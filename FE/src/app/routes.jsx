@@ -1,4 +1,3 @@
-import { jsx } from "react/jsx-runtime";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -24,51 +23,51 @@ import { Dashboard } from "@/pages/manager/Dashboard";
 import { Team } from "@/pages/manager/Team";
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
 import { AdminUsers } from "@/pages/admin/AdminUsers";
+
 const publicChildRoutes = [
-  { index: true, element: /* @__PURE__ */ jsx(Home, {}) },
-  { path: "browse", element: /* @__PURE__ */ jsx(Browse, {}) },
-  { path: "plant/:id", element: /* @__PURE__ */ jsx(PlantDetail, {}) },
-  { path: "blog", element: /* @__PURE__ */ jsx(Blog, {}) },
-  { path: "marketplace", element: /* @__PURE__ */ jsx(Shop, {}) },
-  { path: "product/:id", element: /* @__PURE__ */ jsx(ProductDetail, {}) },
-  { path: "ai-doctor", element: /* @__PURE__ */ jsx(AIDoctor, {}) },
-  { path: "knowledge-graph", element: /* @__PURE__ */ jsx(KnowledgeGraph, {}) },
-  { path: "profile", element: /* @__PURE__ */ jsx(Profile, {}) },
-  { path: "settings", element: /* @__PURE__ */ jsx(Settings, {}) },
-  { path: "cart", element: /* @__PURE__ */ jsx(Cart, {}) },
-  { path: "unauthorized", element: /* @__PURE__ */ jsx(Unauthorized, {}) }
+  { index: true, element: <Home /> },
+  { path: "browse", element: <Browse /> },
+  { path: "plant/:id", element: <PlantDetail /> },
+  { path: "blog", element: <Blog /> },
+  { path: "marketplace", element: <Shop /> },
+  { path: "product/:id", element: <ProductDetail /> },
+  { path: "ai-doctor", element: <AIDoctor /> },
+  { path: "knowledge-graph", element: <KnowledgeGraph /> },
+  { path: "profile", element: <Profile /> },
+  { path: "settings", element: <Settings /> },
+  { path: "cart", element: <Cart /> },
+  { path: "unauthorized", element: <Unauthorized /> }
 ];
+
 const appChildRoutes = [
-  { path: "my-shop", element: /* @__PURE__ */ jsx(MyShop, {}) },
-  { path: "my-shop/add-product", element: /* @__PURE__ */ jsx(AddProduct, {}) },
-  { path: "dashboard", element: /* @__PURE__ */ jsx(Dashboard, {}) },
-  { path: "dashboard/team", element: /* @__PURE__ */ jsx(Team, {}) },
-  { path: "admin", element: /* @__PURE__ */ jsx(AdminDashboard, {}) },
-  { path: "admin/users", element: /* @__PURE__ */ jsx(AdminUsers, {}) }
+  { path: "my-shop", element: <MyShop /> },
+  { path: "my-shop/add-product", element: <AddProduct /> },
+  { path: "dashboard", element: <Dashboard /> },
+  { path: "dashboard/team", element: <Team /> },
+  { path: "admin", element: <AdminDashboard /> },
+  { path: "admin/users", element: <AdminUsers /> }
 ];
+
 const authChildRoutes = [
-  { path: "login", element: /* @__PURE__ */ jsx(Login, {}) },
-  { path: "register", element: /* @__PURE__ */ jsx(Register, {}) },
-  { path: "forgot-password", element: /* @__PURE__ */ jsx(ForgotPassword, {}) }
+  { path: "login", element: <Login /> },
+  { path: "register", element: <Register /> },
+  { path: "forgot-password", element: <ForgotPassword /> }
 ];
+
 const routeTree = [
   {
     path: ROUTES.home,
-    element: /* @__PURE__ */ jsx(PublicLayout, {}),
+    element: <PublicLayout />,
     children: publicChildRoutes
   },
   {
-    element: /* @__PURE__ */ jsx(AppLayout, {}),
+    element: <AppLayout />,
     children: appChildRoutes
   },
   {
-    element: /* @__PURE__ */ jsx(AuthLayout, {}),
+    element: <AuthLayout />,
     children: authChildRoutes
   }
 ];
-export {
-  appChildRoutes,
-  authChildRoutes,
-  publicChildRoutes,
-  routeTree
-};
+
+export { appChildRoutes, authChildRoutes, publicChildRoutes, routeTree };
