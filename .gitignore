@@ -9,7 +9,7 @@ FE/dist/
 .vite/
 FE/.vite/
 
-# Env (giữ .env.example)
+# Env
 .env
 .env.local
 BE/.env
@@ -22,3 +22,16 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 *.local
+
+# ==================== Cursor Settings ====================
+# Personal Cursor settings (không commit)
+.cursor/settings.json
+.cursor/keybindings.json
+.cursor/tasks.json
+
+# Cache / temporary của Cursor
+.cursor/cache/
+.cursor/tmp/
+
+# Chỉ giữ lại thư mục rules
+!.cursor/rules/
