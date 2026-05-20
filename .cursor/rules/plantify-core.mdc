@@ -1,0 +1,42 @@
+---
+description: Quy tắc cốt lõi Plantify — cấu trúc, comment, commit (áp dụng mọi session)
+alwaysApply: true
+---
+
+# Plantify — Core Rules
+
+Đọc chi tiết tại `guidelines/Guidelines.md` khi cần. Luôn tuân thủ khi viết/sửa code trong repo này.
+
+## Cấu trúc
+
+- **BE**: `BE/src/features/<domain>/` — tối đa 4 file: `routes`, `controller`, `service`, `model`.
+- **FE**: `FE/src/features/<domain>/` (api, hooks, components) + `pages/` chỉ compose UI.
+- Tính năng mới: tạo folder ở cả BE và FE `features/` trước, rồi đăng ký route ở `server.js`.
+
+## Đặt tên
+
+- Folder: `kebab-case`. File: `camelCase` (ví dụ `plant.controller.js`).
+- Tên file phải rõ chức năng.
+
+## Comment (bắt buộc)
+
+- Đầu mỗi file: tên file + mục đích (tiếng Việt).
+- Hàm quan trọng: JSDoc (làm gì, params, return).
+- Khối logic lớn: comment phân đoạn. Không comment thừa.
+
+## API & style
+
+- Không hardcode URL API — dùng `FE/src/lib/api.ts`.
+- Response BE: `{ success, message, data }` qua `utils/apiResponse.js`.
+- `async/await` + `try/catch`. Một hàm / một component = một trách nhiệm chính.
+
+## Commit (Conventional Commits)
+
+Format: `<type>(<scope>): <mô tả>` — tiếng Việt ưu tiên, thì hiện tại, ≤72 ký tự, một commit một việc.
+
+Type: `feat`, `fix`, `refactor`, `style`, `docs`, `chore`, `test`, `perf`. Scope: tên feature (`auth`, `plants`, ...).
+
+Chi tiết workflow commit nhỏ: xem rule `plantify-workflow.mdc`.
+
+- Chỉ **chạy** `git commit` khi user yêu cầu rõ.
+- Sau mỗi lát code xong: **nhắc** user commit + gợi ý message (không im lặng gom diff lớn).

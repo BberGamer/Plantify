@@ -1,0 +1,15 @@
+{
+  "name": "plantify",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Plantify monorepo — scripts only (FE/BE cài dependency riêng)",
+  "scripts": {
+    "install:all": "npm install --prefix FE && npm install --prefix BE",
+    "dev": "npx concurrently --kill-others false -n FE,BE -c green,blue \"npm run dev --prefix FE\" \"npm run dev --prefix BE\"",
+    "dev:fe": "npm run dev --prefix FE",
+    "dev:be": "npm run dev --prefix BE",
+    "build": "npm run build --prefix FE",
+    "build:fe": "npm run build --prefix FE",
+    "start:be": "npm run start --prefix BE"
+  }
+}
