@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Leaf, Mail, Lock, User } from "lucide-react";
+import { Leaf, Mail, Lock, User, Phone, MapPin } from "lucide-react";
 import { motion } from "motion/react";
 
 function Register() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    phone: "",
+    address: "",
     password: "",
     confirmPassword: ""
   });
@@ -93,6 +95,36 @@ function Register() {
                     type="email"
                     placeholder="your.email@example.com"
                     value={formData.email}
+                    onChange={handleChange}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Số điện thoại</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="0xxx xxx xxx"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="address">Địa chỉ nhà</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="address"
+                    name="address"
+                    type="text"
+                    placeholder="123 Đường ABC, Quận X, TP.HCM"
+                    value={formData.address}
                     onChange={handleChange}
                     className="pl-10"
                   />
