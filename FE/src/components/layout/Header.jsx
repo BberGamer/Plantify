@@ -29,12 +29,21 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { PUBLIC_NAV } from "@/lib/constants";
 import { ROUTES } from "@/lib/constants";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
-import { UI_PREVIEW_USER } from "@/lib/ui-preview";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/features/auth/hooks";
+import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 function Header() {
   const location = useLocation();
-  const user = UI_PREVIEW_USER;
+  const { user, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Đăng xuất thành công!");
+    navigate("/login");
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -108,56 +117,73 @@ function Header() {
             <Link to={ROUTES.aiDoctor}>Hỏi AI</Link>
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                <Avatar>
-                  <AvatarImage src={user.avatarUrl} alt={user.name} />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-green-600 text-primary-foreground">
-                    {user.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to={ROUTES.profile} className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
-                  Hồ sơ
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to={ROUTES.myShop} className="cursor-pointer">
-                  <Store className="mr-2 h-4 w-4" />
-                  Gian hàng
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to={ROUTES.cart} className="cursor-pointer">
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  Giỏ hàng
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to={ROUTES.settings} className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Cài đặt
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link
-                  to={ROUTES.login}
-                  className="cursor-pointer text-destructive focus:text-destructive"
-                >
+          {isAuthenticated && user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar>
+                    <AvatarImage src={user.avatarUrl} alt={user.fullName} />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-green-600 text-primary-foreground">
+                      {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>{user.fullName}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to={ROUTES.profile} className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Hồ sơ
+                  </Link>
+                </DropdownMenuItem>
+                {(user.role === "admin" || user.role === "manager" || user.role === "business manager" || user.role === "sales" || user.role === "content manager") && (
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to={
+                        user.role === "admin"
+                          ? ROUTES.admin
+                          : (user.role === "manager" || user.role === "business manager")
+                          ? ROUTES.dashboard
+                          : ROUTES.myShop
+                      }
+                      className="cursor-pointer"
+                    >
+                      <Store className="mr-2 h-4 w-4" />
+                      Trang quản lý
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem asChild>
+                  <Link to={ROUTES.cart} className="cursor-pointer">
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Giỏ hàng
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to={ROUTES.settings} className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Cài đặt
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
                   Đăng xuất
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to={ROUTES.login}>Đăng nhập</Link>
+              </Button>
+              <Button size="sm" className="bg-gradient-to-r from-primary to-green-600" asChild>
+                <Link to={ROUTES.register}>Đăng ký</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </header>

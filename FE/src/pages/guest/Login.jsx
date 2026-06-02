@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,13 +11,64 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Leaf, Mail, Lock } from "lucide-react";
+import { Leaf, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "motion/react";
+import { useAuth } from "@/features/auth/hooks";
+import { toast } from "sonner";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const getRedirectPath = (role) => {
+    switch (role) {
+      case "admin":
+        return "/admin";
+      case "manager":
+      case "business manager":
+        return "/dashboard";
+      case "sales":
+      case "content manager":
+        return "/my-shop";
+      default:
+        return "/";
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast.error("Vui lòng nhập đầy đủ email và mật khẩu");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Email không đúng định dạng");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const user = await login(email, password);
+      toast.success(`Chào mừng trở lại, ${user.fullName}!`);
+      
+      // Chuyển hướng theo role
+      const redirectPath = getRedirectPath(user.role);
+      navigate(redirectPath, { replace: true });
+    } catch (error) {
+      console.error(error);
+      const errorMsg = error.response?.data?.message || error.message || "Đăng nhập thất bại. Vui lòng thử lại.";
+      toast.error(errorMsg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
@@ -55,7 +106,7 @@ function Login() {
           <CardContent>
             <form
               className="space-y-4"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleSubmit}
             >
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -68,6 +119,7 @@ function Login() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
+                    disabled={submitting}
                   />
                 </div>
               </div>
@@ -77,12 +129,25 @@ function Login() {
                   <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 pr-10"
+                    disabled={submitting}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                    tabIndex="-1"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
               </div>
               <div className="flex items-center justify-between">
@@ -91,6 +156,7 @@ function Login() {
                     id="remember"
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    disabled={submitting}
                   />
                   <label
                     htmlFor="remember"
@@ -110,10 +176,18 @@ function Login() {
                 type="submit"
                 className="w-full bg-gradient-to-r from-primary to-green-600"
                 size="lg"
+                disabled={submitting}
               >
-                Đăng nhập
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang đăng nhập...
+                  </>
+                ) : (
+                  "Đăng nhập"
+                )}
               </Button>
-              <Button type="button" variant="outline" className="w-full" size="lg">
+              <Button type="button" variant="outline" className="w-full" size="lg" disabled={submitting}>
                 Đăng nhập với Google
               </Button>
             </form>
