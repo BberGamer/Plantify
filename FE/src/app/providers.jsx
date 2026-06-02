@@ -1,6 +1,7 @@
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/features/auth/AuthContext";
 
 function ThemeProvider({ children }) {
   return (
@@ -18,10 +19,12 @@ function ThemeProvider({ children }) {
 function AppProviders({ children }) {
   return (
     <ThemeProvider>
-      <TooltipProvider>
-        {children}
-        <Toaster richColors position="top-center" />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          {children}
+          <Toaster richColors position="top-center" />
+        </TooltipProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

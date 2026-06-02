@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Leaf, Mail, Lock, User, Phone, MapPin } from "lucide-react";
+import { Leaf, Mail, Lock, User, Phone, MapPin, Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "motion/react";
+import { useAuth } from "@/features/auth/hooks";
+import { toast } from "sonner";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -18,6 +20,12 @@ function Register() {
     confirmPassword: ""
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -26,6 +34,63 @@ function Register() {
     });
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const { fullName, email, password, confirmPassword } = formData;
+
+    if (!fullName || !email || !password) {
+      toast.error("Vui lòng điền đầy đủ các thông tin bắt buộc");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Email không đúng định dạng");
+      return;
+    }
+
+    if (formData.phone && formData.phone.trim() !== "") {
+      const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+      if (!phoneRegex.test(formData.phone.trim())) {
+        toast.error("Số điện thoại không hợp lệ (phải bắt đầu bằng 03, 05, 07, 08, 09 và gồm 10 chữ số)");
+        return;
+      }
+    }
+
+    if (password.length < 8) {
+      toast.error("Mật khẩu phải chứa tối thiểu 8 ký tự");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Mật khẩu xác nhận không trùng khớp");
+      return;
+    }
+
+    if (!acceptTerms) {
+      toast.error("Bạn phải đồng ý với điều khoản sử dụng");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await register({
+        fullName,
+        email,
+        phone: formData.phone,
+        address: formData.address,
+        password
+      });
+      toast.success("Đăng ký tài khoản thành công! Hãy đăng nhập.");
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+      const errorMsg = error.response?.data?.message || error.message || "Đăng ký thất bại. Vui lòng thử lại.";
+      toast.error(errorMsg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -68,7 +133,7 @@ function Register() {
           <CardContent>
             <form
               className="space-y-4"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleSubmit}
             >
               <div className="space-y-2">
                 <Label htmlFor="fullName">Họ và tên</Label>
@@ -82,6 +147,7 @@ function Register() {
                     value={formData.fullName}
                     onChange={handleChange}
                     className="pl-10"
+                    disabled={submitting}
                   />
                 </div>
               </div>
@@ -97,6 +163,7 @@ function Register() {
                     value={formData.email}
                     onChange={handleChange}
                     className="pl-10"
+                    disabled={submitting}
                   />
                 </div>
               </div>
@@ -112,6 +179,7 @@ function Register() {
                     value={formData.phone}
                     onChange={handleChange}
                     className="pl-10"
+                    disabled={submitting}
                   />
                 </div>
               </div>
@@ -127,6 +195,7 @@ function Register() {
                     value={formData.address}
                     onChange={handleChange}
                     className="pl-10"
+                    disabled={submitting}
                   />
                 </div>
               </div>
@@ -137,12 +206,25 @@ function Register() {
                   <Input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={handleChange}
-                    className="pl-10"
+                    className="pl-10 pr-10"
+                    disabled={submitting}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                    tabIndex="-1"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
                 <p className="text-xs text-muted-foreground">Tối thiểu 8 ký tự</p>
               </div>
@@ -153,12 +235,25 @@ function Register() {
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="pl-10"
+                    className="pl-10 pr-10"
+                    disabled={submitting}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                    tabIndex="-1"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
               </div>
               <div className="flex items-start space-x-2">
@@ -166,6 +261,7 @@ function Register() {
                   id="terms"
                   checked={acceptTerms}
                   onCheckedChange={(checked) => setAcceptTerms(checked)}
+                  disabled={submitting}
                 />
                 <label
                   htmlFor="terms"
@@ -185,8 +281,16 @@ function Register() {
                 type="submit"
                 className="w-full bg-gradient-to-r from-primary to-green-600"
                 size="lg"
+                disabled={submitting}
               >
-                Đăng ký
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang đăng ký...
+                  </>
+                ) : (
+                  "Đăng ký"
+                )}
               </Button>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -201,6 +305,7 @@ function Register() {
                 variant="outline"
                 className="w-full"
                 size="lg"
+                disabled={submitting}
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path

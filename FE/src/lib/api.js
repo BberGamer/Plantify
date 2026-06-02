@@ -1,7 +1,7 @@
 // api.js
 // Axios instance gọi API backend (base URL từ env)
 import axios from "axios";
-const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
+const apiBaseUrl = import.meta.env.VITE_API_URL ?? "/api";
 const api = axios.create({
   baseURL: apiBaseUrl,
   headers: {
@@ -9,10 +9,23 @@ const api = axios.create({
   },
   timeout: 1e4
 });
-api.interceptors.request.use((config) => config);
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 api.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(error)
+  (error) => {
+    // Nếu token hết hạn hoặc không hợp lệ (401), có thể tự động clear localStorage
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
+    return Promise.reject(error);
+  }
 );
 export {
   api
