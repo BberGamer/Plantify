@@ -30,3 +30,12 @@ export const getMeApi = async () => {
   const response = await api.get("/auth/me");
   return response.data;
 };
+
+/**
+ * Gọi API lấy danh sách người dùng cho quản trị viên
+ * @returns {Promise<object>} response data
+ */
+export const getUsersApi = async () => {
+  const response = await api.get("/auth/users");
+  return response.data;
+};

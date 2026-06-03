@@ -114,8 +114,13 @@ const getMe = async (userId) => {
   return user;
 };
 
+const getUsers = async () => {
+  return User.find().select('-password').sort({ createdAt: -1 });
+};
+
 module.exports = {
   register,
   login,
   getMe,
+  getUsers,
 };

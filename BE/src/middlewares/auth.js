@@ -19,4 +19,12 @@ const authenticate = (req, res, next) => {
   }
 };
 
-module.exports = { authenticate };
+const authorizeAdmin = (req, res, next) => {
+  if (req.user?.role !== 'admin') {
+    return error(res, 'Không có quyền truy cập', 403);
+  }
+
+  next();
+};
+
+module.exports = { authenticate, authorizeAdmin };

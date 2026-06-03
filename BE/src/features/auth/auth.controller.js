@@ -86,8 +86,21 @@ const getMe = async (req, res, next) => {
   }
 };
 
+/**
+ * Lấy danh sách người dùng cho quản trị viên
+ */
+const getUsers = async (req, res, next) => {
+  try {
+    const users = await authService.getUsers();
+    return success(res, 'Lấy danh sách người dùng thành công', users, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
+  getUsers,
 };
