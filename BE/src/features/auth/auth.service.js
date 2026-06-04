@@ -3,15 +3,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('./auth.model');
 
-/**
- * Đăng ký tài khoản người dùng mới
- * @param {object} userData - Thông tin từ client (fullName, email, phone, address, password)
- * @returns {Promise<object>} user - Đối tượng user đã được tạo (không bao gồm password)
- */
-const register = async (userData) => {
+const STATUS_MANAGED_ROLES = ['customer', 'business manager', 'content manager'];
+
+const createUserRecord = async (userData, role) => {
   const { fullName, email, phone, address, password } = userData;
 
-  // 1. Kiểm tra email đã được đăng ký chưa
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     const err = new Error('Email đã được sử dụng bởi tài khoản khác');
@@ -19,7 +15,6 @@ const register = async (userData) => {
     throw err;
   }
 
-  // 1.2. Kiểm tra số điện thoại đã được đăng ký chưa (nếu có cung cấp)
   if (phone && phone.trim() !== '') {
     const existingPhone = await User.findOne({ phone: phone.trim() });
     if (existingPhone) {
@@ -29,25 +24,40 @@ const register = async (userData) => {
     }
   }
 
-  // 2. Mã hóa mật khẩu
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  // 3. Tạo user mới với vai trò mặc định là 'customer'
   const newUser = await User.create({
     fullName,
     email,
     phone,
     address,
     password: hashedPassword,
-    role: 'customer', // Mặc định và bắt buộc là customer
+    role,
     status: 'active',
   });
 
-  // 4. Trả về thông tin user (loại bỏ password)
   const userObj = newUser.toObject();
   delete userObj.password;
   return userObj;
+};
+
+/**
+ * Đăng ký tài khoản người dùng mới
+ * @param {object} userData - Thông tin từ client (fullName, email, phone, address, password)
+ * @returns {Promise<object>} user - Đối tượng user đã được tạo (không bao gồm password)
+ */
+const register = async (userData) => {
+  return createUserRecord(userData, 'customer');
+};
+
+/**
+ * Tạo tài khoản người dùng bởi quản trị viên
+ * @param {object} userData - Thông tin từ client (fullName, email, phone, address, password, role)
+ * @returns {Promise<object>} user - Đối tượng user đã được tạo (không bao gồm password)
+ */
+const createUserByAdmin = async (userData) => {
+  return createUserRecord(userData, userData.role);
 };
 
 /**
@@ -57,7 +67,6 @@ const register = async (userData) => {
  * @returns {Promise<object>} { user, token }
  */
 const login = async (email, password) => {
-  // 1. Tìm người dùng theo email
   const user = await User.findOne({ email });
   if (!user) {
     const err = new Error('Email hoặc mật khẩu không chính xác');
@@ -65,14 +74,12 @@ const login = async (email, password) => {
     throw err;
   }
 
-  // 2. Kiểm tra trạng thái tài khoản
   if (user.status !== 'active') {
     const err = new Error('Tài khoản đã bị khóa');
     err.statusCode = 403;
     throw err;
   }
 
-  // 3. So khớp mật khẩu
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     const err = new Error('Email hoặc mật khẩu không chính xác');
@@ -80,7 +87,6 @@ const login = async (email, password) => {
     throw err;
   }
 
-  // 4. Tạo JWT token
   const token = jwt.sign(
     {
       id: user._id,
@@ -92,7 +98,6 @@ const login = async (email, password) => {
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
 
-  // 5. Trả về thông tin user (loại bỏ password) và token
   const userObj = user.toObject();
   delete userObj.password;
 
@@ -114,8 +119,47 @@ const getMe = async (userId) => {
   return user;
 };
 
+/**
+ * Lấy danh sách người dùng cho quản trị viên
+ * @returns {Promise<object[]>} users
+ */
+const getUsers = async () => {
+  return User.find().select('-password').sort({ createdAt: -1 });
+};
+
+/**
+ * Cập nhật trạng thái hoạt động của người dùng
+ * @param {string} userId - ID người dùng
+ * @param {string} status - active | inactive
+ * @returns {Promise<object>} user
+ */
+const updateUserStatus = async (userId, status) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const err = new Error('Không tìm thấy người dùng');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (!STATUS_MANAGED_ROLES.includes(user.role)) {
+    const err = new Error('Không thể cập nhật trạng thái tài khoản có vai trò này');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  user.status = status;
+  await user.save();
+
+  const userObj = user.toObject();
+  delete userObj.password;
+  return userObj;
+};
+
 module.exports = {
   register,
+  createUserByAdmin,
   login,
   getMe,
+  getUsers,
+  updateUserStatus,
 };
