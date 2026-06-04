@@ -61,15 +61,25 @@ import {
 
 const roleBadgeClassNames = {
   Admin: "border-transparent bg-primary text-primary-foreground",
+
   "Business Manager": "border-transparent bg-green-100 text-green-800",
   "Content Manager": "border-transparent bg-emerald-100 text-emerald-800",
+
+  Manager: "border-transparent bg-green-100 text-green-800",
+  Sales: "border-transparent bg-emerald-100 text-emerald-800",
+
   Customer: "border-green-200 bg-white text-green-700"
 };
 
 const roleBadgeVariants = {
   Admin: "default",
+
   "Business Manager": "secondary",
   "Content Manager": "secondary",
+
+  Manager: "secondary",
+  Sales: "secondary",
+
   Customer: "outline"
 };
 
@@ -79,7 +89,6 @@ const statusBadgeClassNames = {
 };
 
 const privilegedRoles = ["admin", "business manager", "content manager"];
-
 const initialCreateUserForm = {
   fullName: "",
   email: "",
@@ -90,14 +99,21 @@ const initialCreateUserForm = {
   role: "",
 };
 
+
 const mapRoleLabel = (role) => {
   switch (role) {
     case "admin":
       return "Admin";
     case "business manager":
+
       return "Business Manager";
     case "content manager":
       return "Content Manager";
+
+      return "Manager";
+    case "content manager":
+      return "Sales";
+
     default:
       return "Customer";
   }
@@ -138,6 +154,7 @@ const isThisWeek = (dateValue) => {
 };
 
 function AdminUsers() {
+
   const { users, loading, error, createUser, updateUserStatus } = useAdminUsers();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createUserForm, setCreateUserForm] = useState(initialCreateUserForm);
@@ -146,10 +163,14 @@ function AdminUsers() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const { users, loading, error } = useAdminUsers();
+
+
   const totalUsers = users.length;
   const activeUsers = users.filter((user) => user.status === "active").length;
   const privilegedUsers = users.filter((user) => privilegedRoles.includes(user.role)).length;
   const newUsersThisWeek = users.filter((user) => isThisWeek(user.createdAt)).length;
+
 
   const resetCreateUserForm = () => {
     setCreateUserForm(initialCreateUserForm);
@@ -245,6 +266,7 @@ function AdminUsers() {
     }
   };
 
+
   return (
     <>
       <div className="relative overflow-hidden">
@@ -277,6 +299,7 @@ function AdminUsers() {
                 </div>
               </div>
 
+
               <div className="flex flex-wrap items-center gap-3">
                 <Button
                   variant="outline"
@@ -291,6 +314,15 @@ function AdminUsers() {
                   <UserPlus className="mr-2 h-4 w-4" />
                   Thêm người dùng
                 </Button>
+
+              <div className="space-y-2">
+                <h1 className="bg-gradient-to-r from-primary via-green-600 to-green-700 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">
+                  Quản lý người dùng Plantify
+                </h1>
+                <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
+                  Theo dõi tài khoản hệ thống, phân loại vai trò và rà soát trạng thái hoạt động trên cùng một giao diện quản trị.
+                </p>
+
               </div>
             </div>
           </section>
@@ -350,6 +382,7 @@ function AdminUsers() {
                 </Button>
               </div>
             </div>
+
           </section>
 
           <Card className="overflow-hidden border-green-200/60 bg-white/95 shadow-xl backdrop-blur-sm">
@@ -574,6 +607,46 @@ function AdminUsers() {
                   </SelectContent>
                 </Select>
               </div>
+
+          </div>
+        </section>
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <DashboardCard
+            title="Tổng người dùng"
+            value={totalUsers.toString()}
+            description="Toàn bộ tài khoản trong hệ thống"
+            icon={Users}
+          />
+          <DashboardCard
+            title="Đang hoạt động"
+            value={activeUsers.toString()}
+            description="Tài khoản đang ở trạng thái tốt"
+            icon={UserCheck}
+          />
+          <DashboardCard
+            title="Admin / Manager / Sales"
+            value={privilegedUsers.toString()}
+            description="Nhóm có quyền vận hành"
+            icon={Shield}
+          />
+          <DashboardCard
+            title="Mới tuần này"
+            value={newUsersThisWeek.toString()}
+            description="Tài khoản vừa tham gia"
+            icon={UserPlus}
+          />
+        </section>
+
+        <section className="rounded-[1.75rem] border border-green-200/60 bg-white/90 p-4 shadow-lg backdrop-blur-sm sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative w-full max-w-xl">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Tìm theo tên, email hoặc vai trò"
+                className="h-11 rounded-xl border-green-200 bg-white pl-11 shadow-sm focus-visible:ring-primary/30"
+              />
+
             </div>
 
             <div className="space-y-2">
@@ -592,6 +665,7 @@ function AdminUsers() {
                 />
               </div>
             </div>
+
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -647,8 +721,22 @@ function AdminUsers() {
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+
+          </div>
+        </section>
+
+        <Card className="overflow-hidden border-green-200/60 bg-white/95 shadow-xl backdrop-blur-sm">
+          <CardHeader className="border-b border-green-100 bg-gradient-to-r from-white to-green-50/80">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <CardTitle className="text-xl text-foreground">Danh sách người dùng</CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Dữ liệu đang được lấy trực tiếp từ hệ thống tài khoản hiện tại.
+                </p>
+
               </div>
             </div>
+
 
             <DialogFooter>
               <Button
@@ -677,6 +765,102 @@ function AdminUsers() {
         </DialogContent>
       </Dialog>
     </>
+
+          </CardHeader>
+
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="px-6 py-10 text-center text-sm text-muted-foreground">
+                Đang tải danh sách người dùng...
+              </div>
+            ) : error ? (
+              <div className="px-6 py-10 text-center text-sm text-destructive">
+                {error}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-green-100 bg-green-50/50 hover:bg-green-50/50">
+                    <TableHead className="px-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Người dùng
+                    </TableHead>
+                    <TableHead className="px-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Email
+                    </TableHead>
+                    <TableHead className="px-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Vai trò
+                    </TableHead>
+                    <TableHead className="px-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Trạng thái
+                    </TableHead>
+                    <TableHead className="px-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Ngày tham gia
+                    </TableHead>
+                    <TableHead className="px-4 text-right text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Hành động
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => {
+                    const roleLabel = mapRoleLabel(user.role);
+                    const statusLabel = mapStatusLabel(user.status);
+
+                    return (
+                      <TableRow key={user._id} className="border-green-100/80 hover:bg-green-50/40">
+                        <TableCell className="px-4 py-4 align-top">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-11 w-11 ring-2 ring-green-100">
+                              <AvatarFallback className="bg-gradient-to-br from-primary to-green-600 text-sm font-semibold text-white">
+                                {getInitials(user.fullName)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="space-y-1">
+                              <p className="font-semibold text-foreground">{user.fullName}</p>
+                              <p className="text-sm text-muted-foreground">{roleLabel}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-4 text-sm text-muted-foreground">
+                          {user.email}
+                        </TableCell>
+                        <TableCell className="px-4 py-4">
+                          <Badge
+                            variant={roleBadgeVariants[roleLabel]}
+                            className={roleBadgeClassNames[roleLabel]}
+                          >
+                            {roleLabel}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-4 py-4">
+                          <Badge className={statusBadgeClassNames[statusLabel]}>
+                            {statusLabel}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-4 py-4 text-sm text-muted-foreground">
+                          {formatDate(user.createdAt)}
+                        </TableCell>
+                        <TableCell className="px-4 py-4 text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-full text-muted-foreground hover:bg-green-50 hover:text-primary"
+                            aria-label={`Tùy chọn cho ${user.fullName}`}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+
   );
 }
 

@@ -17,9 +17,19 @@ router.get('/me', authenticate, authController.getMe);
 router.get('/users', authenticate, authorizeAdmin, authController.getUsers);
 
 // Tạo người dùng mới cho quản trị viên
-router.post('/users', authenticate, authorizeAdmin, authController.createUserByAdmin);
+router.post(
+  '/users',
+  authenticate,
+  authorizeAdmin,
+  authController.createUserByAdmin
+);
 
 // Cập nhật trạng thái người dùng cho quản trị viên
-router.patch('/users/:id/status', authenticate, authorizeAdmin, authController.updateUserStatus);
+router.patch(
+  '/users/:id/status',
+  authenticate,
+  authorizeAdmin,
+  authController.updateUserStatus
+);
 
 module.exports = router;

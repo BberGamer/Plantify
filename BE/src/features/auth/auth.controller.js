@@ -21,7 +21,9 @@ const validateUserInput = ({ fullName, email, password, phone }) => {
   if (phone && phone.trim() !== '') {
     const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
     if (!phoneRegex.test(phone.trim())) {
-      const err = new Error('Số điện thoại không hợp lệ (phải bắt đầu bằng 03, 05, 07, 08, 09 và gồm 10 chữ số)');
+      const err = new Error(
+        'Số điện thoại không hợp lệ (phải bắt đầu bằng 03, 05, 07, 08, 09 và gồm 10 chữ số)'
+      );
       err.statusCode = 400;
       throw err;
     }
@@ -131,8 +133,17 @@ const updateUserStatus = async (req, res, next) => {
       throw err;
     }
 
-    const user = await authService.updateUserStatus(req.params.id, status);
-    return success(res, 'Cập nhật trạng thái người dùng thành công', user, 200);
+    const user = await authService.updateUserStatus(
+      req.params.id,
+      status
+    );
+
+    return success(
+      res,
+      'Cập nhật trạng thái người dùng thành công',
+      user,
+      200
+    );
   } catch (error) {
     next(error);
   }

@@ -1,6 +1,10 @@
 // useAdminUsers.js - Hook lấy danh sách người dùng cho trang quản trị
 import { useCallback, useEffect, useState } from "react";
-import { createAdminUserApi, getUsersApi, updateUserStatusApi } from "../api";
+import {
+  createAdminUserApi,
+  getUsersApi,
+  updateUserStatusApi,
+} from "../api";
 
 export function useAdminUsers() {
   const [users, setUsers] = useState([]);
@@ -16,7 +20,10 @@ export function useAdminUsers() {
       setUsers(response.data || []);
       return response.data || [];
     } catch (err) {
-      const nextError = err.response?.data?.message || "Không thể tải danh sách người dùng";
+      const nextError =
+        err.response?.data?.message ||
+        "Không thể tải danh sách người dùng";
+
       setError(nextError);
       throw err;
     } finally {
@@ -37,7 +44,10 @@ export function useAdminUsers() {
         }
       } catch (err) {
         if (isMounted) {
-          setError(err.response?.data?.message || "Không thể tải danh sách người dùng");
+          setError(
+            err.response?.data?.message ||
+              "Không thể tải danh sách người dùng"
+          );
         }
       } finally {
         if (isMounted) {

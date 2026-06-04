@@ -39,13 +39,12 @@ const createUserRecord = async (userData, role) => {
 
   const userObj = newUser.toObject();
   delete userObj.password;
+
   return userObj;
 };
 
 /**
  * Đăng ký tài khoản người dùng mới
- * @param {object} userData - Thông tin từ client (fullName, email, phone, address, password)
- * @returns {Promise<object>} user - Đối tượng user đã được tạo (không bao gồm password)
  */
 const register = async (userData) => {
   return createUserRecord(userData, 'customer');
@@ -53,8 +52,6 @@ const register = async (userData) => {
 
 /**
  * Tạo tài khoản người dùng bởi quản trị viên
- * @param {object} userData - Thông tin từ client (fullName, email, phone, address, password, role)
- * @returns {Promise<object>} user - Đối tượng user đã được tạo (không bao gồm password)
  */
 const createUserByAdmin = async (userData) => {
   return createUserRecord(userData, userData.role);
@@ -62,12 +59,10 @@ const createUserByAdmin = async (userData) => {
 
 /**
  * Đăng nhập người dùng
- * @param {string} email - Email đăng nhập
- * @param {string} password - Mật khẩu đăng nhập
- * @returns {Promise<object>} { user, token }
  */
 const login = async (email, password) => {
   const user = await User.findOne({ email });
+
   if (!user) {
     const err = new Error('Email hoặc mật khẩu không chính xác');
     err.statusCode = 401;
@@ -81,6 +76,7 @@ const login = async (email, password) => {
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
+
   if (!isMatch) {
     const err = new Error('Email hoặc mật khẩu không chính xác');
     err.statusCode = 401;
@@ -95,46 +91,52 @@ const login = async (email, password) => {
       fullName: user.fullName,
     },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    {
+      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    }
   );
 
   const userObj = user.toObject();
   delete userObj.password;
 
-  return { user: userObj, token };
+  return {
+    user: userObj,
+    token,
+  };
 };
 
 /**
  * Lấy thông tin user hiện tại
- * @param {string} userId - ID người dùng
- * @returns {Promise<object>} user
  */
 const getMe = async (userId) => {
   const user = await User.findById(userId).select('-password');
+
   if (!user) {
     const err = new Error('Không tìm thấy người dùng');
-    err.statusCode = 444;
+    err.statusCode = 404;
     throw err;
   }
+
   return user;
 };
 
 /**
  * Lấy danh sách người dùng cho quản trị viên
- * @returns {Promise<object[]>} users
  */
 const getUsers = async () => {
-  return User.find().select('-password').sort({ createdAt: -1 });
+  return User.find()
+    .select('-password')
+    .sort({ createdAt: -1 });
 };
 
 /**
  * Cập nhật trạng thái hoạt động của người dùng
- * @param {string} userId - ID người dùng
- * @param {string} status - active | inactive
- * @returns {Promise<object>} user
+ * @param {string} userId
+ * @param {string} status
  */
 const updateUserStatus = async (userId, status) => {
   const user = await User.findById(userId);
+
   if (!user) {
     const err = new Error('Không tìm thấy người dùng');
     err.statusCode = 404;
@@ -142,7 +144,9 @@ const updateUserStatus = async (userId, status) => {
   }
 
   if (!STATUS_MANAGED_ROLES.includes(user.role)) {
-    const err = new Error('Không thể cập nhật trạng thái tài khoản có vai trò này');
+    const err = new Error(
+      'Không thể cập nhật trạng thái tài khoản có vai trò này'
+    );
     err.statusCode = 400;
     throw err;
   }
@@ -152,6 +156,7 @@ const updateUserStatus = async (userId, status) => {
 
   const userObj = user.toObject();
   delete userObj.password;
+
   return userObj;
 };
 

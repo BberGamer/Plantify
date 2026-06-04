@@ -57,6 +57,9 @@ export const createAdminUserApi = async (userData) => {
  * @returns {Promise<object>} response data
  */
 export const updateUserStatusApi = async (userId, status) => {
-  const response = await api.patch(`/auth/users/${userId}/status`, { status });
+  const response = await api.patch(
+    `/auth/users/${userId}/status`,
+    { status }
+  );
   return response.data;
 };
