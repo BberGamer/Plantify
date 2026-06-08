@@ -115,12 +115,6 @@ const ROLE_SIDEBAR_NAV = {
       label: "Người dùng",
       icon: Users,
       roles: ["admin"]
-    },
-    {
-      path: "/dashboard",
-      label: "Thống kê",
-      icon: BarChart3,
-      roles: ["admin"]
     }
   ]
 };
