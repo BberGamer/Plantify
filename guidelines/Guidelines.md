@@ -313,32 +313,6 @@ async function login(email, password) {
 - Đặt tên biến/hàm rõ ràng, có ý nghĩa (ví dụ: `getAllPlants`, `calculateTotalPrice`).
 
 > **Lưu ý cho AI (Cursor, Claude, Grok...):** Khi viết code cho dự án này, phải tuân thủ nghiêm ngặt quy tắc comment và style ở phần 9. Khi tạo commit, tuân thủ Conventional Commits ở phần 8.
-
----
-
----
-
-## 10. Dùng AI (Cursor) — Rules cho cả team
-
-Để **mọi máy** dùng Cursor đều tuân thủ guideline khi code, project có **Project Rules** trong `.cursor/rules/` (commit lên Git cùng repo).
-
-| File | Khi nào áp dụng |
-|------|------------------|
-| `plantify-core.mdc` | Mọi chat / mọi file (`alwaysApply: true`) |
-| `plantify-workflow.mdc` | Nhắc commit từng lát, không gom diff lớn (`alwaysApply: true`) |
-| `plantify-backend.mdc` | Khi làm việc với file trong `BE/` |
-| `plantify-frontend.mdc` | Khi làm việc với file trong `FE/` |
-
-**Cách dùng cho thành viên:**
-
-1. Clone/pull repo bình thường (đã có folder `.cursor/rules/`).
-2. Mở project bằng **Cursor** (không cần cấu hình thêm).
-3. Rules tự được Cursor đọc — Agent/Chat sẽ follow khi generate code.
-
-**Cập nhật quy tắc:** Sửa `guidelines/Guidelines.md` (nguồn chính) và đồng bộ tóm tắt vào `.cursor/rules/*.mdc` nếu đổi quy tắc lớn.
-
-**Lưu ý:** *User Rules* trong Cursor Settings chỉ áp dụng trên máy cá nhân — không chia sẻ team. Muốn đồng bộ cả nhóm → dùng **Project Rules** (`.cursor/rules/`) hoặc `@guidelines/Guidelines.md` khi cần nhắc thêm trong prompt.
-
 ---
 
 **Mục tiêu cuối cùng:** Code phải sạch đến mức người mới mở project lên trong **5 phút** cũng hiểu được toàn bộ cấu trúc.
