@@ -8,7 +8,7 @@ alwaysApply: true
 ## Match Effort to Task Complexity
 - For hard coding and multi-step tasks, think carefully before responding.
 - For simple lookups or obvious fixes, respond directly and avoid unnecessary analysis.
-- If the problem requires multi-step reasoning, explicitly reason through it before acting.
+- If the problem requires multi-step reasoning, reason internally before acting.
 
 ## Avoid Overthinking
 - Choose an approach and commit to it.
