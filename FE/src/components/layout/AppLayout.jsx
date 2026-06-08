@@ -1,12 +1,10 @@
 import { Outlet, useLocation, Navigate } from "react-router";
 import {
   SidebarProvider,
-  SidebarInset,
-  SidebarTrigger
+  SidebarInset
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ROLE_SIDEBAR_NAV } from "@/lib/constants";
-import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/features/auth/hooks";
 import { hasMinimumRole } from "@/lib/roles";
 import { Loader2 } from "lucide-react";

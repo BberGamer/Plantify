@@ -2,7 +2,6 @@
 // Giao diện quản lý người dùng cho khu vực quản trị
 
 import { useState } from "react";
-import { DashboardCard } from "@/components/common/DashboardCard";
 import { useAdminUsers } from "@/features/auth/hooks";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -50,12 +49,10 @@ import {
   MoreHorizontal,
   Phone,
   Search,
-  Shield,
   Sparkles,
   User,
   UserCheck,
   UserPlus,
-  Users,
   UserX,
 } from "lucide-react";
 
@@ -77,8 +74,6 @@ const statusBadgeClassNames = {
   "Hoạt động": "border-transparent bg-green-100 text-green-700",
   "Tạm khóa": "border-transparent bg-stone-200 text-stone-700"
 };
-
-const privilegedRoles = ["admin", "business manager", "content manager"];
 
 const initialCreateUserForm = {
   fullName: "",
@@ -125,18 +120,6 @@ const getInitials = (fullName) => {
     .toUpperCase();
 };
 
-const isThisWeek = (dateValue) => {
-  if (!dateValue) {
-    return false;
-  }
-
-  const createdAt = new Date(dateValue);
-  const now = new Date();
-  const diffInDays = (now - createdAt) / (1000 * 60 * 60 * 24);
-
-  return diffInDays >= 0 && diffInDays <= 7;
-};
-
 function AdminUsers() {
   const { users, loading, error, createUser, updateUserStatus } = useAdminUsers();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -147,9 +130,6 @@ function AdminUsers() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const totalUsers = users.length;
-  const activeUsers = users.filter((user) => user.status === "active").length;
-  const privilegedUsers = users.filter((user) => privilegedRoles.includes(user.role)).length;
-  const newUsersThisWeek = users.filter((user) => isThisWeek(user.createdAt)).length;
 
   const resetCreateUserForm = () => {
     setCreateUserForm(initialCreateUserForm);
@@ -293,33 +273,6 @@ function AdminUsers() {
                 </Button>
               </div>
             </div>
-          </section>
-
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <DashboardCard
-              title="Tổng người dùng"
-              value={totalUsers.toString()}
-              description="Toàn bộ tài khoản trong hệ thống"
-              icon={Users}
-            />
-            <DashboardCard
-              title="Đang hoạt động"
-              value={activeUsers.toString()}
-              description="Tài khoản đang ở trạng thái tốt"
-              icon={UserCheck}
-            />
-            <DashboardCard
-              title="Admin / Business / Content"
-              value={privilegedUsers.toString()}
-              description="Nhóm có quyền vận hành"
-              icon={Shield}
-            />
-            <DashboardCard
-              title="Mới tuần này"
-              value={newUsersThisWeek.toString()}
-              description="Tài khoản vừa tham gia"
-              icon={UserPlus}
-            />
           </section>
 
           <section className="rounded-[1.75rem] border border-green-200/60 bg-white/90 p-4 shadow-lg backdrop-blur-sm sm:p-5">
