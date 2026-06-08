@@ -4,7 +4,6 @@ import {
   SidebarInset,
   SidebarTrigger
 } from "@/components/ui/sidebar";
-import { Header } from "@/components/layout/Header";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ROLE_SIDEBAR_NAV } from "@/lib/constants";
 import { Separator } from "@/components/ui/separator";
@@ -61,9 +60,6 @@ function AppLayout() {
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-6" />
           <span className="text-sm font-medium">Plantify</span>
-        </div>
-        <div className="hidden lg:block">
-          <Header />
         </div>
         <main className="flex-1 p-4 sm:p-6">
           <Outlet />
