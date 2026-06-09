@@ -1,8 +1,10 @@
 import { Outlet, useLocation, Navigate } from "react-router";
 import {
   SidebarProvider,
-  SidebarInset
+  SidebarInset,
+  SidebarTrigger
 } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ROLE_SIDEBAR_NAV } from "@/lib/constants";
 import { useAuth } from "@/features/auth/hooks";
