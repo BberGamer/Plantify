@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { Leaf, Mail, Lock, User, Phone, MapPin, Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuth } from "@/features/auth/hooks";
@@ -19,7 +19,7 @@ function Register() {
     password: "",
     confirmPassword: ""
   });
-  const [acceptTerms, setAcceptTerms] = useState(false);
+
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -67,10 +67,6 @@ function Register() {
       return;
     }
 
-    if (!acceptTerms) {
-      toast.error("Bạn phải đồng ý với điều khoản sử dụng");
-      return;
-    }
 
     setSubmitting(true);
     try {
@@ -256,27 +252,7 @@ function Register() {
                   </button>
                 </div>
               </div>
-              <div className="flex items-start space-x-2">
-                <Checkbox
-                  id="terms"
-                  checked={acceptTerms}
-                  onCheckedChange={(checked) => setAcceptTerms(checked)}
-                  disabled={submitting}
-                />
-                <label
-                  htmlFor="terms"
-                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Tôi đồng ý với{" "}
-                  <Link to="/terms" className="text-primary hover:underline">
-                    điều khoản sử dụng
-                  </Link>{" "}
-                  và{" "}
-                  <Link to="/privacy" className="text-primary hover:underline">
-                    chính sách bảo mật
-                  </Link>
-                </label>
-              </div>
+
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-primary to-green-600"
