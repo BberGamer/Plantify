@@ -26,7 +26,7 @@ export function useProduct(id) {
     getProductById(id)
       .then((data) => {
         if (!cancelled) {
-          setProduct(data);
+          setProduct(data.data);
           setLoading(false);
         }
       })

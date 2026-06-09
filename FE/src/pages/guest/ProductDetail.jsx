@@ -16,85 +16,60 @@ import {
   Truck,
   MessageCircle,
   Plus,
-  Minus
+  Minus,
+  AlertCircle
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useProduct } from "@/features/products/hooks";
 
 function ProductDetail() {
   const { id } = useParams();
+  const { product, loading, error } = useProduct(id);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  const product = {
-    id: 1,
-    name: "Phân bón hữu cơ NPK cao cấp",
-    price: 85000,
-    originalPrice: 120000,
-    category: "Phân bón",
-    images: [
-      "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800",
-      "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800",
-      "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800"
-    ],
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
+          <p className="text-muted-foreground">Đang tải sản phẩm...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Không tìm thấy sản phẩm</h2>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button asChild>
+              <Link to="/marketplace">Quay lại gian hàng</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!product) return null;
+
+  const images = product.images?.length > 0 ? product.images : [product.thumbnail || "https://via.placeholder.com/800"];
+  const currentPrice = product.price ?? 0;
+  const originalPrice = product.originalPrice ?? product.price * 1.2 ?? 0;
+  const discount = Math.round((1 - currentPrice / originalPrice) * 100);
+
+  const mockShop = {
+    name: "Plantify Shop",
+    avatar: "",
     rating: 4.8,
-    reviewCount: 234,
-    sold: 1234,
-    stock: 150,
-    shop: {
-      name: "Green Garden Store",
-      avatar: "",
-      rating: 4.9,
-      followers: 2340,
-      products: 156
-    },
-    description: `
-Phân bón hữu cơ NPK cao cấp được sản xuất từ nguyên liệu thiên nhiên 100%,
-giúp cây phát triển khỏe mạnh, tăng cường sức đề kháng.
-
-**Thành phần:**
-- N (Nitơ): 10%
-- P (Phospho): 10%
-- K (Kali): 10%
-- Vi lượng: Mg, Ca, Fe, Zn
-
-**Công dụng:**
-- Kích thích cây ra rễ, sinh trưởng mạnh
-- Tăng khả năng ra hoa, đậu quả
-- Cải thiện chất lượng đất
-- An toàn cho người và môi trường
-
-**Hướng dẫn sử dụng:**
-- Pha loãng 1 muỗng canh (10ml) cho 1 lít nước
-- Tưới 1-2 lần/tuần cho cây trồng trong chậu
-- Bón lót trực tiếp vào đất với tỷ lệ 50g/m²
-    `,
-    specifications: [
-      { label: "Thương hiệu", value: "GreenGarden" },
-      { label: "Xuất xứ", value: "Việt Nam" },
-      { label: "Khối lượng", value: "1kg" },
-      { label: "Hạn sử dụng", value: "24 tháng" },
-      { label: "Bảo quản", value: "Nơi khô ráo, thoáng mát" }
-    ]
+    followers: 1200,
+    products: 45
   };
-
-  const reviews = [
-    {
-      id: 1,
-      user: "Nguyễn Văn A",
-      rating: 5,
-      date: "15/05/2026",
-      comment: "Sản phẩm rất tốt, cây nhà mình phát triển nhanh hơn hẳn!",
-      images: []
-    },
-    {
-      id: 2,
-      user: "Trần Thị B",
-      rating: 4,
-      date: "10/05/2026",
-      comment: "Chất lượng ổn, giá hợp lý. Sẽ mua lại.",
-      images: []
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white py-12 px-4">
@@ -118,28 +93,30 @@ giúp cây phát triển khỏe mạnh, tăng cường sức đề kháng.
               <CardContent className="p-0">
                 <div className="aspect-square overflow-hidden">
                   <img
-                    src={product.images[selectedImage]}
+                    src={images[selectedImage]}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
               </CardContent>
             </Card>
-            <div className="grid grid-cols-4 gap-3">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? "border-primary" : "border-transparent hover:border-primary/50"}`}
-                >
-                  <img
-                    src={image}
-                    alt={`${product.name} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+            {images.length > 1 && (
+              <div className="grid grid-cols-4 gap-3">
+                {images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? "border-primary" : "border-transparent hover:border-primary/50"}`}
+                  >
+                    <img
+                      src={image}
+                      alt={`${product.name} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Product Info */}
@@ -147,7 +124,7 @@ giúp cây phát triển khỏe mạnh, tăng cường sức đề kháng.
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <Badge className="mb-3">{product.category}</Badge>
+            <Badge className="mb-3">{product.categoryId?.name || "Sản phẩm"}</Badge>
             <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
 
             <div className="flex items-center gap-4 mb-6">
@@ -156,35 +133,37 @@ giúp cây phát triển khỏe mạnh, tăng cường sức đề kháng.
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-5 h-5 ${i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                      className={`w-5 h-5 ${i < Math.floor(product.ratingAverage || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
                     />
                   ))}
                 </div>
-                <span className="font-medium">{product.rating}</span>
+                <span className="font-medium">{product.ratingAverage?.toFixed(1) || "0"}</span>
                 <span className="text-muted-foreground">
-                  ({product.reviewCount} đánh giá)
+                  ({product.ratingCount || 0} đánh giá)
                 </span>
               </div>
               <Separator orientation="vertical" className="h-4" />
               <span className="text-muted-foreground">
-                Đã bán {product.sold}
+                Đã bán {product.ratingCount || 0}
               </span>
             </div>
 
             <div className="bg-muted/50 rounded-lg p-6 mb-6">
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="text-4xl font-bold text-primary">
-                  {product.price.toLocaleString("vi-VN")}đ
+                  {currentPrice.toLocaleString("vi-VN")}đ
                 </span>
-                <span className="text-lg text-muted-foreground line-through">
-                  {product.originalPrice.toLocaleString("vi-VN")}đ
-                </span>
-                <Badge variant="destructive">
-                  -{Math.round((1 - product.price / product.originalPrice) * 100)}%
-                </Badge>
+                {discount > 0 && (
+                  <>
+                    <span className="text-lg text-muted-foreground line-through">
+                      {originalPrice.toLocaleString("vi-VN")}đ
+                    </span>
+                    <Badge variant="destructive">-{discount}%</Badge>
+                  </>
+                )}
               </div>
               <p className="text-sm text-muted-foreground">
-                Còn {product.stock} sản phẩm
+                Còn {product.stock || 0} sản phẩm
               </p>
             </div>
 
@@ -203,7 +182,7 @@ giúp cây phát triển khỏe mạnh, tăng cường sức đề kháng.
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                    onClick={() => setQuantity(Math.min(product.stock || 0, quantity + 1))}
                   >
                     <Plus className="w-4 h-4" />
                   </Button>
@@ -232,21 +211,21 @@ giúp cây phát triển khỏe mạnh, tăng cường sức đề kháng.
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-12 h-12">
-                      <AvatarImage src={product.shop.avatar} />
+                      <AvatarImage src={mockShop.avatar} />
                       <AvatarFallback className="bg-primary text-white">
-                        {product.shop.name.charAt(0)}
+                        {mockShop.name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-semibold">{product.shop.name}</h3>
+                      <h3 className="font-semibold">{mockShop.name}</h3>
                       <div className="flex items-center gap-1 text-sm">
                         <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        <span>{product.shop.rating}</span>
+                        <span>{mockShop.rating}</span>
                       </div>
                     </div>
                   </div>
                   <Button variant="outline" asChild>
-                    <Link to={`/shop/${product.shop.name}`}>
+                    <Link to={`/shop/${mockShop.name}`}>
                       <Store className="w-4 h-4 mr-2" />
                       Xem shop
                     </Link>
@@ -254,8 +233,8 @@ giúp cây phát triển khỏe mạnh, tăng cường sức đề kháng.
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                  <div>Sản phẩm: {product.shop.products}</div>
-                  <div>Người theo dõi: {product.shop.followers}</div>
+                  <div>Sản phẩm: {mockShop.products}</div>
+                  <div>Người theo dõi: {mockShop.followers}</div>
                 </div>
               </CardContent>
             </Card>
@@ -287,15 +266,16 @@ giúp cây phát triển khỏe mạnh, tăng cường sức đề kháng.
             <TabsList className="w-full justify-start">
               <TabsTrigger value="description">Mô tả sản phẩm</TabsTrigger>
               <TabsTrigger value="specifications">Thông số kỹ thuật</TabsTrigger>
-              <TabsTrigger value="reviews">
-                Đánh giá ({product.reviewCount})
-              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="description">
               <Card>
-                <CardContent className="p-6 prose max-w-none">
-                  <div className="whitespace-pre-line">{product.description}</div>
+                <CardContent className="p-6">
+                  {product.description ? (
+                    <div className="whitespace-pre-line">{product.description}</div>
+                  ) : (
+                    <p className="text-muted-foreground italic">Chưa có mô tả sản phẩm.</p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -304,48 +284,27 @@ giúp cây phát triển khỏe mạnh, tăng cường sức đề kháng.
               <Card>
                 <CardContent className="p-6">
                   <div className="space-y-3">
-                    {product.specifications.map((spec, index) => (
-                      <div key={index} className="flex py-3 border-b last:border-0">
-                        <span className="w-1/3 text-muted-foreground">{spec.label}</span>
-                        <span className="flex-1 font-medium">{spec.value}</span>
+                    {product.brand && (
+                      <div className="flex py-3 border-b">
+                        <span className="w-1/3 text-muted-foreground">Thương hiệu</span>
+                        <span className="flex-1 font-medium">{product.brand}</span>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="reviews">
-              <Card>
-                <CardContent className="p-6 space-y-6">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="pb-6 border-b last:border-0">
-                      <div className="flex items-start gap-4">
-                        <Avatar>
-                          <AvatarFallback className="bg-primary text-white">
-                            {review.user.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold">{review.user}</h4>
-                            <span className="text-sm text-muted-foreground">
-                              {review.date}
-                            </span>
-                          </div>
-                          <div className="flex mb-2">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-                              />
-                            ))}
-                          </div>
-                          <p className="text-muted-foreground">{review.comment}</p>
+                    )}
+                    {product.tags?.length > 0 && (
+                      <div className="flex py-3 border-b">
+                        <span className="w-1/3 text-muted-foreground">Tags</span>
+                        <div className="flex-1 flex flex-wrap gap-2">
+                          {product.tags.map((tag, i) => (
+                            <Badge key={i} variant="secondary">{tag}</Badge>
+                          ))}
                         </div>
                       </div>
+                    )}
+                    <div className="flex py-3 border-b">
+                      <span className="w-1/3 text-muted-foreground">Kho hàng</span>
+                      <span className="flex-1 font-medium">{product.stock || 0}</span>
                     </div>
-                  ))}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
