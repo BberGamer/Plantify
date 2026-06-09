@@ -8,6 +8,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./features/auth/auth.routes');
+const productRoutes = require('./features/products/product.routes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -26,6 +27,7 @@ app.get('/', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
 
 // Error Handler Middleware (sau tất cả các route)
 app.use(errorHandler);
