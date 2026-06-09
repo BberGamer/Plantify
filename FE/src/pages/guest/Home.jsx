@@ -1,7 +1,8 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router";
 import { PlantCard } from "@/components/common/PlantCard";
 import { DashboardCard } from "@/components/common/DashboardCard";
+import { usePlants } from "@/features/plants/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -23,63 +24,6 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 
-const plants = [
-  {
-    name: "Monstera Deliciosa",
-    scientificName: "Monstera deliciosa",
-    difficulty: "Dễ",
-    water: "Vừa phải",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1614887410788-e158d6efb3be?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Trầu Bà Nam Mỹ",
-    scientificName: "Philodendron hederaceum",
-    difficulty: "Dễ",
-    water: "Vừa phải",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1641977563529-7b617571393d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Sen Đá",
-    scientificName: "Echeveria elegans",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Nhiều ánh sáng",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1614425467998-8a7249179a53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Kim Tiền",
-    scientificName: "Zamioculcas zamiifolia",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1611383856597-aae8f0cfd9e6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Cây Lưỡi Hổ",
-    scientificName: "Sansevieria trifasciata",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1609906250026-11abd4c014cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Cây Trầu Bà Lá Tim",
-    scientificName: "Philodendron scandens",
-    difficulty: "Trung bình",
-    water: "Vừa phải",
-    light: "Ánh sáng gián tiếp",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1644820864412-2e08f6f7c975?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  }
-];
-
 const searchTags = [
   "#Monstera",
   "#Sen đá",
@@ -93,6 +37,19 @@ const searchTags = [
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { plants: apiPlants, loading, error } = usePlants({ page: 1, limit: 6 });
+
+  const plantCards = apiPlants.map((plant) => ({
+    id: plant.id || plant._id || plant.scientificName,
+    name: plant.name,
+    scientificName: plant.scientificName,
+    difficulty: plant.difficultyLevel,
+    water: plant.watering,
+    light: plant.sunlight,
+    indoor: plant.isIndoor,
+    imageUrl: plant.thumbnail || plant.images?.[0],
+  }));
+
   return (
     <div className="min-h-screen">
       <section className="relative overflow-hidden">
@@ -207,20 +164,32 @@ function Home() {
             <Link to="/browse">Xem tất cả</Link>
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plants.map((plant, index) => (
-            <motion.div
-              key={plant.scientificName}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Link to={`/plant/${plant.scientificName}`}>
-                <PlantCard {...plant} />
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+        {loading && (
+          <div className="py-12 text-center text-muted-foreground">
+            Đang tải danh sách cây...
+          </div>
+        )}
+        {error && (
+          <div className="py-12 text-center text-destructive">
+            Không thể tải danh sách cây: {error}
+          </div>
+        )}
+        {!loading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {plantCards.map((plant, index) => (
+              <motion.div
+                key={plant.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Link to={`/plant/${plant.scientificName}`}>
+                  <PlantCard {...plant} />
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </section>
       <section className="py-20 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-green-50/30 to-transparent" />
@@ -517,3 +486,4 @@ function Home() {
 export {
   Home
 };
+
