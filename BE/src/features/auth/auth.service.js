@@ -1,7 +1,9 @@
 // auth.service.js - Nghiệp vụ đăng ký, đăng nhập
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('./auth.model');
+const { sendOTPEmail } = require('../../utils/email');
 
 const STATUS_MANAGED_ROLES = ['customer', 'business manager', 'content manager'];
 
@@ -155,6 +157,114 @@ const updateUserStatus = async (userId, status) => {
   return userObj;
 };
 
+/**
+ * Tạo và gửi mã OTP đặt lại mật khẩu qua email
+ * @param {string} email - Email người dùng
+ * @returns {Promise<void>}
+ */
+const forgotPassword = async (email) => {
+  const user = await User.findOne({ email: email.toLowerCase().trim() });
+  if (!user) {
+    const err = new Error('Không tìm thấy tài khoản với email này');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (user.status !== 'active') {
+    const err = new Error('Tài khoản đã bị khóa, không thể đặt lại mật khẩu');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  // Tạo OTP gồm 6 số ngẫu nhiên
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Hash OTP để lưu trữ bảo mật trong database
+  const hashedOTP = crypto.createHash('sha256').update(otp).digest('hex');
+
+  user.resetPasswordOTP = hashedOTP;
+  user.resetPasswordOTPExpires = new Date(Date.now() + 5 * 60 * 1000); // Hạn 5 phút
+  await user.save();
+
+  // Gửi OTP chưa hash tới email người dùng
+  try {
+    await sendOTPEmail(user.email, otp);
+  } catch (error) {
+    const err = new Error('Không thể gửi email OTP lúc này, vui lòng kiểm tra mạng hoặc thử lại sau.');
+    err.statusCode = 500;
+    throw err;
+  }
+};
+
+/**
+ * Đặt lại mật khẩu bằng OTP
+ * @param {string} email - Email của tài khoản cần reset
+ * @param {string} otp - Mã OTP từ người dùng
+ * @param {string} newPassword - Mật khẩu mới
+ * @returns {Promise<void>}
+ */
+const resetPassword = async (email, otp, newPassword) => {
+  const user = await User.findOne({ email: email.toLowerCase().trim() });
+  if (!user) {
+    const err = new Error('Không tìm thấy tài khoản với email này');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (!user.resetPasswordOTPExpires || user.resetPasswordOTPExpires < Date.now()) {
+    const err = new Error('Mã OTP đã hết hạn hoặc không tồn tại. Vui lòng yêu cầu mã mới.');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Kiểm tra mã OTP bằng cách hash mã đầu vào và so sánh với DB
+  const hashedOTP = crypto.createHash('sha256').update(otp.trim()).digest('hex');
+  if (user.resetPasswordOTP !== hashedOTP) {
+    const err = new Error('Mã OTP xác thực không chính xác');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Cập nhật mật khẩu mới
+  const salt = await bcrypt.genSalt(10);
+  user.password = await bcrypt.hash(newPassword, salt);
+
+  // Xóa mã OTP và hạn sử dụng sau khi cập nhật thành công
+  user.resetPasswordOTP = null;
+  user.resetPasswordOTPExpires = null;
+  await user.save();
+};
+
+/**
+ * Xác thực mã OTP mà không đặt lại mật khẩu
+ * Dùng để kiểm tra OTP ở trang /forgot-password trước khi sang trang /reset-password
+ * @param {string} email - Email của tài khoản
+ * @param {string} otp - Mã OTP 6 số từ người dùng
+ * @returns {Promise<void>}
+ */
+const verifyOTP = async (email, otp) => {
+  const user = await User.findOne({ email: email.toLowerCase().trim() });
+  if (!user) {
+    const err = new Error('Không tìm thấy tài khoản với email này');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (!user.resetPasswordOTPExpires || user.resetPasswordOTPExpires < Date.now()) {
+    const err = new Error('Mã OTP đã hết hạn hoặc không tồn tại. Vui lòng yêu cầu mã mới.');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const hashedOTP = crypto.createHash('sha256').update(otp.trim()).digest('hex');
+  if (user.resetPasswordOTP !== hashedOTP) {
+    const err = new Error('Mã OTP không chính xác');
+    err.statusCode = 400;
+    throw err;
+  }
+  // OTP hợp lệ — không xóa để reset-password có thể dùng lại
+};
+
 module.exports = {
   register,
   createUserByAdmin,
@@ -162,4 +272,7 @@ module.exports = {
   getMe,
   getUsers,
   updateUserStatus,
+  forgotPassword,
+  verifyOTP,
+  resetPassword,
 };
