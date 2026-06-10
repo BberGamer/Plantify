@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { PlantCard } from "@/components/common/PlantCard";
 import { DashboardCard } from "@/components/common/DashboardCard";
 import { usePlants } from "@/features/plants/hooks";
+import { usePosts } from "@/features/posts/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ const searchTags = [
 function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const { plants: apiPlants, loading, error } = usePlants({ page: 1, limit: 6 });
+  const { posts: apiPosts } = usePosts({ page: 1, limit: 3 });
 
   const plantCards = apiPlants.map((plant) => ({
     id: plant.id || plant._id || plant.scientificName,
@@ -48,6 +50,13 @@ function Home() {
     light: plant.sunlight,
     indoor: plant.isIndoor,
     imageUrl: plant.thumbnail || plant.images?.[0],
+  }));
+
+  const blogCards = apiPosts.map((post) => ({
+    id: post.id || post._id,
+    title: post.title,
+    category: post.category,
+    image: post.thumbnail || post.images?.[0],
   }));
 
   return (
@@ -432,30 +441,14 @@ function Home() {
           </Button>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
-          {[
-            {
-              title: "10 loại cây dễ trồng cho người mới bắt đầu",
-              category: "Hướng dẫn",
-              image: "https://images.unsplash.com/photo-1623325944200-bf6ce5743612?w=800"
-            },
-            {
-              title: "Cách xử lý lá vàng trên cây Monstera",
-              category: "Bệnh & Điều trị",
-              image: "https://images.unsplash.com/photo-1587717366614-d23cfe1cca83?w=800"
-            },
-            {
-              title: "Phòng ngừa sâu bệnh theo mùa",
-              category: "Phòng ngừa",
-              image: "https://images.unsplash.com/photo-1498251095152-27c0ddd22aae?w=800"
-            }
-          ].map((article, index) => (
+          {blogCards.map((article, index) => (
             <motion.div
-              key={article.title}
+              key={article.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Link to="/blog">
+              <Link to={`/blog/${article.id}`}>
                 <Card className="overflow-hidden border border-border hover:shadow-lg transition-shadow cursor-pointer group">
                   <div className="aspect-video overflow-hidden">
                     <img

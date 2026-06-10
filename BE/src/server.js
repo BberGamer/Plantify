@@ -10,6 +10,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./features/auth/auth.routes');
 const productRoutes = require('./features/products/product.routes');
 const plantRoutes = require('./features/plants/plant.routes');
+const postRoutes = require('./features/posts/post.routes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -30,6 +31,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/plants', plantRoutes);
+app.use('/api/posts', postRoutes);
 
 // Error Handler Middleware (sau tất cả các route)
 app.use(errorHandler);
