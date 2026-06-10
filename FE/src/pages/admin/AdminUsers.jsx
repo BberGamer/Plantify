@@ -130,6 +130,7 @@ function AdminUsers() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
 
   const totalUsers = users.length;
   const activeUsers = users.filter((user) => user.status === "active").length;
@@ -145,12 +146,10 @@ function AdminUsers() {
   }).length;
   const normalizedSearchTerm = searchTerm.trim().toLowerCase();
   const filteredUsers = users.filter((user) => {
-    if (!normalizedSearchTerm) {
-      return true;
-    }
+    const matchesSearch = !normalizedSearchTerm || (user.fullName || "").toLowerCase().includes(normalizedSearchTerm);
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
 
-    const fullName = (user.fullName || "").toLowerCase();
-    return fullName.includes(normalizedSearchTerm);
+    return matchesSearch && matchesRole;
   });
 
   const resetCreateUserForm = () => {
@@ -364,19 +363,38 @@ function AdminUsers() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <Button className="rounded-full bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700">
+                <Button
+                  onClick={() => setRoleFilter("all")}
+                  className={`rounded-full ${roleFilter === "all" ? "bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700" : "border-green-200 bg-white text-green-700 hover:bg-green-50"}`}
+                >
                   Tất cả
                 </Button>
-                <Button variant="outline" className="rounded-full border-green-200 bg-white text-green-700 hover:bg-green-50">
+                <Button
+                  variant={roleFilter === "admin" ? "default" : "outline"}
+                  onClick={() => setRoleFilter("admin")}
+                  className={`rounded-full ${roleFilter === "admin" ? "bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700" : "border-green-200 bg-white text-green-700 hover:bg-green-50"}`}
+                >
                   Admin
                 </Button>
-                <Button variant="outline" className="rounded-full border-green-200 bg-white text-green-700 hover:bg-green-50">
+                <Button
+                  variant={roleFilter === "business manager" ? "default" : "outline"}
+                  onClick={() => setRoleFilter("business manager")}
+                  className={`rounded-full ${roleFilter === "business manager" ? "bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700" : "border-green-200 bg-white text-green-700 hover:bg-green-50"}`}
+                >
                   Business Manager
                 </Button>
-                <Button variant="outline" className="rounded-full border-green-200 bg-white text-green-700 hover:bg-green-50">
+                <Button
+                  variant={roleFilter === "content manager" ? "default" : "outline"}
+                  onClick={() => setRoleFilter("content manager")}
+                  className={`rounded-full ${roleFilter === "content manager" ? "bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700" : "border-green-200 bg-white text-green-700 hover:bg-green-50"}`}
+                >
                   Content Manager
                 </Button>
-                <Button variant="outline" className="rounded-full border-green-200 bg-white text-green-700 hover:bg-green-50">
+                <Button
+                  variant={roleFilter === "customer" ? "default" : "outline"}
+                  onClick={() => setRoleFilter("customer")}
+                  className={`rounded-full ${roleFilter === "customer" ? "bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700" : "border-green-200 bg-white text-green-700 hover:bg-green-50"}`}
+                >
                   Khách hàng
                 </Button>
               </div>
