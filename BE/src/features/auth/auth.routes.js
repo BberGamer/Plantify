@@ -22,4 +22,13 @@ router.post('/users', authenticate, authorizeAdmin, authController.createUserByA
 // Cập nhật trạng thái người dùng cho quản trị viên
 router.patch('/users/:id/status', authenticate, authorizeAdmin, authController.updateUserStatus);
 
+// Quên mật khẩu - gửi OTP qua email
+router.post('/forgot-password', authController.forgotPassword);
+
+// Xác thực mã OTP (bước trung gian trước khi đặt lại mật khẩu)
+router.post('/verify-otp', authController.verifyOTP);
+
+// Đặt lại mật khẩu bằng OTP từ email
+router.post('/reset-password', authController.resetPassword);
+
 module.exports = router;
