@@ -129,6 +129,7 @@ function AdminUsers() {
   const [statusUpdatingUserId, setStatusUpdatingUserId] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const totalUsers = users.length;
   const activeUsers = users.filter((user) => user.status === "active").length;
@@ -142,7 +143,15 @@ function AdminUsers() {
 
     return new Date(user.createdAt) >= weekAgo;
   }).length;
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const filteredUsers = users.filter((user) => {
+    if (!normalizedSearchTerm) {
+      return true;
+    }
 
+    const fullName = (user.fullName || "").toLowerCase();
+    return fullName.includes(normalizedSearchTerm);
+  });
 
   const resetCreateUserForm = () => {
     setCreateUserForm(initialCreateUserForm);
@@ -347,7 +356,9 @@ function AdminUsers() {
               <div className="relative w-full max-w-xl">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Tìm theo tên, email hoặc vai trò"
+                  placeholder="Tìm theo họ và tên"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
                   className="h-11 rounded-xl border-green-200 bg-white pl-11 shadow-sm focus-visible:ring-primary/30"
                 />
               </div>
@@ -382,7 +393,7 @@ function AdminUsers() {
                   </p>
                 </div>
                 <Badge className="border-transparent bg-primary/10 px-3 py-1 text-primary hover:bg-primary/10">
-                  {totalUsers} tài khoản hiển thị
+                  {filteredUsers.length} tài khoản hiển thị
                 </Badge>
               </div>
             </CardHeader>
@@ -421,87 +432,95 @@ function AdminUsers() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user) => {
-                      const roleLabel = mapRoleLabel(user.role);
-                      const statusLabel = mapStatusLabel(user.status);
-                      const canUpdateStatus = user.role !== "admin";
-                      const isUpdatingStatus = statusUpdatingUserId === user._id;
-                      const nextStatus = user.status === "active" ? "inactive" : "active";
+                    {filteredUsers.length === 0 ? (
+                      <TableRow className="border-green-100/80 hover:bg-transparent">
+                        <TableCell colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                          Không tìm thấy người dùng phù hợp.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredUsers.map((user) => {
+                        const roleLabel = mapRoleLabel(user.role);
+                        const statusLabel = mapStatusLabel(user.status);
+                        const canUpdateStatus = user.role !== "admin";
+                        const isUpdatingStatus = statusUpdatingUserId === user._id;
+                        const nextStatus = user.status === "active" ? "inactive" : "active";
 
-                      return (
-                        <TableRow key={user._id} className="border-green-100/80 hover:bg-green-50/40">
-                          <TableCell className="px-4 py-4 align-top">
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-11 w-11 ring-2 ring-green-100">
-                                <AvatarFallback className="bg-gradient-to-br from-primary to-green-600 text-sm font-semibold text-white">
-                                  {getInitials(user.fullName)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="space-y-1">
-                                <p className="font-semibold text-foreground">{user.fullName}</p>
-                                <p className="text-sm text-muted-foreground">{roleLabel}</p>
+                        return (
+                          <TableRow key={user._id} className="border-green-100/80 hover:bg-green-50/40">
+                            <TableCell className="px-4 py-4 align-top">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-11 w-11 ring-2 ring-green-100">
+                                  <AvatarFallback className="bg-gradient-to-br from-primary to-green-600 text-sm font-semibold text-white">
+                                    {getInitials(user.fullName)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="space-y-1">
+                                  <p className="font-semibold text-foreground">{user.fullName}</p>
+                                  <p className="text-sm text-muted-foreground">{roleLabel}</p>
+                                </div>
                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-4 py-4 text-sm text-muted-foreground">
-                            {user.email}
-                          </TableCell>
-                          <TableCell className="px-4 py-4">
-                            <Badge
-                              variant={roleBadgeVariants[roleLabel]}
-                              className={roleBadgeClassNames[roleLabel]}
-                            >
-                              {roleLabel}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="px-4 py-4">
-                            <Badge className={statusBadgeClassNames[statusLabel]}>
-                              {statusLabel}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="px-4 py-4 text-sm text-muted-foreground">
-                            {formatDate(user.createdAt)}
-                          </TableCell>
-                          <TableCell className="px-4 py-4 text-right">
-                            {canUpdateStatus ? (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="rounded-full text-muted-foreground hover:bg-green-50 hover:text-primary"
-                                    aria-label={`Tùy chọn cho ${user.fullName}`}
-                                    disabled={isUpdatingStatus}
-                                  >
-                                    {isUpdatingStatus ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() => handleStatusChange(user)}
-                                    variant={nextStatus === "inactive" ? "destructive" : "default"}
-                                    disabled={isUpdatingStatus}
-                                  >
-                                    {nextStatus === "active" ? (
-                                      <UserCheck className="h-4 w-4" />
-                                    ) : (
-                                      <UserX className="h-4 w-4" />
-                                    )}
-                                    {nextStatus === "active" ? "Kích hoạt" : "Tạm khóa"}
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            ) : (
-                              <span className="text-sm text-muted-foreground">--</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                            </TableCell>
+                            <TableCell className="px-4 py-4 text-sm text-muted-foreground">
+                              {user.email}
+                            </TableCell>
+                            <TableCell className="px-4 py-4">
+                              <Badge
+                                variant={roleBadgeVariants[roleLabel]}
+                                className={roleBadgeClassNames[roleLabel]}
+                              >
+                                {roleLabel}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="px-4 py-4">
+                              <Badge className={statusBadgeClassNames[statusLabel]}>
+                                {statusLabel}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="px-4 py-4 text-sm text-muted-foreground">
+                              {formatDate(user.createdAt)}
+                            </TableCell>
+                            <TableCell className="px-4 py-4 text-right">
+                              {canUpdateStatus ? (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="rounded-full text-muted-foreground hover:bg-green-50 hover:text-primary"
+                                      aria-label={`Tùy chọn cho ${user.fullName}`}
+                                      disabled={isUpdatingStatus}
+                                    >
+                                      {isUpdatingStatus ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusChange(user)}
+                                      variant={nextStatus === "inactive" ? "destructive" : "default"}
+                                      disabled={isUpdatingStatus}
+                                    >
+                                      {nextStatus === "active" ? (
+                                        <UserCheck className="h-4 w-4" />
+                                      ) : (
+                                        <UserX className="h-4 w-4" />
+                                      )}
+                                      {nextStatus === "active" ? "Kích hoạt" : "Tạm khóa"}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">--</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
                   </TableBody>
                 </Table>
               )}
