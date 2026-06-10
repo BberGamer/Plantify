@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,84 +7,64 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, ShoppingCart, Star, Store } from "lucide-react";
 import { motion } from "motion/react";
-
-const mockProducts = [
-  {
-    id: 1,
-    name: "Phân bón hữu cơ NPK",
-    price: 85000,
-    category: "Phân bón",
-    image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400",
-    rating: 4.8,
-    sold: 234,
-    shop: "Green Garden"
-  },
-  {
-    id: 2,
-    name: "Bộ dụng cụ trồng cây mini",
-    price: 150000,
-    category: "Dụng cụ",
-    image: "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=400",
-    rating: 4.9,
-    sold: 156,
-    shop: "Plant Tools Pro"
-  },
-  {
-    id: 3,
-    name: "Đất trồng chuyên dụng 5kg",
-    price: 45000,
-    category: "Đất & Giá thể",
-    image: "https://images.unsplash.com/photo-1585571850696-e31f8b6e8c1a?w=400",
-    rating: 4.7,
-    sold: 389,
-    shop: "Soil Master"
-  },
-  {
-    id: 4,
-    name: "Chậu gốm tráng men cao cấp",
-    price: 280000,
-    category: "Chậu & Giá đỡ",
-    image: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400",
-    rating: 4.9,
-    sold: 98,
-    shop: "Ceramic House"
-  },
-  {
-    id: 5,
-    name: "Thuốc trừ sâu sinh học",
-    price: 120000,
-    category: "Thuốc bảo vệ",
-    image: "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=400",
-    rating: 4.6,
-    sold: 167,
-    shop: "Bio Garden"
-  },
-  {
-    id: 6,
-    name: "Hệ thống tưới nhỏ giọt",
-    price: 350000,
-    category: "Dụng cụ",
-    image: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400",
-    rating: 4.8,
-    sold: 203,
-    shop: "Smart Garden"
-  }
-];
-
-const categories = [
-  "Tất cả",
-  "Phân bón",
-  "Dụng cụ",
-  "Đất & Giá thể",
-  "Chậu & Giá đỡ",
-  "Thuốc bảo vệ",
-  "Hệ thống tưới"
-];
+import { useProducts } from "@/features/products/hooks";
+import { getCategories } from "@/features/products/api";
 
 function Shop() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchParam, setSearchParam] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [sortBy, setSortBy] = useState("popular");
+  
+  // Price states
+  const [minPriceInput, setMinPriceInput] = useState("");
+  const [maxPriceInput, setMaxPriceInput] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+
+  // Rating state
+  const [selectedRating, setSelectedRating] = useState(null);
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+
+  // Dynamic categories
+  const [categories, setCategories] = useState(["Tất cả"]);
+
+  useEffect(() => {
+    getCategories()
+      .then((res) => {
+        if (res.success && res.data) {
+          const names = ["Tất cả", ...res.data.map((c) => c.name)];
+          setCategories(names);
+        }
+      })
+      .catch((err) => console.error("Lỗi lấy danh mục:", err));
+  }, []);
+
+  // Fetch products using custom hook
+  const { products, total, pages, currentPage, loading, error } = useProducts({
+    search: searchParam,
+    category: selectedCategory,
+    minPrice: minPrice || undefined,
+    maxPrice: maxPrice || undefined,
+    minRating: selectedRating || undefined,
+    sortBy,
+    page,
+    limit: 6
+  });
+
+  const handleSearch = (e) => {
+    if (e) e.preventDefault();
+    setSearchParam(searchQuery);
+    setPage(1);
+  };
+
+  const handleApplyPrice = () => {
+    setMinPrice(minPriceInput);
+    setMaxPrice(maxPriceInput);
+    setPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white">
@@ -104,18 +84,18 @@ function Shop() {
               Mua sắm mọi sản phẩm chăm sóc cây cảnh tại một nơi
             </p>
             <div className="max-w-2xl mx-auto">
-              <div className="relative flex items-center gap-3 bg-white rounded-2xl shadow-2xl p-2">
+              <form onSubmit={handleSearch} className="relative flex items-center gap-3 bg-white rounded-2xl shadow-2xl p-2">
                 <Search className="absolute left-6 w-5 h-5 text-muted-foreground" />
                 <Input
                   placeholder="Tìm kiếm sản phẩm..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="border-0 focus-visible:ring-0 text-lg pl-12"
+                  className="border-0 focus-visible:ring-0 text-lg pl-12 text-black"
                 />
-                <Button size="lg" className="rounded-xl bg-gradient-to-r from-primary to-green-600">
+                <Button type="submit" size="lg" className="rounded-xl bg-gradient-to-r from-primary to-green-600 text-white">
                   Tìm kiếm
                 </Button>
-              </div>
+              </form>
             </div>
             <div className="flex items-center justify-center gap-4 mt-8">
               <Button
@@ -142,6 +122,7 @@ function Shop() {
           </motion.div>
         </div>
       </section>
+
       <section className="py-12 px-6 max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-8">
           <motion.div
@@ -156,7 +137,10 @@ function Shop() {
                   {categories.map((category) => (
                     <button
                       key={category}
-                      onClick={() => setSelectedCategory(category)}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setPage(1);
+                      }}
                       className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                         selectedCategory === category
                           ? "bg-primary text-white"
@@ -167,26 +151,44 @@ function Shop() {
                     </button>
                   ))}
                 </div>
+                
                 <div className="mt-8 pt-6 border-t">
                   <h3 className="font-semibold mb-4">Giá</h3>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <Input placeholder="Từ" type="number" />
+                      <Input
+                        placeholder="Từ"
+                        type="number"
+                        value={minPriceInput}
+                        onChange={(e) => setMinPriceInput(e.target.value)}
+                      />
                       <span>-</span>
-                      <Input placeholder="Đến" type="number" />
+                      <Input
+                        placeholder="Đến"
+                        type="number"
+                        value={maxPriceInput}
+                        onChange={(e) => setMaxPriceInput(e.target.value)}
+                      />
                     </div>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" onClick={handleApplyPrice}>
                       Áp dụng
                     </Button>
                   </div>
                 </div>
+
                 <div className="mt-8 pt-6 border-t">
                   <h3 className="font-semibold mb-4">Đánh giá</h3>
                   <div className="space-y-2">
                     {[5, 4, 3].map((stars) => (
                       <button
                         key={stars}
-                        className="flex items-center gap-2 w-full text-left px-2 py-1 rounded hover:bg-muted"
+                        onClick={() => {
+                          setSelectedRating(selectedRating === stars ? null : stars);
+                          setPage(1);
+                        }}
+                        className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded hover:bg-muted transition-colors ${
+                          selectedRating === stars ? "bg-muted font-medium text-primary" : ""
+                        }`}
                       >
                         <div className="flex">
                           {Array.from({ length: stars }).map((_, i) => (
@@ -204,12 +206,13 @@ function Shop() {
               </CardContent>
             </Card>
           </motion.div>
+
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6">
               <p className="text-muted-foreground">
-                Hiển thị {mockProducts.length} sản phẩm
+                Hiển thị {total} sản phẩm
               </p>
-              <Select value={sortBy} onValueChange={setSortBy}>
+              <Select value={sortBy} onValueChange={(val) => { setSortBy(val); setPage(1); }}>
                 <SelectTrigger className="w-48">
                   <SelectValue />
                 </SelectTrigger>
@@ -222,72 +225,96 @@ function Shop() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Link to={`/product/${product.id}`}>
-                    <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full">
-                      <div className="aspect-square overflow-hidden relative">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <Badge className="absolute top-3 left-3 bg-white/95 text-primary border-0">
-                          {product.category}
-                        </Badge>
-                      </div>
-                      <CardContent className="p-4">
-                        <h3 className="font-semibold mb-2 line-clamp-2">
-                          {product.name}
-                        </h3>
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium">
-                              {product.rating}
-                            </span>
+
+            {loading ? (
+              <div className="flex justify-center items-center py-20 w-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
+              </div>
+            ) : error ? (
+              <div className="text-center py-20">
+                <p className="text-red-500 font-semibold">{error}</p>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-20 text-muted-foreground">
+                Không tìm thấy sản phẩm nào phù hợp.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map((product, index) => (
+                  <motion.div
+                    key={product._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Link to={`/product/${product._id}`}>
+                      <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col">
+                        <div className="aspect-square overflow-hidden relative bg-muted">
+                          <img
+                            src={product.images?.[0] || product.thumbnail || "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400"}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <Badge className="absolute top-3 left-3 bg-white/95 text-primary border-0 shadow-sm">
+                            {product.categoryId?.name || "Sản phẩm"}
+                          </Badge>
+                        </div>
+                        <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                          <div>
+                            <h3 className="font-semibold mb-2 line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+                              {product.name}
+                            </h3>
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="flex items-center gap-1">
+                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                <span className="text-sm font-medium">
+                                  {product.ratingAverage?.toFixed(1) || "0.0"}
+                                </span>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                Đã bán {product.ratingCount || 0}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-3">
+                              {product.brand || "Plantify"}
+                            </p>
                           </div>
-                          <span className="text-sm text-muted-foreground">
-                            Đã bán {product.sold}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          {product.shop}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xl font-bold text-primary">
-                            {product.price.toLocaleString("vi-VN")}đ
-                          </p>
-                          <Button size="sm" variant="outline">
-                            <ShoppingCart className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-            <div className="flex justify-center gap-2 mt-12">
-              {[1, 2, 3, 4, 5].map((page) => (
-                <Button
-                  key={page}
-                  variant={page === 1 ? "default" : "outline"}
-                  size="sm"
-                  className={
-                    page === 1 ? "bg-gradient-to-r from-primary to-green-600" : ""
-                  }
-                >
-                  {page}
-                </Button>
-              ))}
-            </div>
+                          <div className="flex items-center justify-between mt-auto pt-2">
+                            <p className="text-xl font-bold text-primary">
+                              {product.price.toLocaleString("vi-VN")}đ
+                            </p>
+                            <Button size="sm" variant="outline" className="hover:bg-primary hover:text-white transition-colors">
+                              <ShoppingCart className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+            {pages > 1 && (
+              <div className="flex justify-center gap-2 mt-12">
+                {Array.from({ length: pages }).map((_, i) => {
+                  const p = i + 1;
+                  return (
+                    <Button
+                      key={p}
+                      variant={p === page ? "default" : "outline"}
+                      size="sm"
+                      className={
+                        p === page ? "bg-gradient-to-r from-primary to-green-600 text-white" : ""
+                      }
+                      onClick={() => setPage(p)}
+                    >
+                      {p}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </section>
