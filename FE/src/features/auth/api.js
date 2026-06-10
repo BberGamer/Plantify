@@ -60,3 +60,37 @@ export const updateUserStatusApi = async (userId, status) => {
   const response = await api.patch(`/auth/users/${userId}/status`, { status });
   return response.data;
 };
+
+/**
+ * Gọi API quên mật khẩu - gửi email đặt lại
+ * @param {string} email - Email đã đăng ký
+ * @returns {Promise<object>} response data
+ */
+export const forgotPasswordApi = async (email) => {
+  const response = await api.post('/auth/forgot-password', { email });
+  return response.data;
+};
+
+/**
+ * Gọi API xác thực mã OTP (trước khi đặt lại mật khẩu)
+ * @param {string} email - Email tài khoản
+ * @param {string} otp - Mã OTP 6 chữ số
+ * @returns {Promise<object>} response data
+ */
+export const verifyOtpApi = async (email, otp) => {
+  const response = await api.post('/auth/verify-otp', { email, otp });
+  return response.data;
+};
+
+/**
+ * Gọi API đặt lại mật khẩu bằng OTP
+ * @param {string} email - Email tài khoản
+ * @param {string} otp - Mã OTP 6 chữ số
+ * @param {string} password - Mật khẩu mới
+ * @param {string} confirmPassword - Xác nhận mật khẩu mới
+ * @returns {Promise<object>} response data
+ */
+export const resetPasswordApi = async (email, otp, password, confirmPassword) => {
+  const response = await api.post('/auth/reset-password', { email, otp, password, confirmPassword });
+  return response.data;
+};
