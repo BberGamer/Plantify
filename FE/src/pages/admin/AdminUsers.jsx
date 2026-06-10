@@ -49,6 +49,7 @@ import {
   MoreHorizontal,
   Phone,
   Search,
+  ShieldCheck,
   Sparkles,
   User,
   UserCheck,
@@ -128,8 +129,28 @@ function AdminUsers() {
   const [statusUpdatingUserId, setStatusUpdatingUserId] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
 
   const totalUsers = users.length;
+  const activeUsers = users.filter((user) => user.status === "active").length;
+  const managedUsers = users.filter((user) => user.role !== "customer").length;
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const newUsersThisWeek = users.filter((user) => {
+    if (!user.createdAt) {
+      return false;
+    }
+
+    return new Date(user.createdAt) >= weekAgo;
+  }).length;
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch = !normalizedSearchTerm || (user.fullName || "").toLowerCase().includes(normalizedSearchTerm);
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+
+    return matchesSearch && matchesRole;
+  });
 
   const resetCreateUserForm = () => {
     setCreateUserForm(initialCreateUserForm);
@@ -275,30 +296,105 @@ function AdminUsers() {
             </div>
           </section>
 
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+              <CardContent className="flex items-start justify-between gap-4 p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Tổng người dùng</p>
+                  <p className="text-4xl font-bold text-foreground">{totalUsers}</p>
+                  <p className="text-sm text-muted-foreground">Toàn bộ tài khoản trong hệ thống</p>
+                </div>
+                <div className="rounded-full bg-primary/10 p-3 text-primary">
+                  <User className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+              <CardContent className="flex items-start justify-between gap-4 p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Đang hoạt động</p>
+                  <p className="text-4xl font-bold text-foreground">{activeUsers}</p>
+                  <p className="text-sm text-muted-foreground">Tài khoản đang ở trạng thái tốt</p>
+                </div>
+                <div className="rounded-full bg-green-100 p-3 text-green-700">
+                  <UserCheck className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+              <CardContent className="flex items-start justify-between gap-4 p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Admin / Business / Content</p>
+                  <p className="text-4xl font-bold text-foreground">{managedUsers}</p>
+                  <p className="text-sm text-muted-foreground">Nhóm có quyền vận hành hệ thống</p>
+                </div>
+                <div className="rounded-full bg-emerald-100 p-3 text-emerald-700">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+              <CardContent className="flex items-start justify-between gap-4 p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Mới tuần này</p>
+                  <p className="text-4xl font-bold text-foreground">{newUsersThisWeek}</p>
+                  <p className="text-sm text-muted-foreground">Tài khoản được tạo trong 7 ngày gần đây</p>
+                </div>
+                <div className="rounded-full bg-primary/10 p-3 text-primary">
+                  <UserPlus className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
           <section className="rounded-[1.75rem] border border-green-200/60 bg-white/90 p-4 shadow-lg backdrop-blur-sm sm:p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="relative w-full max-w-xl">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Tìm theo tên, email hoặc vai trò"
+                  placeholder="Tìm theo họ và tên"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
                   className="h-11 rounded-xl border-green-200 bg-white pl-11 shadow-sm focus-visible:ring-primary/30"
                 />
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <Button className="rounded-full bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700">
+                <Button
+                  onClick={() => setRoleFilter("all")}
+                  className={`rounded-full ${roleFilter === "all" ? "bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700" : "border-green-200 bg-white text-green-700 hover:bg-green-50"}`}
+                >
                   Tất cả
                 </Button>
-                <Button variant="outline" className="rounded-full border-green-200 bg-white text-green-700 hover:bg-green-50">
+                <Button
+                  variant={roleFilter === "admin" ? "default" : "outline"}
+                  onClick={() => setRoleFilter("admin")}
+                  className={`rounded-full ${roleFilter === "admin" ? "bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700" : "border-green-200 bg-white text-green-700 hover:bg-green-50"}`}
+                >
                   Admin
                 </Button>
-                <Button variant="outline" className="rounded-full border-green-200 bg-white text-green-700 hover:bg-green-50">
+                <Button
+                  variant={roleFilter === "business manager" ? "default" : "outline"}
+                  onClick={() => setRoleFilter("business manager")}
+                  className={`rounded-full ${roleFilter === "business manager" ? "bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700" : "border-green-200 bg-white text-green-700 hover:bg-green-50"}`}
+                >
                   Business Manager
                 </Button>
-                <Button variant="outline" className="rounded-full border-green-200 bg-white text-green-700 hover:bg-green-50">
+                <Button
+                  variant={roleFilter === "content manager" ? "default" : "outline"}
+                  onClick={() => setRoleFilter("content manager")}
+                  className={`rounded-full ${roleFilter === "content manager" ? "bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700" : "border-green-200 bg-white text-green-700 hover:bg-green-50"}`}
+                >
                   Content Manager
                 </Button>
-                <Button variant="outline" className="rounded-full border-green-200 bg-white text-green-700 hover:bg-green-50">
+                <Button
+                  variant={roleFilter === "customer" ? "default" : "outline"}
+                  onClick={() => setRoleFilter("customer")}
+                  className={`rounded-full ${roleFilter === "customer" ? "bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700" : "border-green-200 bg-white text-green-700 hover:bg-green-50"}`}
+                >
                   Khách hàng
                 </Button>
               </div>
@@ -315,7 +411,7 @@ function AdminUsers() {
                   </p>
                 </div>
                 <Badge className="border-transparent bg-primary/10 px-3 py-1 text-primary hover:bg-primary/10">
-                  {totalUsers} tài khoản hiển thị
+                  {filteredUsers.length} tài khoản hiển thị
                 </Badge>
               </div>
             </CardHeader>
@@ -354,87 +450,95 @@ function AdminUsers() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user) => {
-                      const roleLabel = mapRoleLabel(user.role);
-                      const statusLabel = mapStatusLabel(user.status);
-                      const canUpdateStatus = user.role !== "admin";
-                      const isUpdatingStatus = statusUpdatingUserId === user._id;
-                      const nextStatus = user.status === "active" ? "inactive" : "active";
+                    {filteredUsers.length === 0 ? (
+                      <TableRow className="border-green-100/80 hover:bg-transparent">
+                        <TableCell colSpan={6} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                          Không tìm thấy người dùng phù hợp.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredUsers.map((user) => {
+                        const roleLabel = mapRoleLabel(user.role);
+                        const statusLabel = mapStatusLabel(user.status);
+                        const canUpdateStatus = user.role !== "admin";
+                        const isUpdatingStatus = statusUpdatingUserId === user._id;
+                        const nextStatus = user.status === "active" ? "inactive" : "active";
 
-                      return (
-                        <TableRow key={user._id} className="border-green-100/80 hover:bg-green-50/40">
-                          <TableCell className="px-4 py-4 align-top">
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-11 w-11 ring-2 ring-green-100">
-                                <AvatarFallback className="bg-gradient-to-br from-primary to-green-600 text-sm font-semibold text-white">
-                                  {getInitials(user.fullName)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="space-y-1">
-                                <p className="font-semibold text-foreground">{user.fullName}</p>
-                                <p className="text-sm text-muted-foreground">{roleLabel}</p>
+                        return (
+                          <TableRow key={user._id} className="border-green-100/80 hover:bg-green-50/40">
+                            <TableCell className="px-4 py-4 align-top">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-11 w-11 ring-2 ring-green-100">
+                                  <AvatarFallback className="bg-gradient-to-br from-primary to-green-600 text-sm font-semibold text-white">
+                                    {getInitials(user.fullName)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="space-y-1">
+                                  <p className="font-semibold text-foreground">{user.fullName}</p>
+                                  <p className="text-sm text-muted-foreground">{roleLabel}</p>
+                                </div>
                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-4 py-4 text-sm text-muted-foreground">
-                            {user.email}
-                          </TableCell>
-                          <TableCell className="px-4 py-4">
-                            <Badge
-                              variant={roleBadgeVariants[roleLabel]}
-                              className={roleBadgeClassNames[roleLabel]}
-                            >
-                              {roleLabel}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="px-4 py-4">
-                            <Badge className={statusBadgeClassNames[statusLabel]}>
-                              {statusLabel}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="px-4 py-4 text-sm text-muted-foreground">
-                            {formatDate(user.createdAt)}
-                          </TableCell>
-                          <TableCell className="px-4 py-4 text-right">
-                            {canUpdateStatus ? (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="rounded-full text-muted-foreground hover:bg-green-50 hover:text-primary"
-                                    aria-label={`Tùy chọn cho ${user.fullName}`}
-                                    disabled={isUpdatingStatus}
-                                  >
-                                    {isUpdatingStatus ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() => handleStatusChange(user)}
-                                    variant={nextStatus === "inactive" ? "destructive" : "default"}
-                                    disabled={isUpdatingStatus}
-                                  >
-                                    {nextStatus === "active" ? (
-                                      <UserCheck className="h-4 w-4" />
-                                    ) : (
-                                      <UserX className="h-4 w-4" />
-                                    )}
-                                    {nextStatus === "active" ? "Kích hoạt" : "Tạm khóa"}
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            ) : (
-                              <span className="text-sm text-muted-foreground">--</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                            </TableCell>
+                            <TableCell className="px-4 py-4 text-sm text-muted-foreground">
+                              {user.email}
+                            </TableCell>
+                            <TableCell className="px-4 py-4">
+                              <Badge
+                                variant={roleBadgeVariants[roleLabel]}
+                                className={roleBadgeClassNames[roleLabel]}
+                              >
+                                {roleLabel}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="px-4 py-4">
+                              <Badge className={statusBadgeClassNames[statusLabel]}>
+                                {statusLabel}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="px-4 py-4 text-sm text-muted-foreground">
+                              {formatDate(user.createdAt)}
+                            </TableCell>
+                            <TableCell className="px-4 py-4 text-right">
+                              {canUpdateStatus ? (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="rounded-full text-muted-foreground hover:bg-green-50 hover:text-primary"
+                                      aria-label={`Tùy chọn cho ${user.fullName}`}
+                                      disabled={isUpdatingStatus}
+                                    >
+                                      {isUpdatingStatus ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusChange(user)}
+                                      variant={nextStatus === "inactive" ? "destructive" : "default"}
+                                      disabled={isUpdatingStatus}
+                                    >
+                                      {nextStatus === "active" ? (
+                                        <UserCheck className="h-4 w-4" />
+                                      ) : (
+                                        <UserX className="h-4 w-4" />
+                                      )}
+                                      {nextStatus === "active" ? "Kích hoạt" : "Tạm khóa"}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">--</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
                   </TableBody>
                 </Table>
               )}
