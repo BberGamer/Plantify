@@ -29,6 +29,7 @@ import { KnowledgeGraph } from "@/pages/guest/KnowledgeGraph";
 import { Login } from "@/pages/guest/Login";
 import { Register } from "@/pages/guest/Register";
 import { ForgotPassword } from "@/pages/guest/ForgotPassword";
+import { ResetPassword } from "@/pages/guest/ResetPassword";
 import { Unauthorized } from "@/pages/guest/Unauthorized";
 
 // ============================================================
@@ -102,6 +103,7 @@ const authChildRoutes = [
   { path: "login", element: <Login /> },
   { path: "register", element: <Register /> },
   { path: "forgot-password", element: <ForgotPassword /> },
+  { path: "reset-password", element: <ResetPassword /> },
 ];
 
 // ============================================================
