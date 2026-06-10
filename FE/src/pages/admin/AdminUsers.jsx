@@ -49,6 +49,7 @@ import {
   MoreHorizontal,
   Phone,
   Search,
+  ShieldCheck,
   Sparkles,
   User,
   UserCheck,
@@ -130,6 +131,18 @@ function AdminUsers() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const totalUsers = users.length;
+  const activeUsers = users.filter((user) => user.status === "active").length;
+  const managedUsers = users.filter((user) => user.role !== "customer").length;
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const newUsersThisWeek = users.filter((user) => {
+    if (!user.createdAt) {
+      return false;
+    }
+
+    return new Date(user.createdAt) >= weekAgo;
+  }).length;
+
 
   const resetCreateUserForm = () => {
     setCreateUserForm(initialCreateUserForm);
@@ -273,6 +286,60 @@ function AdminUsers() {
                 </Button>
               </div>
             </div>
+          </section>
+
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+              <CardContent className="flex items-start justify-between gap-4 p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Tổng người dùng</p>
+                  <p className="text-4xl font-bold text-foreground">{totalUsers}</p>
+                  <p className="text-sm text-muted-foreground">Toàn bộ tài khoản trong hệ thống</p>
+                </div>
+                <div className="rounded-full bg-primary/10 p-3 text-primary">
+                  <User className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+              <CardContent className="flex items-start justify-between gap-4 p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Đang hoạt động</p>
+                  <p className="text-4xl font-bold text-foreground">{activeUsers}</p>
+                  <p className="text-sm text-muted-foreground">Tài khoản đang ở trạng thái tốt</p>
+                </div>
+                <div className="rounded-full bg-green-100 p-3 text-green-700">
+                  <UserCheck className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+              <CardContent className="flex items-start justify-between gap-4 p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Admin / Business / Content</p>
+                  <p className="text-4xl font-bold text-foreground">{managedUsers}</p>
+                  <p className="text-sm text-muted-foreground">Nhóm có quyền vận hành hệ thống</p>
+                </div>
+                <div className="rounded-full bg-emerald-100 p-3 text-emerald-700">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+              <CardContent className="flex items-start justify-between gap-4 p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Mới tuần này</p>
+                  <p className="text-4xl font-bold text-foreground">{newUsersThisWeek}</p>
+                  <p className="text-sm text-muted-foreground">Tài khoản được tạo trong 7 ngày gần đây</p>
+                </div>
+                <div className="rounded-full bg-primary/10 p-3 text-primary">
+                  <UserPlus className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
           </section>
 
           <section className="rounded-[1.75rem] border border-green-200/60 bg-white/90 p-4 shadow-lg backdrop-blur-sm sm:p-5">
