@@ -60,11 +60,49 @@ function Shop() {
     setPage(1);
   };
 
+  const formatPrice = (value) => {
+    // Chỉ giữ lại số
+    const clean = value.replace(/\D/g, "");
+    if (!clean) return "";
+    const num = parseInt(clean, 10);
+    if (num <= 0) return "";
+    const capped = Math.min(num, 1000000000);
+    return capped.toLocaleString("vi-VN");
+  };
+
+  const handleMinPriceChange = (e) => {
+    setMinPriceInput(formatPrice(e.target.value));
+  };
+
+  const handleMaxPriceChange = (e) => {
+    setMaxPriceInput(formatPrice(e.target.value));
+  };
+
   const handleApplyPrice = () => {
-    setMinPrice(minPriceInput);
-    setMaxPrice(maxPriceInput);
+    let rawMin = minPriceInput ? parseInt(minPriceInput.replace(/\./g, ""), 10) : "";
+    let rawMax = maxPriceInput ? parseInt(maxPriceInput.replace(/\./g, ""), 10) : "";
+
+    if (rawMin && rawMax && rawMin > rawMax) {
+      const temp = rawMin;
+      rawMin = rawMax;
+      rawMax = temp;
+      setMinPriceInput(rawMin.toLocaleString("vi-VN"));
+      setMaxPriceInput(rawMax.toLocaleString("vi-VN"));
+    }
+
+    setMinPrice(rawMin);
+    setMaxPrice(rawMax);
     setPage(1);
   };
+
+  const handleClearPriceFilter = () => {
+    setMinPriceInput("");
+    setMaxPriceInput("");
+    setMinPrice("");
+    setMaxPrice("");
+    setPage(1);
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white">
@@ -153,26 +191,49 @@ function Shop() {
                 </div>
                 
                 <div className="mt-8 pt-6 border-t">
-                  <h3 className="font-semibold mb-4">Giá</h3>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold">Giá (đ)</h3>
+                    {(minPrice || maxPrice) && (
+                      <button
+                        onClick={handleClearPriceFilter}
+                        className="text-xs text-red-500 hover:text-red-700 hover:underline transition-colors"
+                      >
+                        Xoá lọc
+                      </button>
+                    )}
+                  </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <Input
                         placeholder="Từ"
-                        type="number"
+                        type="text"
                         value={minPriceInput}
-                        onChange={(e) => setMinPriceInput(e.target.value)}
+                        onChange={handleMinPriceChange}
+                        className="text-sm text-black"
                       />
                       <span>-</span>
                       <Input
                         placeholder="Đến"
-                        type="number"
+                        type="text"
                         value={maxPriceInput}
-                        onChange={(e) => setMaxPriceInput(e.target.value)}
+                        onChange={handleMaxPriceChange}
+                        className="text-sm text-black"
                       />
                     </div>
-                    <Button variant="outline" className="w-full" onClick={handleApplyPrice}>
-                      Áp dụng
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1" onClick={handleApplyPrice}>
+                        Áp dụng
+                      </Button>
+                      {(minPriceInput || maxPriceInput) && (
+                        <Button
+                          variant="ghost"
+                          onClick={handleClearPriceFilter}
+                          className="px-3 text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          Xoá
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
