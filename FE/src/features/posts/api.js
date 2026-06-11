@@ -1,4 +1,6 @@
-// api.js - Các hàm gọi API liên quan tới posts
+/**
+ * api.js - Cac ham goi API lien quan toi posts.
+ */
 import { api } from "@/lib/api";
 
 /**

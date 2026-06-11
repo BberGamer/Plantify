@@ -75,7 +75,17 @@ const postSchema = new mongoose.Schema(
     collection: 'posts',
     id: false,
     strict: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+postSchema.virtual('comments', {
+  ref: 'Comment',
+  localField: '_id',
+  foreignField: 'postId',
+  justOne: false,
+  options: { sort: { createdAt: -1 } },
+});
 
 module.exports = mongoose.model('Post', postSchema);

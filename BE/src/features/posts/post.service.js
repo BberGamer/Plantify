@@ -1,6 +1,7 @@
 // post.service.js - Business logic cho bài viết Plantify
 const mongoose = require('mongoose');
 const Post = require('./post.model');
+require('../comments/comment.model');
 
 function buildPostIdQuery(id) {
   if (mongoose.Types.ObjectId.isValid(id)) {
@@ -40,7 +41,15 @@ async function getAllPosts(filters = {}) {
  * @returns {Promise<Object>} Chi tiết bài viết
  */
 async function getPostById(id) {
-  const post = await Post.findOne({ ...buildPostIdQuery(id), isActive: true }).lean();
+  const post = await Post.findOne({ ...buildPostIdQuery(id), isActive: true })
+    .populate({
+      path: 'comments',
+      populate: {
+        path: 'userId',
+        select: 'fullName email',
+      },
+    })
+    .lean();
 
   if (!post) {
     const error = new Error('Không tìm thấy bài viết');
