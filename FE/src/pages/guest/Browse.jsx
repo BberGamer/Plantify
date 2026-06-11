@@ -1,6 +1,11 @@
+/**
+ * Browse.jsx - Trang khám phá và tìm kiếm cây cảnh
+ * Hỗ trợ đọc search query và tag từ URL
+ */
 import { useState } from "react";
-import { Link } from "react-router";
+import { useSearchParams, Link } from "react-router";
 import { PlantCard } from "@/components/common/PlantCard";
+import { useProducts } from "@/features/products/hooks";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,90 +18,6 @@ import {
 } from "@/components/ui/select";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
 
-const allPlants = [
-  {
-    name: "Monstera Deliciosa",
-    scientificName: "Monstera deliciosa",
-    difficulty: "Dễ",
-    water: "Vừa phải",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1614887410788-e158d6efb3be?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Trầu Bà Nam Mỹ",
-    scientificName: "Philodendron hederaceum",
-    difficulty: "Dễ",
-    water: "Vừa phải",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1641977563529-7b617571393d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Sen Đá",
-    scientificName: "Echeveria elegans",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Nhiều ánh sáng",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1614425467998-8a7249179a53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Kim Tiền",
-    scientificName: "Zamioculcas zamiifolia",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1611383856597-aae8f0cfd9e6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Cây Lưỡi Hổ",
-    scientificName: "Sansevieria trifasciata",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1609906250026-11abd4c014cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Cây Trầu Bà Lá Tim",
-    scientificName: "Philodendron scandens",
-    difficulty: "Trung bình",
-    water: "Vừa phải",
-    light: "Ánh sáng gián tiếp",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1644820864412-2e08f6f7c975?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Cây Trầu Bà Đỏ",
-    scientificName: "Philodendron erubescens",
-    difficulty: "Trung bình",
-    water: "Vừa phải",
-    light: "Ánh sáng gián tiếp",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1630393178216-7a0bd27bc990?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Sen Đá Xanh",
-    scientificName: "Echeveria Blue Prince",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Nhiều ánh sáng",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1498251095152-27c0ddd22aae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Cây Kim Tiền Lá Nhỏ",
-    scientificName: "Zamioculcas zamiifolia Raven",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1611211233623-1b1e2162633f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  }
-];
-
 const categories = [
   "Tất cả",
   "Dễ chăm sóc",
@@ -107,8 +28,13 @@ const categories = [
 ];
 
 function Browse() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("q") || "";
+  const tag = searchParams.get("tag") || "";
+
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
+
+  const { products, total, loading } = useProducts({ search: searchQuery });
 
   return (
     <div className="min-h-screen py-12 px-6">
@@ -126,7 +52,6 @@ function Browse() {
               <Input
                 placeholder="Tìm theo tên, tên khoa học..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 h-12 text-lg"
               />
             </div>
@@ -193,7 +118,7 @@ function Browse() {
         </div>
         <div className="mb-6 flex items-center justify-between">
           <p className="text-muted-foreground">
-            Hiển thị <span className="font-semibold text-foreground">{allPlants.length}</span> kết quả
+            Hiển thị <span className="font-semibold text-foreground">{total || products.length}</span> kết quả
           </p>
           <Button variant="ghost" size="sm">
             <Filter className="w-4 h-4 mr-2" />
@@ -201,11 +126,17 @@ function Browse() {
           </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allPlants.map((plant) => (
-            <Link key={plant.scientificName} to={`/plant/${plant.scientificName}`}>
-              <PlantCard {...plant} />
-            </Link>
-          ))}
+          {loading ? (
+            <p className="col-span-full text-center text-muted-foreground py-12">Đang tải...</p>
+          ) : products.length > 0 ? (
+            products.map((plant) => (
+              <Link key={plant._id || plant.scientificName} to={`/plant/${plant.slug || plant.scientificName}`}>
+                <PlantCard {...plant} />
+              </Link>
+            ))
+          ) : (
+            <p className="col-span-full text-center text-muted-foreground py-12">Không tìm thấy cây cảnh nào</p>
+          )}
         </div>
         <div className="mt-12 text-center">
           <Button size="lg" variant="outline">
