@@ -29,15 +29,11 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 
-const searchTags = [
-  "#Monstera",
-  "#Sen đá",
-  "#Trầu bà",
-  "#Cây chịu bóng",
-  "#Lá vàng",
-  "#Cây nội thất",
-  "#Dễ chăm sóc",
-  "#Thanh lọc không khí"
+const quickTags = [
+  { value: "easy-care", label: "Dễ chăm" },
+  { value: "indoor", label: "Trong nhà" },
+  { value: "air-purifying", label: "Lọc không khí" },
+  { value: "beginner-friendly", label: "Người mới" },
 ];
 
 function Home() {
@@ -56,13 +52,16 @@ function Home() {
     }
   };
 
+  const difficultyLabel = { low: "Dễ", medium: "Trung bình", high: "Khó" };
+  const levelLabel = { low: "Ít", medium: "Trung bình", high: "Nhiều" };
+
   const plantCards = apiPlants.map((plant) => ({
     id: plant.id || plant._id || plant.scientificName,
     name: plant.name,
     scientificName: plant.scientificName,
-    difficulty: plant.difficultyLevel,
-    water: plant.watering,
-    light: plant.sunlight,
+    difficulty: difficultyLabel[plant.difficultyLevel] || plant.difficultyLevel,
+    water: levelLabel[plant.watering] || plant.watering,
+    light: levelLabel[plant.sunlight] || plant.sunlight,
     indoor: plant.isIndoor,
     imageUrl: plant.thumbnail || plant.images?.[0],
   }));
@@ -164,14 +163,14 @@ function Home() {
               </form>
               {/* === Quick search tags === */}
               <div className="flex flex-wrap gap-2 justify-center mt-6">
-                {searchTags.map((tag) => (
+                {quickTags.map((item) => (
                   <Badge
-                    key={tag}
+                    key={item.value}
                     variant="secondary"
                     className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors"
-                    onClick={() => navigate(`/browse?tag=${encodeURIComponent(tag.replace("#", ""))}`)}
+                    onClick={() => navigate(`/browse?tag=${encodeURIComponent(item.value)}`)}
                   >
-                    {tag}
+                    {item.label}
                   </Badge>
                 ))}
               </div>

@@ -1,8 +1,8 @@
-// Browse.jsx - Trang khám phá cây cảnh với real data từ Plants
+// Browse.jsx - Trang khám phá cây cảnh với real data từ Plants, pagination và search/tag
 import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router";
 import { PlantCard } from "@/components/common/PlantCard";
-import { usePlants } from "@/features/plants/hooks";
+import { usePlants, usePlantTags } from "@/features/plants/hooks";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,63 +15,111 @@ import {
 } from "@/components/ui/select";
 import { Search, Filter, Loader2 } from "lucide-react";
 
-const categories = [
-  "Tất cả",
-  "Dễ chăm sóc",
-  "Cây chịu bóng",
-  "Sen đá",
-  "Trầu bà",
-  "Thanh lọc không khí"
-];
-
 function Browse() {
-  // === URL params: đọc search query và tag từ URL ===
+  // === URL params ===
   const [searchParams, setSearchParams] = useSearchParams();
 
   const searchQuery = searchParams.get("q") || "";
   const tag = searchParams.get("tag") || "";
+  const difficulty = searchParams.get("difficulty") || "";
+  const sunlight = searchParams.get("sunlight") || "";
+  const watering = searchParams.get("watering") || "";
 
-  // State cục bộ cho input search (đồng bộ với URL)
+  // State cục bộ cho input search
   const [localSearch, setLocalSearch] = useState(searchQuery);
 
-  // Khi URL thay đổi (ví dụ: click tag) → sync localSearch
   useEffect(() => {
     setLocalSearch(searchQuery);
   }, [searchQuery]);
 
-  const [selectedCategory, setSelectedCategory] = useState("Tất cả");
+  const { plants, loading, error, total, pages, currentPage } = usePlants({
+    search: searchQuery,
+    tag: tag,
+    difficulty: difficulty,
+    sunlight: sunlight,
+    watering: watering,
+    page: parseInt(searchParams.get("page")) || 1,
+    limit: 9
+  });
 
-  const { plants, loading, error, total } = usePlants({ search: searchQuery, page: 1, limit: 12 });
+  const { tags: availableTags } = usePlantTags();
 
-  // === Search handlers: Home → Browse dùng ?q=, tag dùng ?tag= ===
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
+  const difficultyLabel = { low: "Dễ", medium: "Trung bình", high: "Khó" };
+  const levelLabel = { low: "Ít", medium: "Trung bình", high: "Nhiều" };
+  const tagLabel = {
+    "flowering": "Có hoa",
+    "succulent": "Sen đá",
+    "air-purifying": "Lọc không khí",
+    "low-maintenance": "Dễ chăm",
+    "easy-care": "Dễ chăm",
+    "pet-friendly": "An toàn thú cưng",
+    "edible": "Ăn được",
+    "climbing": "Leo giò",
+    "outdoor": "Ngoài trời",
+    "indoor": "Trong nhà",
+    "rare": "Hiếm",
+    "beginner-friendly": "Cho người mới",
+    "perennial": "Lâu năm",
+    "annual": "Một năm",
+    "fragrant": "Thơm",
+    "medicinal": "Làm thuốc",
+    "fast-growing": "Phát triển nhanh",
+    "drought-tolerant": "Chịu hạn",
+    "shade-loving": "Ủ bóng",
+    "foliage": "Lá cây",
+    "low-water": "Ít nước",
+    "philodendron": "Trầu bà",
+    "sunlight": "Ánh nắng",
+  };
+
+  // Map plant data cho PlantCard
+  const plantCards = plants.map((plant) => ({
+    id: plant.id || plant._id,
+    name: plant.name,
+    scientificName: plant.scientificName,
+    difficulty: difficultyLabel[plant.difficultyLevel] || plant.difficultyLevel,
+    water: levelLabel[plant.watering] || plant.watering,
+    light: levelLabel[plant.sunlight] || plant.sunlight,
+    indoor: plant.isIndoor,
+    imageUrl: plant.thumbnail || plant.images?.[0],
+  }));
+
+  // === Update URL params helper ===
+  const updateParams = (updates) => {
     const params = new URLSearchParams(searchParams);
-    if (localSearch.trim()) {
-      params.set("q", localSearch.trim());
-    } else {
-      params.delete("q");
-    }
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
+    });
     params.set("page", "1");
-    params.delete("tag");
     setSearchParams(params);
   };
 
-  // === Tag handlers: click tag → set URL, clear search ===
-  const handleTagClick = (category) => {
-    if (category === "Tất cả") {
-      setSearchParams({});
-    } else {
-      setSearchParams({ tag: category, page: "1" });
-    }
+  // === Handlers ===
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    updateParams({ q: localSearch.trim() });
   };
+
+  const handleTagClick = (selectedTag) => {
+    updateParams({ tag: selectedTag === tag ? "" : selectedTag });
+  };
+
+  const handleFilterChange = (key, value) => {
+    updateParams({ [key]: value });
+  };
+
+  const hasActiveFilters = searchQuery || tag || difficulty || sunlight || watering;
 
   return (
     <div className="min-h-screen py-12 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-10">
           <h1 className="text-5xl font-bold mb-2">
-            {searchQuery ? `Kết quả cho "${searchQuery}"` : tag ? `Danh mục: ${tag}` : "Khám phá cây cảnh"}
+            {searchQuery ? `Kết quả cho "${searchQuery}"` : tag ? `Danh mục: ${tagLabel[tag] || tag}` : "Khám phá cây cảnh"}
           </h1>
           <p className="text-xl text-muted-foreground">
             {searchQuery || tag ? "Tìm thấy các loài phù hợp" : "Tìm kiếm và lọc từ hàng nghìn loại cây cảnh"}
@@ -94,51 +142,60 @@ function Browse() {
               Tìm kiếm
             </Button>
           </form>
-          {/* === Tag navigation === */}
+          {/* === Tag navigation (dynamic từ API) === */}
           <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
+            <Badge
+              key="all"
+              variant={!tag ? "default" : "secondary"}
+              className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors"
+              onClick={() => handleTagClick("")}
+            >
+              Tất cả
+            </Badge>
+            {availableTags.map((t) => (
               <Badge
-                key={category}
-                variant={(tag === category || (category === "Tất cả" && !tag)) ? "default" : "secondary"}
+                key={t}
+                variant={tag === t ? "default" : "secondary"}
                 className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors"
-                onClick={() => handleTagClick(category)}
+                onClick={() => handleTagClick(t)}
               >
-                {category}
+                {tagLabel[t] || t}
               </Badge>
             ))}
           </div>
+          {/* === Dropdown filters === */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select>
+            <Select value={difficulty} onValueChange={(v) => handleFilterChange("difficulty", v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Độ khó" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="easy">Dễ</SelectItem>
+                <SelectItem value="low">Dễ</SelectItem>
                 <SelectItem value="medium">Trung bình</SelectItem>
-                <SelectItem value="hard">Khó</SelectItem>
+                <SelectItem value="high">Khó</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={sunlight} onValueChange={(v) => handleFilterChange("sunlight", v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Ánh sáng" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">Bóng râm</SelectItem>
-                <SelectItem value="medium">Ánh sáng gián tiếp</SelectItem>
-                <SelectItem value="high">Nhiều ánh sáng</SelectItem>
+                <SelectItem value="low">Ít</SelectItem>
+                <SelectItem value="medium">Trung bình</SelectItem>
+                <SelectItem value="high">Nhiều</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={watering} onValueChange={(v) => handleFilterChange("watering", v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Tưới nước" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="low">Ít</SelectItem>
-                <SelectItem value="medium">Vừa phải</SelectItem>
+                <SelectItem value="medium">Trung bình</SelectItem>
                 <SelectItem value="high">Nhiều</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={searchParams.get("sort") || ""} onValueChange={(v) => handleFilterChange("sort", v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Sắp xếp" />
               </SelectTrigger>
@@ -162,7 +219,7 @@ function Browse() {
               </>
             )}
           </p>
-          {(searchQuery || tag) && (
+          {(searchQuery || tag || difficulty || sunlight || watering) && (
             <Button
               variant="ghost"
               size="sm"
@@ -188,9 +245,9 @@ function Browse() {
               <p className="text-lg text-red-500 mb-4">Đã xảy ra lỗi: {error}</p>
               <Button variant="outline" onClick={() => window.location.reload()}>Thử lại</Button>
             </div>
-          ) : plants.length > 0 ? (
-            plants.map((plant) => (
-              <Link key={plant._id || plant.scientificName} to={`/plant/${plant.slug || plant.scientificName}`}>
+          ) : plantCards.length > 0 ? (
+            plantCards.map((plant) => (
+              <Link key={plant.id} to={`/plant/${plant.scientificName}`}>
                 <PlantCard {...plant} />
               </Link>
             ))
@@ -203,11 +260,49 @@ function Browse() {
             </div>
           )}
         </div>
-        <div className="mt-12 text-center">
-          <Button size="lg" variant="outline">
-            Tải thêm cây
-          </Button>
-        </div>
+        {/* === Pagination === */}
+        {!loading && plants.length > 0 && pages > 1 && (
+          <div className="mt-12 flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              disabled={currentPage <= 1}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams);
+                params.set("page", String(currentPage - 1));
+                setSearchParams(params);
+              }}
+            >
+              Trước
+            </Button>
+            <div className="flex gap-1">
+              {Array.from({ length: pages }, (_, i) => i + 1).map((pageNum) => (
+                <Button
+                  key={pageNum}
+                  variant={pageNum === currentPage ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.set("page", String(pageNum));
+                    setSearchParams(params);
+                  }}
+                >
+                  {pageNum}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              disabled={currentPage >= pages}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams);
+                params.set("page", String(currentPage + 1));
+                setSearchParams(params);
+              }}
+            >
+              Sau
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
