@@ -62,6 +62,16 @@ export const updateUserStatusApi = async (userId, status) => {
 };
 
 /**
+ * Gọi API xóa người dùng
+ * @param {string} userId
+ * @returns {Promise<object>} response data
+ */
+export const deleteUserApi = async (userId) => {
+  const response = await api.delete(`/auth/users/${userId}`);
+  return response.data;
+};
+
+/**
  * Gọi API quên mật khẩu - gửi email đặt lại
  * @param {string} email - Email đã đăng ký
  * @returns {Promise<object>} response data

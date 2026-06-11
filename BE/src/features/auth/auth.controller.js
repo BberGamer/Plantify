@@ -139,6 +139,18 @@ const updateUserStatus = async (req, res, next) => {
 };
 
 /**
+ * Xóa tài khoản người dùng
+ */
+const deleteUser = async (req, res, next) => {
+  try {
+    await authService.deleteUser(req.params.id);
+    return success(res, 'Xóa người dùng thành công', null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Quên mật khẩu - gửi email đặt lại
  */
 const forgotPassword = async (req, res, next) => {
@@ -252,6 +264,7 @@ module.exports = {
   getMe,
   getUsers,
   updateUserStatus,
+  deleteUser,
   forgotPassword,
   verifyOTP,
   resetPassword,
