@@ -27,6 +27,9 @@ function Browse() {
   const [watering, setWatering] = useState("");
   const [sortBy, setSortBy] = useState("popular");
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+
   useEffect(() => {
     getPlantCategories()
       .then((res) => {
@@ -39,18 +42,36 @@ function Browse() {
   }, []);
 
   // Fetch plants from the backend API
-  const { plants, loading, error } = usePlants({
+  const { plants, loading, error, hasMore } = usePlants({
     search: searchParam,
     category: selectedCategory,
     difficulty: difficulty || undefined,
     sunlight: sunlight || undefined,
     watering: watering || undefined,
-    sortBy: sortBy || undefined
+    sortBy: sortBy || undefined,
+    page,
+    limit: 6
   });
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
     setSearchParam(searchQuery);
+    setPage(1);
+  };
+
+  const handleLoadMore = () => {
+    setPage((prevPage) => prevPage + 1);
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setSearchParam("");
+    setSelectedCategory("Tất cả");
+    setDifficulty("");
+    setSunlight("");
+    setWatering("");
+    setSortBy("popular");
+    setPage(1);
   };
 
   const mapPlantForCard = (plant) => {
@@ -100,14 +121,17 @@ function Browse() {
                 key={category}
                 variant={selectedCategory === category ? "default" : "secondary"}
                 className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors"
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => {
+                  setSelectedCategory(category);
+                  setPage(1);
+                }}
               >
                 {category}
               </Badge>
             ))}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select value={difficulty || "all"} onValueChange={(val) => setDifficulty(val === "all" ? "" : val)}>
+            <Select value={difficulty || "all"} onValueChange={(val) => { setDifficulty(val === "all" ? "" : val); setPage(1); }}>
               <SelectTrigger>
                 <SelectValue placeholder="Độ khó" />
               </SelectTrigger>
@@ -118,7 +142,7 @@ function Browse() {
                 <SelectItem value="hard">Khó</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={sunlight || "all"} onValueChange={(val) => setSunlight(val === "all" ? "" : val)}>
+            <Select value={sunlight || "all"} onValueChange={(val) => { setSunlight(val === "all" ? "" : val); setPage(1); }}>
               <SelectTrigger>
                 <SelectValue placeholder="Ánh sáng" />
               </SelectTrigger>
@@ -129,7 +153,7 @@ function Browse() {
                 <SelectItem value="high">Nhiều ánh sáng</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={watering || "all"} onValueChange={(val) => setWatering(val === "all" ? "" : val)}>
+            <Select value={watering || "all"} onValueChange={(val) => { setWatering(val === "all" ? "" : val); setPage(1); }}>
               <SelectTrigger>
                 <SelectValue placeholder="Tưới nước" />
               </SelectTrigger>
@@ -140,7 +164,7 @@ function Browse() {
                 <SelectItem value="high">Nhiều</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={sortBy || "popular"} onValueChange={setSortBy}>
+            <Select value={sortBy || "popular"} onValueChange={(val) => { setSortBy(val); setPage(1); }}>
               <SelectTrigger>
                 <SelectValue placeholder="Sắp xếp" />
               </SelectTrigger>
@@ -158,13 +182,13 @@ function Browse() {
           <p className="text-muted-foreground">
             Hiển thị <span className="font-semibold text-foreground">{plants.length}</span> kết quả
           </p>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={handleClearFilters}>
             <Filter className="w-4 h-4 mr-2" />
             Xóa bộ lọc
           </Button>
         </div>
 
-        {loading ? (
+        {loading && page === 1 ? (
           <div className="flex justify-center items-center py-20 w-full">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
           </div>
@@ -186,11 +210,13 @@ function Browse() {
           </div>
         )}
 
-        <div className="mt-12 text-center">
-          <Button size="lg" variant="outline">
-            Tải thêm cây
-          </Button>
-        </div>
+        {hasMore && plants.length > 0 && (
+          <div className="mt-12 text-center">
+            <Button size="lg" variant="outline" onClick={handleLoadMore} disabled={loading}>
+              {loading ? "Đang tải..." : "Tải thêm cây"}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

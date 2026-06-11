@@ -11,6 +11,7 @@ export function usePlants(filters = {}) {
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const filterKey = JSON.stringify(filters);
@@ -24,7 +25,16 @@ export function usePlants(filters = {}) {
     getPlants(filters)
       .then((response) => {
         if (!cancelled) {
-          setPlants(response.data || []);
+          const newPlants = response.data || [];
+          const limit = filters.limit || 6;
+          
+          setHasMore(newPlants.length >= limit);
+
+          if (filters.page && filters.page > 1) {
+            setPlants((prev) => [...prev, ...newPlants]);
+          } else {
+            setPlants(newPlants);
+          }
           setLoading(false);
         }
       })
@@ -44,7 +54,7 @@ export function usePlants(filters = {}) {
     setRefreshKey((currentKey) => currentKey + 1);
   };
 
-  return { plants, loading, error, refetch };
+  return { plants, loading, error, hasMore, refetch };
 }
 
 export default usePlants;
