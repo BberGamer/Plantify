@@ -1,11 +1,8 @@
-/**
- * Browse.jsx - Trang khám phá và tìm kiếm cây cảnh
- * Hỗ trợ đọc search query và tag từ URL
- */
+// Browse.jsx - Trang khám phá cây cảnh với real data từ Plants
 import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router";
 import { PlantCard } from "@/components/common/PlantCard";
-import { useProducts } from "@/features/products/hooks";
+import { usePlants } from "@/features/plants/hooks";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +41,7 @@ function Browse() {
 
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
 
-  const { products, total, loading } = useProducts({ search: searchQuery });
+  const { plants, loading, error, total } = usePlants({ search: searchQuery, page: 1, limit: 12 });
 
   // === Search handlers: Home → Browse dùng ?q=, tag dùng ?tag= ===
   const handleSearchSubmit = (e) => {
@@ -161,7 +158,7 @@ function Browse() {
               "Đang tìm kiếm..."
             ) : (
               <>
-                Hiển thị <span className="font-semibold text-foreground">{total || products.length}</span> kết quả
+                Hiển thị <span className="font-semibold text-foreground">{total || plants.length}</span> kết quả
               </>
             )}
           </p>
@@ -186,8 +183,13 @@ function Browse() {
             <div className="col-span-full flex justify-center py-20">
               <Loader2 className="w-10 h-10 animate-spin text-primary" />
             </div>
-          ) : products.length > 0 ? (
-            products.map((plant) => (
+          ) : error ? (
+            <div className="col-span-full text-center py-20">
+              <p className="text-lg text-red-500 mb-4">Đã xảy ra lỗi: {error}</p>
+              <Button variant="outline" onClick={() => window.location.reload()}>Thử lại</Button>
+            </div>
+          ) : plants.length > 0 ? (
+            plants.map((plant) => (
               <Link key={plant._id || plant.scientificName} to={`/plant/${plant.slug || plant.scientificName}`}>
                 <PlantCard {...plant} />
               </Link>
