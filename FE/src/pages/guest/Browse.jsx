@@ -46,7 +46,7 @@ function Browse() {
 
   const { products, total, loading } = useProducts({ search: searchQuery });
 
-  // === Search handlers ===
+  // === Search handlers: Home → Browse dùng ?q=, tag dùng ?tag= ===
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     const params = new URLSearchParams(searchParams);
