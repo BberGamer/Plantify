@@ -1,9 +1,10 @@
-import { Link } from "react-router";
+import { useState } from "react";
+import BlogPostDetail from "@/components/common/BlogPostDetail";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { usePosts } from "@/features/posts/hooks";
+import { usePostDetail, usePosts } from "@/features/posts/hooks";
 import { Search, Calendar, User, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -49,11 +50,96 @@ function mapPostToBlogCard(post) {
   };
 }
 
+/**
+ * Skeleton hien thi trong luc dang tai chi tiet bai viet.
+ * @param {Object} props - Component props
+ * @param {Function} props.onClose - Callback dong skeleton modal
+ * @returns {JSX.Element} Loading UI cho modal chi tiet
+ */
+function BlogPostDetailSkeleton({ onClose }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-4 py-6 backdrop-blur-sm sm:px-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <motion.div
+        className="mx-auto max-w-5xl"
+        initial={{ opacity: 0, y: 28, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+      >
+        <Card className="overflow-hidden border-green-200/70 bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-green-100 px-5 py-4">
+            <div className="h-6 w-28 animate-pulse rounded-full bg-green-100" />
+            <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+              Dong
+            </Button>
+          </div>
+          <div className="grid gap-3 bg-gradient-to-br from-green-50/60 to-white p-4 md:grid-cols-[1.5fr_1fr]">
+            <div className="aspect-video animate-pulse rounded-lg bg-green-100" />
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="aspect-video animate-pulse rounded-lg bg-green-100/80" />
+              ))}
+            </div>
+          </div>
+          <CardContent className="space-y-6 p-6 sm:p-8">
+            <div className="h-10 w-3/4 animate-pulse rounded bg-green-100" />
+            <div className="h-5 w-full animate-pulse rounded bg-muted" />
+            <div className="h-5 w-5/6 animate-pulse rounded bg-muted" />
+            <div className="grid gap-3 sm:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="h-5 animate-pulse rounded bg-green-100/80" />
+              ))}
+            </div>
+            <div className="space-y-3 pt-4">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="h-4 animate-pulse rounded bg-muted" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function Blog() {
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
   const { posts: apiPosts, loading, error } = usePosts({ page: 1, limit: 6 });
+  const {
+    post: detailPost,
+    comments: detailComments,
+    loading: detailLoading,
+  } = usePostDetail(showDetail ? selectedPost?.id : null);
+
   const blogPosts = apiPosts.map(mapPostToBlogCard);
   const featuredPost = blogPosts[0];
   const gridPosts = blogPosts.slice(1);
+  const activePost = detailPost || selectedPost;
+  const activeComments = detailPost ? detailComments : selectedPost?.comments || [];
+
+  /**
+   * Mo modal chi tiet va kich hoat hook fetch full data cho bai viet duoc chon.
+   * @param {Object} post - Bai viet tu danh sach blog
+   */
+  function handleOpenPost(post) {
+    setSelectedPost(post);
+    setShowDetail(true);
+  }
+
+  /**
+   * Dong modal chi tiet nhung giu list/search/categories khong bi reset.
+   */
+  function handleCloseDetail() {
+    setShowDetail(false);
+  }
 
   return (
     <div className="min-h-screen py-12 px-6">
@@ -142,11 +228,9 @@ function Blog() {
                       </div>
                       <span>• {featuredPost.readTime}</span>
                     </div>
-                    <Button size="lg" className="w-fit" asChild>
-                      <Link to={`/blog/${featuredPost.id}`}>
+                    <Button size="lg" className="w-fit" onClick={() => handleOpenPost(featuredPost)}>
                         Đọc bài viết
                         <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
                     </Button>
                   </CardContent>
                 </div>
@@ -162,7 +246,11 @@ function Blog() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Link to={`/blog/${post.id}`}>
+                  <button
+                    type="button"
+                    className="block h-full w-full text-left"
+                    onClick={() => handleOpenPost(post)}
+                  >
                     <Card className="overflow-hidden border border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group h-full">
                       <div className="aspect-video overflow-hidden">
                         <img
@@ -189,7 +277,7 @@ function Blog() {
                         </div>
                       </CardContent>
                     </Card>
-                  </Link>
+                  </button>
                 </motion.div>
               ))}
             </div>
@@ -200,6 +288,18 @@ function Blog() {
         <div className="mt-12 text-center">
           <Button size="lg" variant="outline">Xem thêm bài viết</Button>
         </div>
+
+        {showDetail && detailLoading && !detailPost && (
+          <BlogPostDetailSkeleton onClose={handleCloseDetail} />
+        )}
+
+        {showDetail && activePost && (!detailLoading || detailPost) && (
+          <BlogPostDetail
+            post={activePost}
+            comments={activeComments}
+            onClose={handleCloseDetail}
+          />
+        )}
       </div>
     </div>
   );
