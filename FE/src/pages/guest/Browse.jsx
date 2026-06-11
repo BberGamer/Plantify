@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import { Search, Filter, Loader2 } from "lucide-react";
 
 const categories = [
   "Tất cả",
@@ -73,9 +73,11 @@ function Browse() {
     <div className="min-h-screen py-12 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-10">
-          <h1 className="text-5xl font-bold mb-2">Khám phá cây cảnh</h1>
+          <h1 className="text-5xl font-bold mb-2">
+            {searchQuery ? `Kết quả cho "${searchQuery}"` : tag ? `Danh mục: ${tag}` : "Khám phá cây cảnh"}
+          </h1>
           <p className="text-xl text-muted-foreground">
-            Tìm kiếm và lọc từ hàng nghìn loại cây cảnh
+            {searchQuery || tag ? "Tìm thấy các loài phù hợp" : "Tìm kiếm và lọc từ hàng nghìn loại cây cảnh"}
           </p>
         </div>
         <div className="mb-10 space-y-6">
@@ -152,18 +154,38 @@ function Browse() {
             </Select>
           </div>
         </div>
+        {/* === Results header === */}
         <div className="mb-6 flex items-center justify-between">
           <p className="text-muted-foreground">
-            Hiển thị <span className="font-semibold text-foreground">{total || products.length}</span> kết quả
+            {loading ? (
+              "Đang tìm kiếm..."
+            ) : (
+              <>
+                Hiển thị <span className="font-semibold text-foreground">{total || products.length}</span> kết quả
+              </>
+            )}
           </p>
-          <Button variant="ghost" size="sm">
-            <Filter className="w-4 h-4 mr-2" />
-            Xóa bộ lọc
-          </Button>
+          {(searchQuery || tag) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setLocalSearch("");
+                setSearchParams({});
+              }}
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Xóa bộ lọc
+            </Button>
+          )}
         </div>
+
+        {/* === Products grid === */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            <p className="col-span-full text-center text-muted-foreground py-12">Đang tải...</p>
+            <div className="col-span-full flex justify-center py-20">
+              <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            </div>
           ) : products.length > 0 ? (
             products.map((plant) => (
               <Link key={plant._id || plant.scientificName} to={`/plant/${plant.slug || plant.scientificName}`}>
@@ -171,7 +193,12 @@ function Browse() {
               </Link>
             ))
           ) : (
-            <p className="col-span-full text-center text-muted-foreground py-12">Không tìm thấy cây cảnh nào</p>
+            <div className="col-span-full text-center py-20">
+              <p className="text-lg text-muted-foreground mb-4">Không tìm thấy cây cảnh nào phù hợp</p>
+              <p className="text-sm text-muted-foreground">
+                Thử từ khóa khác hoặc xóa bộ lọc để xem tất cả cây cảnh
+              </p>
+            </div>
           )}
         </div>
         <div className="mt-12 text-center">
