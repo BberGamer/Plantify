@@ -10,3 +10,12 @@ export const getPlants = async (params = {}) => {
   const response = await api.get("/plants", { params });
   return response.data;
 };
+
+/**
+ * Lấy danh mục cây từ backend.
+ * @returns {Promise<object>} Response data từ API
+ */
+export const getPlantCategories = async () => {
+  const response = await api.get("/plants/categories");
+  return response.data;
+};

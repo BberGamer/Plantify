@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { PlantCard } from "@/components/common/PlantCard";
 import { Input } from "@/components/ui/input";
@@ -13,24 +13,29 @@ import {
 } from "@/components/ui/select";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
 import { usePlants } from "@/features/plants/hooks";
-
-const categories = [
-  "Tất cả",
-  "Dễ chăm sóc",
-  "Cây chịu bóng",
-  "Sen đá",
-  "Trầu bà",
-  "Thanh lọc không khí"
-];
+import { getPlantCategories } from "@/features/plants/api";
 
 function Browse() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParam, setSearchParam] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
+  const [categories, setCategories] = useState(["Tất cả"]);
+
+  useEffect(() => {
+    getPlantCategories()
+      .then((res) => {
+        if (res.success && res.data) {
+          const names = ["Tất cả", ...res.data.map((c) => c.name)];
+          setCategories(names);
+        }
+      })
+      .catch((err) => console.error("Lỗi lấy danh mục cây:", err));
+  }, []);
 
   // Fetch plants from the backend API
   const { plants, loading, error } = usePlants({
-    search: searchParam
+    search: searchParam,
+    category: selectedCategory
   });
 
   const handleSearch = (e) => {

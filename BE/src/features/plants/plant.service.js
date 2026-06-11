@@ -1,5 +1,5 @@
 // plant.service.js - Business logic cho Plants
-const { Plant } = require('./plant.model');
+const { Plant, PlantCategory } = require('./plant.model');
 
 /**
  * Lấy danh sách cây, có hỗ trợ lọc theo category và phân trang.
@@ -10,8 +10,19 @@ async function getAllPlants(filters = {}) {
   const { category, search, page, limit } = filters;
   const query = {};
 
-  if (category) {
-    query.categoryId = category;
+  if (category && category !== 'Tất cả') {
+    const foundCategory = await PlantCategory.findOne({
+      $or: [
+        { id: category },
+        { slug: category },
+        { name: category }
+      ]
+    });
+    if (foundCategory) {
+      query.categoryId = foundCategory.id || foundCategory._id;
+    } else {
+      return [];
+    }
   }
 
   if (search) {
@@ -32,4 +43,15 @@ async function getAllPlants(filters = {}) {
   return plantQuery.lean();
 }
 
-module.exports = { getAllPlants };
+/**
+ * Lấy tất cả danh mục cây cảnh
+ */
+async function getAllCategories() {
+  return await PlantCategory.find({ isActive: true }).sort({ name: 1 }).lean();
+}
+
+module.exports = {
+  getAllPlants,
+  getAllCategories
+};
+

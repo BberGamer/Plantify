@@ -28,4 +28,17 @@ async function getAllPlants(req, res, next) {
   }
 }
 
-module.exports = { getAllPlants };
+async function getAllCategories(req, res, next) {
+  try {
+    const categories = await plantService.getAllCategories();
+    return apiResponse.success(res, 'Lấy danh sách danh mục cây thành công', categories);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = {
+  getAllPlants,
+  getAllCategories
+};
+
