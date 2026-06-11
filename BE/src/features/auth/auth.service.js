@@ -158,6 +158,28 @@ const updateUserStatus = async (userId, status) => {
 };
 
 /**
+ * Xóa tài khoản người dùng
+ * @param {string} userId - ID người dùng
+ * @returns {Promise<void>}
+ */
+const deleteUser = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const err = new Error('Không tìm thấy người dùng');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (!STATUS_MANAGED_ROLES.includes(user.role)) {
+    const err = new Error('Không thể xóa tài khoản có vai trò này');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  await User.findByIdAndDelete(userId);
+};
+
+/**
  * Tạo và gửi mã OTP đặt lại mật khẩu qua email
  * @param {string} email - Email người dùng
  * @returns {Promise<void>}
@@ -272,6 +294,7 @@ module.exports = {
   getMe,
   getUsers,
   updateUserStatus,
+  deleteUser,
   forgotPassword,
   verifyOTP,
   resetPassword,

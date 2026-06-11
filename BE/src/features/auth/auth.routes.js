@@ -22,6 +22,9 @@ router.post('/users', authenticate, authorizeAdmin, authController.createUserByA
 // Cập nhật trạng thái người dùng cho quản trị viên
 router.patch('/users/:id/status', authenticate, authorizeAdmin, authController.updateUserStatus);
 
+// Xóa người dùng cho quản trị viên
+router.delete('/users/:id', authenticate, authorizeAdmin, authController.deleteUser);
+
 // Quên mật khẩu - gửi OTP qua email
 router.post('/forgot-password', authController.forgotPassword);
 
