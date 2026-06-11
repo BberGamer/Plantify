@@ -12,90 +12,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
-
-const allPlants = [
-  {
-    name: "Monstera Deliciosa",
-    scientificName: "Monstera deliciosa",
-    difficulty: "Dễ",
-    water: "Vừa phải",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1614887410788-e158d6efb3be?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Trầu Bà Nam Mỹ",
-    scientificName: "Philodendron hederaceum",
-    difficulty: "Dễ",
-    water: "Vừa phải",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1641977563529-7b617571393d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Sen Đá",
-    scientificName: "Echeveria elegans",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Nhiều ánh sáng",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1614425467998-8a7249179a53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Kim Tiền",
-    scientificName: "Zamioculcas zamiifolia",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1611383856597-aae8f0cfd9e6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Cây Lưỡi Hổ",
-    scientificName: "Sansevieria trifasciata",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1609906250026-11abd4c014cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Cây Trầu Bà Lá Tim",
-    scientificName: "Philodendron scandens",
-    difficulty: "Trung bình",
-    water: "Vừa phải",
-    light: "Ánh sáng gián tiếp",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1644820864412-2e08f6f7c975?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Cây Trầu Bà Đỏ",
-    scientificName: "Philodendron erubescens",
-    difficulty: "Trung bình",
-    water: "Vừa phải",
-    light: "Ánh sáng gián tiếp",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1630393178216-7a0bd27bc990?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Sen Đá Xanh",
-    scientificName: "Echeveria Blue Prince",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Nhiều ánh sáng",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1498251095152-27c0ddd22aae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  },
-  {
-    name: "Cây Kim Tiền Lá Nhỏ",
-    scientificName: "Zamioculcas zamiifolia Raven",
-    difficulty: "Dễ",
-    water: "Ít",
-    light: "Bóng râm",
-    indoor: true,
-    imageUrl: "https://images.unsplash.com/photo-1611211233623-1b1e2162633f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
-  }
-];
+import { usePlants } from "@/features/plants/hooks";
 
 const categories = [
   "Tất cả",
@@ -110,6 +27,25 @@ function Browse() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
 
+  // Fetch plants from the backend API
+  const { plants, loading, error } = usePlants();
+
+  const mapPlantForCard = (plant) => {
+    const diffMap = { low: "Dễ", medium: "Trung bình", high: "Khó" };
+    const waterMap = { low: "Ít", medium: "Vừa phải", high: "Nhiều" };
+    const lightMap = { low: "Bóng râm", medium: "Ánh sáng gián tiếp", high: "Nhiều ánh sáng" };
+
+    return {
+      name: plant.name,
+      scientificName: plant.scientificName,
+      difficulty: diffMap[plant.difficultyLevel] || "Dễ",
+      water: waterMap[plant.watering] || "Vừa phải",
+      light: lightMap[plant.sunlight] || "Ánh sáng gián tiếp",
+      indoor: plant.isIndoor ?? true,
+      imageUrl: plant.thumbnail || (plant.images && plant.images[0]) || "https://images.unsplash.com/photo-1614887410788-e158d6efb3be?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800"
+    };
+  };
+
   return (
     <div className="min-h-screen py-12 px-6">
       <div className="max-w-7xl mx-auto">
@@ -119,6 +55,7 @@ function Browse() {
             Tìm kiếm và lọc từ hàng nghìn loại cây cảnh
           </p>
         </div>
+        
         <div className="mb-10 space-y-6">
           <div className="flex gap-3">
             <div className="relative flex-1">
@@ -127,7 +64,7 @@ function Browse() {
                 placeholder="Tìm theo tên, tên khoa học..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 text-lg"
+                className="pl-12 h-12 text-lg text-black"
               />
             </div>
             <Button size="lg" variant="outline" className="gap-2">
@@ -191,22 +128,39 @@ function Browse() {
             </Select>
           </div>
         </div>
+
         <div className="mb-6 flex items-center justify-between">
           <p className="text-muted-foreground">
-            Hiển thị <span className="font-semibold text-foreground">{allPlants.length}</span> kết quả
+            Hiển thị <span className="font-semibold text-foreground">{plants.length}</span> kết quả
           </p>
           <Button variant="ghost" size="sm">
             <Filter className="w-4 h-4 mr-2" />
             Xóa bộ lọc
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allPlants.map((plant) => (
-            <Link key={plant.scientificName} to={`/plant/${plant.scientificName}`}>
-              <PlantCard {...plant} />
-            </Link>
-          ))}
-        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center py-20 w-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <p className="text-red-500 font-semibold">{error}</p>
+          </div>
+        ) : plants.length === 0 ? (
+          <div className="text-center py-20 text-muted-foreground">
+            Không tìm thấy cây nào phù hợp.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {plants.map((plant) => (
+              <Link key={plant.scientificName || plant._id} to={`/plant/${plant.scientificName || plant._id}`}>
+                <PlantCard {...mapPlantForCard(plant)} />
+              </Link>
+            ))}
+          </div>
+        )}
+
         <div className="mt-12 text-center">
           <Button size="lg" variant="outline">
             Tải thêm cây
