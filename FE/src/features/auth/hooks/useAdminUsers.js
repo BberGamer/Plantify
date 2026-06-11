@@ -1,6 +1,6 @@
 // useAdminUsers.js - Hook lấy danh sách người dùng cho trang quản trị
 import { useCallback, useEffect, useState } from "react";
-import { createAdminUserApi, getUsersApi, updateUserStatusApi } from "../api";
+import { createAdminUserApi, deleteUserApi, getUsersApi, updateUserStatusApi } from "../api";
 
 export function useAdminUsers() {
   const [users, setUsers] = useState([]);
@@ -65,6 +65,12 @@ export function useAdminUsers() {
     return response;
   };
 
+  const deleteUser = async (userId) => {
+    const response = await deleteUserApi(userId);
+    await refetchUsers();
+    return response;
+  };
+
   return {
     users,
     loading,
@@ -72,6 +78,7 @@ export function useAdminUsers() {
     refetchUsers,
     createUser,
     updateUserStatus,
+    deleteUser,
   };
 }
 

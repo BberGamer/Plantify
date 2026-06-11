@@ -1,5 +1,9 @@
-﻿import { useState } from "react";
-import { Link } from "react-router";
+﻿/**
+ * Home.jsx - Trang chủ Plantify
+ * Hiển thị hero section với search bar và các section giới thiệu
+ */
+import { useState } from "react";
+import { Link, useNavigate } from "react-router";
 import { PlantCard } from "@/components/common/PlantCard";
 import { DashboardCard } from "@/components/common/DashboardCard";
 import { usePlants } from "@/features/plants/hooks";
@@ -25,29 +29,39 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 
-const searchTags = [
-  "#Monstera",
-  "#Sen đá",
-  "#Trầu bà",
-  "#Cây chịu bóng",
-  "#Lá vàng",
-  "#Cây nội thất",
-  "#Dễ chăm sóc",
-  "#Thanh lọc không khí"
+const quickTags = [
+  { value: "easy-care", label: "Dễ chăm" },
+  { value: "indoor", label: "Trong nhà" },
+  { value: "air-purifying", label: "Lọc không khí" },
+  { value: "beginner-friendly", label: "Người mới" },
 ];
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   const { plants: apiPlants, loading, error } = usePlants({ page: 1, limit: 6 });
   const { posts: apiPosts } = usePosts({ page: 1, limit: 3 });
+
+  // === Search handlers: form submit hoặc Enter → navigate với ?q= ===
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/browse?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      navigate("/browse");
+    }
+  };
+
+  const difficultyLabel = { low: "Dễ", medium: "Trung bình", high: "Khó" };
+  const levelLabel = { low: "Ít", medium: "Trung bình", high: "Nhiều" };
 
   const plantCards = apiPlants.map((plant) => ({
     id: plant.id || plant._id || plant.scientificName,
     name: plant.name,
     scientificName: plant.scientificName,
-    difficulty: plant.difficultyLevel,
-    water: plant.watering,
-    light: plant.sunlight,
+    difficulty: difficultyLabel[plant.difficultyLevel] || plant.difficultyLevel,
+    water: levelLabel[plant.watering] || plant.watering,
+    light: levelLabel[plant.sunlight] || plant.sunlight,
     indoor: plant.isIndoor,
     imageUrl: plant.thumbnail || plant.images?.[0],
   }));
@@ -127,7 +141,8 @@ function Home() {
               Tra cứu, chăm sóc và hiểu cây cảnh bằng AI
             </p>
             <div className="max-w-2xl mx-auto">
-              <div className="relative group">
+              {/* === Search Form: navigate sang browse === */}
+              <form onSubmit={handleSearch} className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-green-600 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity" />
                 <div className="relative flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-2 border border-green-200/50">
                   <Search className="w-5 h-5 text-muted-foreground ml-4" />
@@ -138,22 +153,24 @@ function Home() {
                     className="border-0 focus-visible:ring-0 text-lg"
                   />
                   <Button
+                    type="submit"
                     size="lg"
                     className="rounded-xl bg-gradient-to-r from-primary to-green-600"
-                    asChild
                   >
-                    <Link to="/browse">Tìm kiếm</Link>
+                    Tìm kiếm
                   </Button>
                 </div>
-              </div>
+              </form>
+              {/* === Quick search tags === */}
               <div className="flex flex-wrap gap-2 justify-center mt-6">
-                {searchTags.map((tag) => (
+                {quickTags.map((item) => (
                   <Badge
-                    key={tag}
+                    key={item.value}
                     variant="secondary"
                     className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors"
+                    onClick={() => navigate(`/browse?tag=${encodeURIComponent(item.value)}`)}
                   >
-                    {tag}
+                    {item.label}
                   </Badge>
                 ))}
               </div>

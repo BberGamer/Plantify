@@ -3,6 +3,16 @@
 
 import { useState } from "react";
 import { useAdminUsers } from "@/features/auth/hooks";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,6 +61,7 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  Trash2,
   User,
   UserCheck,
   UserPlus,
@@ -122,11 +133,13 @@ const getInitials = (fullName) => {
 };
 
 function AdminUsers() {
-  const { users, loading, error, createUser, updateUserStatus } = useAdminUsers();
+  const { users, loading, error, createUser, updateUserStatus, deleteUser } = useAdminUsers();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createUserForm, setCreateUserForm] = useState(initialCreateUserForm);
   const [submitting, setSubmitting] = useState(false);
   const [statusUpdatingUserId, setStatusUpdatingUserId] = useState("");
+  const [deleteTargetUser, setDeleteTargetUser] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -243,6 +256,29 @@ function AdminUsers() {
       toast.error(errorMessage);
     } finally {
       setStatusUpdatingUserId("");
+    }
+  };
+
+  const handleDeleteClick = (user) => {
+    setDeleteTargetUser(user);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTargetUser) {
+      return;
+    }
+
+    setDeleting(true);
+
+    try {
+      await deleteUser(deleteTargetUser._id);
+      toast.success("Xóa người dùng thành công");
+      setDeleteTargetUser(null);
+    } catch (deleteError) {
+      const errorMessage = deleteError.response?.data?.message || deleteError.message || "Không thể xóa người dùng";
+      toast.error(errorMessage);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -507,9 +543,9 @@ function AdminUsers() {
                                       size="icon"
                                       className="rounded-full text-muted-foreground hover:bg-green-50 hover:text-primary"
                                       aria-label={`Tùy chọn cho ${user.fullName}`}
-                                      disabled={isUpdatingStatus}
+                                      disabled={isUpdatingStatus || deleting}
                                     >
-                                      {isUpdatingStatus ? (
+                                      {isUpdatingStatus || (deleting && deleteTargetUser?._id === user._id) ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                       ) : (
                                         <MoreHorizontal className="h-4 w-4" />
@@ -520,7 +556,7 @@ function AdminUsers() {
                                     <DropdownMenuItem
                                       onClick={() => handleStatusChange(user)}
                                       variant={nextStatus === "inactive" ? "destructive" : "default"}
-                                      disabled={isUpdatingStatus}
+                                      disabled={isUpdatingStatus || deleting}
                                     >
                                       {nextStatus === "active" ? (
                                         <UserCheck className="h-4 w-4" />
@@ -528,6 +564,14 @@ function AdminUsers() {
                                         <UserX className="h-4 w-4" />
                                       )}
                                       {nextStatus === "active" ? "Kích hoạt" : "Tạm khóa"}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleDeleteClick(user)}
+                                      variant="destructive"
+                                      disabled={isUpdatingStatus || deleting}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      Xóa người dùng
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
@@ -733,6 +777,34 @@ function AdminUsers() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteTargetUser} onOpenChange={(open) => !open && !deleting && setDeleteTargetUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa người dùng</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa tài khoản <span className="font-semibold text-foreground">{deleteTargetUser?.fullName}</span>? Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleting}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang xóa...
+                </>
+              ) : (
+                "Xóa người dùng"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
