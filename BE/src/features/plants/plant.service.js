@@ -7,11 +7,18 @@ const { Plant } = require('./plant.model');
  * @returns {Promise<Array>} Danh sách cây
  */
 async function getAllPlants(filters = {}) {
-  const { category, page, limit } = filters;
+  const { category, search, page, limit } = filters;
   const query = {};
 
   if (category) {
     query.categoryId = category;
+  }
+
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { scientificName: { $regex: search, $options: 'i' } }
+    ];
   }
 
   let plantQuery = Plant.find(query).sort({ name: 1 });

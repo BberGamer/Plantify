@@ -25,10 +25,18 @@ const categories = [
 
 function Browse() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchParam, setSearchParam] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
 
   // Fetch plants from the backend API
-  const { plants, loading, error } = usePlants();
+  const { plants, loading, error } = usePlants({
+    search: searchParam
+  });
+
+  const handleSearch = (e) => {
+    if (e) e.preventDefault();
+    setSearchParam(searchQuery);
+  };
 
   const mapPlantForCard = (plant) => {
     const diffMap = { low: "Dễ", medium: "Trung bình", high: "Khó" };
@@ -57,7 +65,7 @@ function Browse() {
         </div>
         
         <div className="mb-10 space-y-6">
-          <div className="flex gap-3">
+          <form onSubmit={handleSearch} className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -67,11 +75,10 @@ function Browse() {
                 className="pl-12 h-12 text-lg text-black"
               />
             </div>
-            <Button size="lg" variant="outline" className="gap-2">
-              <SlidersHorizontal className="w-5 h-5" />
-              Bộ lọc
+            <Button type="submit" size="lg" className="bg-primary text-white hover:bg-primary/95">
+              Tìm kiếm
             </Button>
-          </div>
+          </form>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <Badge
