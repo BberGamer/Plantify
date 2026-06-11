@@ -1,9 +1,10 @@
 /**
  * BlogPostDetail.jsx - Card/modal hien thi chi tiet bai viet va binh luan.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import {
+  ArrowLeft,
   Calendar,
   Heart,
   Image as ImageIcon,
@@ -119,13 +120,28 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
     createPostComment,
   } = useComments(postId, comments);
 
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onClose?.();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
   if (!post) {
     return null;
   }
 
   const authorName = post.author?.fullName || post.author?.name || post.author || "Plantify";
   const likesCount = post.likesCount || post.likes || 0;
-  const commentCount = liveComments.length || post.commentsCount || 0;
+  const fallbackCommentCount = post.commentsCount || comments.length || 0;
+  const commentCount = commentsLoading || commentsError ? fallbackCommentCount : liveComments.length;
 
   /**
    * Gui comment moi len API va refetch danh sach comments sau khi tao thanh cong.
@@ -167,7 +183,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-4 py-6 backdrop-blur-sm sm:px-6"
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-3 py-4 backdrop-blur-sm sm:px-6 sm:py-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -178,15 +194,25 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
       }}
     >
       <motion.div
-        className="mx-auto max-w-5xl"
+        className="mx-auto w-full max-w-5xl"
         initial={{ opacity: 0, y: 28, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 18, scale: 0.98 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
         <Card className="overflow-hidden border-green-200/70 bg-white shadow-2xl">
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-green-100 bg-white/95 px-5 py-4 backdrop-blur">
-            <div className="flex min-w-0 items-center gap-3">
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-green-100 bg-white/95 px-4 py-3 backdrop-blur sm:px-5 sm:py-4">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="shrink-0 gap-2 rounded-full text-green-700 hover:bg-green-50 hover:text-green-800"
+                onClick={onClose}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Quay lai</span>
+              </Button>
               <Badge className="shrink-0 bg-green-100 text-green-700 hover:bg-green-100">
                 {post.category || "Blog"}
               </Badge>
@@ -205,7 +231,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
           </div>
 
           {images.length > 0 && (
-            <section className="grid gap-3 bg-gradient-to-br from-green-50/60 to-white p-4 md:grid-cols-[1.5fr_1fr]">
+            <section className="grid gap-3 bg-gradient-to-br from-green-50/60 to-white p-3 sm:p-4 md:grid-cols-[1.5fr_1fr]">
               <div className="aspect-video overflow-hidden rounded-lg border border-green-100 bg-white">
                 <ImageWithFallback
                   src={images[0]}
@@ -232,9 +258,9 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
             </section>
           )}
 
-          <CardContent className="space-y-8 p-6 sm:p-8">
+          <CardContent className="space-y-7 p-4 sm:space-y-8 sm:p-8">
             <header className="space-y-5">
-              <h1 className="text-3xl font-bold leading-tight text-foreground sm:text-4xl">
+              <h1 className="text-2xl font-bold leading-tight text-foreground sm:text-4xl">
                 {post.title}
               </h1>
               {post.excerpt && (

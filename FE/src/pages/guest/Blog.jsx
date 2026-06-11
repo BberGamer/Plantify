@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BlogPostDetail from "@/components/common/BlogPostDetail";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePostDetail, usePosts } from "@/features/posts/hooks";
-import { Search, Calendar, User, ArrowRight } from "lucide-react";
+import { Search, Calendar, User, ArrowRight, X } from "lucide-react";
 import { motion } from "motion/react";
 
 const categories = [
@@ -109,6 +109,51 @@ function BlogPostDetailSkeleton({ onClose }) {
   );
 }
 
+/**
+ * Trang thai loi khi khong the tai chi tiet bai viet.
+ * @param {Object} props - Component props
+ * @param {string} props.message - Noi dung loi
+ * @param {Function} props.onClose - Callback dong modal
+ * @returns {JSX.Element} Error modal cho detail
+ */
+function BlogPostDetailError({ message, onClose }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <motion.div
+        className="w-full max-w-lg"
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+      >
+        <Card className="border-destructive/20 bg-white shadow-2xl">
+          <CardContent className="space-y-4 p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Khong the tai bai viet</h2>
+                <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+              </div>
+              <Button type="button" variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <Button className="bg-gradient-to-r from-primary to-green-600 text-white" onClick={onClose}>
+              Quay lai Blog
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function Blog() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
@@ -117,6 +162,7 @@ function Blog() {
     post: detailPost,
     comments: detailComments,
     loading: detailLoading,
+    error: detailError,
   } = usePostDetail(showDetail ? selectedPost?.id : null);
 
   const blogPosts = apiPosts.map(mapPostToBlogCard);
@@ -140,6 +186,24 @@ function Blog() {
   function handleCloseDetail() {
     setShowDetail(false);
   }
+
+  useEffect(() => {
+    if (!showDetail) {
+      return undefined;
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        handleCloseDetail();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showDetail]);
 
   return (
     <div className="min-h-screen py-12 px-6">
@@ -291,6 +355,10 @@ function Blog() {
 
         {showDetail && detailLoading && !detailPost && (
           <BlogPostDetailSkeleton onClose={handleCloseDetail} />
+        )}
+
+        {showDetail && detailError && !detailLoading && !detailPost && (
+          <BlogPostDetailError message={detailError} onClose={handleCloseDetail} />
         )}
 
         {showDetail && activePost && (!detailLoading || detailPost) && (
