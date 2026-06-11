@@ -7,7 +7,7 @@ const { Plant, PlantCategory } = require('./plant.model');
  * @returns {Promise<Array>} Danh sách cây
  */
 async function getAllPlants(filters = {}) {
-  const { category, search, page, limit } = filters;
+  const { category, search, difficulty, sunlight, watering, sortBy, page, limit } = filters;
   const query = {};
 
   if (category && category !== 'Tất cả') {
@@ -32,7 +32,34 @@ async function getAllPlants(filters = {}) {
     ];
   }
 
-  let plantQuery = Plant.find(query).sort({ name: 1 });
+  if (difficulty) {
+    let diffVal = difficulty;
+    if (difficulty === 'easy') diffVal = 'low';
+    if (difficulty === 'hard') diffVal = 'high';
+    query.difficultyLevel = diffVal;
+  }
+
+  if (sunlight) {
+    query.sunlight = sunlight;
+  }
+
+  if (watering) {
+    query.watering = watering;
+  }
+
+  let sort = {};
+  if (sortBy === 'az') {
+    sort.name = 1;
+  } else if (sortBy === 'za') {
+    sort.name = -1;
+  } else if (sortBy === 'difficulty') {
+    sort.difficultyLevel = 1;
+  } else {
+    // popular
+    sort.createdAt = -1;
+  }
+
+  let plantQuery = Plant.find(query).sort(sort);
 
   if (page && limit) {
     const safePage = Math.max(Number(page), 1);

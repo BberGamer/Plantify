@@ -21,6 +21,12 @@ function Browse() {
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [categories, setCategories] = useState(["Tất cả"]);
 
+  // Dropdown states
+  const [difficulty, setDifficulty] = useState("");
+  const [sunlight, setSunlight] = useState("");
+  const [watering, setWatering] = useState("");
+  const [sortBy, setSortBy] = useState("popular");
+
   useEffect(() => {
     getPlantCategories()
       .then((res) => {
@@ -35,7 +41,11 @@ function Browse() {
   // Fetch plants from the backend API
   const { plants, loading, error } = usePlants({
     search: searchParam,
-    category: selectedCategory
+    category: selectedCategory,
+    difficulty: difficulty || undefined,
+    sunlight: sunlight || undefined,
+    watering: watering || undefined,
+    sortBy: sortBy || undefined
   });
 
   const handleSearch = (e) => {
@@ -97,37 +107,40 @@ function Browse() {
             ))}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select>
+            <Select value={difficulty || "all"} onValueChange={(val) => setDifficulty(val === "all" ? "" : val)}>
               <SelectTrigger>
                 <SelectValue placeholder="Độ khó" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Tất cả độ khó</SelectItem>
                 <SelectItem value="easy">Dễ</SelectItem>
                 <SelectItem value="medium">Trung bình</SelectItem>
                 <SelectItem value="hard">Khó</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={sunlight || "all"} onValueChange={(val) => setSunlight(val === "all" ? "" : val)}>
               <SelectTrigger>
                 <SelectValue placeholder="Ánh sáng" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Tất cả mức sáng</SelectItem>
                 <SelectItem value="low">Bóng râm</SelectItem>
                 <SelectItem value="medium">Ánh sáng gián tiếp</SelectItem>
                 <SelectItem value="high">Nhiều ánh sáng</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={watering || "all"} onValueChange={(val) => setWatering(val === "all" ? "" : val)}>
               <SelectTrigger>
                 <SelectValue placeholder="Tưới nước" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Tất cả mức nước</SelectItem>
                 <SelectItem value="low">Ít</SelectItem>
                 <SelectItem value="medium">Vừa phải</SelectItem>
                 <SelectItem value="high">Nhiều</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={sortBy || "popular"} onValueChange={setSortBy}>
               <SelectTrigger>
                 <SelectValue placeholder="Sắp xếp" />
               </SelectTrigger>
