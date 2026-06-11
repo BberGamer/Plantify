@@ -1,7 +1,7 @@
 /**
  * BlogPostDetail.jsx - Card/modal hien thi chi tiet bai viet va binh luan.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "motion/react";
 import {
   Calendar,
@@ -20,7 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 import { useAuth } from "@/features/auth/hooks";
-import { api } from "@/lib/api";
+import { useComments } from "@/features/comments/hooks";
 
 /**
  * Format ngay gio theo ngon ngu hien tai cua UI.
@@ -102,39 +102,47 @@ function RatingStars({ rating }) {
  */
 function BlogPostDetail({ post, onClose, comments = [] }) {
   const { user, isAuthenticated } = useAuth();
-  const [localComments, setLocalComments] = useState(comments);
   const [content, setContent] = useState("");
   const [rating, setRating] = useState(5);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
-  useEffect(() => {
-    setLocalComments(comments || []);
-  }, [comments]);
-
   const images = useMemo(() => {
     const gallery = [post?.thumbnail, ...(post?.images || [])].filter(Boolean);
     return Array.from(new Set(gallery));
   }, [post]);
+  const postId = post?._id || post?.id;
+  const {
+    comments: liveComments,
+    loading: commentsLoading,
+    error: commentsError,
+    createPostComment,
+  } = useComments(postId, comments);
 
   if (!post) {
     return null;
   }
 
-  const postId = post._id || post.id;
   const authorName = post.author?.fullName || post.author?.name || post.author || "Plantify";
   const likesCount = post.likesCount || post.likes || 0;
-  const commentCount = localComments.length || post.commentsCount || 0;
+  const commentCount = liveComments.length || post.commentsCount || 0;
 
   /**
-   * Gui comment moi len API va cap nhat UI local sau khi tao thanh cong.
+   * Gui comment moi len API va refetch danh sach comments sau khi tao thanh cong.
    * @param {SubmitEvent} event - Form submit event
    * @returns {Promise<void>}
    */
   async function handleSubmitComment(event) {
     event.preventDefault();
 
-    if (!content.trim() || !user || !postId) {
+    const trimmedContent = content.trim();
+
+    if (!trimmedContent) {
+      setSubmitError("Vui long nhap noi dung binh luan");
+      return;
+    }
+
+    if (!user || !postId) {
       return;
     }
 
@@ -142,22 +150,12 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
     setSubmitError(null);
 
     try {
-      const response = await api.post("/comments", {
+      await createPostComment({
         userId: user._id || user.id,
         postId,
-        content: content.trim(),
+        content: trimmedContent,
         rating,
       });
-
-      const createdComment = response.data?.data || response.data;
-      setLocalComments((currentComments) => [
-        {
-          ...createdComment,
-          userId: createdComment?.userId || user,
-          createdAt: createdComment?.createdAt || new Date().toISOString(),
-        },
-        ...currentComments,
-      ]);
       setContent("");
       setRating(5);
     } catch (error) {
@@ -327,8 +325,20 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
               )}
 
               <div className="space-y-4">
-                {localComments.length > 0 ? (
-                  localComments.map((comment) => {
+                {commentsLoading && (
+                  <div className="rounded-lg border border-green-100 bg-green-50/40 py-6 text-center text-sm text-green-700">
+                    Dang tai binh luan...
+                  </div>
+                )}
+
+                {commentsError && (
+                  <div className="rounded-lg border border-destructive/20 bg-destructive/5 py-4 text-center text-sm text-destructive">
+                    Khong the tai binh luan: {commentsError}
+                  </div>
+                )}
+
+                {!commentsLoading && liveComments.length > 0 ? (
+                  liveComments.map((comment) => {
                     const author = getCommentAuthor(comment);
 
                     return (
@@ -359,7 +369,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                       </motion.div>
                     );
                   })
-                ) : (
+                ) : !commentsLoading && (
                   <div className="rounded-lg border border-dashed border-green-200 py-10 text-center text-muted-foreground">
                     Chua co binh luan nao cho bai viet nay.
                   </div>
