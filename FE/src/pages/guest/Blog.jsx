@@ -43,7 +43,7 @@ function formatPostDate(date) {
 function mapPostToBlogCard(post) {
   return {
     ...post,
-    id: post.id || post._id,
+    id: post._id || post.id,
     image: post.thumbnail || post.images?.[0],
     date: formatPostDate(post.createdAt),
     readTime: post.readTime || "5 phút đọc"
@@ -163,7 +163,7 @@ function Blog() {
     comments: detailComments,
     loading: detailLoading,
     error: detailError,
-  } = usePostDetail(showDetail ? selectedPost?.id : null);
+  } = usePostDetail(showDetail ? selectedPost?._id || selectedPost?.id : null);
 
   const blogPosts = apiPosts.map(mapPostToBlogCard);
   const featuredPost = blogPosts[0];
@@ -265,7 +265,18 @@ function Blog() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-12"
             >
-              <Card className="overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-colors">
+              <Card
+                className="overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onClick={() => handleOpenPost(featuredPost)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    handleOpenPost(featuredPost);
+                  }
+                }}
+              >
                 <div className="grid md:grid-cols-2">
                   <div className="aspect-video md:aspect-auto overflow-hidden">
                     <img
@@ -292,7 +303,14 @@ function Blog() {
                       </div>
                       <span>• {featuredPost.readTime}</span>
                     </div>
-                    <Button size="lg" className="w-fit" onClick={() => handleOpenPost(featuredPost)}>
+                    <Button
+                      size="lg"
+                      className="w-fit"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleOpenPost(featuredPost);
+                      }}
+                    >
                         Đọc bài viết
                         <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>

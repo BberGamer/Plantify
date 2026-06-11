@@ -6,8 +6,6 @@ import { motion } from "motion/react";
 import {
   ArrowLeft,
   Calendar,
-  Heart,
-  Image as ImageIcon,
   MessageCircle,
   Send,
   Star,
@@ -71,23 +69,35 @@ function getCommentAuthor(comment) {
 
 /**
  * Render rating bang icon sao de giu UI gon va de scan.
- * @param {number} rating - Diem danh gia 1-5
+ * @param {object} props - Component props
+ * @param {number} props.rating - Diem danh gia 1-5
+ * @param {Function} props.onChange - Callback khi bam sao trong form
  * @returns {JSX.Element|null} Cum sao rating
  */
-function RatingStars({ rating }) {
+function RatingStars({ rating, onChange }) {
   const safeRating = Math.max(0, Math.min(Number(rating) || 0, 5));
 
-  if (!safeRating) {
+  if (!safeRating && !onChange) {
     return null;
   }
 
   return (
-    <div className="flex items-center gap-0.5 text-amber-500" aria-label={`${safeRating}/5`}>
+    <div className="flex items-center gap-0.5 text-amber-500" aria-label={`${safeRating}/5 sao`}>
       {Array.from({ length: 5 }).map((_, index) => (
-        <Star
+        <button
           key={index}
-          className={`h-4 w-4 ${index < safeRating ? "fill-current" : "text-muted-foreground/30"}`}
-        />
+          type="button"
+          className={`rounded-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+            onChange ? "cursor-pointer hover:text-amber-600" : "cursor-default"
+          }`}
+          onClick={() => onChange?.(index + 1)}
+          disabled={!onChange}
+          aria-label={`Chon ${index + 1} sao`}
+        >
+          <Star
+            className={`h-4 w-4 ${index < safeRating ? "fill-current" : "text-muted-foreground/30"}`}
+          />
+        </button>
       ))}
     </div>
   );
@@ -139,7 +149,6 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
   }
 
   const authorName = post.author?.fullName || post.author?.name || post.author || "Plantify";
-  const likesCount = post.likesCount || post.likes || 0;
   const fallbackCommentCount = post.commentsCount || comments.length || 0;
   const commentCount = commentsLoading || commentsError ? fallbackCommentCount : liveComments.length;
 
@@ -231,7 +240,11 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
           </div>
 
           {images.length > 0 && (
-            <section className="grid gap-3 bg-gradient-to-br from-green-50/60 to-white p-3 sm:p-4 md:grid-cols-[1.5fr_1fr]">
+            <section
+              className={`grid gap-3 bg-gradient-to-br from-green-50/60 to-white p-3 sm:p-4 ${
+                images.length > 1 ? "md:grid-cols-[1.5fr_1fr]" : ""
+              }`}
+            >
               <div className="aspect-video overflow-hidden rounded-lg border border-green-100 bg-white">
                 <ImageWithFallback
                   src={images[0]}
@@ -239,7 +252,8 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              {images.length > 1 && (
+                <div className="grid grid-cols-2 gap-3">
                 {images.slice(1, 5).map((image, index) => (
                   <div key={image} className="aspect-video overflow-hidden rounded-lg border border-green-100 bg-white">
                     <ImageWithFallback
@@ -249,12 +263,8 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                     />
                   </div>
                 ))}
-                {images.length === 1 && (
-                  <div className="col-span-2 flex aspect-video items-center justify-center rounded-lg border border-dashed border-green-200 bg-white/70 text-green-700">
-                    <ImageIcon className="h-8 w-8" />
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </section>
           )}
 
@@ -274,10 +284,6 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-green-700" />
                   <span>{formatDate(post.createdAt)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Heart className="h-4 w-4 text-green-700" />
-                  <span>{likesCount} luot thich</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MessageCircle className="h-4 w-4 text-green-700" />
@@ -311,18 +317,8 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                     <div>
                       <p className="font-medium text-foreground">{user.fullName}</p>
                       <div className="mt-1 flex items-center gap-2">
-                        <RatingStars rating={rating} />
-                        <select
-                          value={rating}
-                          onChange={(event) => setRating(Number(event.target.value))}
-                          className="rounded-md border border-green-200 bg-white px-2 py-1 text-xs text-green-700 outline-none focus:ring-2 focus:ring-green-500/30"
-                        >
-                          {[5, 4, 3, 2, 1].map((value) => (
-                            <option key={value} value={value}>
-                              {value} sao
-                            </option>
-                          ))}
-                        </select>
+                        <RatingStars rating={rating} onChange={setRating} />
+                        <span className="text-xs font-medium text-green-700">{rating} sao</span>
                       </div>
                     </div>
                   </div>
