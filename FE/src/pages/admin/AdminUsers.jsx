@@ -69,16 +69,16 @@ import {
 } from "lucide-react";
 
 const roleBadgeClassNames = {
-  Admin: "border-transparent bg-primary text-primary-foreground",
-  "Business Manager": "border-transparent bg-green-100 text-green-800",
-  "Content Manager": "border-transparent bg-emerald-100 text-emerald-800",
+  Admin: "border-green-200 bg-white text-green-700",
+  "Business Manager": "border-green-200 bg-white text-green-700",
+  "Content Manager": "border-green-200 bg-white text-green-700",
   Customer: "border-green-200 bg-white text-green-700"
 };
 
 const roleBadgeVariants = {
-  Admin: "default",
-  "Business Manager": "secondary",
-  "Content Manager": "secondary",
+  Admin: "outline",
+  "Business Manager": "outline",
+  "Content Manager": "outline",
   Customer: "outline"
 };
 
@@ -192,21 +192,31 @@ function AdminUsers() {
     event.preventDefault();
 
     const { fullName, email, phone, address, password, confirmPassword, role } = createUserForm;
+    const normalizedFullName = fullName.trim();
+    const normalizedEmail = email.trim();
+    const normalizedPhone = phone.trim();
+    const normalizedAddress = address.trim();
 
-    if (!fullName || !email || !password || !role) {
+    if (!normalizedFullName || !normalizedEmail || !password || !role) {
       toast.error("Vui lòng điền đầy đủ các thông tin bắt buộc");
       return;
     }
 
+    const fullNameRegex = /^[\p{L}\s]+$/u;
+    if (!fullNameRegex.test(normalizedFullName)) {
+      toast.error("Họ tên chỉ được chứa chữ cái và khoảng trắng");
+      return;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(normalizedEmail)) {
       toast.error("Email không đúng định dạng");
       return;
     }
 
-    if (phone && phone.trim() !== "") {
+    if (normalizedPhone !== "") {
       const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
-      if (!phoneRegex.test(phone.trim())) {
+      if (!phoneRegex.test(normalizedPhone)) {
         toast.error("Số điện thoại không hợp lệ (phải bắt đầu bằng 03, 05, 07, 08, 09 và gồm 10 chữ số)");
         return;
       }
@@ -226,10 +236,10 @@ function AdminUsers() {
 
     try {
       await createUser({
-        fullName,
-        email,
-        phone,
-        address,
+        fullName: normalizedFullName,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        address: normalizedAddress,
         password,
         role,
       });
@@ -596,7 +606,7 @@ function AdminUsers() {
           <DialogHeader>
             <DialogTitle>Thêm người dùng mới</DialogTitle>
             <DialogDescription>
-              Tạo nhanh tài khoản vận hành với vai trò manager hoặc sales.
+              Tạo nhanh tài khoản người dùng với các vai trò phù hợp trong hệ thống.
             </DialogDescription>
           </DialogHeader>
 
@@ -670,6 +680,8 @@ function AdminUsers() {
                     <SelectValue placeholder="Chọn vai trò" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="customer">Customer</SelectItem>
                     <SelectItem value="business manager">Business Manager</SelectItem>
                     <SelectItem value="content manager">Content Manager</SelectItem>
                   </SelectContent>

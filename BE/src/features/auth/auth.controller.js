@@ -2,7 +2,7 @@
 const authService = require('./auth.service');
 const { success } = require('../../utils/apiResponse');
 
-const ADMIN_CREATABLE_ROLES = ['business manager', 'content manager'];
+const ADMIN_CREATABLE_ROLES = ['admin', 'customer', 'business manager', 'content manager'];
 
 const validateUserInput = ({ fullName, email, password, phone }) => {
   if (!fullName || !email || !password) {
@@ -11,8 +11,17 @@ const validateUserInput = ({ fullName, email, password, phone }) => {
     throw err;
   }
 
+  const normalizedFullName = fullName.trim();
+  const normalizedEmail = email.trim();
+  const fullNameRegex = /^[\p{L}\s]+$/u;
+  if (!fullNameRegex.test(normalizedFullName)) {
+    const err = new Error('Họ tên chỉ được chứa chữ cái và khoảng trắng');
+    err.statusCode = 400;
+    throw err;
+  }
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!emailRegex.test(normalizedEmail)) {
     const err = new Error('Email không đúng định dạng');
     err.statusCode = 400;
     throw err;
