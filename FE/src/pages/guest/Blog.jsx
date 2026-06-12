@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePostDetail, usePosts } from "@/features/posts/hooks";
-import { Search, Calendar, User, ArrowRight, X } from "lucide-react";
+import { Search, Calendar, User, ArrowRight, X, Star } from "lucide-react";
 import { motion } from "motion/react";
 
 const categories = [
@@ -35,6 +35,27 @@ function formatPostDate(date) {
   }).format(new Date(date));
 }
 
+function getPostPreview(content = "", maxLength = 140) {
+  const plainText = content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
+  if (plainText.length <= maxLength) {
+    return plainText;
+  }
+
+  return `${plainText.slice(0, maxLength).trim()}...`;
+}
+
+function RatingSummary({ value }) {
+  const safeValue = Math.max(0, Math.min(Number(value) || 0, 5));
+
+  return (
+    <div className="flex items-center gap-1 text-amber-500">
+      <Star className={`h-4 w-4 ${safeValue > 0 ? "fill-current" : ""}`} />
+      <span className="text-sm font-medium text-foreground">{safeValue.toFixed(1)}</span>
+    </div>
+  );
+}
+
 /**
  * Chuẩn hóa dữ liệu bài viết từ API về shape UI đang sử dụng.
  * @param {Object} post - Bài viết từ backend
@@ -43,10 +64,10 @@ function formatPostDate(date) {
 function mapPostToBlogCard(post) {
   return {
     ...post,
-    id: post._id || post.id,
+    id: post._id,
     image: post.thumbnail || post.images?.[0],
     date: formatPostDate(post.createdAt),
-    readTime: post.readTime || "5 phút đọc"
+    preview: getPostPreview(post.content)
   };
 }
 
@@ -291,7 +312,7 @@ function Blog() {
                       {featuredPost.category}
                     </Badge>
                     <h2 className="text-3xl font-bold mb-4">{featuredPost.title}</h2>
-                    <p className="text-muted-foreground mb-6">{featuredPost.excerpt}</p>
+                    <p className="text-muted-foreground mb-6">{featuredPost.preview}</p>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4" />
@@ -301,7 +322,7 @@ function Blog() {
                         <Calendar className="w-4 h-4" />
                         <span>{featuredPost.date}</span>
                       </div>
-                      <span>• {featuredPost.readTime}</span>
+                      <RatingSummary value={featuredPost.avgRating} />
                     </div>
                     <Button
                       size="lg"
@@ -323,7 +344,7 @@ function Blog() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {gridPosts.map((post, index) => (
                 <motion.div
-                  key={post.id}
+                  key={post._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
@@ -347,7 +368,7 @@ function Blog() {
                         </Badge>
                         <h3 className="font-bold mb-3 line-clamp-2">{post.title}</h3>
                         <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                          {post.excerpt}
+                          {post.preview}
                         </p>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
@@ -355,7 +376,7 @@ function Blog() {
                             <span>{post.author}</span>
                           </div>
                           <span>•</span>
-                          <span>{post.readTime}</span>
+                          <RatingSummary value={post.avgRating} />
                         </div>
                       </CardContent>
                     </Card>

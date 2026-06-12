@@ -4,12 +4,6 @@ const mongoose = require('mongoose');
 // Schema lưu nội dung blog/bài viết trong collection posts.
 const postSchema = new mongoose.Schema(
   {
-    id: {
-      type: String,
-      trim: true,
-      unique: true,
-      sparse: true,
-    },
     title: {
       type: String,
       required: true,
@@ -18,10 +12,6 @@ const postSchema = new mongoose.Schema(
     content: {
       type: String,
       required: true,
-      default: '',
-    },
-    excerpt: {
-      type: String,
       default: '',
     },
     thumbnail: {
@@ -51,23 +41,16 @@ const postSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
-    likesCount: {
+    avgRating: {
       type: Number,
       default: 0,
       min: 0,
+      max: 5,
     },
     commentsCount: {
       type: Number,
       default: 0,
       min: 0,
-    },
-    isFeatured: {
-      type: Boolean,
-      default: false,
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
     },
   },
   {
