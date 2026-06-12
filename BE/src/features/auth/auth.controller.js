@@ -20,7 +20,8 @@ const validateUserInput = ({ fullName, email, password, phone }) => {
     throw err;
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Chỉ chấp nhận @gmail.com | @yahoo.com | @fpt.edu.vn
+  const emailRegex = /^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i;
   if (!emailRegex.test(normalizedEmail)) {
     const err = new Error('Email không đúng định dạng');
     err.statusCode = 400;
@@ -128,7 +129,8 @@ const login = async (req, res, next) => {
       throw err;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Chỉ chấp nhận @gmail.com | @yahoo.com | @fpt.edu.vn
+    const emailRegex = /^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i;
     if (!emailRegex.test(email)) {
       const err = new Error('Email không đúng định dạng');
       err.statusCode = 400;
@@ -211,7 +213,8 @@ const forgotPassword = async (req, res, next) => {
       throw err;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Chỉ chấp nhận @gmail.com | @yahoo.com | @fpt.edu.vn
+    const emailRegex = /^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i;
     if (!emailRegex.test(email.trim())) {
       const err = new Error('Email không đúng định dạng');
       err.statusCode = 400;
