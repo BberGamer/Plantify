@@ -23,6 +23,27 @@ export const registerApi = async (userData) => {
 };
 
 /**
+ * Gửi OTP xác thực đăng ký — kiểm tra trùng email/SĐT và gửi mã OTP qua Gmail
+ * @param {object} userData - { fullName, email, phone, address, password }
+ * @returns {Promise<object>} response data
+ */
+export const sendRegisterOtpApi = async (userData) => {
+  const response = await api.post("/auth/register/send-otp", userData);
+  return response.data;
+};
+
+/**
+ * Xác thực OTP đăng ký — kích hoạt tài khoản sau khi nhập đúng OTP
+ * @param {string} email - Email đăng ký
+ * @param {string} otp - Mã OTP 6 chữ số
+ * @returns {Promise<object>} response data
+ */
+export const verifyRegisterOtpApi = async (email, otp) => {
+  const response = await api.post("/auth/register/verify-otp", { email, otp });
+  return response.data;
+};
+
+/**
  * Gọi API lấy thông tin người dùng hiện tại
  * @returns {Promise<object>} response data
  */

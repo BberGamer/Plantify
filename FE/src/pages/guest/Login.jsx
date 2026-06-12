@@ -47,7 +47,7 @@ function Login() {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i;
     if (!emailRegex.test(email)) {
       toast.error("Email không đúng định dạng");
       return;

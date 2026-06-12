@@ -4,8 +4,14 @@ const router = express.Router();
 const authController = require('./auth.controller');
 const { authenticate, authorizeAdmin } = require('../../middlewares/auth');
 
-// Đăng ký người dùng mới
+// Đăng ký người dùng mới (dùng cho admin tạo user trực tiếp)
 router.post('/register', authController.register);
+
+// Bước 1: Gửi OTP xác thực email khi đăng ký
+router.post('/register/send-otp', authController.sendRegisterOTP);
+
+// Bước 2: Xác thực OTP và kích hoạt tài khoản
+router.post('/register/verify-otp', authController.verifyRegisterOTP);
 
 // Đăng nhập người dùng
 router.post('/login', authController.login);

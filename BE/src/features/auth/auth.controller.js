@@ -20,7 +20,8 @@ const validateUserInput = ({ fullName, email, password, phone }) => {
     throw err;
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Chỉ chấp nhận @gmail.com | @yahoo.com | @fpt.edu.vn
+  const emailRegex = /^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i;
   if (!emailRegex.test(normalizedEmail)) {
     const err = new Error('Email không đúng định dạng');
     err.statusCode = 400;
@@ -51,6 +52,45 @@ const register = async (req, res, next) => {
     validateUserInput(req.body);
     const user = await authService.register(req.body);
     return success(res, 'Đăng ký tài khoản thành công', user, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Bước 1 đăng ký: Kiểm tra trùng email/SĐT và gửi OTP xác thực qua Gmail
+ */
+const sendRegisterOTP = async (req, res, next) => {
+  try {
+    validateUserInput(req.body);
+    await authService.sendRegisterOTP(req.body);
+    return success(res, 'Mã OTP xác thực đã được gửi đến Gmail của bạn. Vui lòng kiểm tra hộp thư.', null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Bước 2 đăng ký: Xác thực OTP để kích hoạt tài khoản
+ */
+const verifyRegisterOTP = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !email.trim()) {
+      const err = new Error('Email là bắt buộc');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    if (!otp || otp.trim().length !== 6) {
+      const err = new Error('Mã OTP không hợp lệ (phải gồm 6 chữ số)');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const user = await authService.verifyRegisterOTP(email.trim(), otp.trim());
+    return success(res, 'Đăng ký tài khoản thành công! Hãy đăng nhập.', user, 200);
   } catch (error) {
     next(error);
   }
@@ -89,7 +129,8 @@ const login = async (req, res, next) => {
       throw err;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Chỉ chấp nhận @gmail.com | @yahoo.com | @fpt.edu.vn
+    const emailRegex = /^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i;
     if (!emailRegex.test(email)) {
       const err = new Error('Email không đúng định dạng');
       err.statusCode = 400;
@@ -172,7 +213,8 @@ const forgotPassword = async (req, res, next) => {
       throw err;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Chỉ chấp nhận @gmail.com | @yahoo.com | @fpt.edu.vn
+    const emailRegex = /^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i;
     if (!emailRegex.test(email.trim())) {
       const err = new Error('Email không đúng định dạng');
       err.statusCode = 400;
@@ -268,6 +310,8 @@ const verifyOTP = async (req, res, next) => {
 
 module.exports = {
   register,
+  sendRegisterOTP,
+  verifyRegisterOTP,
   createUserByAdmin,
   login,
   getMe,
