@@ -28,6 +28,7 @@ import { AIDoctor } from "@/pages/guest/AIDoctor";
 import { KnowledgeGraph } from "@/pages/guest/KnowledgeGraph";
 import { Login } from "@/pages/guest/Login";
 import { Register } from "@/pages/guest/Register";
+import { RegisterVerifyOtp } from "@/pages/guest/RegisterVerifyOtp";
 import { ForgotPassword } from "@/pages/guest/ForgotPassword";
 import { ResetPassword } from "@/pages/guest/ResetPassword";
 import { Unauthorized } from "@/pages/guest/Unauthorized";
@@ -102,6 +103,7 @@ const appChildRoutes = [
 const authChildRoutes = [
   { path: "login", element: <Login /> },
   { path: "register", element: <Register /> },
+  { path: "register/verify-otp", element: <RegisterVerifyOtp /> },
   { path: "forgot-password", element: <ForgotPassword /> },
   { path: "reset-password", element: <ResetPassword /> },
 ];
