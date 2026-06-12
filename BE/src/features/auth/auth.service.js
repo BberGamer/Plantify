@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('./auth.model');
-const { sendOTPEmail } = require('../../utils/email');
+const { sendOTPEmail, sendRegisterOTPEmail } = require('../../utils/email');
 
 const STATUS_MANAGED_ROLES = ['customer', 'business manager', 'content manager'];
 
@@ -111,9 +111,9 @@ const sendRegisterOTP = async (userData) => {
     expires,
   });
 
-  // Gửi OTP qua email
+  // Gửi OTP qua email đăng ký
   try {
-    await sendOTPEmail(normalizedEmail, otp);
+    await sendRegisterOTPEmail(normalizedEmail, otp);
   } catch (error) {
     // Nếu gửi thất bại thì xóa khỏi memory để tránh rác
     pendingRegistrations.delete(normalizedEmail);
