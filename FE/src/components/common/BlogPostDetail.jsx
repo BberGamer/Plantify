@@ -103,6 +103,17 @@ function RatingStars({ rating, onChange }) {
   );
 }
 
+function RatingSummary({ value }) {
+  const safeValue = Math.max(0, Math.min(Number(value) || 0, 5));
+
+  return (
+    <div className="flex items-center gap-2">
+      <RatingStars rating={Math.round(safeValue)} />
+      <span>{safeValue.toFixed(1)} sao</span>
+    </div>
+  );
+}
+
 /**
  * Hien thi chi tiet bai viet, gallery anh, metadata va khu vuc binh luan.
  * @param {object} props
@@ -273,9 +284,6 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
               <h1 className="text-2xl font-bold leading-tight text-foreground sm:text-4xl">
                 {post.title}
               </h1>
-              {post.excerpt && (
-                <p className="text-lg leading-8 text-muted-foreground">{post.excerpt}</p>
-              )}
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-green-700" />
@@ -289,6 +297,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                   <MessageCircle className="h-4 w-4 text-green-700" />
                   <span>{commentCount} binh luan</span>
                 </div>
+                <RatingSummary value={post.avgRating} />
               </div>
             </header>
 

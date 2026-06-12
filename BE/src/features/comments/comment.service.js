@@ -11,6 +11,25 @@ function ensureObjectId(id, message = 'ID khong hop le') {
   }
 }
 
+async function syncPostRating(postId) {
+  const stats = await Comment.aggregate([
+    { $match: { postId: new mongoose.Types.ObjectId(postId), rating: { $gte: 1, $lte: 5 } } },
+    {
+      $group: {
+        _id: '$postId',
+        commentsCount: { $sum: 1 },
+        avgRating: { $avg: '$rating' },
+      },
+    },
+  ]);
+  const ratingStats = stats[0] || { commentsCount: 0, avgRating: 0 };
+
+  await Post.findByIdAndUpdate(postId, {
+    commentsCount: ratingStats.commentsCount,
+    avgRating: Number(ratingStats.avgRating.toFixed(1)),
+  });
+}
+
 async function getAllComments(filters = {}) {
   const query = {};
 
@@ -52,7 +71,7 @@ async function createComment(payload) {
     rating: payload.rating,
   });
 
-  await Post.findByIdAndUpdate(post._id, { $inc: { commentsCount: 1 } });
+  await syncPostRating(post._id);
 
   return Comment.findById(comment._id)
     .populate('userId', 'fullName email')

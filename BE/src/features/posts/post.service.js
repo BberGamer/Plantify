@@ -5,10 +5,44 @@ require('../comments/comment.model');
 
 function buildPostIdQuery(id) {
   if (mongoose.Types.ObjectId.isValid(id)) {
-    return { $or: [{ _id: id }, { id }] };
+    return { _id: id };
   }
 
-  return { id };
+  return { _id: null };
+}
+
+function withRatingPipeline(extraStages = []) {
+  return [
+    ...extraStages,
+    {
+      $lookup: {
+        from: 'comments',
+        localField: '_id',
+        foreignField: 'postId',
+        as: 'ratingComments',
+      },
+    },
+    {
+      $addFields: {
+        commentsCount: { $size: '$ratingComments' },
+        avgRating: {
+          $ifNull: [{ $round: [{ $avg: '$ratingComments.rating' }, 1] }, 0],
+        },
+      },
+    },
+    {
+      $project: {
+        ratingComments: 0,
+        id: 0,
+        excerpt: 0,
+        likesCount: 0,
+        likeCount: 0,
+        isFeatured: 0,
+        isActive: 0,
+        readTime: 0,
+      },
+    },
+  ];
 }
 
 /**
@@ -18,21 +52,24 @@ function buildPostIdQuery(id) {
  */
 async function getAllPosts(filters = {}) {
   const { category, page, limit } = filters;
-  const query = { isActive: true };
+  const query = {};
 
   if (category) {
     query.category = category;
   }
 
-  let postQuery = Post.find(query).sort({ createdAt: -1 });
+  const pipeline = withRatingPipeline([
+    { $match: query },
+    { $sort: { createdAt: -1 } },
+  ]);
 
   if (page && limit) {
     const safePage = Math.max(Number(page), 1);
     const safeLimit = Math.max(Number(limit), 1);
-    postQuery = postQuery.skip((safePage - 1) * safeLimit).limit(safeLimit);
+    pipeline.push({ $skip: (safePage - 1) * safeLimit }, { $limit: safeLimit });
   }
 
-  return postQuery.lean();
+  return Post.aggregate(pipeline);
 }
 
 /**
@@ -41,7 +78,8 @@ async function getAllPosts(filters = {}) {
  * @returns {Promise<Object>} Chi tiết bài viết
  */
 async function getPostById(id) {
-  const post = await Post.findOne({ ...buildPostIdQuery(id), isActive: true })
+  const post = await Post.findOne(buildPostIdQuery(id))
+    .select('-id -excerpt -likesCount -likeCount -isFeatured -isActive -readTime')
     .populate({
       path: 'comments',
       populate: {
@@ -57,6 +95,19 @@ async function getPostById(id) {
     throw error;
   }
 
+  const ratedComments = post.comments?.filter((comment) => Number(comment.rating) > 0) || [];
+  const avgRating = ratedComments.length
+    ? Number(
+        (
+          ratedComments.reduce((total, comment) => total + Number(comment.rating || 0), 0) /
+          ratedComments.length
+        ).toFixed(1)
+      )
+    : 0;
+
+  post.commentsCount = post.comments?.length || 0;
+  post.avgRating = avgRating;
+
   return post;
 }
 
@@ -67,11 +118,11 @@ async function getPostById(id) {
  */
 async function getFeaturedPosts(filters = {}) {
   const safeLimit = Math.max(Number(filters.limit) || 3, 1);
+  const pipeline = withRatingPipeline([]);
 
-  return Post.find({ isActive: true, isFeatured: true })
-    .sort({ createdAt: -1 })
-    .limit(safeLimit)
-    .lean();
+  pipeline.push({ $sort: { avgRating: -1, createdAt: -1 } }, { $limit: safeLimit });
+
+  return Post.aggregate(pipeline);
 }
 
 module.exports = { getAllPosts, getPostById, getFeaturedPosts };
