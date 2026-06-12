@@ -69,16 +69,16 @@ import {
 } from "lucide-react";
 
 const roleBadgeClassNames = {
-  Admin: "border-transparent bg-primary text-primary-foreground",
-  "Business Manager": "border-transparent bg-green-100 text-green-800",
-  "Content Manager": "border-transparent bg-emerald-100 text-emerald-800",
+  Admin: "border-green-200 bg-white text-green-700",
+  "Business Manager": "border-green-200 bg-white text-green-700",
+  "Content Manager": "border-green-200 bg-white text-green-700",
   Customer: "border-green-200 bg-white text-green-700"
 };
 
 const roleBadgeVariants = {
-  Admin: "default",
-  "Business Manager": "secondary",
-  "Content Manager": "secondary",
+  Admin: "outline",
+  "Business Manager": "outline",
+  "Content Manager": "outline",
   Customer: "outline"
 };
 
