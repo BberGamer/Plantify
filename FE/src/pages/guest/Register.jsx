@@ -39,7 +39,7 @@ function Register() {
     if (!fullName || !fullName.trim()) newErrors.fullName = "Họ và tên là bắt buộc";
     if (!email || !email.trim()) {
       newErrors.email = "Email là bắt buộc";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    } else if (!/^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i.test(email.trim())) {
       newErrors.email = "Email không đúng định dạng";
     }
 

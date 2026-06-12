@@ -51,7 +51,8 @@ function ForgotPassword() {
   // ------- Bước 1: Xử lý gửi OTP -------
   const validateEmail = (val) => {
     if (!val || !val.trim()) return "Email là bắt buộc";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())) return "Email không đúng định dạng";
+    if (!/^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i.test(val.trim()))
+      return "Email không đúng định dạng";
     return "";
   };
 
