@@ -57,6 +57,45 @@ const register = async (req, res, next) => {
 };
 
 /**
+ * Bước 1 đăng ký: Kiểm tra trùng email/SĐT và gửi OTP xác thực qua Gmail
+ */
+const sendRegisterOTP = async (req, res, next) => {
+  try {
+    validateUserInput(req.body);
+    await authService.sendRegisterOTP(req.body);
+    return success(res, 'Mã OTP xác thực đã được gửi đến Gmail của bạn. Vui lòng kiểm tra hộp thư.', null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Bước 2 đăng ký: Xác thực OTP để kích hoạt tài khoản
+ */
+const verifyRegisterOTP = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !email.trim()) {
+      const err = new Error('Email là bắt buộc');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    if (!otp || otp.trim().length !== 6) {
+      const err = new Error('Mã OTP không hợp lệ (phải gồm 6 chữ số)');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const user = await authService.verifyRegisterOTP(email.trim(), otp.trim());
+    return success(res, 'Đăng ký tài khoản thành công! Hãy đăng nhập.', user, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Tạo tài khoản người dùng bởi quản trị viên
  */
 const createUserByAdmin = async (req, res, next) => {
@@ -268,6 +307,8 @@ const verifyOTP = async (req, res, next) => {
 
 module.exports = {
   register,
+  sendRegisterOTP,
+  verifyRegisterOTP,
   createUserByAdmin,
   login,
   getMe,
