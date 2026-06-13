@@ -269,6 +269,7 @@ function Cart() {
                   size="lg"
                   className="w-full bg-gradient-to-r from-primary to-green-600"
                   disabled={selectedItems.length === 0}
+                  onClick={() => navigate("/checkout")}
                 >
                   Thanh toán ({selectedItems.length})
                   <ArrowRight className="w-5 h-5 ml-2" />

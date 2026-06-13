@@ -39,6 +39,7 @@ import { Unauthorized } from "@/pages/guest/Unauthorized";
 import { Profile } from "@/pages/customer/Profile";
 import { Settings } from "@/pages/customer/Settings";
 import { Cart } from "@/pages/customer/Cart";
+import { Checkout } from "@/pages/customer/Checkout";
 
 // ============================================================
 // Sales Pages (Người dùng đã đăng nhập - vai trò Sales)
@@ -78,6 +79,7 @@ const publicChildRoutes = [
   { path: "profile", element: <Profile /> },
   { path: "settings", element: <Settings /> },
   { path: "cart", element: <Cart /> },
+  { path: "checkout", element: <Checkout /> },
   { path: "unauthorized", element: <Unauthorized /> },
 ];
 
