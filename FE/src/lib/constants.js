@@ -29,6 +29,7 @@ const ROUTES = {
   profile: "/profile",
   settings: "/settings",
   cart: "/cart",
+  checkout: "/checkout",
   myShop: "/my-shop",
   addProduct: "/my-shop/add-product",
   dashboard: "/dashboard",
