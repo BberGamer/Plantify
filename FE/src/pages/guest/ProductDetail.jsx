@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { useState, useEffect } from "react";
+import { Link, useParams, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,12 +21,100 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useProduct } from "@/features/products/hooks";
+import { toast } from "sonner";
 
 function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { product, loading, error } = useProduct(id);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+
+  const [isFavorite, setIsFavorite] = useState(() => {
+    const saved = localStorage.getItem("favorites");
+    if (!saved) return false;
+    const favs = JSON.parse(saved);
+    return favs.includes(id);
+  });
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    try {
+      const savedCart = localStorage.getItem("cart");
+      let cart = savedCart ? JSON.parse(savedCart) : [];
+      const existingItemIndex = cart.findIndex((item) => item.id === product._id);
+
+      if (existingItemIndex > -1) {
+        const newQty = cart[existingItemIndex].quantity + quantity;
+        if (newQty > (product.stock || 0)) {
+          toast.warning(`Chỉ có thể thêm tối đa ${product.stock} sản phẩm này.`);
+          cart[existingItemIndex].quantity = product.stock || 0;
+        } else {
+          cart[existingItemIndex].quantity = newQty;
+          toast.success("Đã cập nhật số lượng giỏ hàng!");
+        }
+      } else {
+        const newItem = {
+          id: product._id,
+          name: product.name,
+          price: product.price,
+          originalPrice: product.originalPrice || Math.round(product.price * 1.2),
+          quantity: quantity,
+          stock: product.stock || 0,
+          image: product.thumbnail || (product.images && product.images[0]) || "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400",
+          shop: product.brand || "Plantify Shop",
+          selected: true
+        };
+        cart.push(newItem);
+        toast.success("Đã thêm vào giỏ hàng thành công!");
+      }
+
+      localStorage.setItem("cart", JSON.stringify(cart));
+    } catch (err) {
+      console.error(err);
+      toast.error("Không thể thêm vào giỏ hàng.");
+    }
+  };
+
+  const handleBuyNow = () => {
+    handleAddToCart();
+    navigate("/cart");
+  };
+
+  const handleToggleFavorite = () => {
+    const saved = localStorage.getItem("favorites");
+    let favs = saved ? JSON.parse(saved) : [];
+    
+    if (isFavorite) {
+      favs = favs.filter(favId => favId !== id);
+      setIsFavorite(false);
+      toast.success("Đã xóa khỏi danh sách yêu thích!");
+    } else {
+      favs.push(id);
+      setIsFavorite(true);
+      toast.success("Đã thêm vào danh sách yêu thích!");
+    }
+    localStorage.setItem("favorites", JSON.stringify(favs));
+  };
+
+  const handleShare = () => {
+    const shareUrl = window.location.href;
+    if (navigator.share) {
+      navigator.share({
+        title: product?.name,
+        text: `Xem sản phẩm ${product?.name} trên Plantify!`,
+        url: shareUrl
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          toast.success("Đã sao chép liên kết sản phẩm!");
+        })
+        .catch(() => {
+          toast.error("Không thể sao chép liên kết.");
+        });
+    }
+  };
 
   if (loading) {
     return (
@@ -190,54 +278,32 @@ function ProductDetail() {
               </div>
             </div>
 
-            <div className="flex gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <Button
                 size="lg"
-                className="flex-1 bg-gradient-to-r from-primary to-green-600"
+                variant="outline"
+                className="flex-1 border-primary text-primary hover:bg-primary/5"
+                onClick={handleAddToCart}
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
                 Thêm vào giỏ hàng
               </Button>
-              <Button size="lg" variant="outline">
-                <Heart className="w-5 h-5" />
+              <Button
+                size="lg"
+                className="flex-1 bg-gradient-to-r from-primary to-green-600 text-white"
+                onClick={handleBuyNow}
+              >
+                Mua ngay
               </Button>
-              <Button size="lg" variant="outline">
-                <Share2 className="w-5 h-5" />
-              </Button>
+              <div className="flex gap-2 justify-center">
+                <Button size="lg" variant="outline" onClick={handleToggleFavorite}>
+                  <Heart className={`w-5 h-5 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
+                </Button>
+                <Button size="lg" variant="outline" onClick={handleShare}>
+                  <Share2 className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage src={mockShop.avatar} />
-                      <AvatarFallback className="bg-primary text-white">
-                        {mockShop.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold">{mockShop.name}</h3>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        <span>{mockShop.rating}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <Button variant="outline" asChild>
-                    <Link to={`/shop/${mockShop.name}`}>
-                      <Store className="w-4 h-4 mr-2" />
-                      Xem shop
-                    </Link>
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                  <div>Sản phẩm: {mockShop.products}</div>
-                  <div>Người theo dõi: {mockShop.followers}</div>
-                </div>
-              </CardContent>
-            </Card>
 
             <div className="grid grid-cols-3 gap-4 mt-6">
               <div className="flex items-center gap-2 text-sm">
