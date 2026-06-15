@@ -1,11 +1,12 @@
 // ManagerLayout.jsx
 // Layout quản lý Plantify: dùng chung phong cách với AdminLayout, đổi menu theo vai trò manager.
 
-import { Link, Outlet, useLocation } from "react-router";
+import { Link, Navigate, Outlet, useLocation } from "react-router";
 import {
   Bell,
   LayoutDashboard,
   Leaf,
+  Loader2,
   LogOut,
   Menu,
   Search,
@@ -78,11 +79,27 @@ const getUserInitials = (user) => {
 };
 
 function ManagerLayout({ children }) {
-  const { user, logout } = useAuth();
+  const { user, logout, loading, isAuthenticated } = useAuth();
   const location = useLocation();
   const managerRole = getManagerRole(user?.role);
   const menuItems = managerMenuConfig[managerRole];
   const roleLabel = managerRoleLabels[managerRole];
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!managerMenuConfig[user.role]) {
+    return <Navigate to="/unauthorized" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

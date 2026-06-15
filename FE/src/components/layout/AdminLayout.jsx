@@ -1,11 +1,12 @@
 // AdminLayout.jsx
 // Layout quản trị Plantify: sidebar, header, drawer mobile và vùng nội dung chính cho Admin.
 
-import { Link, Outlet, useLocation } from "react-router";
+import { Link, Navigate, Outlet, useLocation } from "react-router";
 import {
   Bell,
   LayoutDashboard,
   Leaf,
+  Loader2,
   LogOut,
   Menu,
   Search,
@@ -60,8 +61,24 @@ const getUserInitials = (user) => {
 };
 
 function AdminLayout({ children }) {
-  const { user, logout } = useAuth();
+  const { user, logout, loading, isAuthenticated } = useAuth();
   const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role !== "admin") {
+    return <Navigate to="/unauthorized" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

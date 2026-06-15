@@ -8,7 +8,8 @@
 // ============================================================
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
-import { AppLayout } from "@/components/layout/AppLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
+import ManagerLayout from "@/components/layout/ManagerLayout";
 
 // ============================================================
 // Constants
@@ -89,10 +90,16 @@ const publicChildRoutes = [
  * Role-based: tự động redirect nếu không có quyền
  */
 const appChildRoutes = [
+];
+
+const managerChildRoutes = [
   { path: "my-shop", element: <MyShop /> },
   { path: "my-shop/add-product", element: <AddProduct /> },
   { path: "dashboard", element: <Dashboard /> },
   { path: "dashboard/team", element: <Team /> },
+];
+
+const adminChildRoutes = [
   { path: "admin", element: <AdminDashboard /> },
   { path: "admin/users", element: <AdminUsers /> },
 ];
@@ -120,8 +127,12 @@ const routeTree = [
     children: publicChildRoutes,
   },
   {
-    element: <AppLayout />,
-    children: appChildRoutes,
+    element: <ManagerLayout />,
+    children: managerChildRoutes,
+  },
+  {
+    element: <AdminLayout />,
+    children: adminChildRoutes,
   },
   {
     element: <AuthLayout />,
@@ -129,4 +140,11 @@ const routeTree = [
   },
 ];
 
-export { appChildRoutes, authChildRoutes, publicChildRoutes, routeTree };
+export {
+  adminChildRoutes,
+  appChildRoutes,
+  authChildRoutes,
+  managerChildRoutes,
+  publicChildRoutes,
+  routeTree
+};
