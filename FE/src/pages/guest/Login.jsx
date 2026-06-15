@@ -32,9 +32,8 @@ function Login() {
       case "manager":
       case "business manager":
         return "/dashboard";
-      case "sales":
       case "content manager":
-        return "/my-shop";
+        return "/content/dashboard";
       default:
         return "/";
     }

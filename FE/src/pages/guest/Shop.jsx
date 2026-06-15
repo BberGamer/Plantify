@@ -141,16 +141,6 @@ function Shop() {
                 className="bg-white/20 backdrop-blur-sm border-white/40 text-white hover:bg-white/30"
                 asChild
               >
-                <Link to="/my-shop">
-                  <Store className="w-4 h-4 mr-2" />
-                  Gian hàng của tôi
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                className="bg-white/20 backdrop-blur-sm border-white/40 text-white hover:bg-white/30"
-                asChild
-              >
                 <Link to="/cart">
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   Giỏ hàng

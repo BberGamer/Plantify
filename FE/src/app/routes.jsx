@@ -42,17 +42,16 @@ import { Settings } from "@/pages/customer/Settings";
 import { Cart } from "@/pages/customer/Cart";
 import { Checkout } from "@/pages/customer/Checkout";
 
-// ============================================================
-// Sales Pages (Người dùng đã đăng nhập - vai trò Sales)
-// ============================================================
-import { MyShop } from "@/pages/ContentManager/MyShop";
-import { AddProduct } from "@/pages/ContentManager/AddProduct";
+
+
+
 
 // ============================================================
 // Manager Pages (Người dùng đã đăng nhập - vai trò Manager)
 // ============================================================
 import { Dashboard } from "@/pages/BusinessManager/Dashboard";
 import { Team } from "@/pages/BusinessManager/Team";
+import { ContentDashboard } from "@/pages/ContentManager/Dashboard";
 
 // ============================================================
 // Admin Pages (Người dùng đã đăng nhập - vai trò Admin)
@@ -88,15 +87,16 @@ const publicChildRoutes = [
  * App Routes - Trang yêu cầu đăng nhập
  * Layout: AppLayout (có sidebar, header)
  * Role-based: tự động redirect nếu không có quyền
- */
+ */ 
 const appChildRoutes = [
 ];
 
 const managerChildRoutes = [
-  { path: "my-shop", element: <MyShop /> },
-  { path: "my-shop/add-product", element: <AddProduct /> },
+  
+  
   { path: "dashboard", element: <Dashboard /> },
   { path: "dashboard/team", element: <Team /> },
+  { path: "content/dashboard", element: <ContentDashboard /> },
 ];
 
 const adminChildRoutes = [

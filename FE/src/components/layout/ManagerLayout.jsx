@@ -45,7 +45,7 @@ const managerMenuConfig = {
   "content manager": [
     {
       label: "Dashboard",
-      path: "/my-shop",
+      path: "/content/dashboard",
       icon: LayoutDashboard
     }
   ]
