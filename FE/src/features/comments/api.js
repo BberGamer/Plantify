@@ -22,3 +22,23 @@ export const createComment = async (payload) => {
   const response = await api.post("/comments", payload);
   return response.data;
 };
+
+/**
+ * Lay danh sach danh gia cua mot san pham.
+ * @param {string} productId - Id san pham
+ * @returns {Promise<object>} Response data tu API
+ */
+export const getCommentsByProductId = async (productId) => {
+  const response = await api.get(`/comments/product/${productId}`);
+  return response.data;
+};
+
+/**
+ * Tao danh gia moi cho san pham.
+ * @param {Object} payload - Du lieu danh gia gom userId, productId, content, rating
+ * @returns {Promise<object>} Response data tu API
+ */
+export const createProductComment = async (payload) => {
+  const response = await api.post("/comments/product", payload);
+  return response.data;
+};
