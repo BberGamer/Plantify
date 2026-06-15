@@ -29,8 +29,28 @@ async function createComment(req, res, next) {
   }
 }
 
+async function getCommentsByProductId(req, res, next) {
+  try {
+    const comments = await commentService.getCommentsByProductId(req.params.productId);
+    return apiResponse.success(res, 'Lay binh luan cua san pham thanh cong', comments);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function createProductComment(req, res, next) {
+  try {
+    const comment = await commentService.createProductComment(req.body);
+    return apiResponse.success(res, 'Tao danh gia san pham thanh cong', comment, 201);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   getAllComments,
   getCommentsByPostId,
   createComment,
+  getCommentsByProductId,
+  createProductComment,
 };
