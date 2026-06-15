@@ -1,294 +1,361 @@
+// Dashboard.jsx - Trang dashboard giao diện riêng cho business manager
 import { DashboardCard } from "@/components/common/DashboardCard";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  TrendingUp,
-  Bug,
-  BookOpen,
-  Users,
-  Search,
-  Calendar,
-  Leaf
-} from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import {
+  TrendingUp,
+  Wallet,
+  ShoppingBag,
+  Store,
+  CircleDollarSign,
+  Target,
+  Package,
+  Users,
+  CalendarClock
+} from "lucide-react";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  BarChart,
+  Bar
+} from "recharts";
 
-const searchTrendData = [
-  { month: "T1", searches: 1200 },
-  { month: "T2", searches: 1900 },
-  { month: "T3", searches: 2400 },
-  { month: "T4", searches: 3200 },
-  { month: "T5", searches: 4100 },
-  { month: "T6", searches: 3800 }
+const revenueTrendData = [
+  { month: "T1", revenue: 420, orders: 280 },
+  { month: "T2", revenue: 465, orders: 312 },
+  { month: "T3", revenue: 510, orders: 338 },
+  { month: "T4", revenue: 590, orders: 376 },
+  { month: "T5", revenue: 640, orders: 421 },
+  { month: "T6", revenue: 705, orders: 468 }
 ];
 
-const diseaseTrendData = [
-  { disease: "Lá vàng", cases: 245 },
-  { disease: "Rệp sáp", cases: 189 },
-  { disease: "Thối rễ", cases: 156 },
-  { disease: "Bệnh nấm", cases: 142 },
-  { disease: "Thiếu dinh dưỡng", cases: 98 }
+const categoryPerformanceData = [
+  { category: "Phân bón", revenue: 185 },
+  { category: "Chậu cây", revenue: 142 },
+  { category: "Dụng cụ", revenue: 118 },
+  { category: "Hạt giống", revenue: 96 },
+  { category: "Đất trồng", revenue: 88 }
 ];
 
-const topPlants = [
-  { name: "Monstera Deliciosa", views: 12450, growth: "+23%" },
-  { name: "Trầu Bà Nam Mỹ", views: 9870, growth: "+18%" },
-  { name: "Sen Đá", views: 8650, growth: "+15%" },
-  { name: "Kim Tiền", views: 7340, growth: "+12%" },
-  { name: "Cây Lưỡi Hổ", views: 6920, growth: "+8%" }
+const topPartners = [
+  {
+    name: "Green Garden Hub",
+    region: "TP. Hồ Chí Minh",
+    revenue: "128 triệu",
+    growth: "+18%"
+  },
+  {
+    name: "Leaf & Soil Market",
+    region: "Hà Nội",
+    revenue: "104 triệu",
+    growth: "+14%"
+  },
+  {
+    name: "Plant Care House",
+    region: "Đà Nẵng",
+    revenue: "92 triệu",
+    growth: "+11%"
+  },
+  {
+    name: "Urban Jungle Store",
+    region: "Cần Thơ",
+    revenue: "81 triệu",
+    growth: "+9%"
+  }
+];
+
+const priorityTasks = [
+  {
+    title: "Duyệt 12 yêu cầu mở rộng gian hàng",
+    description: "Ưu tiên các đối tác ở khu vực miền Nam trong hôm nay.",
+    status: "Cần xử lý"
+  },
+  {
+    title: "Theo dõi chiến dịch mùa mưa",
+    description: "Doanh thu nhóm phân bón đang vượt kế hoạch 8%.",
+    status: "Đang tốt"
+  },
+  {
+    title: "Rà soát đơn giao chậm",
+    description: "Có 7 đơn vượt SLA tại khu vực Hà Nội và Hải Phòng.",
+    status: "Cảnh báo"
+  }
+];
+
+const recentActivities = [
+  {
+    actor: "Kênh Marketplace",
+    action: "Ghi nhận 48 đơn hàng mới trong 2 giờ gần nhất",
+    time: "5 phút trước"
+  },
+  {
+    actor: "Đối tác Green Garden Hub",
+    action: "Cập nhật tồn kho thêm 120 sản phẩm phân bón hữu cơ",
+    time: "18 phút trước"
+  },
+  {
+    actor: "Hệ thống vận hành",
+    action: "Hoàn tất đối soát doanh thu cho 6 gian hàng trọng điểm",
+    time: "35 phút trước"
+  },
+  {
+    actor: "Nhóm hỗ trợ bán hàng",
+    action: "Yêu cầu điều chỉnh phí vận chuyển cho chiến dịch cuối tuần",
+    time: "1 giờ trước"
+  }
 ];
 
 function Dashboard() {
   return (
-    <div className="min-h-screen py-12 px-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-10">
-          <h1 className="text-5xl font-bold mb-2">Dashboard & Analytics</h1>
-          <p className="text-xl text-muted-foreground">Phân tích xu hướng và thống kê nền tảng</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <DashboardCard
-            title="Tổng người dùng"
-            value="12,450"
-            description="Tháng này"
-            icon={Users}
-            trend={{ value: 18, isPositive: true }}
-          />
-          <DashboardCard
-            title="Lượt tìm kiếm"
-            value="45,231"
-            description="7 ngày qua"
-            icon={Search}
-            trend={{ value: 23, isPositive: true }}
-          />
-          <DashboardCard
-            title="Chẩn đoán AI"
-            value="2,847"
-            description="Tuần này"
-            icon={Bug}
-            trend={{ value: 15, isPositive: true }}
-          />
-          <DashboardCard
-            title="Bài viết mới"
-            value="48"
-            description="Tháng này"
-            icon={BookOpen}
-            trend={{ value: 12, isPositive: false }}
-          />
-        </div>
-
-        <Tabs defaultValue="trends" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="trends">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Xu hướng
-            </TabsTrigger>
-            <TabsTrigger value="plants">
-              <Leaf className="w-4 h-4 mr-2" />
-              Cây phổ biến
-            </TabsTrigger>
-            <TabsTrigger value="diseases">
-              <Bug className="w-4 h-4 mr-2" />
-              Bệnh thường gặp
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="trends" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Lượt tìm kiếm theo tháng</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={{
-                    searches: {
-                      label: "Lượt tìm kiếm",
-                      color: "hsl(var(--primary))"
-                    }
-                  }}
-                  className="h-80"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={searchTrendData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line
-                        type="monotone"
-                        dataKey="searches"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={3}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Người dùng hoạt động</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Hôm nay</span>
-                      <span className="font-semibold">3,240</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Tuần này</span>
-                      <span className="font-semibold">18,765</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Tháng này</span>
-                      <span className="font-semibold">56,432</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tương tác</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Câu hỏi AI</span>
-                      <span className="font-semibold">8,934</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Lưu cây yêu thích</span>
-                      <span className="font-semibold">12,450</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Chia sẻ</span>
-                      <span className="font-semibold">2,876</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+    <div className="mx-auto max-w-7xl space-y-8">
+      <section className="rounded-3xl border border-green-100 bg-gradient-to-r from-green-50 via-background to-emerald-50 p-6 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-3">
+            <Badge className="w-fit border-transparent bg-green-100 text-green-700 hover:bg-green-100">
+              Business Manager Dashboard
+            </Badge>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                Tổng quan vận hành kinh doanh
+              </h1>
+              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
+                Theo dõi doanh thu, đơn hàng, hiệu suất gian hàng và các đầu việc ưu tiên trên nền tảng Plantify.
+              </p>
             </div>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="plants">
-            <Card>
-              <CardHeader>
-                <CardTitle>Cây được xem nhiều nhất</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {topPlants.map((plant, index) => (
-                    <div
-                      key={plant.name}
-                      className="flex items-center gap-4 p-4 rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold">{plant.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {plant.views.toLocaleString()} lượt xem
-                        </p>
-                      </div>
-                      <div className="text-green-600 font-medium">{plant.growth}</div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <div className="grid grid-cols-2 gap-3 sm:min-w-[320px]">
+            <div className="rounded-2xl border border-green-100 bg-white/90 p-4">
+              <p className="text-sm text-muted-foreground">Mục tiêu tháng</p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">82%</p>
+              <p className="mt-1 text-xs text-green-600">Đạt 1,23 tỷ / 1,5 tỷ</p>
+            </div>
+            <div className="rounded-2xl border border-green-100 bg-white/90 p-4">
+              <p className="text-sm text-muted-foreground">Tỉ lệ hoàn tất</p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">96,4%</p>
+              <p className="mt-1 text-xs text-green-600">Tăng 2,1% so với tháng trước</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <TabsContent value="diseases">
-            <Card>
-              <CardHeader>
-                <CardTitle>Bệnh được chẩn đoán nhiều nhất</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={{
-                    cases: {
-                      label: "Số ca",
-                      color: "hsl(var(--primary))"
-                    }
-                  }}
-                  className="h-80"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={diseaseTrendData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="disease" />
-                      <YAxis />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="cases" fill="hsl(var(--primary))" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <DashboardCard
+          title="Doanh thu tháng"
+          value="1,23 tỷ"
+          description="Cập nhật đến hôm nay"
+          icon={Wallet}
+          trend={{ value: 16, isPositive: true }}
+        />
+        <DashboardCard
+          title="Đơn hàng thành công"
+          value="468"
+          description="30 ngày gần nhất"
+          icon={ShoppingBag}
+          trend={{ value: 11, isPositive: true }}
+        />
+        <DashboardCard
+          title="Gian hàng hoạt động"
+          value="32"
+          description="Đang phát sinh doanh thu"
+          icon={Store}
+          trend={{ value: 9, isPositive: true }}
+        />
+        <DashboardCard
+          title="Giá trị đơn trung bình"
+          value="2,63 triệu"
+          description="Theo toàn hệ thống"
+          icon={CircleDollarSign}
+          trend={{ value: 4, isPositive: false }}
+        />
+      </section>
 
-        <Card className="mt-10">
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-5">
+        <Card className="xl:col-span-3">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Hoạt động gần đây
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Hiệu suất doanh thu và đơn hàng
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{
+                revenue: {
+                  label: "Doanh thu (triệu)",
+                  color: "hsl(var(--primary))"
+                },
+                orders: {
+                  label: "Đơn hàng",
+                  color: "hsl(142 72% 45%)"
+                }
+              }}
+              className="h-80"
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={revenueTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={3}
+                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="orders"
+                    stroke="hsl(142 72% 45%)"
+                    strokeWidth={2}
+                    dot={{ fill: "hsl(142 72% 45%)", strokeWidth: 0 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="xl:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              Đầu việc ưu tiên
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {priorityTasks.map((task) => (
+              <div
+                key={task.title}
+                className="rounded-2xl border border-border bg-card p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="font-semibold text-foreground">{task.title}</p>
+                    <p className="text-sm text-muted-foreground">{task.description}</p>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className="border-green-200 bg-green-50 text-green-700"
+                  >
+                    {task.status}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-5">
+        <Card className="xl:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-primary" />
+              Top danh mục theo doanh thu
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{
+                revenue: {
+                  label: "Doanh thu (triệu)",
+                  color: "hsl(var(--primary))"
+                }
+              }}
+              className="h-80"
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={categoryPerformanceData} layout="vertical" margin={{ left: 12 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" />
+                  <YAxis
+                    dataKey="category"
+                    type="category"
+                    width={90}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[0, 8, 8, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="xl:col-span-3">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Gian hàng nổi bật
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                {
-                  user: "Người dùng #1234",
-                  action: "Chẩn đoán bệnh Lá vàng",
-                  time: "2 phút trước"
-                },
-                {
-                  user: "Người dùng #5678",
-                  action: "Tìm kiếm Monstera Deliciosa",
-                  time: "5 phút trước"
-                },
-                {
-                  user: "Người dùng #9101",
-                  action: "Lưu cây Sen Đá vào yêu thích",
-                  time: "12 phút trước"
-                },
-                {
-                  user: "Người dùng #1121",
-                  action: "Đặt nhắc nhở tưới nước",
-                  time: "18 phút trước"
-                },
-                {
-                  user: "Người dùng #3141",
-                  action: "Xem bài viết về phòng ngừa sâu bệnh",
-                  time: "25 phút trước"
-                }
-              ].map((activity, index) => (
+              {topPartners.map((partner, index) => (
                 <div
-                  key={index}
-                  className="flex items-start gap-3 pb-4 border-b border-border last:border-0"
+                  key={partner.name}
+                  className="flex flex-col gap-3 rounded-2xl border border-border bg-card px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="w-2 h-2 rounded-full bg-primary mt-2" />
-                  <div className="flex-1">
-                    <p className="font-medium">{activity.user}</p>
-                    <p className="text-sm text-muted-foreground">{activity.action}</p>
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">{partner.name}</p>
+                      <p className="text-sm text-muted-foreground">{partner.region}</p>
+                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">{activity.time}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">{partner.revenue}</Badge>
+                    <Badge className="border-transparent bg-green-100 text-green-700 hover:bg-green-100">
+                      {partner.growth}
+                    </Badge>
+                  </div>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
-      </div>
+      </section>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarClock className="h-5 w-5 text-primary" />
+            Hoạt động vận hành gần đây
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {recentActivities.map((activity) => (
+              <div
+                key={`${activity.actor}-${activity.time}`}
+                className="flex items-start gap-3 border-b border-border pb-4 last:border-0 last:pb-0"
+              >
+                <div className="mt-2 h-2 w-2 rounded-full bg-primary" />
+                <div className="flex-1 space-y-1">
+                  <p className="font-medium text-foreground">{activity.actor}</p>
+                  <p className="text-sm text-muted-foreground">{activity.action}</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{activity.time}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
