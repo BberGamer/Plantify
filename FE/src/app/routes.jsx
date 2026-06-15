@@ -44,14 +44,14 @@ import { Checkout } from "@/pages/customer/Checkout";
 // ============================================================
 // Sales Pages (Người dùng đã đăng nhập - vai trò Sales)
 // ============================================================
-import { MyShop } from "@/pages/sales/MyShop";
-import { AddProduct } from "@/pages/sales/AddProduct";
+import { MyShop } from "@/pages/ContentManager/MyShop";
+import { AddProduct } from "@/pages/ContentManager/AddProduct";
 
 // ============================================================
 // Manager Pages (Người dùng đã đăng nhập - vai trò Manager)
 // ============================================================
-import { Dashboard } from "@/pages/business manager/Dashboard";
-import { Team } from "@/pages/business manager/Team";
+import { Dashboard } from "@/pages/BusinessManager/Dashboard";
+import { Team } from "@/pages/BusinessManager/Team";
 
 // ============================================================
 // Admin Pages (Người dùng đã đăng nhập - vai trò Admin)
