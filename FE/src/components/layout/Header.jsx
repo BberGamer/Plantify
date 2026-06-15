@@ -138,7 +138,7 @@ function Header() {
                     Hồ sơ
                   </Link>
                 </DropdownMenuItem>
-                {(user.role === "admin" || user.role === "manager" || user.role === "business manager" || user.role === "sales" || user.role === "content manager") && (
+                {(user.role === "admin" || user.role === "manager" || user.role === "business manager" || user.role === "content manager") && (
                   <DropdownMenuItem asChild>
                     <Link
                       to={
@@ -146,7 +146,9 @@ function Header() {
                           ? ROUTES.admin
                           : (user.role === "manager" || user.role === "business manager")
                           ? ROUTES.dashboard
-                          : ROUTES.myShop
+                          : user.role === "content manager"
+                          ? ROUTES.contentDashboard
+                          : ROUTES.dashboard
                       }
                       className="cursor-pointer"
                     >

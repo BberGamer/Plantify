@@ -1,12 +1,11 @@
 // constants.js
-// Route paths, navigation theo vai trò
+// Route paths va cau hinh dieu huong theo vai tro.
 import {
   BarChart3,
   BookOpen,
   Home,
   LayoutDashboard,
   Network,
-  Package,
   Settings,
   ShoppingCart,
   Sparkles,
@@ -14,6 +13,7 @@ import {
   User,
   Users
 } from "lucide-react";
+
 const ROUTES = {
   home: "/",
   browse: "/browse",
@@ -30,76 +30,63 @@ const ROUTES = {
   settings: "/settings",
   cart: "/cart",
   checkout: "/checkout",
-  myShop: "/my-shop",
-  addProduct: "/my-shop/add-product",
   dashboard: "/dashboard",
+  contentDashboard: "/content/dashboard",
   admin: "/admin",
   adminUsers: "/admin/users",
   unauthorized: "/unauthorized"
 };
+
 const PUBLIC_NAV = [
-  { path: "/", label: "Trang chủ", icon: Home, roles: ["guest"] },
-  { path: "/browse", label: "Khám phá", icon: BookOpen, roles: ["guest"] },
+  { path: "/", label: "Trang chu", icon: Home, roles: ["guest"] },
+  { path: "/browse", label: "Kham pha", icon: BookOpen, roles: ["guest"] },
   {
     path: "/marketplace",
-    label: "Gian hàng",
+    label: "Gian hang",
     icon: Store,
     roles: ["guest"]
   },
   {
     path: "/ai-doctor",
-    label: "Bác sĩ AI",
+    label: "Bac si AI",
     icon: Sparkles,
     roles: ["guest"]
   },
   {
     path: "/knowledge-graph",
-    label: "Đồ thị tri thức",
+    label: "Do thi tri thuc",
     icon: Network,
     roles: ["guest"]
   },
   { path: "/blog", label: "Blog", icon: BookOpen, roles: ["guest"] }
 ];
+
 const ROLE_SIDEBAR_NAV = {
   customer: [
-    { path: "/profile", label: "Hồ sơ", icon: User, roles: ["customer"] },
+    { path: "/profile", label: "Ho so", icon: User, roles: ["customer"] },
     {
       path: "/cart",
-      label: "Giỏ hàng",
+      label: "Gio hang",
       icon: ShoppingCart,
       roles: ["customer"]
     },
     {
       path: "/settings",
-      label: "Cài đặt",
+      label: "Cai dat",
       icon: Settings,
       roles: ["customer"]
-    }
-  ],
-  sales: [
-    {
-      path: "/my-shop",
-      label: "Gian hàng của tôi",
-      icon: Store,
-      roles: ["sales"]
-    },
-    {
-      path: "/my-shop/add-product",
-      label: "Thêm sản phẩm",
-      icon: Package,
-      roles: ["sales"]
     }
   ],
   manager: [
     {
       path: "/dashboard",
-      label: "Thống kê",
+      label: "Thong ke",
       icon: BarChart3,
       roles: ["manager"]
     },
     {
       path: "/dashboard/team",
-      label: "Đội ngũ",
+      label: "Doi ngu",
       icon: Users,
       roles: ["manager"]
     }
@@ -107,18 +94,19 @@ const ROLE_SIDEBAR_NAV = {
   admin: [
     {
       path: "/admin",
-      label: "Tổng quan",
+      label: "Tong quan",
       icon: LayoutDashboard,
       roles: ["admin"]
     },
     {
       path: "/admin/users",
-      label: "Người dùng",
+      label: "Nguoi dung",
       icon: Users,
       roles: ["admin"]
     }
   ]
 };
+
 export {
   PUBLIC_NAV,
   ROLE_SIDEBAR_NAV,

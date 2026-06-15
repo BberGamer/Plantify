@@ -8,7 +8,8 @@
 // ============================================================
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
-import { AppLayout } from "@/components/layout/AppLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
+import ManagerLayout from "@/components/layout/ManagerLayout";
 
 // ============================================================
 // Constants
@@ -41,17 +42,16 @@ import { Settings } from "@/pages/customer/Settings";
 import { Cart } from "@/pages/customer/Cart";
 import { Checkout } from "@/pages/customer/Checkout";
 
-// ============================================================
-// Sales Pages (Người dùng đã đăng nhập - vai trò Sales)
-// ============================================================
-import { MyShop } from "@/pages/sales/MyShop";
-import { AddProduct } from "@/pages/sales/AddProduct";
+
+
+
 
 // ============================================================
 // Manager Pages (Người dùng đã đăng nhập - vai trò Manager)
 // ============================================================
-import { Dashboard } from "@/pages/business manager/Dashboard";
-import { Team } from "@/pages/business manager/Team";
+import { Dashboard } from "@/pages/BusinessManager/Dashboard";
+import { Team } from "@/pages/BusinessManager/Team";
+import { ContentDashboard } from "@/pages/ContentManager/Dashboard";
 
 // ============================================================
 // Admin Pages (Người dùng đã đăng nhập - vai trò Admin)
@@ -87,12 +87,19 @@ const publicChildRoutes = [
  * App Routes - Trang yêu cầu đăng nhập
  * Layout: AppLayout (có sidebar, header)
  * Role-based: tự động redirect nếu không có quyền
- */
+ */ 
 const appChildRoutes = [
-  { path: "my-shop", element: <MyShop /> },
-  { path: "my-shop/add-product", element: <AddProduct /> },
+];
+
+const managerChildRoutes = [
+  
+  
   { path: "dashboard", element: <Dashboard /> },
   { path: "dashboard/team", element: <Team /> },
+  { path: "content/dashboard", element: <ContentDashboard /> },
+];
+
+const adminChildRoutes = [
   { path: "admin", element: <AdminDashboard /> },
   { path: "admin/users", element: <AdminUsers /> },
 ];
@@ -120,8 +127,12 @@ const routeTree = [
     children: publicChildRoutes,
   },
   {
-    element: <AppLayout />,
-    children: appChildRoutes,
+    element: <ManagerLayout />,
+    children: managerChildRoutes,
+  },
+  {
+    element: <AdminLayout />,
+    children: adminChildRoutes,
   },
   {
     element: <AuthLayout />,
@@ -129,4 +140,11 @@ const routeTree = [
   },
 ];
 
-export { appChildRoutes, authChildRoutes, publicChildRoutes, routeTree };
+export {
+  adminChildRoutes,
+  appChildRoutes,
+  authChildRoutes,
+  managerChildRoutes,
+  publicChildRoutes,
+  routeTree
+};
