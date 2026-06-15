@@ -1,5 +1,5 @@
 // AdminLayout.jsx
-// Layout quản trị Plantify: sidebar, header, drawer mobile và vùng nội dung chính cho Admin.
+// Layout quản trị Plantify: sidebar trái, drawer mobile và tùy chọn tài khoản ở cuối sidebar.
 
 import { Link, Navigate, Outlet, useLocation } from "react-router";
 import {
@@ -9,7 +9,6 @@ import {
   Loader2,
   LogOut,
   Menu,
-  Search,
   Settings,
   User,
   Users
@@ -24,7 +23,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -83,12 +81,13 @@ function AdminLayout({ children }) {
   return (
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-border bg-card lg:block">
-        <AdminSidebar pathname={location.pathname} />
+        <AdminSidebar pathname={location.pathname} user={user} onLogout={logout} />
       </aside>
 
+      <MobileSidebar pathname={location.pathname} user={user} onLogout={logout} />
+
       <div className="min-h-screen lg:pl-72">
-        <AdminHeader user={user} onLogout={logout} pathname={location.pathname} />
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <main className="mx-auto w-full max-w-7xl px-4 py-6 pt-20 sm:px-6 lg:px-8 lg:pt-8">
           {children || <Outlet />}
         </main>
       </div>
@@ -96,95 +95,28 @@ function AdminLayout({ children }) {
   );
 }
 
-function AdminHeader({ user, onLogout, pathname }) {
+function MobileSidebar({ pathname, user, onLogout }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-      <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="lg:hidden">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Mở menu quản trị</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
-            <SheetHeader className="sr-only">
-              <SheetTitle>Menu quản trị</SheetTitle>
-            </SheetHeader>
-            <AdminSidebar pathname={pathname} />
-          </SheetContent>
-        </Sheet>
-
-        <div className="relative hidden flex-1 sm:block">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Tìm kiếm trong quản trị..."
-            className="h-10 max-w-md bg-background pl-9"
-          />
-        </div>
-
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="sm:hidden">
-            <Search className="h-5 w-5" />
-            <span className="sr-only">Tìm kiếm</span>
+    <div className="fixed left-4 top-4 z-50 lg:hidden">
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="icon" className="bg-background shadow-sm">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Mở menu quản trị</span>
           </Button>
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
-            <span className="sr-only">Thông báo</span>
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-10 gap-2 px-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatarUrl || user?.avatar} alt={user?.fullName || "Admin"} />
-                  <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
-                    {getUserInitials(user)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden max-w-32 truncate text-sm font-medium md:inline">
-                  {user?.fullName || user?.name || "Admin"}
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col">
-                  <span>{user?.fullName || user?.name || "Admin"}</span>
-                  <span className="truncate text-xs font-normal text-muted-foreground">
-                    {user?.email || "admin@plantify.local"}
-                  </span>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/profile">
-                  <User className="h-4 w-4" />
-                  Hồ sơ
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/settings">
-                  <Settings className="h-4 w-4" />
-                  Cài đặt
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogout}>
-                <LogOut className="h-4 w-4" />
-                Đăng xuất
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-    </header>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-72 p-0">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Menu quản trị</SheetTitle>
+          </SheetHeader>
+          <AdminSidebar pathname={pathname} user={user} onLogout={onLogout} />
+        </SheetContent>
+      </Sheet>
+    </div>
   );
 }
 
-function AdminSidebar({ pathname }) {
+function AdminSidebar({ pathname, user, onLogout }) {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border px-5 py-4">
@@ -208,6 +140,69 @@ function AdminSidebar({ pathname }) {
           />
         ))}
       </nav>
+
+      <SidebarAccountOptions user={user} onLogout={onLogout} />
+    </div>
+  );
+}
+
+function SidebarAccountOptions({ user, onLogout }) {
+  return (
+    <div className="space-y-2 border-t border-border p-3">
+      <Button variant="ghost" className="relative w-full justify-start px-3">
+        <Bell className="h-4 w-4" />
+        <span>Thông báo</span>
+        <span className="ml-auto h-2 w-2 rounded-full bg-primary" />
+      </Button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-auto w-full justify-start gap-3 px-3 py-2">
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={user?.avatarUrl || user?.avatar} alt={user?.fullName || "Admin"} />
+              <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
+                {getUserInitials(user)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="min-w-0 flex-1 text-left">
+              <span className="block truncate text-sm font-medium">
+                {user?.fullName || user?.name || "Admin"}
+              </span>
+              <span className="block truncate text-xs font-normal text-muted-foreground">
+                {user?.email || "admin@plantify.local"}
+              </span>
+            </span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="end" className="w-56">
+          <DropdownMenuLabel>
+            <div className="flex flex-col">
+              <span>{user?.fullName || user?.name || "Admin"}</span>
+              <span className="truncate text-xs font-normal text-muted-foreground">
+                {user?.email || "admin@plantify.local"}
+              </span>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link to="/profile">
+              <User className="h-4 w-4" />
+              Hồ sơ
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/settings">
+              <Settings className="h-4 w-4" />
+              Cài đặt
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onLogout}>
+            <LogOut className="h-4 w-4" />
+            Đăng xuất
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
