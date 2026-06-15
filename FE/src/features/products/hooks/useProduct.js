@@ -3,11 +3,12 @@ import { useState, useEffect } from "react";
 import { getProductById } from "../api";
 
 /**
- * Hook lấy sản phẩm theo id
- * @param {string} id
+ * Hook lấy sản phẩm theo id.
+ * @param {string} id - Product id
+ * @param {number} [refreshKey=0] - Tang len de trigger re-fetch (dung sau khi submit rating)
  * @returns {{ product: object|null, loading: boolean, error: string|null }}
  */
-export function useProduct(id) {
+export function useProduct(id, refreshKey = 0) {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,7 +41,7 @@ export function useProduct(id) {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, refreshKey]);
 
   return { product, loading, error };
 }

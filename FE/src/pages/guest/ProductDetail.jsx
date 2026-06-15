@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,13 +22,20 @@ import {
 import { motion } from "motion/react";
 import { useProduct } from "@/features/products/hooks";
 import { toast } from "sonner";
+import { ProductReviews } from "@/components/common/ProductReviews";
 
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { product, loading, error } = useProduct(id);
+  const [productKey, setProductKey] = useState(0);
+  const { product, loading, error } = useProduct(id, productKey);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+
+  // Refetch product sau khi user gui danh gia de cap nhat ratingAverage
+  const handleRatingUpdate = useCallback(() => {
+    setProductKey((k) => k + 1);
+  }, []);
 
   const [isFavorite, setIsFavorite] = useState(() => {
     const saved = localStorage.getItem("favorites");
@@ -375,6 +382,20 @@ function ProductDetail() {
               </Card>
             </TabsContent>
           </Tabs>
+        </motion.div>
+
+        {/* Reviews Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <ProductReviews
+            productId={product._id}
+            ratingAverage={product.ratingAverage}
+            ratingCount={product.ratingCount}
+            onRatingUpdate={handleRatingUpdate}
+          />
         </motion.div>
       </div>
     </div>
