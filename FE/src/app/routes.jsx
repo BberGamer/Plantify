@@ -50,8 +50,8 @@ import { AddProduct } from "@/pages/sales/AddProduct";
 // ============================================================
 // Manager Pages (Người dùng đã đăng nhập - vai trò Manager)
 // ============================================================
-import { Dashboard } from "@/pages/manager/Dashboard";
-import { Team } from "@/pages/manager/Team";
+import { Dashboard } from "@/pages/business manager/Dashboard";
+import { Team } from "@/pages/business manager/Team";
 
 // ============================================================
 // Admin Pages (Người dùng đã đăng nhập - vai trò Admin)
