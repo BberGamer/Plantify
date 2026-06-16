@@ -1,13 +1,17 @@
 ﻿/**
  * Home.jsx - Trang chủ Plantify
- * Hiển thị hero section với search bar và các section giới thiệu
+ * Hien thi hero, cac section gioi thieu va modal chi tiet blog inline.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import BlogPostDetail, {
+  BlogPostDetailError,
+  BlogPostDetailSkeleton,
+} from "@/components/common/BlogPostDetail";
 import { PlantCard } from "@/components/common/PlantCard";
 import { DashboardCard } from "@/components/common/DashboardCard";
 import { usePlants } from "@/features/plants/hooks";
-import { usePosts } from "@/features/posts/hooks";
+import { usePostDetail, usePosts } from "@/features/posts/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -38,9 +42,17 @@ const quickTags = [
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPostHome, setSelectedPostHome] = useState(null);
+  const [showDetailHome, setShowDetailHome] = useState(false);
   const navigate = useNavigate();
   const { plants: apiPlants, loading, error } = usePlants({ page: 1, limit: 6 });
   const { posts: apiPosts } = usePosts({ page: 1, limit: 3 });
+  const {
+    post: detailPostHome,
+    comments: detailCommentsHome,
+    loading: detailLoadingHome,
+    error: detailErrorHome,
+  } = usePostDetail(showDetailHome ? selectedPostHome?._id || selectedPostHome?.id : null);
 
   // === Search handlers: form submit hoặc Enter → navigate với ?q= ===
   const handleSearch = (e) => {
@@ -67,11 +79,41 @@ function Home() {
   }));
 
   const blogCards = apiPosts.map((post) => ({
+    ...post,
     id: post.id || post._id,
     title: post.title,
     category: post.category,
     image: post.thumbnail || post.images?.[0],
   }));
+  const activePostHome = detailPostHome || selectedPostHome;
+  const activeCommentsHome = detailPostHome ? detailCommentsHome : selectedPostHome?.comments || [];
+
+  function handleOpenPostHome(post) {
+    setSelectedPostHome(post);
+    setShowDetailHome(true);
+  }
+
+  function handleClosePostHome() {
+    setShowDetailHome(false);
+  }
+
+  useEffect(() => {
+    if (!showDetailHome) {
+      return undefined;
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        handleClosePostHome();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showDetailHome]);
 
   return (
     <div className="min-h-screen">
@@ -465,8 +507,12 @@ function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Link to={`/blog/${article.id}`}>
-                <Card className="overflow-hidden border border-border hover:shadow-lg transition-shadow cursor-pointer group">
+              <button
+                type="button"
+                className="block h-full w-full text-left"
+                onClick={() => handleOpenPostHome(article)}
+              >
+                <Card className="h-full overflow-hidden border border-border hover:shadow-lg transition-shadow cursor-pointer group">
                   <div className="aspect-video overflow-hidden">
                     <img
                       src={article.image}
@@ -479,16 +525,31 @@ function Home() {
                       {article.category}
                     </Badge>
                     <h3 className="font-semibold mb-2">{article.title}</h3>
-                    <Button variant="link" className="p-0 h-auto text-primary">
+                    <span className="inline-flex h-auto p-0 text-sm font-medium text-primary">
                       Đọc thêm →
-                    </Button>
+                    </span>
                   </CardContent>
                 </Card>
-              </Link>
+              </button>
             </motion.div>
           ))}
         </div>
       </section>
+      {showDetailHome && detailLoadingHome && !detailPostHome && (
+        <BlogPostDetailSkeleton onClose={handleClosePostHome} />
+      )}
+
+      {showDetailHome && detailErrorHome && !detailLoadingHome && !detailPostHome && (
+        <BlogPostDetailError message={detailErrorHome} onClose={handleClosePostHome} />
+      )}
+
+      {showDetailHome && activePostHome && (!detailLoadingHome || detailPostHome) && (
+        <BlogPostDetail
+          post={activePostHome}
+          comments={activeCommentsHome}
+          onClose={handleClosePostHome}
+        />
+      )}
     </div>
   );
 }

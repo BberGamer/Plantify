@@ -1,5 +1,11 @@
+/**
+ * Blog.jsx - Trang blog co filter category/search va modal chi tiet bai viet.
+ */
 import { useEffect, useState } from "react";
-import BlogPostDetail from "@/components/common/BlogPostDetail";
+import BlogPostDetail, {
+  BlogPostDetailError,
+  BlogPostDetailSkeleton,
+} from "@/components/common/BlogPostDetail";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -71,114 +77,19 @@ function mapPostToBlogCard(post) {
   };
 }
 
-/**
- * Skeleton hien thi trong luc dang tai chi tiet bai viet.
- * @param {Object} props - Component props
- * @param {Function} props.onClose - Callback dong skeleton modal
- * @returns {JSX.Element} Loading UI cho modal chi tiet
- */
-function BlogPostDetailSkeleton({ onClose }) {
-  return (
-    <motion.div
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-4 py-6 backdrop-blur-sm sm:px-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <motion.div
-        className="mx-auto max-w-5xl"
-        initial={{ opacity: 0, y: 28, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-      >
-        <Card className="overflow-hidden border-green-200/70 bg-white shadow-2xl">
-          <div className="flex items-center justify-between border-b border-green-100 px-5 py-4">
-            <div className="h-6 w-28 animate-pulse rounded-full bg-green-100" />
-            <Button type="button" variant="ghost" size="sm" onClick={onClose}>
-              Dong
-            </Button>
-          </div>
-          <div className="grid gap-3 bg-gradient-to-br from-green-50/60 to-white p-4 md:grid-cols-[1.5fr_1fr]">
-            <div className="aspect-video animate-pulse rounded-lg bg-green-100" />
-            <div className="grid grid-cols-2 gap-3">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="aspect-video animate-pulse rounded-lg bg-green-100/80" />
-              ))}
-            </div>
-          </div>
-          <CardContent className="space-y-6 p-6 sm:p-8">
-            <div className="h-10 w-3/4 animate-pulse rounded bg-green-100" />
-            <div className="h-5 w-full animate-pulse rounded bg-muted" />
-            <div className="h-5 w-5/6 animate-pulse rounded bg-muted" />
-            <div className="grid gap-3 sm:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="h-5 animate-pulse rounded bg-green-100/80" />
-              ))}
-            </div>
-            <div className="space-y-3 pt-4">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="h-4 animate-pulse rounded bg-muted" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-/**
- * Trang thai loi khi khong the tai chi tiet bai viet.
- * @param {Object} props - Component props
- * @param {string} props.message - Noi dung loi
- * @param {Function} props.onClose - Callback dong modal
- * @returns {JSX.Element} Error modal cho detail
- */
-function BlogPostDetailError({ message, onClose }) {
-  return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 backdrop-blur-sm"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <motion.div
-        className="w-full max-w-lg"
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-      >
-        <Card className="border-destructive/20 bg-white shadow-2xl">
-          <CardContent className="space-y-4 p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Khong the tai bai viet</h2>
-                <p className="mt-2 text-sm text-muted-foreground">{message}</p>
-              </div>
-              <Button type="button" variant="ghost" size="icon" onClick={onClose}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <Button className="bg-gradient-to-r from-primary to-green-600 text-white" onClick={onClose}>
-              Quay lai Blog
-            </Button>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </motion.div>
-  );
-}
-
 function Blog() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
-  const { posts: apiPosts, loading, error } = usePosts({ page: 1, limit: 6 });
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const hasActiveFilters = Boolean(selectedCategory || searchTerm.trim());
+  const { posts: apiPosts, loading, error } = usePosts({
+    page: 1,
+    limit: 6,
+    category: selectedCategory,
+    search: debouncedSearchTerm,
+  });
   const {
     post: detailPost,
     comments: detailComments,
@@ -207,6 +118,25 @@ function Blog() {
   function handleCloseDetail() {
     setShowDetail(false);
   }
+
+  function handleSelectCategory(category) {
+    setSelectedCategory(category === categories[0] ? "" : category);
+  }
+
+  function handleClearFilters() {
+    setSelectedCategory("");
+    setSearchTerm("");
+  }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchTerm]);
 
   useEffect(() => {
     if (!showDetail) {
@@ -243,20 +173,34 @@ function Blog() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               placeholder="Tìm kiếm bài viết..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
               className="pl-12 h-12 text-lg"
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {categories.map((category) => (
               <Badge
                 key={category}
-                variant="secondary"
+                variant={
+                  (!selectedCategory && category === categories[0]) || selectedCategory === category
+                    ? "default"
+                    : "secondary"
+                }
                 className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors"
+                onClick={() => handleSelectCategory(category)}
               >
                 {category}
               </Badge>
             ))}
+
+            {hasActiveFilters && (
+              <Button type="button" variant="ghost" size="sm" onClick={handleClearFilters}>
+                <X className="mr-2 h-4 w-4" />
+                Xóa bộ lọc
+              </Button>
+            )}
           </div>
         </div>
 
@@ -274,7 +218,7 @@ function Blog() {
 
         {!loading && !error && !featuredPost && (
           <div className="py-12 text-center text-muted-foreground">
-            Chưa có bài viết nào.
+            {hasActiveFilters ? "Không tìm thấy bài viết phù hợp." : "Chưa có bài viết nào."}
           </div>
         )}
 
