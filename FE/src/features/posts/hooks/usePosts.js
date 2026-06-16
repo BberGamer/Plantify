@@ -6,7 +6,7 @@ import { getPostById, getPosts } from "../api";
 
 /**
  * Hook lấy danh sách bài viết từ API.
- * @param {Object} filters - Filter truyen len API nhu page, limit, category, title/searchTerm
+ * @param {Object} filters - Filter truyen len API nhu page, limit, category, title/search/searchTerm
  * @returns {{ posts: Array, loading: boolean, error: string|null, searchTerm: string, setSearchTerm: Function, category: string, setCategory: Function, refetch: Function }}
  */
 export function usePosts(filters = {}) {
@@ -14,20 +14,26 @@ export function usePosts(filters = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [searchTerm, setSearchTerm] = useState(filters.searchTerm || filters.title || "");
+  const [searchTerm, setSearchTerm] = useState(filters.searchTerm || filters.search || filters.title || "");
   const [category, setCategory] = useState(filters.category || "");
   const baseFilterKey = JSON.stringify(filters);
 
   useEffect(() => {
-    setSearchTerm(filters.searchTerm || filters.title || "");
-  }, [filters.searchTerm, filters.title]);
+    setSearchTerm(filters.searchTerm || filters.search || filters.title || "");
+  }, [filters.searchTerm, filters.search, filters.title]);
 
   useEffect(() => {
     setCategory(filters.category || "");
   }, [filters.category]);
 
   const requestFilters = useMemo(() => {
-    const { searchTerm: _searchTerm, title: _title, category: _category, ...baseFilters } = filters;
+    const {
+      searchTerm: _searchTerm,
+      search: _search,
+      title: _title,
+      category: _category,
+      ...baseFilters
+    } = filters;
     const nextFilters = { ...baseFilters };
     const trimmedSearchTerm = searchTerm.trim();
 

@@ -178,7 +178,16 @@ function BlogPostDetailError({ message, onClose }) {
 function Blog() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
-  const { posts: apiPosts, loading, error } = usePosts({ page: 1, limit: 6 });
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const hasActiveFilters = Boolean(selectedCategory || searchTerm.trim());
+  const { posts: apiPosts, loading, error } = usePosts({
+    page: 1,
+    limit: 6,
+    category: selectedCategory,
+    search: debouncedSearchTerm,
+  });
   const {
     post: detailPost,
     comments: detailComments,
@@ -207,6 +216,25 @@ function Blog() {
   function handleCloseDetail() {
     setShowDetail(false);
   }
+
+  function handleSelectCategory(category) {
+    setSelectedCategory(category === categories[0] ? "" : category);
+  }
+
+  function handleClearFilters() {
+    setSelectedCategory("");
+    setSearchTerm("");
+  }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchTerm]);
 
   useEffect(() => {
     if (!showDetail) {
@@ -243,20 +271,34 @@ function Blog() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               placeholder="Tìm kiếm bài viết..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
               className="pl-12 h-12 text-lg"
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {categories.map((category) => (
               <Badge
                 key={category}
-                variant="secondary"
+                variant={
+                  (!selectedCategory && category === categories[0]) || selectedCategory === category
+                    ? "default"
+                    : "secondary"
+                }
                 className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors"
+                onClick={() => handleSelectCategory(category)}
               >
                 {category}
               </Badge>
             ))}
+
+            {hasActiveFilters && (
+              <Button type="button" variant="ghost" size="sm" onClick={handleClearFilters}>
+                <X className="mr-2 h-4 w-4" />
+                Xóa bộ lọc
+              </Button>
+            )}
           </div>
         </div>
 
