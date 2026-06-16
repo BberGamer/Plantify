@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 
 /**
  * Lấy danh sách bài viết từ backend.
- * @param {Object} params - Query params như page, limit, category
+ * @param {Object} params - Query params nhu page, limit, category, title
  * @returns {Promise<object>} Response data từ API
  */
 export const getPosts = async (params = {}) => {

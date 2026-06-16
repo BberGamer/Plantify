@@ -1,21 +1,56 @@
 /**
  * usePosts.js - Custom hooks fetch danh sach va chi tiet posts.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getPostById, getPosts } from "../api";
 
 /**
  * Hook lấy danh sách bài viết từ API.
- * @param {Object} filters - Filter truyền lên API như page, limit, category
- * @returns {{ posts: Array, loading: boolean, error: string|null, refetch: Function }}
+ * @param {Object} filters - Filter truyen len API nhu page, limit, category, title/searchTerm
+ * @returns {{ posts: Array, loading: boolean, error: string|null, searchTerm: string, setSearchTerm: Function, category: string, setCategory: Function, refetch: Function }}
  */
 export function usePosts(filters = {}) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchTerm, setSearchTerm] = useState(filters.searchTerm || filters.title || "");
+  const [category, setCategory] = useState(filters.category || "");
+  const baseFilterKey = JSON.stringify(filters);
 
-  const filterKey = JSON.stringify(filters);
+  useEffect(() => {
+    setSearchTerm(filters.searchTerm || filters.title || "");
+  }, [filters.searchTerm, filters.title]);
+
+  useEffect(() => {
+    setCategory(filters.category || "");
+  }, [filters.category]);
+
+  const requestFilters = useMemo(() => {
+    const { searchTerm: _searchTerm, title: _title, category: _category, ...baseFilters } = filters;
+    const nextFilters = { ...baseFilters };
+    const trimmedSearchTerm = searchTerm.trim();
+
+    if (category) {
+      nextFilters.category = category;
+    }
+
+    if (trimmedSearchTerm) {
+      nextFilters.title = trimmedSearchTerm;
+    }
+
+    return nextFilters;
+  }, [baseFilterKey, searchTerm, category]);
+
+  const filterKey = useMemo(
+    () =>
+      Object.entries(requestFilters)
+        .filter(([, value]) => value !== undefined && value !== null && value !== "")
+        .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+        .map(([key, value]) => `${key}:${value}`)
+        .join("|"),
+    [requestFilters]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -23,7 +58,7 @@ export function usePosts(filters = {}) {
     setLoading(true);
     setError(null);
 
-    getPosts(filters)
+    getPosts(requestFilters)
       .then((response) => {
         if (!cancelled) {
           setPosts(response.data || []);
@@ -46,7 +81,7 @@ export function usePosts(filters = {}) {
     setRefreshKey((currentKey) => currentKey + 1);
   };
 
-  return { posts, loading, error, refetch };
+  return { posts, loading, error, searchTerm, setSearchTerm, category, setCategory, refetch };
 }
 
 /**
