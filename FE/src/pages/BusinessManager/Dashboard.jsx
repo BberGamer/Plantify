@@ -172,7 +172,7 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-2">
+        <Card className="overflow-hidden xl:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FolderTree className="h-5 w-5 text-primary" />
@@ -198,15 +198,13 @@ function Dashboard() {
                 }}
                 className="h-80"
               >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={productCategoryData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="total" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <BarChart data={productCategoryData} margin={{ top: 8, right: 12, left: -12, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" interval={0} tickMargin={8} />
+                  <YAxis allowDecimals={false} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="total" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} maxBarSize={56} />
+                </BarChart>
               </ChartContainer>
             )}
           </CardContent>
