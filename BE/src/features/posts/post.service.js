@@ -46,16 +46,20 @@ function withRatingPipeline(extraStages = []) {
 }
 
 /**
- * Lấy danh sách bài viết, có hỗ trợ lọc theo category và phân trang.
+ * Lấy danh sách bài viết, có hỗ trợ lọc theo category, title và phân trang.
  * @param {Object} filters - Query filter từ request
  * @returns {Promise<Array>} Danh sách bài viết
  */
 async function getAllPosts(filters = {}) {
-  const { category, page, limit } = filters;
+  const { category, title, page, limit } = filters;
   const query = {};
 
   if (category) {
     query.category = category;
+  }
+
+  if (title) {
+    query.title = { $regex: title, $options: 'i' };
   }
 
   const pipeline = withRatingPipeline([
