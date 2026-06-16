@@ -2,12 +2,13 @@
  * Home.jsx - Trang chủ Plantify
  * Hiển thị hero section với search bar và các section giới thiệu
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import BlogPostDetail from "@/components/common/BlogPostDetail";
 import { PlantCard } from "@/components/common/PlantCard";
 import { DashboardCard } from "@/components/common/DashboardCard";
 import { usePlants } from "@/features/plants/hooks";
-import { usePosts } from "@/features/posts/hooks";
+import { usePostDetail, usePosts } from "@/features/posts/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +26,8 @@ import {
   Network,
   Store,
   ShoppingCart,
-  Package
+  Package,
+  X
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -36,11 +38,105 @@ const quickTags = [
   { value: "beginner-friendly", label: "Người mới" },
 ];
 
+function BlogPostDetailSkeleton({ onClose }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-4 py-6 backdrop-blur-sm sm:px-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <motion.div
+        className="mx-auto max-w-5xl"
+        initial={{ opacity: 0, y: 28, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+      >
+        <Card className="overflow-hidden border-green-200/70 bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-green-100 px-5 py-4">
+            <div className="h-6 w-28 animate-pulse rounded-full bg-green-100" />
+            <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+              Đóng
+            </Button>
+          </div>
+          <div className="grid gap-3 bg-gradient-to-br from-green-50/60 to-white p-4 md:grid-cols-[1.5fr_1fr]">
+            <div className="aspect-video animate-pulse rounded-lg bg-green-100" />
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="aspect-video animate-pulse rounded-lg bg-green-100/80" />
+              ))}
+            </div>
+          </div>
+          <CardContent className="space-y-6 p-6 sm:p-8">
+            <div className="h-10 w-3/4 animate-pulse rounded bg-green-100" />
+            <div className="h-5 w-full animate-pulse rounded bg-muted" />
+            <div className="h-5 w-5/6 animate-pulse rounded bg-muted" />
+            <div className="space-y-3 pt-4">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="h-4 animate-pulse rounded bg-muted" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function BlogPostDetailError({ message, onClose }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <motion.div
+        className="w-full max-w-lg"
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+      >
+        <Card className="border-destructive/20 bg-white shadow-2xl">
+          <CardContent className="space-y-4 p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Không thể tải bài viết</h2>
+                <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+              </div>
+              <Button type="button" variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <Button className="bg-gradient-to-r from-primary to-green-600 text-white" onClick={onClose}>
+              Quay lại trang chủ
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPostHome, setSelectedPostHome] = useState(null);
+  const [showDetailHome, setShowDetailHome] = useState(false);
   const navigate = useNavigate();
   const { plants: apiPlants, loading, error } = usePlants({ page: 1, limit: 6 });
   const { posts: apiPosts } = usePosts({ page: 1, limit: 3 });
+  const {
+    post: detailPostHome,
+    comments: detailCommentsHome,
+    loading: detailLoadingHome,
+    error: detailErrorHome,
+  } = usePostDetail(showDetailHome ? selectedPostHome?._id || selectedPostHome?.id : null);
 
   // === Search handlers: form submit hoặc Enter → navigate với ?q= ===
   const handleSearch = (e) => {
@@ -67,11 +163,41 @@ function Home() {
   }));
 
   const blogCards = apiPosts.map((post) => ({
+    ...post,
     id: post.id || post._id,
     title: post.title,
     category: post.category,
     image: post.thumbnail || post.images?.[0],
   }));
+  const activePostHome = detailPostHome || selectedPostHome;
+  const activeCommentsHome = detailPostHome ? detailCommentsHome : selectedPostHome?.comments || [];
+
+  function handleOpenPostHome(post) {
+    setSelectedPostHome(post);
+    setShowDetailHome(true);
+  }
+
+  function handleClosePostHome() {
+    setShowDetailHome(false);
+  }
+
+  useEffect(() => {
+    if (!showDetailHome) {
+      return undefined;
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        handleClosePostHome();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showDetailHome]);
 
   return (
     <div className="min-h-screen">
@@ -465,8 +591,12 @@ function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Link to={`/blog/${article.id}`}>
-                <Card className="overflow-hidden border border-border hover:shadow-lg transition-shadow cursor-pointer group">
+              <button
+                type="button"
+                className="block h-full w-full text-left"
+                onClick={() => handleOpenPostHome(article)}
+              >
+                <Card className="h-full overflow-hidden border border-border hover:shadow-lg transition-shadow cursor-pointer group">
                   <div className="aspect-video overflow-hidden">
                     <img
                       src={article.image}
@@ -479,16 +609,31 @@ function Home() {
                       {article.category}
                     </Badge>
                     <h3 className="font-semibold mb-2">{article.title}</h3>
-                    <Button variant="link" className="p-0 h-auto text-primary">
+                    <span className="inline-flex h-auto p-0 text-sm font-medium text-primary">
                       Đọc thêm →
-                    </Button>
+                    </span>
                   </CardContent>
                 </Card>
-              </Link>
+              </button>
             </motion.div>
           ))}
         </div>
       </section>
+      {showDetailHome && detailLoadingHome && !detailPostHome && (
+        <BlogPostDetailSkeleton onClose={handleClosePostHome} />
+      )}
+
+      {showDetailHome && detailErrorHome && !detailLoadingHome && !detailPostHome && (
+        <BlogPostDetailError message={detailErrorHome} onClose={handleClosePostHome} />
+      )}
+
+      {showDetailHome && activePostHome && (!detailLoadingHome || detailPostHome) && (
+        <BlogPostDetail
+          post={activePostHome}
+          comments={activeCommentsHome}
+          onClose={handleClosePostHome}
+        />
+      )}
     </div>
   );
 }
