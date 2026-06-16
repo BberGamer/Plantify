@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  ShoppingBag,
   User
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +39,11 @@ const managerMenuConfig = {
       label: "Dashboard",
       path: "/dashboard",
       icon: LayoutDashboard
+    },
+    {
+      label: "Quản lý đơn hàng",
+      path: "/dashboard/team",
+      icon: ShoppingBag
     }
   ],
   "content manager": [
