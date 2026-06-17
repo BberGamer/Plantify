@@ -1,4 +1,5 @@
 // plant.service.js - Business logic cho Plants
+// Cung cấp các hàm CRUD: lấy danh sách, chi tiết, tạo, cập nhật, xóa cây
 const { Plant, PlantCategory } = require('./plant.model');
 
 /**
@@ -7,8 +8,13 @@ const { Plant, PlantCategory } = require('./plant.model');
  * @returns {Promise<object>} { plants, total, pages, currentPage }
  */
 async function getAllPlants(filters = {}) {
-  const { search, tag, difficulty, sunlight, watering, sort, page = 1, limit = 9 } = filters;
+  const { search, category, tag, difficulty, sunlight, watering, sort, page = 1, limit = 9 } = filters;
   const query = {};
+
+  // Filter theo categoryId
+  if (category) {
+    query.categoryId = category;
+  }
 
   // Search theo name, scientificName, commonNames
   if (search) {
@@ -73,4 +79,73 @@ async function getAllTags() {
   return Array.from(tagSet).sort();
 }
 
-module.exports = { getAllPlants, getAllTags };
+/**
+ * Lấy chi tiết một cây theo id.
+ * @param {string} id - Plant id
+ * @param {boolean} populateCategory - Có populate category không
+ * @returns {Promise<object|null>} Plant document hoặc null
+ */
+async function getPlantById(id, populateCategory = false) {
+  if (!id) {
+    throw new Error('Plant ID is required');
+  }
+
+  let query = Plant.findById(id);
+  if (populateCategory) {
+    query = query.populate('categoryId', 'name slug thumbnail');
+  }
+  return query.lean();
+}
+
+/**
+ * Tạo mới một cây.
+ * @param {Object} data - Dữ liệu cây mới
+ * @returns {Promise<object>} Plant document đã tạo
+ */
+async function createPlant(data) {
+  if (!data.name || !data.name.trim()) {
+    throw new Error('Plant name is required');
+  }
+  if (!data.categoryId || !data.categoryId.trim()) {
+    throw new Error('Category ID is required');
+  }
+
+  const plant = new Plant(data);
+  return plant.save();
+}
+
+/**
+ * Cập nhật một cây theo id.
+ * @param {string} id - Plant id
+ * @param {Object} data - Dữ liệu cập nhật
+ * @returns {Promise<object|null>} Plant document đã cập nhật hoặc null
+ */
+async function updatePlant(id, data) {
+  if (!id) {
+    throw new Error('Plant ID is required');
+  }
+
+  if (data.name !== undefined && !data.name.trim()) {
+    throw new Error('Plant name cannot be empty');
+  }
+  if (data.categoryId !== undefined && !data.categoryId.trim()) {
+    throw new Error('Category ID cannot be empty');
+  }
+
+  return Plant.findByIdAndUpdate(id, data, { new: true, runValidators: true }).lean();
+}
+
+/**
+ * Xóa một cây theo id.
+ * @param {string} id - Plant id
+ * @returns {Promise<object|null>} Plant document đã xóa hoặc null
+ */
+async function deletePlant(id) {
+  if (!id) {
+    throw new Error('Plant ID is required');
+  }
+
+  return Plant.findByIdAndDelete(id);
+}
+
+module.exports = { getAllPlants, getAllTags, getPlantById, createPlant, updatePlant, deletePlant };
