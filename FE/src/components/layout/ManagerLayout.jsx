@@ -51,6 +51,11 @@ const managerMenuConfig = {
       label: "Dashboard",
       path: "/content/dashboard",
       icon: LayoutDashboard
+    },
+    {
+      label: "Quản lý Plants",
+      path: "/content/plants",
+      icon: Leaf
     }
   ]
 };

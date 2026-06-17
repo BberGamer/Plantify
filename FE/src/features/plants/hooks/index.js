@@ -1,2 +1,9 @@
 // index.js - Export các hook của plants feature
-export { usePlants, usePlantTags } from "./usePlants";
+export {
+  usePlants,
+  usePlant,
+  useCreatePlant,
+  useUpdatePlant,
+  useDeletePlant,
+  usePlantTags,
+} from "./usePlants";

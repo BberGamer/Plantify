@@ -1,4 +1,6 @@
 // plant.model.js - Mongoose schema cho Plant và PlantCategory
+// - PlantCategory: danh mục phân loại cây (collection: plant_categories)
+// - Plant: thông tin cây và hướng dẫn chăm sóc (collection: plants)
 const mongoose = require('mongoose');
 
 // Schema danh mục cây trong collection plant_categories.
@@ -111,7 +113,11 @@ const plantSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
-    soil: {
+    soilType: {
+      type: String,
+      default: '',
+    },
+    origin: {
       type: String,
       default: '',
     },

@@ -52,6 +52,8 @@ import { Checkout } from "@/pages/customer/Checkout";
 import { Dashboard } from "@/pages/BusinessManager/Dashboard";
 import { Team } from "@/pages/BusinessManager/Team";
 import { ContentDashboard } from "@/pages/ContentManager/Dashboard";
+import { ManagePlants } from "@/pages/ContentManager/ManagePlants";
+import { PlantDetail as PlantDetailManager } from "@/pages/ContentManager/PlantDetail";
 
 // ============================================================
 // Admin Pages (Người dùng đã đăng nhập - vai trò Admin)
@@ -92,11 +94,11 @@ const appChildRoutes = [
 ];
 
 const managerChildRoutes = [
-  
-  
   { path: "dashboard", element: <Dashboard /> },
   { path: "dashboard/team", element: <Team /> },
   { path: "content/dashboard", element: <ContentDashboard /> },
+  { path: "content/plants", element: <ManagePlants /> },
+  { path: "content/plants/:id", element: <PlantDetailManager /> },
 ];
 
 const adminChildRoutes = [
