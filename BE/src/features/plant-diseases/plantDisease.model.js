@@ -9,6 +9,10 @@ const plantDiseaseSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    plantId: {
+      type: String,
+      trim: true,
+    },
     scientificName: {
       type: String,
       trim: true,
