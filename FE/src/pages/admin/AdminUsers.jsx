@@ -111,7 +111,9 @@ const mapRoleLabel = (role) => {
 };
 
 const mapStatusLabel = (status) => {
-  return status === "active" ? "Hoạt động" : "Tạm khóa";
+  return status
+    ? "Hoạt động"
+    : "Tạm khóa";
 };
 
 const formatDate = (dateValue) => {
@@ -146,7 +148,9 @@ function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState("all");
 
   const totalUsers = users.length;
-  const activeUsers = users.filter((user) => user.status === "active").length;
+  const activeUsers = users.filter(
+    (user) => user.status
+  ).length;
   const managedUsers = users.filter((user) => user.role !== "customer").length;
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
@@ -255,12 +259,16 @@ function AdminUsers() {
   };
 
   const handleStatusChange = async (user) => {
-    const nextStatus = user.status === "active" ? "inactive" : "active";
+    const nextStatus = !user.status;
     setStatusUpdatingUserId(user._id);
 
     try {
       await updateUserStatus(user._id, nextStatus);
-      toast.success(nextStatus === "active" ? "Kích hoạt tài khoản thành công" : "Tạm khóa tài khoản thành công");
+      toast.success(
+        nextStatus
+          ? "Kích hoạt tài khoản thành công"
+          : "Tạm khóa tài khoản thành công"
+      );
     } catch (statusError) {
       const errorMessage = statusError.response?.data?.message || statusError.message || "Không thể cập nhật trạng thái người dùng";
       toast.error(errorMessage);
@@ -508,7 +516,7 @@ function AdminUsers() {
                         const statusLabel = mapStatusLabel(user.status);
                         const canUpdateStatus = user.role !== "admin";
                         const isUpdatingStatus = statusUpdatingUserId === user._id;
-                        const nextStatus = user.status === "active" ? "inactive" : "active";
+                        const nextStatus = !user.status;
 
                         return (
                           <TableRow key={user._id} className="border-green-100/80 hover:bg-green-50/40">
@@ -565,15 +573,16 @@ function AdminUsers() {
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuItem
                                       onClick={() => handleStatusChange(user)}
-                                      variant={nextStatus === "inactive" ? "destructive" : "default"}
+                                      variant={!nextStatus ? "destructive" : "default"}
                                       disabled={isUpdatingStatus || deleting}
                                     >
-                                      {nextStatus === "active" ? (
+                                      {nextStatus ? (
                                         <UserCheck className="h-4 w-4" />
                                       ) : (
                                         <UserX className="h-4 w-4" />
                                       )}
-                                      {nextStatus === "active" ? "Kích hoạt" : "Tạm khóa"}
+
+                                      {nextStatus ? "Kích hoạt" : "Tạm khóa"}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       onClick={() => handleDeleteClick(user)}
@@ -819,6 +828,6 @@ function AdminUsers() {
       </AlertDialog>
     </>
   );
-}
 
+}
 export { AdminUsers };

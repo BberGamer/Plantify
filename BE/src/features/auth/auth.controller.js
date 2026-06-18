@@ -175,14 +175,20 @@ const updateUserStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
 
-    if (!['active', 'inactive'].includes(status)) {
-      const err = new Error('Trạng thái không hợp lệ');
+    if (typeof status !== "boolean") {
+      const err = new Error("Trạng thái không hợp lệ");
       err.statusCode = 400;
       throw err;
     }
 
     const user = await authService.updateUserStatus(req.params.id, status);
-    return success(res, 'Cập nhật trạng thái người dùng thành công', user, 200);
+
+    return success(
+      res,
+      "Cập nhật trạng thái người dùng thành công",
+      user,
+      200
+    );
   } catch (error) {
     next(error);
   }

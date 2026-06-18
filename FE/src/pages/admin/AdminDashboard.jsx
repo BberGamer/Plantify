@@ -67,8 +67,8 @@ function AdminDashboard() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline">{mapRoleLabel(user.role)}</Badge>
-                    <Badge className={user.status === "active" ? "border-transparent bg-green-100 text-green-700" : "border-transparent bg-stone-200 text-stone-700"}>
-                      {user.status === "active" ? "Hoat dong" : "Tam khoa"}
+                    <Badge className={user.status ? "border-transparent bg-green-100 text-green-700" : "border-transparent bg-stone-200 text-stone-700"}>
+                      {user.status ? "Hoat dong" : "Tam khoa"}
                     </Badge>
                     <span className="text-sm text-muted-foreground">{formatDate(user.createdAt)}</span>
                   </div>
