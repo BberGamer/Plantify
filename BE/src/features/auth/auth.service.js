@@ -321,9 +321,7 @@ const forgotPassword = async (email) => {
     err.statusCode = 403;
     throw err;
   
-  const err = new Error('Tài khoản đã bị khóa');
-  err.statusCode = 403;
-  throw err;
+  
 }
 
 
