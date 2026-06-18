@@ -1,6 +1,17 @@
 // plant.service.js - Business logic cho Plants
 // Cung cấp các hàm CRUD: lấy danh sách, chi tiết, tạo, cập nhật, xóa cây
 const Plant = require('./plant.model');
+const PlantCategory = require('./plantCategory.model');
+
+const toSlug = (str) =>
+  str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
 
 /**
  * Lấy danh sách cây, có hỗ trợ lọc và phân trang.
@@ -148,4 +159,43 @@ async function deletePlant(id) {
   return Plant.findOneAndDelete({ id });
 }
 
-module.exports = { getAllPlants, getAllTags, getPlantById, createPlant, updatePlant, deletePlant };
+/**
+ * Lấy danh sách tất cả danh mục cây.
+ * @returns {Promise<Array>} Mảng PlantCategory
+ */
+async function getAllCategories() {
+  return PlantCategory.find().sort({ name: 1 }).lean();
+}
+
+/**
+ * Tạo mới một danh mục cây.
+ * @param {Object} data - Dữ liệu danh mục mới
+ * @returns {Promise<object>} PlantCategory document đã tạo
+ */
+async function createCategory(data) {
+  if (!data.name || !data.name.trim()) {
+    throw new Error('Category name is required');
+  }
+  const category = new PlantCategory({
+    name: data.name.trim(),
+    slug: toSlug(data.name.trim()),
+  });
+  return category.save();
+}
+
+/**
+ * Xóa một danh mục cây theo id.
+ * @param {string} id - Category id
+ * @returns {Promise<object|null>} PlantCategory document đã xóa hoặc null
+ */
+async function deleteCategory(id) {
+  if (!id) {
+    throw new Error('Category ID is required');
+  }
+  return PlantCategory.findOneAndDelete({ id });
+}
+
+module.exports = {
+  getAllPlants, getAllTags, getPlantById, createPlant, updatePlant, deletePlant,
+  getAllCategories, createCategory, deleteCategory
+};

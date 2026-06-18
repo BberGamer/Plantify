@@ -7,3 +7,5 @@ export {
   useDeletePlant,
   usePlantTags,
 } from "./usePlants";
+export { usePlantCategories } from "./usePlantCategories";
+export { useCreateCategory, useDeleteCategory } from "./useCategoryActions";

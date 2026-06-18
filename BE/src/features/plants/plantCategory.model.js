@@ -20,9 +20,17 @@ const plantCategorySchema = new mongoose.Schema(
   {
     timestamps: true,
     collection: 'plant_categories',
-    id: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+// Tự tạo `id` từ MongoDB `_id` nếu chưa có (Mongoose 5+ async)
+plantCategorySchema.pre('save', async function () {
+  if (!this.id) {
+    this.id = this._id.toString();
+  }
+});
 
 const PlantCategory = mongoose.model('PlantCategory', plantCategorySchema);
 

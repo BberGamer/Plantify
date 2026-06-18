@@ -21,4 +21,13 @@ const error = (res, message, statusCode = 500) => {
   return res.status(statusCode).json({ success: false, message, data: null });
 };
 
-module.exports = { success, error };
+/**
+ * Trả về response 404 Not Found
+ * @param {object} res - Express response object
+ * @param {string} message - Thông báo lỗi
+ */
+const notFound = (res, message = 'Không tìm thấy') => {
+  return res.status(404).json({ success: false, message, data: null });
+};
+
+module.exports = { success, error, notFound };
