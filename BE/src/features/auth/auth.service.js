@@ -36,7 +36,7 @@ const createUserRecord = async (userData, role) => {
     address,
     password: hashedPassword,
     role,
-    status: 'active',
+    status: true,
   });
 
   const userObj = newUser.toObject();
@@ -165,7 +165,7 @@ const verifyRegisterOTP = async (email, otp) => {
     address: pending.address,
     password: pending.hashedPassword,
     role: 'customer',
-    status: 'active',
+    status: true,
   });
 
   // Xóa khỏi memory sau khi tạo thành công
@@ -255,7 +255,7 @@ const getUsers = async () => {
 /**
  * Cập nhật trạng thái hoạt động của người dùng
  * @param {string} userId - ID người dùng
- * @param {string} status - active | inactive
+ * @param {boolean} status - true | false
  * @returns {Promise<object>} user
  */
 const updateUserStatus = async (userId, status) => {

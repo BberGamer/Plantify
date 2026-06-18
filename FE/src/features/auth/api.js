@@ -74,7 +74,7 @@ export const createAdminUserApi = async (userData) => {
 /**
  * Gọi API cập nhật trạng thái người dùng
  * @param {string} userId
- * @param {string} status - active | inactive
+ * @param {boolean} status - true | false
  * @returns {Promise<object>} response data
  */
 export const updateUserStatusApi = async (userId, status) => {
