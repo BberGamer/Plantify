@@ -35,9 +35,8 @@ const userSchema = new mongoose.Schema(
       default: 'customer',
     },
     status: {
-      type: String,
-      enum: ['active', 'inactive'],
-      default: 'active',
+      type: Boolean,
+      default: true,
     },
     resetPasswordOTP: {
       type: String,

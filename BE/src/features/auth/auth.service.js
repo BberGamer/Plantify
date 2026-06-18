@@ -36,7 +36,7 @@ const createUserRecord = async (userData, role) => {
     address,
     password: hashedPassword,
     role,
-    status: 'active',
+    status: true,
   });
 
   const userObj = newUser.toObject();
@@ -165,7 +165,7 @@ const verifyRegisterOTP = async (email, otp) => {
     address: pending.address,
     password: pending.hashedPassword,
     role: 'customer',
-    status: 'active',
+    status: true,
   });
 
   // Xóa khỏi memory sau khi tạo thành công
@@ -255,7 +255,7 @@ const getUsers = async () => {
 /**
  * Cập nhật trạng thái hoạt động của người dùng
  * @param {string} userId - ID người dùng
- * @param {string} status - active | inactive
+ * @param {boolean} status - true | false
  * @returns {Promise<object>} user
  */
 const updateUserStatus = async (userId, status) => {
@@ -316,10 +316,16 @@ const forgotPassword = async (email) => {
   }
 
   if (!user.status) {
+
+    const err = new Error('Tài khoản đã bị khóa, không thể đặt lại mật khẩu');
+    err.statusCode = 403;
+    throw err;
+  
   const err = new Error('Tài khoản đã bị khóa');
   err.statusCode = 403;
   throw err;
 }
+
 
   // Tạo OTP gồm 6 số ngẫu nhiên
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
