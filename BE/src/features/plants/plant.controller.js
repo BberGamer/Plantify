@@ -137,7 +137,24 @@ async function deleteCategory(req, res, next) {
   }
 }
 
+/**
+ * Xử lý request PUT /api/plants/categories/:id.
+ * Cập nhật một danh mục cây.
+ */
+async function updateCategory(req, res, next) {
+  try {
+    const { id } = req.params;
+    const category = await plantService.updateCategory(id, req.body);
+    if (!category) {
+      return apiResponse.notFound(res, 'Không tìm thấy danh mục');
+    }
+    return apiResponse.success(res, 'Cập nhật danh mục thành công', category);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   getAllPlants, getAllTags, getPlantById, createPlant, updatePlant, deletePlant,
-  getAllCategories, createCategory, deleteCategory
+  getAllCategories, createCategory, deleteCategory, updateCategory
 };

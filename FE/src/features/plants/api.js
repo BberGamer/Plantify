@@ -46,3 +46,8 @@ export const deleteCategory = async (id) => {
   const response = await api.delete(`/plants/categories/${id}`);
   return response.data;
 };
+
+export const updateCategory = async (id, data) => {
+  const response = await api.put(`/plants/categories/${id}`, data);
+  return response.data;
+};

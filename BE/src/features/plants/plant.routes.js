@@ -14,6 +14,9 @@ router.post('/categories', authenticate, plantController.createCategory);
 // DELETE /api/plants/categories/:id - Xóa danh mục cây.
 router.delete('/categories/:id', authenticate, plantController.deleteCategory);
 
+// PUT /api/plants/categories/:id - Cập nhật danh mục cây.
+router.put('/categories/:id', authenticate, plantController.updateCategory);
+
 // GET /api/plants/tags - Lấy danh sách tags độc nhất.
 router.get('/tags', plantController.getAllTags);
 

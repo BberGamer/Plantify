@@ -195,7 +195,28 @@ async function deleteCategory(id) {
   return PlantCategory.findOneAndDelete({ id });
 }
 
+/**
+ * Cập nhật một danh mục cây theo id.
+ * @param {string} id - Category id (MongoDB _id)
+ * @param {Object} data - Dữ liệu cập nhật
+ * @returns {Promise<object|null>} PlantCategory document đã cập nhật hoặc null
+ */
+async function updateCategory(id, data) {
+  if (!id) {
+    throw new Error('Category ID is required');
+  }
+  if (data.name !== undefined && !data.name.trim()) {
+    throw new Error('Category name cannot be empty');
+  }
+  const updateData = {};
+  if (data.name) {
+    updateData.name = data.name.trim();
+    updateData.slug = toSlug(data.name.trim());
+  }
+  return PlantCategory.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).lean();
+}
+
 module.exports = {
   getAllPlants, getAllTags, getPlantById, createPlant, updatePlant, deletePlant,
-  getAllCategories, createCategory, deleteCategory
+  getAllCategories, createCategory, deleteCategory, updateCategory
 };

@@ -1,6 +1,6 @@
 // useCategoryActions.js - Hook tạo / xóa danh mục cây
 import { useState, useCallback } from "react";
-import { createCategory, deleteCategory } from "../api";
+import { createCategory, deleteCategory, updateCategory } from "../api";
 
 /**
  * Hook tạo danh mục cây
@@ -42,4 +42,25 @@ export function useDeleteCategory() {
   }, []);
 
   return { remove, loading };
+}
+
+/**
+ * Hook cập nhật danh mục cây
+ * @returns {{ update: function, loading: boolean }}
+ */
+export function useUpdateCategory() {
+  const [loading, setLoading] = useState(false);
+
+  const update = useCallback(async (id, data) => {
+    setLoading(true);
+    try {
+      return await updateCategory(id, data);
+    } catch (err) {
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { update, loading };
 }

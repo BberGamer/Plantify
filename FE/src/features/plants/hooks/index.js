@@ -8,4 +8,4 @@ export {
   usePlantTags,
 } from "./usePlants";
 export { usePlantCategories } from "./usePlantCategories";
-export { useCreateCategory, useDeleteCategory } from "./useCategoryActions";
+export { useCreateCategory, useDeleteCategory, useUpdateCategory } from "./useCategoryActions";

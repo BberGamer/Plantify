@@ -1,7 +1,7 @@
 // PlantDetail.jsx - Trang chi tiết Plant cho Content Manager
 import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
-import { ArrowLeft, Trash2, Loader2, Sprout, Globe } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, Sprout, Globe, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -51,6 +51,14 @@ function PlantDetail() {
   const { remove: deletePlant, loading: deletingPlant } = useDeletePlant();
   const { create: createCareGuide, loading: creatingCareGuide } = useCreateCareGuide();
   const { create: createDisease, loading: creatingDisease } = useCreatePlantDisease();
+
+  // Image carousel state
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const images = plant?.images || [];
+  const goToPrev = () => setCurrentImageIndex((i) => (i === 0 ? images.length - 1 : i - 1));
+  const goToNext = () => setCurrentImageIndex((i) => (i === images.length - 1 ? 0 : i + 1));
+  const mainImage = images[currentImageIndex] || images[0];
+  const hasMultipleImages = images.length > 1;
 
   // Handlers
   const handleUpdatePlant = async (payload) => {
@@ -102,8 +110,6 @@ function PlantDetail() {
     );
   }
 
-  const mainImage = plant.thumbnail || plant.images?.[0];
-
   return (
     <div className="plant-detail">
       {/* Header */}
@@ -137,6 +143,23 @@ function PlantDetail() {
                 </div>
               }
             />
+
+            {hasMultipleImages && (
+              <>
+                <button className="plant-detail-image-nav plant-detail-image-nav-prev" onClick={goToPrev}>
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button className="plant-detail-image-nav plant-detail-image-nav-next" onClick={goToNext}>
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+
+                <div className="plant-detail-image-dots">
+                  {images.map((_, idx) => (
+                    <span key={idx} className={`plant-detail-image-dot ${idx === currentImageIndex ? "active" : ""}`} />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 

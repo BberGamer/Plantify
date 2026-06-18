@@ -1,6 +1,6 @@
 // PlantEditForm.jsx - Form chỉnh sửa Plant + Modal thêm Care Guide + Modal thêm Disease
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, X, GripVertical, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,7 @@ const EMPTY_PLANT_FORM = {
   name: "",
   scientificName: "",
   categoryId: "",
-  images: "",
+  images: [],
   shortDescription: "",
   description: "",
   difficultyLevel: "",
@@ -50,6 +50,138 @@ const SEASON_OPTIONS = [
 const toCommaString = (arr) => (Array.isArray(arr) && arr.length > 0 ? arr.join(", ") : "");
 const toCommaArray = (str) => (str ? str.split(",").map((t) => t.trim()).filter(Boolean) : []);
 
+// ===================== IMAGE UPLOADER COMPONENT =====================
+
+function ImageUploader({ images, onChange }) {
+  const [newUrl, setNewUrl] = useState("");
+  const [draggedIndex, setDraggedIndex] = useState(null);
+
+  const addImage = () => {
+    const trimmed = newUrl.trim();
+    if (trimmed && !images.includes(trimmed)) {
+      onChange([...images, trimmed]);
+      setNewUrl("");
+    }
+  };
+
+  const removeImage = (index) => {
+    onChange(images.filter((_, i) => i !== index));
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addImage();
+    }
+  };
+
+  // Drag and drop reordering
+  const handleDragStart = (index) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newImages = [...images];
+    const draggedItem = newImages[draggedIndex];
+    newImages.splice(draggedIndex, 1);
+    newImages.splice(index, 0, draggedItem);
+    onChange(newImages);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Grid thumbnails */}
+      {images.length > 0 && (
+        <div className="grid grid-cols-4 gap-3">
+          {images.map((url, index) => (
+            <div
+              key={index}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragEnd={handleDragEnd}
+              className={`relative group aspect-square rounded-lg overflow-hidden border-2 ${
+                draggedIndex === index ? "border-primary opacity-50" : "border-transparent"
+              } cursor-grab active:cursor-grabbing`}
+            >
+              <img
+                src={url}
+                alt={`Image ${index + 1}`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%23999' font-size='12'%3EError%3C/text%3E%3C/svg%3E";
+                }}
+              />
+
+              {/* Drag handle */}
+              <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="bg-black/50 rounded p-1">
+                  <GripVertical className="w-3 h-3 text-white" />
+                </div>
+              </div>
+
+              {/* Delete button */}
+              <button
+                type="button"
+                onClick={() => removeImage(index)}
+                className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/80"
+              >
+                <X className="w-3 h-3" />
+              </button>
+
+              {/* Index badge */}
+              <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
+                {index + 1}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add image input */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Input
+            value={newUrl}
+            onChange={(e) => setNewUrl(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Nhập URL ảnh..."
+            className="pr-10"
+          />
+          {newUrl && (
+            <button
+              type="button"
+              onClick={() => setNewUrl("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        <Button type="button" variant="outline" onClick={addImage} disabled={!newUrl.trim()}>
+          <Plus className="w-4 h-4 mr-1" />
+          Thêm ảnh
+        </Button>
+      </div>
+
+      {images.length === 0 && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <ImageIcon className="w-4 h-4" />
+          <span>Chưa có ảnh nào. Thêm ảnh bằng cách dán URL bên trên.</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ===================== PLANT EDIT FORM =====================
 
 /**
@@ -65,7 +197,7 @@ export function PlantEditForm({ plant, categories, onUpdate, loading }) {
         name: plant.name || "",
         scientificName: plant.scientificName || "",
         categoryId: plant.categoryId || "",
-        images: toCommaString(plant.images),
+        images: Array.isArray(plant.images) ? [...plant.images] : [],
         shortDescription: plant.shortDescription || "",
         description: plant.description || "",
         difficultyLevel: plant.difficultyLevel || "",
@@ -76,7 +208,7 @@ export function PlantEditForm({ plant, categories, onUpdate, loading }) {
         origin: plant.origin || "",
         soil: plant.soil || "",
         toxicity: plant.toxicity ?? false,
-        tags: toCommaString(plant.tags),
+        tags: Array.isArray(plant.tags) ? plant.tags.join(", ") : "",
       });
     }
   }, [plant, isOpen]);
@@ -85,7 +217,6 @@ export function PlantEditForm({ plant, categories, onUpdate, loading }) {
     e.preventDefault();
     const payload = {
       ...form,
-      images: toCommaArray(form.images),
       tags: toCommaArray(form.tags),
       temperatureMin: form.temperatureMin !== "" ? Number(form.temperatureMin) : undefined,
       temperatureMax: form.temperatureMax !== "" ? Number(form.temperatureMax) : undefined,
@@ -158,15 +289,11 @@ export function PlantEditForm({ plant, categories, onUpdate, loading }) {
 
             {/* Images */}
             <div className="space-y-2">
-              <Label htmlFor="images">Danh sách ảnh (URL, phân cách bằng dấu phẩy)</Label>
-              <Textarea id="images" value={form.images} onChange={(e) => setForm((p) => ({ ...p, images: e.target.value }))} rows={2} placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg" />
-              {form.images && (
-                <div className="flex gap-2 flex-wrap mt-2">
-                  {form.images.split(",").map((url, i) => url.trim() && (
-                    <img key={i} src={url.trim()} alt="" className="h-12 w-12 rounded-md object-cover" onError={(e) => e.target.style.display = "none"} />
-                  ))}
-                </div>
-              )}
+              <Label>Hình ảnh</Label>
+              <ImageUploader
+                images={form.images}
+                onChange={(newImages) => setForm((p) => ({ ...p, images: newImages }))}
+              />
             </div>
 
             {/* Ánh sáng, Độ ẩm, Loại đất */}
