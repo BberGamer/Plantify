@@ -316,10 +316,16 @@ const forgotPassword = async (email) => {
   }
 
   if (!user.status) {
+
     const err = new Error('Tài khoản đã bị khóa, không thể đặt lại mật khẩu');
     err.statusCode = 403;
     throw err;
-  }
+  
+  const err = new Error('Tài khoản đã bị khóa');
+  err.statusCode = 403;
+  throw err;
+}
+
 
   // Tạo OTP gồm 6 số ngẫu nhiên
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
