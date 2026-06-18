@@ -11,7 +11,8 @@ import {
   Menu,
   Settings,
   ShoppingBag,
-  User
+  User,
+  FolderOpen
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -48,14 +49,14 @@ const managerMenuConfig = {
   ],
   "content manager": [
     {
-      label: "Dashboard",
-      path: "/content/dashboard",
-      icon: LayoutDashboard
-    },
-    {
       label: "Quản lý Plants",
       path: "/content/plants",
       icon: Leaf
+    },
+    {
+      label: "Quản lý Danh mục",
+      path: "/content/categories",
+      icon: FolderOpen
     }
   ]
 };
@@ -199,12 +200,6 @@ function ManagerSidebar({ pathname, roleLabel, menuItems, user, onLogout }) {
 function SidebarAccountOptions({ user, onLogout }) {
   return (
     <div className="space-y-2 border-t border-border p-3">
-      <Button variant="ghost" className="relative w-full justify-start px-3">
-        <Bell className="h-4 w-4" />
-        <span>Thông báo</span>
-        <span className="ml-auto h-2 w-2 rounded-full bg-primary" />
-      </Button>
-
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-auto w-full justify-start gap-3 px-3 py-2">

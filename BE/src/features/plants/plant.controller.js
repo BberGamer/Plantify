@@ -4,6 +4,19 @@ const plantService = require('./plant.service');
 const apiResponse = require('../../utils/apiResponse');
 
 /**
+ * Xử lý request GET /api/plants/categories.
+ * Trả về danh sách danh mục cây.
+ */
+async function getAllCategories(req, res, next) {
+  try {
+    const categories = await plantService.getAllCategories();
+    return apiResponse.success(res, 'Lấy danh sách danh mục thành công', categories);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
  * Xử lý request GET /api/plants.
  * Hỗ trợ search, tag, phân trang (page, limit).
  */
@@ -54,7 +67,7 @@ async function getPlantById(req, res, next) {
 async function createPlant(req, res, next) {
   try {
     const plant = await plantService.createPlant(req.body);
-    return apiResponse.created(res, 'Tạo cây thành công', plant);
+    return apiResponse.success(res, 'Tạo cây thành công', plant, 201);
   } catch (error) {
     return next(error);
   }
@@ -94,4 +107,54 @@ async function deletePlant(req, res, next) {
   }
 }
 
-module.exports = { getAllPlants, getAllTags, getPlantById, createPlant, updatePlant, deletePlant };
+/**
+ * Xử lý request POST /api/plants/categories.
+ * Tạo mới một danh mục cây.
+ */
+async function createCategory(req, res, next) {
+  try {
+    const category = await plantService.createCategory(req.body);
+    return apiResponse.success(res, 'Tạo danh mục thành công', category, 201);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * Xử lý request DELETE /api/plants/categories/:id.
+ * Xóa một danh mục cây.
+ */
+async function deleteCategory(req, res, next) {
+  try {
+    const { id } = req.params;
+    const category = await plantService.deleteCategory(id);
+    if (!category) {
+      return apiResponse.notFound(res, 'Không tìm thấy danh mục');
+    }
+    return apiResponse.success(res, 'Xóa danh mục thành công', category);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * Xử lý request PUT /api/plants/categories/:id.
+ * Cập nhật một danh mục cây.
+ */
+async function updateCategory(req, res, next) {
+  try {
+    const { id } = req.params;
+    const category = await plantService.updateCategory(id, req.body);
+    if (!category) {
+      return apiResponse.notFound(res, 'Không tìm thấy danh mục');
+    }
+    return apiResponse.success(res, 'Cập nhật danh mục thành công', category);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = {
+  getAllPlants, getAllTags, getPlantById, createPlant, updatePlant, deletePlant,
+  getAllCategories, createCategory, deleteCategory, updateCategory
+};
