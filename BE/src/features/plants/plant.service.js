@@ -101,7 +101,7 @@ async function getPlantById(id, populateCategory = false) {
     throw new Error('Plant ID is required');
   }
 
-  let query = Plant.findOne({ id });
+  let query = Plant.findOne({ _id: id });
   if (populateCategory) {
     query = query.populate('categoryId', 'name slug thumbnail');
   }
@@ -143,7 +143,7 @@ async function updatePlant(id, data) {
     throw new Error('Category ID cannot be empty');
   }
 
-  return Plant.findOneAndUpdate({ id }, data, { new: true, runValidators: true }).lean();
+  return Plant.findByIdAndUpdate(id, data, { new: true, runValidators: true }).lean();
 }
 
 /**
@@ -156,7 +156,7 @@ async function deletePlant(id) {
     throw new Error('Plant ID is required');
   }
 
-  return Plant.findOneAndDelete({ id });
+  return Plant.findByIdAndDelete(id);
 }
 
 /**
