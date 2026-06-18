@@ -1,6 +1,6 @@
 // plant.service.js - Business logic cho Plants
 // Cung cấp các hàm CRUD: lấy danh sách, chi tiết, tạo, cập nhật, xóa cây
-const { Plant, PlantCategory } = require('./plant.model');
+const Plant = require('./plant.model');
 
 /**
  * Lấy danh sách cây, có hỗ trợ lọc và phân trang.
