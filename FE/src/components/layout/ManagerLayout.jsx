@@ -12,7 +12,9 @@ import {
   Settings,
   ShoppingBag,
   User,
-  FolderOpen
+  FolderOpen,
+  Package,
+  Tags
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -45,6 +47,16 @@ const managerMenuConfig = {
       label: "Quản lý đơn hàng",
       path: "/dashboard/team",
       icon: ShoppingBag
+    },
+    {
+      label: "Quản lý sản phẩm",
+      path: "/dashboard/products",
+      icon: Package
+    },
+    {
+      label: "Loại sản phẩm",
+      path: "/dashboard/categories",
+      icon: Tags
     }
   ],
   "content manager": [

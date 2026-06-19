@@ -51,6 +51,9 @@ import { Checkout } from "@/pages/customer/Checkout";
 // ============================================================
 import { Dashboard } from "@/pages/BusinessManager/Dashboard";
 import { Team } from "@/pages/BusinessManager/Team";
+import { ManageCategories as ManageProductCategories } from "@/pages/BusinessManager/ManageCategories";
+import { ManageProducts } from "@/pages/BusinessManager/ManageProducts";
+import { ProductDetail as BusinessProductDetail } from "@/pages/BusinessManager/ProductDetail";
 import { ManagePlants } from "@/pages/ContentManager/ManagePlants";
 import { ManageCategories } from "@/pages/ContentManager/ManageCategories";
 import { PlantDetail as PlantDetailManager } from "@/pages/ContentManager/PlantDetail";
@@ -96,6 +99,9 @@ const appChildRoutes = [
 const managerChildRoutes = [
   { path: "dashboard", element: <Dashboard /> },
   { path: "dashboard/team", element: <Team /> },
+  { path: "dashboard/products", element: <ManageProducts /> },
+  { path: "dashboard/products/:id", element: <BusinessProductDetail /> },
+  { path: "dashboard/categories", element: <ManageProductCategories /> },
   { path: "content/plants", element: <ManagePlants /> },
   { path: "content/plants/:id", element: <PlantDetailManager /> },
   { path: "content/categories", element: <ManageCategories /> },

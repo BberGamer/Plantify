@@ -3,6 +3,16 @@ const Product = require('./product.model');
 const ProductCategory = require('./product-category.model');
 const mongoose = require('mongoose');
 
+const toSlug = (str) =>
+  str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+
 /**
  * Lấy product theo id, populate category
  * @param {string} id - Product id
@@ -99,12 +109,141 @@ async function getAllProducts({ search, category, minPrice, maxPrice, minRating,
  * Lấy tất cả danh mục sản phẩm
  */
 async function getAllCategories() {
-  return await ProductCategory.find();
+  return await ProductCategory.find().sort({ name: 1 }).lean();
+}
+
+/**
+ * Tạo mới danh mục sản phẩm
+ */
+async function createCategory(data) {
+  if (!data.name || !data.name.trim()) {
+    throw new Error('Category name is required');
+  }
+
+  const trimmedName = data.name.trim();
+  const category = new ProductCategory({
+    name: trimmedName,
+    slug: toSlug(trimmedName)
+  });
+
+  return category.save();
+}
+
+/**
+ * Cập nhật danh mục sản phẩm
+ */
+async function updateCategory(id, data) {
+  if (!id) {
+    throw new Error('Category ID is required');
+  }
+
+  if (data.name !== undefined && !data.name.trim()) {
+    throw new Error('Category name cannot be empty');
+  }
+
+  const updateData = {};
+  if (data.name) {
+    updateData.name = data.name.trim();
+    updateData.slug = toSlug(data.name.trim());
+  }
+
+  return ProductCategory.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).lean();
+}
+
+/**
+ * Xóa danh mục sản phẩm
+ */
+async function deleteCategory(id) {
+  if (!id) {
+    throw new Error('Category ID is required');
+  }
+
+  return ProductCategory.findByIdAndDelete(id);
+}
+
+/**
+ * Tạo mới sản phẩm
+ */
+async function createProduct(data) {
+  if (!data.name || !data.name.trim()) {
+    throw new Error('Product name is required');
+  }
+
+  if (!data.categoryId || !String(data.categoryId).trim()) {
+    throw new Error('Category ID is required');
+  }
+
+  if (data.price === undefined || Number.isNaN(Number(data.price))) {
+    throw new Error('Product price is required');
+  }
+
+  const product = new Product({
+    ...data,
+    name: data.name.trim(),
+    categoryId: String(data.categoryId).trim(),
+    brand: data.brand?.trim() || '',
+    thumbnail: data.thumbnail?.trim() || '',
+    description: data.description?.trim() || '',
+    price: Number(data.price),
+    stock: Number(data.stock || 0),
+    tags: Array.isArray(data.tags) ? data.tags : []
+  });
+
+  return product.save();
+}
+
+/**
+ * Cập nhật sản phẩm
+ */
+async function updateProduct(id, data) {
+  if (!id) {
+    throw new Error('Product ID is required');
+  }
+
+  if (data.name !== undefined && !data.name.trim()) {
+    throw new Error('Product name cannot be empty');
+  }
+
+  if (data.categoryId !== undefined && !String(data.categoryId).trim()) {
+    throw new Error('Category ID cannot be empty');
+  }
+
+  const updateData = {
+    ...data,
+  };
+
+  if (data.name !== undefined) updateData.name = data.name.trim();
+  if (data.categoryId !== undefined) updateData.categoryId = String(data.categoryId).trim();
+  if (data.brand !== undefined) updateData.brand = data.brand?.trim() || '';
+  if (data.thumbnail !== undefined) updateData.thumbnail = data.thumbnail?.trim() || '';
+  if (data.description !== undefined) updateData.description = data.description?.trim() || '';
+  if (data.price !== undefined) updateData.price = Number(data.price);
+  if (data.stock !== undefined) updateData.stock = Number(data.stock || 0);
+  if (data.tags !== undefined) updateData.tags = Array.isArray(data.tags) ? data.tags : [];
+
+  return Product.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).lean();
+}
+
+/**
+ * Xóa sản phẩm
+ */
+async function deleteProduct(id) {
+  if (!id) {
+    throw new Error('Product ID is required');
+  }
+
+  return Product.findByIdAndDelete(id);
 }
 
 module.exports = {
   getProductById,
   getAllProducts,
-  getAllCategories
+  getAllCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  createProduct,
+  updateProduct,
+  deleteProduct
 };
 
