@@ -199,6 +199,7 @@ const login = async (email, password) => {
     throw err;
   }
 
+  // Kiểm tra trạng thái tài khoản (Boolean: true = hoạt động, false = bị khóa)
   if (!user.status) {
     const err = new Error('Tài khoản đã bị khóa');
     err.statusCode = 403;
@@ -315,15 +316,16 @@ const forgotPassword = async (email) => {
     throw err;
   }
 
-  if (!user.status) {
+  // Đồng bộ status cũ (string 'active'/'inactive') sang Boolean nếu cần
+  if (typeof user.status === 'string') {
+    user.status = user.status === 'active';
+  }
 
+  if (!user.status) {
     const err = new Error('Tài khoản đã bị khóa, không thể đặt lại mật khẩu');
     err.statusCode = 403;
     throw err;
-  
-  
-}
-
+  }
 
   // Tạo OTP gồm 6 số ngẫu nhiên
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
