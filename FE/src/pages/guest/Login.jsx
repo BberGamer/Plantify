@@ -33,7 +33,7 @@ function Login() {
       case "business manager":
         return "/dashboard";
       case "content manager":
-        return "/content/dashboard";
+        return "/content/plants";
       default:
         return "/";
     }

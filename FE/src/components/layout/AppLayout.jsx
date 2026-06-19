@@ -40,7 +40,7 @@ function AppLayout() {
   let requiredRole = "customer";
   if (pathname.startsWith("/admin")) {
     requiredRole = "admin";
-  } else if (pathname.startsWith("/dashboard") || pathname.startsWith("/content/dashboard")) {
+  } else if (pathname.startsWith("/dashboard") || pathname.startsWith("/content")) {
     requiredRole = "manager";
   }
 
