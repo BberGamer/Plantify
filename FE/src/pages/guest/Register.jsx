@@ -86,11 +86,14 @@ function Register() {
       });
     } catch (error) {
       const msg = error.response?.data?.message || error.message || "Đã có lỗi xảy ra.";
-      if (msg.toLowerCase().includes("email")) {
+      const lower = msg.toLowerCase();
+      // Chỉ map vào email field khi đúng là lỗi email trùng hay không hợp lệ
+      if (lower.includes("email đã") || lower.includes("email không hợp lệ")) {
         setErrors({ email: msg });
-      } else if (msg.toLowerCase().includes("điện thoại") || msg.toLowerCase().includes("phone")) {
+      } else if (lower.includes("điện thoại") || lower.includes("phone") || lower.includes("số điện")) {
         setErrors({ phone: msg });
       } else {
+        // Lỗi SMTP / server -> hiện toast, không điền vào field
         toast.error(msg);
       }
     } finally {

@@ -56,7 +56,7 @@ function Login() {
     try {
       const user = await login(email, password);
       toast.success(`Chào mừng trở lại, ${user.fullName}!`);
-      
+
       // Chuyển hướng theo role
       const redirectPath = getRedirectPath(user.role);
       navigate(redirectPath, { replace: true });
@@ -185,9 +185,6 @@ function Login() {
                 ) : (
                   "Đăng nhập"
                 )}
-              </Button>
-              <Button type="button" variant="outline" className="w-full" size="lg" disabled={submitting}>
-                Đăng nhập với Google
               </Button>
             </form>
             <div className="mt-6 text-center text-sm">
