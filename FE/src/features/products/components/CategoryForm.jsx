@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -59,6 +60,9 @@ export function CategoryForm({ onSubmit, loading, editCategory }) {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Tạo danh mục sản phẩm mới</DialogTitle>
+              <DialogDescription>
+                Nhập tên để tạo một danh mục sản phẩm mới trong hệ thống.
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -92,6 +96,9 @@ export function CategoryForm({ onSubmit, loading, editCategory }) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Sửa danh mục sản phẩm</DialogTitle>
+          <DialogDescription>
+            Cập nhật tên danh mục sản phẩm đang được sử dụng trong hệ thống.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

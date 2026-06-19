@@ -15,9 +15,7 @@ import {
 import {
   useCategories,
   useCreateProduct,
-  useDeleteProduct,
   useProducts,
-  useUpdateProduct,
 } from "@/features/products/hooks";
 import { ProductCard } from "@/features/products/components/ProductCard";
 import { ProductForm } from "@/features/products/components/ProductForm";
@@ -27,7 +25,6 @@ function ManageProducts() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const [editingProduct, setEditingProduct] = useState(null);
 
   const {
     products,
@@ -46,10 +43,6 @@ function ManageProducts() {
 
   const { categories, loading: categoriesLoading } = useCategories();
   const { create, loading: creating } = useCreateProduct();
-  const { update, loading: updating } = useUpdateProduct();
-  const { remove, loading: deleting } = useDeleteProduct();
-
-  const isSubmitting = creating || updating || deleting;
 
   const activeCategoryLabel = useMemo(() => {
     if (categoryFilter === "all") return "Tất cả danh mục";
@@ -69,39 +62,6 @@ function ManageProducts() {
     }
   };
 
-  const handleUpdate = async (payload) => {
-    try {
-      await update(payload.id, {
-        name: payload.name,
-        categoryId: payload.categoryId,
-        brand: payload.brand,
-        price: payload.price,
-        stock: payload.stock,
-        thumbnail: payload.thumbnail,
-        images: payload.images,
-        description: payload.description,
-        tags: payload.tags,
-        isActive: payload.isActive,
-      });
-      toast.success("Cập nhật sản phẩm thành công");
-      refetch();
-      setEditingProduct(null);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Đã xảy ra lỗi");
-    }
-  };
-
-  const handleDelete = async (product) => {
-    if (!confirm(`Xóa sản phẩm "${product.name}"?`)) return;
-
-    try {
-      await remove(product._id || product.id);
-      toast.success("Xóa sản phẩm thành công");
-      refetch();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Đã xảy ra lỗi");
-    }
-  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -236,9 +196,6 @@ function ManageProducts() {
               <ProductCard
                 key={product._id || product.id}
                 product={product}
-                onEdit={setEditingProduct}
-                onDelete={handleDelete}
-                disabled={isSubmitting}
               />
             ))}
           </div>
@@ -269,14 +226,6 @@ function ManageProducts() {
         </div>
       )}
 
-      {editingProduct && (
-        <ProductForm
-          categories={categories}
-          editProduct={editingProduct}
-          onSubmit={handleUpdate}
-          loading={updating}
-        />
-      )}
     </div>
   );
 }
