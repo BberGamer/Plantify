@@ -28,7 +28,8 @@ export const registerApi = async (userData) => {
  * @returns {Promise<object>} response data
  */
 export const sendRegisterOtpApi = async (userData) => {
-  const response = await api.post("/auth/register/send-otp", userData);
+  // Timeout 60s vì SMTP handshake có thể mất nhiều thời gian
+  const response = await api.post("/auth/register/send-otp", userData, { timeout: 60000 });
   return response.data;
 };
 
@@ -98,7 +99,8 @@ export const deleteUserApi = async (userId) => {
  * @returns {Promise<object>} response data
  */
 export const forgotPasswordApi = async (email) => {
-  const response = await api.post('/auth/forgot-password', { email });
+  // Timeout 60s vì SMTP handshake có thể mất nhiều thời gian
+  const response = await api.post('/auth/forgot-password', { email }, { timeout: 60000 });
   return response.data;
 };
 
