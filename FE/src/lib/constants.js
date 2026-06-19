@@ -31,7 +31,7 @@ const ROUTES = {
   cart: "/cart",
   checkout: "/checkout",
   dashboard: "/dashboard",
-  contentDashboard: "/content/dashboard",
+  contentDashboard: "/content/plants",
   admin: "/admin",
   adminUsers: "/admin/users",
   unauthorized: "/unauthorized"

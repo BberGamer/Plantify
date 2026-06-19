@@ -6,7 +6,7 @@ const UI_PREVIEW_USER = {
 function uiSidebarRoleFromPath(pathname) {
   if (pathname.startsWith("/admin")) return "admin";
   if (pathname.startsWith("/dashboard")) return "manager";
-  if (pathname.startsWith("/content/dashboard")) return "manager";
+  if (pathname.startsWith("/content")) return "manager";
   return "customer";
 }
 export {
