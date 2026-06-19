@@ -51,32 +51,37 @@ src/
 ```bash
 src/
 ├── components/
-│   ├── common/          # Component dùng chung (PlantCard, ThemeToggle...)
-│   ├── layout/          # AppLayout, Header, Sidebar...
+│   ├── common/          # Component dùng chung
+│   ├── layout/          # PublicLayout, AuthLayout, AdminLayout, ManagerLayout...
 │   └── ui/              # Shadcn/UI primitives
 │
 ├── features/            # Logic theo domain (song song với BE)
 │   ├── auth/
-│   │   ├── api.ts
+│   │   ├── api.js
 │   │   ├── hooks/
-│   │   └── components/  # (chỉ component đặc thù)
+│   │   └── components/
 │   ├── plants/
 │   ├── products/
+│   ├── care-guides/
+│   ├── plant-diseases/
+│   ├── posts/
+│   ├── comments/
 │   ├── orders/
 │   └── cart/
 │
-├── pages/               # Trang theo role (giữ nguyên)
+├── pages/               # Trang theo role
 │   ├── guest/
 │   ├── customer/
-│   ├── sales/
-│   ├── manager/
+│   ├── BusinessManager/
+│   ├── ContentManager/
 │   └── admin/
 │
 ├── lib/
-│   ├── api.ts           # Axios instance
-│   ├── utils.ts
-│   ├── roles.js         # Định nghĩa vai trò & quyền (thay thế src/types/)
-│   └── constants.js
+│   ├── api.js           # Axios instance
+│   ├── utils.js
+│   ├── roles.js
+│   ├── constants.js
+│   └── ui-preview.js
 │
 └── styles/
 ```
@@ -97,22 +102,6 @@ src/
 - Tên file phải **rõ chức năng**: `auth.routes.js`, `plant.service.js`.
 - Frontend: `.jsx` cho component có JSX, `.js` cho logic thuần túy.
 
-### Comment bắt buộc
-
-Mỗi file phải có comment mô tả ở **đầu file**:
-
-```javascript
-// auth.routes.js
-// Định nghĩa các route liên quan đến Authentication
-```
-
-Frontend component:
-
-```jsx
-// plantDetail.jsx
-// Hiển thị chi tiết một loại cây
-```
-
 ### Response Format (Backend)
 
 Luôn trả về theo format thống nhất:
@@ -129,10 +118,12 @@ Luôn trả về theo format thống nhất:
 
 ## 4. Quy tắc Backend
 
-- Mỗi feature chỉ có **tối đa 4 file**: `routes`, `controller`, `service`, `model`.
+- Mỗi feature backend **ưu tiên** theo bộ khung: `routes`, `controller`, `service`, `model`.
+- Nếu domain thực tế cần thêm file phụ trong cùng feature (ví dụ nhiều model liên quan như product/category) thì được phép mở rộng, nhưng vẫn phải giữ logic rõ ràng theo feature.
 - **`routes.js`**: Chỉ định nghĩa route + middleware.
 - **`controller.js`**: Nhận request, gọi service, trả response.
 - **`service.js`**: Chứa toàn bộ business logic.
+- **`model.js`**: Schema/model dữ liệu của feature.
 - **Không** để logic database trực tiếp trong controller.
 
 ---
@@ -141,22 +132,35 @@ Luôn trả về theo format thống nhất:
 
 | Thư mục | Trách nhiệm |
 |---------|-------------|
-| `pages/` | Chỉ compose UI và gọi hook từ `features/` |
-| `features/[domain]/api.ts` | Các hàm gọi API |
-| `features/[domain]/hooks/` | Custom hooks (`useLogin`, `usePlants`, ...) |
-| `features/[domain]/components/` | Chỉ component **đặc thù** của domain |
+| `pages/` | Chỉ compose UI và gọi hook/component từ `features/` |
+| `features/[domain]/api.js` | Các hàm gọi API |
+| `features/[domain]/hooks/` | Custom hooks (`useAuth`, `usePlants`, ...) |
+| `features/[domain]/components/` | Component **đặc thù** của domain |
 | `components/common/` | Component dùng chung toàn app |
 
 - Logic state, fetch data → **ưu tiên tách thành Custom Hooks**.
-- Dự án dùng **JavaScript thuần** (`.js` / `.jsx`), không có TypeScript.
 - Dùng `@/` alias trong code (đã cấu hình trong `jsconfig.json` và `vite.config.js`).
 - Không dùng generic, type annotation, interface — chỉ plain JS objects.
+
+### Quy tắc tách page lớn thành component + CSS riêng
+
+- Nếu một page trở nên dài, có nhiều section UI lớn, dialog, table, filter hoặc form trong cùng một file thì **phải refactor tách nhỏ**.
+- `pages/` chỉ giữ vai trò **compose UI + điều phối state/hook/toast/handler**.
+- Các phần UI tách nhỏ phải chuyển thành file component riêng, ưu tiên đặt gần page hoặc trong `features/[domain]/components/` nếu là component đặc thù của domain.
+- **Không đổi logic khi refactor**: mục tiêu là làm file dễ đọc, dễ maintain, không thêm tính năng mới.
+- Nếu page có nhiều class UI lặp lại hoặc layout phức tạp, tạo thêm file CSS riêng trong `FE/src/styles/` với tên rõ ràng theo page. Ví dụ: `AdminUsers.css`.
+- CSS riêng chỉ dùng cho layout/semantic class của page; logic dữ liệu và xử lý sự kiện không được đưa vào CSS file.
+- Sau khi tách, file page chính phải đủ gọn để người khác nhìn vào là thấy ngay: header, state chính, handlers chính, rồi compose các component con.
+
+**Pattern tham chiếu:**
+- `FE/src/pages/admin/AdminUsers.jsx`
+- `FE/src/styles/AdminUsers.css`
 
 ---
 
 ## 6. Best Practices
 
-- Không hardcode URL API → dùng `lib/api.ts`.
+- Không hardcode URL API → dùng `lib/api.js`.
 - Component phải nhỏ, chỉ làm **một trách nhiệm**.
 - Luôn dùng `async/await` + `try/catch`.
 - Đặt tên biến/hàm rõ ràng, có ý nghĩa.
@@ -222,7 +226,7 @@ Chúng ta sử dụng **Conventional Commits** để commit message rõ ràng, d
 
 Tránh để AI code **cả feature / hàng trăm dòng** rồi mới commit một lần. Chia nhỏ theo lớp:
 
-`model` → `service` → `routes/controller` → `api.ts` → `hooks` → `UI`
+`model` → `service` → `routes/controller` → `api.js` → `hooks` → `UI`
 
 Sau mỗi bước xong (review hoặc chạy được): **commit ngay** với message Conventional Commits.
 
@@ -260,8 +264,6 @@ refactor: di chuyển PlantCard vào components/common
 ---
 
 ## 9. Quy tắc Comment & Code Style (Bắt buộc)
-
-### Khi viết code (Backend & Frontend)
 
 **Mục tiêu:** Bất kỳ ai (giảng viên, bạn, AI) mở file lên cũng hiểu được code đang làm gì mà không cần hỏi.
 
