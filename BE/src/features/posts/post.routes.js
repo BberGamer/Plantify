@@ -20,6 +20,9 @@ router.patch('/:id', authenticate, authorizeCustomer, postController.updatePost)
 // PUT /api/posts/:id - Customer cap nhat bai viet cua chinh minh.
 router.put('/:id', authenticate, authorizeCustomer, postController.updatePost);
 
+// DELETE /api/posts/:id - Customer xoa bai viet cua chinh minh.
+router.delete('/:id', authenticate, authorizeCustomer, postController.deletePost);
+
 // GET /api/posts/:id - Lay chi tiet bai viet.
 router.get('/:id', postController.getPostById);
 

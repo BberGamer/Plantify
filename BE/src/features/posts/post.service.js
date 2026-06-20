@@ -11,6 +11,10 @@ function buildPostIdQuery(id) {
   return { _id: null };
 }
 
+function getCurrentUserId(currentUser = {}) {
+  return currentUser.id || currentUser._id || currentUser.userId;
+}
+
 function withRatingPipeline(extraStages = []) {
   return [
     ...extraStages,
@@ -95,7 +99,7 @@ function buildPostUpdatePayload(payload = {}) {
 async function createPost(payload = {}, currentUser = {}) {
   const title = typeof payload.title === 'string' ? payload.title.trim() : '';
   const content = typeof payload.content === 'string' ? payload.content.trim() : '';
-  const userId = currentUser.id || currentUser._id || currentUser.userId;
+  const userId = getCurrentUserId(currentUser);
 
   if (!title) {
     const error = new Error('Tiêu đề bài viết là bắt buộc');
@@ -142,7 +146,7 @@ async function createPost(payload = {}, currentUser = {}) {
  * @returns {Promise<Object>} Bài viết sau khi cập nhật
  */
 async function updatePost(id, payload = {}, currentUser = {}) {
-  const userId = currentUser.id || currentUser._id || currentUser.userId;
+  const userId = getCurrentUserId(currentUser);
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const error = new Error('ID bài viết không hợp lệ');
@@ -196,6 +200,46 @@ async function updatePost(id, payload = {}, currentUser = {}) {
   });
 
   return post.save();
+}
+
+/**
+ * Xóa bài viết của chính customer đang đăng nhập.
+ * @param {string} id - Id bài viết
+ * @param {Object} currentUser - Thông tin user từ JWT
+ * @returns {Promise<Object>} Bài viết vừa xóa
+ */
+async function deletePost(id, currentUser = {}) {
+  const userId = getCurrentUserId(currentUser);
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const error = new Error('ID bài viết không hợp lệ');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    const error = new Error('Người dùng không hợp lệ');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const post = await Post.findById(id);
+
+  if (!post) {
+    const error = new Error('Không tìm thấy bài viết');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (post.userId?.toString() !== userId.toString()) {
+    const error = new Error('Bạn không có quyền xóa bài viết này');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  await post.deleteOne();
+
+  return post;
 }
 
 /**
@@ -282,4 +326,4 @@ async function getFeaturedPosts(filters = {}) {
   return Post.aggregate(pipeline);
 }
 
-module.exports = { createPost, updatePost, getAllPosts, getPostById, getFeaturedPosts };
+module.exports = { createPost, updatePost, deletePost, getAllPosts, getPostById, getFeaturedPosts };
