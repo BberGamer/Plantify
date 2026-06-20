@@ -77,15 +77,8 @@ function ManageCareGuides() {
     const keyword = search.trim().toLocaleLowerCase("vi");
     return careGuides.filter((guide) => {
       const plant = plantMap.get(String(guide.plantId));
-      const searchableText = [
-        plant?.name,
-        guide.plantId,
-        guide.watering,
-        guide.propagation,
-        guide.pruning,
-        guide.repotting,
-      ].filter(Boolean).join(" ").toLocaleLowerCase("vi");
-      return !keyword || searchableText.includes(keyword);
+      const plantName = String(plant?.name || "").toLocaleLowerCase("vi");
+      return !keyword || plantName.includes(keyword);
     });
   }, [careGuides, plantMap, search]);
 
@@ -155,7 +148,7 @@ function ManageCareGuides() {
           <Input
             value={search}
             onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-            placeholder="Tìm theo tên cây, nội dung hướng dẫn..."
+            placeholder="Tìm theo tên cây..."
             className="rounded-full bg-card pl-10"
           />
         </div>
@@ -203,9 +196,6 @@ function ManageCareGuides() {
                         </span>
                         <span className="min-w-0 overflow-hidden">
                           <span className="block truncate font-medium text-foreground">{plant?.name || "Cây không xác định"}</span>
-                          <span className="block truncate text-xs text-muted-foreground">
-                            ID: {guide.plantId}
-                          </span>
                         </span>
                       </div>
                     </TableCell>
