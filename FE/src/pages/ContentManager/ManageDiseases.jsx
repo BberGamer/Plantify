@@ -198,7 +198,7 @@ export function ManageDiseases() {
                             </>
                           ) : (
                             <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-red-500 border border-red-100">
-                              <AlertCircle className="h-5 w-5" />
+                              <Bug className="h-5 w-5" />
                             </span>
                           )}
                         </div>

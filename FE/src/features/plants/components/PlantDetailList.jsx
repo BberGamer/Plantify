@@ -1,7 +1,7 @@
 // PlantDetailList.jsx - Component hiển thị danh sách Care Guides và Diseases
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Droplets, Leaf, AlertCircle, Scissors, Sprout, RefreshCw } from "lucide-react";
+import { Loader2, Droplets, Leaf, AlertCircle, Scissors, Sprout, RefreshCw, Bug } from "lucide-react";
 
 /**
  * CareGuideList - Danh sách Care Guides
@@ -102,7 +102,7 @@ export function DiseaseList({ diseases, loading }) {
         </div>
       ) : diseases.length === 0 ? (
         <Card className="plant-detail-empty">
-          <AlertCircle className="w-12 h-12 text-muted-foreground plant-detail-empty-icon" />
+          <Bug className="w-12 h-12 text-muted-foreground plant-detail-empty-icon" />
           <p className="plant-detail-empty-text">Chưa có thông tin bệnh cho cây này.</p>
         </Card>
       ) : (
@@ -112,7 +112,7 @@ export function DiseaseList({ diseases, loading }) {
               <div>
                 <div className="plant-detail-card-header">
                   <div className="plant-detail-card-title">
-                    <AlertCircle className="w-5 h-5 plant-detail-disease-icon" />
+                    <Bug className="w-5 h-5 plant-detail-disease-icon" />
                     <h3>{disease.name}</h3>
                   </div>
                 </div>
