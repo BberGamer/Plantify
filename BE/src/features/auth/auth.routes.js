@@ -40,4 +40,10 @@ router.post('/verify-otp', authController.verifyOTP);
 // Đặt lại mật khẩu bằng OTP từ email
 router.post('/reset-password', authController.resetPassword);
 
+// Cập nhật thông tin cá nhân của người dùng đang đăng nhập
+router.patch('/me', authenticate, authController.updateProfile);
+
+// Đổi mật khẩu của người dùng đang đăng nhập
+router.patch('/me/password', authenticate, authController.changePassword);
+
 module.exports = router;

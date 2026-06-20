@@ -39,23 +39,23 @@ const ROUTES = {
 };
 
 const PUBLIC_NAV = [
-  { path: "/", label: "Trang chu", icon: Home, roles: ["guest"] },
-  { path: "/browse", label: "Kham pha", icon: BookOpen, roles: ["guest"] },
+  { path: "/", label: "Trang chủ", icon: Home, roles: ["guest"] },
+  { path: "/browse", label: "Khám phá", icon: BookOpen, roles: ["guest"] },
   {
     path: "/marketplace",
-    label: "Gian hang",
+    label: "Gian hàng",
     icon: Store,
     roles: ["guest"]
   },
   {
     path: "/ai-doctor",
-    label: "Bac si AI",
+    label: "Bác sĩ AI",
     icon: Sparkles,
     roles: ["guest"]
   },
   {
     path: "/knowledge-graph",
-    label: "Do thi tri thuc",
+    label: "Đồ thị tri thức",
     icon: Network,
     roles: ["guest"]
   },
@@ -64,17 +64,17 @@ const PUBLIC_NAV = [
 
 const ROLE_SIDEBAR_NAV = {
   customer: [
-    { path: "/profile", label: "Ho so", icon: User, roles: ["customer"] },
-    { path: "/my-posts", label: "Bai viet cua toi", icon: BookOpen, roles: ["customer"] },
+    { path: "/profile", label: "Hồ sơ", icon: User, roles: ["customer"] },
+    { path: "/my-posts", label: "Bài viết của tôi", icon: BookOpen, roles: ["customer"] },
     {
       path: "/cart",
-      label: "Gio hang",
+      label: "Giỏ hàng",
       icon: ShoppingCart,
       roles: ["customer"]
     },
     {
       path: "/settings",
-      label: "Cai dat",
+      label: "Cài đặt",
       icon: Settings,
       roles: ["customer"]
     }
@@ -82,13 +82,13 @@ const ROLE_SIDEBAR_NAV = {
   manager: [
     {
       path: "/dashboard",
-      label: "Thong ke",
+      label: "Thống kê",
       icon: BarChart3,
       roles: ["manager"]
     },
     {
       path: "/dashboard/team",
-      label: "Doi ngu",
+      label: "Đội ngũ",
       icon: Users,
       roles: ["manager"]
     }
@@ -96,13 +96,13 @@ const ROLE_SIDEBAR_NAV = {
   admin: [
     {
       path: "/admin",
-      label: "Tong quan",
+      label: "Tổng quan",
       icon: LayoutDashboard,
       roles: ["admin"]
     },
     {
       path: "/admin/users",
-      label: "Nguoi dung",
+      label: "Người dùng",
       icon: Users,
       roles: ["admin"]
     }

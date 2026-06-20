@@ -417,6 +417,94 @@ const verifyOTP = async (email, otp) => {
   // OTP hợp lệ — không xóa để reset-password có thể dùng lại
 };
 
+/**
+ * Cập nhật thông tin cá nhân của người dùng
+ * @param {string} userId - ID người dùng từ token
+ * @param {object} profileData - { fullName, email, phone, address }
+ * @returns {Promise<object>} user - Thông tin sau khi cập nhật (không bao gồm password)
+ */
+const updateProfile = async (userId, profileData) => {
+  const { fullName, email, phone, address } = profileData;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    const err = new Error('Không tìm thấy người dùng');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  // Kiểm tra email không trùng với người dùng khác
+  if (email && email.trim() !== '') {
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingEmail = await User.findOne({ email: normalizedEmail, _id: { $ne: userId } });
+    if (existingEmail) {
+      const err = new Error('Email đã được sử dụng bởi tài khoản khác');
+      err.statusCode = 400;
+      throw err;
+    }
+    user.email = normalizedEmail;
+  }
+
+  // Kiểm tra số điện thoại không trùng với người dùng khác
+  if (phone && phone.trim() !== '') {
+    const existingPhone = await User.findOne({ phone: phone.trim(), _id: { $ne: userId } });
+    if (existingPhone) {
+      const err = new Error('Số điện thoại đã được sử dụng bởi tài khoản khác');
+      err.statusCode = 400;
+      throw err;
+    }
+  }
+
+  // Cập nhật các trường được phép thay đổi
+  if (fullName) user.fullName = fullName.trim();
+  if (phone !== undefined) user.phone = phone.trim();
+  if (address !== undefined) user.address = address.trim();
+
+  await user.save();
+
+  const userObj = user.toObject();
+  delete userObj.password;
+  return userObj;
+};
+
+/**
+ * Đổi mật khẩu cho người dùng đang đăng nhập
+ * @param {string} userId - ID người dùng từ token
+ * @param {object} passwordData - { currentPassword, newPassword, confirmPassword }
+ * @returns {Promise<void>}
+ */
+const changePassword = async (userId, passwordData) => {
+  const { currentPassword, newPassword } = passwordData;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    const err = new Error('Không tìm thấy người dùng');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  // 1. Kiểm tra mật khẩu hiện tại
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) {
+    const err = new Error('Mật khẩu hiện tại không chính xác');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // 2. Không cho phép đặt lại cùng mật khẩu cũ
+  const isSamePassword = await bcrypt.compare(newPassword, user.password);
+  if (isSamePassword) {
+    const err = new Error('Mật khẩu mới không được trùng với mật khẩu hiện tại');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // 3. Hash và lưu mật khẩu mới
+  const salt = await bcrypt.genSalt(10);
+  user.password = await bcrypt.hash(newPassword, salt);
+  await user.save();
+};
+
 module.exports = {
   register,
   sendRegisterOTP,
@@ -430,4 +518,6 @@ module.exports = {
   forgotPassword,
   verifyOTP,
   resetPassword,
+  updateProfile,
+  changePassword,
 };

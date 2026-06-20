@@ -127,3 +127,23 @@ export const resetPasswordApi = async (email, otp, password, confirmPassword) =>
   const response = await api.post('/auth/reset-password', { email, otp, password, confirmPassword });
   return response.data;
 };
+
+/**
+ * Cập nhật thông tin cá nhân của người dùng đang đăng nhập
+ * @param {object} profileData - { fullName, phone, address }
+ * @returns {Promise<object>} response data
+ */
+export const updateProfileApi = async (profileData) => {
+  const response = await api.patch('/auth/me', profileData);
+  return response.data;
+};
+
+/**
+ * Đổi mật khẩu của người dùng đang đăng nhập
+ * @param {object} passwordData - { currentPassword, newPassword, confirmPassword }
+ * @returns {Promise<object>} response data
+ */
+export const changePasswordApi = async (passwordData) => {
+  const response = await api.patch('/auth/me/password', passwordData);
+  return response.data;
+};
