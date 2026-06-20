@@ -12,6 +12,7 @@ import {
   Settings,
   ShoppingBag,
   FolderOpen,
+  Flag,
   Package,
   Tags
 } from "lucide-react";
@@ -59,6 +60,11 @@ const managerMenuConfig = {
       label: "Quản lý Danh mục",
       path: "/content/categories",
       icon: FolderOpen
+    },
+    {
+      label: "Xử lý report",
+      path: "/content/reports",
+      icon: Flag
     }
   ]
 };
