@@ -2,24 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Droplets, Sun, Leaf, AlertCircle } from "lucide-react";
-
-// Constants
-const SEASON_OPTIONS = [
-  { value: "all", label: "Tất cả mùa" },
-  { value: "spring", label: "Mùa xuân" },
-  { value: "summer", label: "Mùa hè" },
-  { value: "autumn", label: "Mùa thu" },
-  { value: "winter", label: "Mùa đông" },
-];
-
-const SEASON_COLORS = {
-  spring: "bg-pink-100 text-pink-700 border-pink-200",
-  summer: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  autumn: "bg-orange-100 text-orange-700 border-orange-200",
-  winter: "bg-blue-100 text-blue-700 border-blue-200",
-  all: "bg-gray-100 text-gray-700 border-gray-200",
-};
+import { Loader2, Droplets, Leaf, AlertCircle, Scissors, Sprout, RefreshCw } from "lucide-react";
 
 const SEVERITY_CONFIG = {
   low: { label: "Thấp", color: "bg-green-100 text-green-700 border-green-200" },
@@ -55,33 +38,39 @@ export function CareGuideList({ careGuides, loading, onAdd }) {
       ) : (
         <div className="plant-detail-list-grid">
           {careGuides.map((cg) => (
-            <Card key={cg._id || cg.id} className="plant-detail-card">
+            <Card key={cg._id} className="plant-detail-card">
               <div className="plant-detail-card-header">
                 <div className="plant-detail-card-title">
                   <Droplets className="w-5 h-5" />
-                  <h3>{cg.title}</h3>
+                  <h3>Hướng dẫn chăm sóc</h3>
                 </div>
-                <Badge className={SEASON_COLORS[cg.season] || "bg-gray-100"}>
-                  {SEASON_OPTIONS.find((s) => s.value === cg.season)?.label || cg.season}
-                </Badge>
               </div>
               <div className="plant-detail-card-meta">
-                {cg.wateringFrequency && (
+                {cg.watering && (
                   <div className="plant-detail-card-meta-item">
                     <Droplets className="text-blue-400" />
-                    Tưới: {cg.wateringFrequency}
+                    Tưới: {cg.watering}
                   </div>
                 )}
-                {cg.fertilizingFrequency && (
+                {cg.propagation && (
                   <div className="plant-detail-card-meta-item">
-                    <Sun className="text-yellow-400" />
-                    Bón phân: {cg.fertilizingFrequency}
+                    <Sprout className="text-green-500" />
+                    Nhân giống: {cg.propagation}
+                  </div>
+                )}
+                {cg.pruning && (
+                  <div className="plant-detail-card-meta-item">
+                    <Scissors className="text-orange-400" />
+                    Cắt tỉa: {cg.pruning}
+                  </div>
+                )}
+                {cg.repotting && (
+                  <div className="plant-detail-card-meta-item">
+                    <RefreshCw className="text-violet-400" />
+                    Thay chậu: {cg.repotting}
                   </div>
                 )}
               </div>
-              {cg.content && (
-                <p className="plant-detail-card-preview">{cg.content}</p>
-              )}
             </Card>
           ))}
         </div>
