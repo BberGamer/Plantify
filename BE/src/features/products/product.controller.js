@@ -20,7 +20,7 @@ async function getProductById(req, res, next) {
 
 async function getAllProducts(req, res, next) {
   try {
-    const { search, category, minPrice, maxPrice, minRating, sortBy, page, limit } = req.query;
+    const { search, category, minPrice, maxPrice, minRating, sortBy, page, limit, includeInactive } = req.query;
     const result = await productService.getAllProducts({
       search,
       category,
@@ -29,7 +29,8 @@ async function getAllProducts(req, res, next) {
       minRating: minRating ? Number(minRating) : undefined,
       sortBy,
       page: page ? Number(page) : 1,
-      limit: limit ? Number(limit) : 6
+      limit: limit ? Number(limit) : 6,
+      includeInactive: includeInactive === 'true'
     });
     res.json({ success: true, message: 'Lấy danh sách sản phẩm thành công', data: result });
   } catch (error) {

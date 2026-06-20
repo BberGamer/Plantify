@@ -1,6 +1,6 @@
 // ManageProducts.jsx - Trang quản lý sản phẩm cho business manager
 import { useMemo, useState } from "react";
-import { Search, Loader2, Package, Tags } from "lucide-react";
+import { Search, Loader2, Package, Tags, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import { ProductForm } from "@/features/products/components/ProductForm";
 import { toast } from "sonner";
 
 function ManageProducts() {
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [page, setPage] = useState(1);
@@ -36,6 +37,7 @@ function ManageProducts() {
   } = useProducts({
     search,
     category: categoryFilter !== "all" ? categoryFilter : undefined,
+    includeInactive: true,
     page,
     limit: 9,
     sortBy: "newest",
@@ -51,6 +53,21 @@ function ManageProducts() {
     );
     return matchedCategory?.name || "Tất cả danh mục";
   }, [categories, categoryFilter]);
+
+  const hasActiveFilters = search !== "" || categoryFilter !== "all";
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    setSearch(searchInput.trim());
+    setPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setCategoryFilter("all");
+    setPage(1);
+  };
 
   const handleCreate = async (payload) => {
     try {
@@ -133,42 +150,59 @@ function ManageProducts() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4 p-6">
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <div className="relative lg:col-span-2">
+          <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+            <div className="relative lg:col-span-6">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Tìm kiếm theo tên hoặc mô tả sản phẩm"
                 className="pl-10"
               />
             </div>
-            <Select
-              value={categoryFilter}
-              onValueChange={(value) => {
-                setCategoryFilter(value);
-                setPage(1);
-              }}
+            <div className="lg:col-span-3">
+              <Select
+                value={categoryFilter}
+                onValueChange={(value) => {
+                  setCategoryFilter(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn danh mục" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả danh mục</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem
+                      key={category._id || category.id}
+                      value={category._id || category.id}
+                    >
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" className="lg:col-span-2">
+              <Search className="mr-2 h-4 w-4" />
+              Tìm kiếm
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="lg:col-span-1"
+              onClick={handleResetFilters}
+              disabled={!hasActiveFilters && searchInput === ""}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn danh mục" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả danh mục</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem
-                    key={category._id || category.id}
-                    value={category._id || category.id}
-                  >
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          </form>
+          {hasActiveFilters && (
+            <p className="text-sm text-muted-foreground">
+              Đang lọc theo từ khóa "{search || ""}" và danh mục "{activeCategoryLabel}".
+            </p>
+          )}
         </CardContent>
       </Card>
 

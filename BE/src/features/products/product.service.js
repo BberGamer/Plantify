@@ -29,8 +29,8 @@ async function getProductById(id) {
 /**
  * Lấy danh sách sản phẩm theo bộ lọc, tìm kiếm, phân trang và sắp xếp
  */
-async function getAllProducts({ search, category, minPrice, maxPrice, minRating, sortBy, page = 1, limit = 6 }) {
-  const query = { isActive: true };
+async function getAllProducts({ search, category, minPrice, maxPrice, minRating, sortBy, page = 1, limit = 6, includeInactive = false }) {
+  const query = includeInactive ? {} : { isActive: true };
 
   // Tìm kiếm theo tên hoặc mô tả
   if (search) {
@@ -41,22 +41,30 @@ async function getAllProducts({ search, category, minPrice, maxPrice, minRating,
   }
 
   // Lọc theo danh mục (category slug, name hoặc ID)
-  if (category && category !== 'Tất cả') {
-    if (mongoose.Types.ObjectId.isValid(category)) {
-      query.categoryId = category;
+  // Lọc theo danh mục: nhận cả id, slug hoặc name
+  if (category && category !== 'all' && category !== 'Tất cả') {
+    const categoryValue = String(category).trim();
+
+    if (mongoose.Types.ObjectId.isValid(categoryValue)) {
+      query.categoryId = new mongoose.Types.ObjectId(categoryValue);
     } else {
       const foundCategory = await ProductCategory.findOne({
         $or: [
-          { slug: category },
-          { name: category }
+          { slug: categoryValue },
+          { name: { $regex: `^${categoryValue}$`, $options: 'i' } }
         ]
-      });
-      if (foundCategory) {
-        query.categoryId = foundCategory._id;
-      } else {
-        // Nếu không tìm thấy danh mục, trả về kết quả rỗng
-        return { products: [], total: 0, pages: 0, currentPage: page };
+      }).lean();
+
+      if (!foundCategory) {
+        return {
+          products: [],
+          total: 0,
+          pages: 0,
+          currentPage: Number(page)
+        };
       }
+
+      query.categoryId = foundCategory._id;
     }
   }
 
@@ -88,7 +96,7 @@ async function getAllProducts({ search, category, minPrice, maxPrice, minRating,
   }
 
   const skip = (page - 1) * limit;
-  
+
   const products = await Product.find(query)
     .populate('categoryId')
     .sort(sort)
