@@ -15,7 +15,8 @@ import {
   FolderOpen,
   Flag,
   Package,
-  Tags
+  Tags,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,6 +62,11 @@ const managerMenuConfig = {
       label: "Hướng dẫn chăm sóc",
       path: "/content/care-guides",
       icon: BookOpen
+    },
+    {
+      label: "Bệnh cây",
+      path: "/content/diseases",
+      icon: AlertCircle
     },
     {
       label: "Quản lý Danh mục",

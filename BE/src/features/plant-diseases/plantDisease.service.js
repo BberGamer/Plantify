@@ -1,38 +1,61 @@
-// plantDisease.service.js - Business logic cho PlantDiseases
-// Cung cấp các hàm CRUD: lấy danh sách, chi tiết, tạo, cập nhật, xóa bệnh cây
+// Business logic cho Plant Diseases.
 const PlantDisease = require('./plantDisease.model');
+const Plant = require('../plants/plant.model');
 
-/**
- * Lấy danh sách bệnh cây, có hỗ trợ lọc và phân trang.
- * @param {Object} filters - Query filter từ request
- * @returns {Promise<object>} { diseases, total, pages, currentPage }
- */
+const PLANT_DISEASE_FIELDS = [
+  'plantId',
+  'name',
+  'symptoms',
+  'causes',
+  'treatment',
+  'prevention',
+  'images',
+];
+
+function pickPlantDiseaseFields(data = {}) {
+  return PLANT_DISEASE_FIELDS.reduce((result, field) => {
+    if (data[field] !== undefined) result[field] = data[field];
+    return result;
+  }, {});
+}
+
 async function getAllPlantDiseases(filters = {}) {
-  const { search, severity, sort, page = 1, limit = 10 } = filters;
+  const { plantId, search, sort, page = 1, limit = 10 } = filters;
   const query = {};
 
-  if (search) {
-    query.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { scientificName: { $regex: search, $options: 'i' } },
-      { symptoms: { $regex: search, $options: 'i' } },
-    ];
-  }
-  if (severity) {
-    query.severity = severity;
+  if (plantId) query.plantId = plantId;
+
+  const keyword = String(search || '').trim();
+  if (keyword) {
+    const matchingPlants = await Plant.find({
+      name: { $regex: keyword, $options: 'i' }
+    }).select('_id');
+    const plantIds = matchingPlants.map(p => p._id);
+
+    const conditions = ['name', 'symptoms', 'causes', 'treatment', 'prevention'].map((field) => ({
+      [field]: { $regex: keyword, $options: 'i' },
+    }));
+
+    if (plantIds.length > 0) {
+      conditions.push({ plantId: { $in: plantIds } });
+    }
+
+    query.$or = conditions;
   }
 
+  const safePage = Math.max(Number(page) || 1, 1);
+  const safeLimit = Math.min(Math.max(Number(limit) || 10, 1), 200);
   const total = await PlantDisease.countDocuments(query);
-  const pages = Math.ceil(total / limit);
-  const safePage = Math.max(Number(page), 1);
-  const safeLimit = Math.max(Number(limit), 10);
-
-  let sortOption = { name: 1 };
-  if (sort === 'newest') sortOption = { createdAt: -1 };
-  else if (sort === 'oldest') sortOption = { createdAt: 1 };
-  else if (sort === 'severity') sortOption = { severity: -1 };
+  const pages = Math.max(Math.ceil(total / safeLimit), 1);
+  
+  let sortOption = { _id: -1 };
+  if (sort === 'newest') sortOption = { _id: -1 };
+  else if (sort === 'oldest') sortOption = { _id: 1 };
+  else if (sort === 'za') sortOption = { name: -1 };
+  else if (sort === 'name') sortOption = { name: 1 };
 
   const diseases = await PlantDisease.find(query)
+    .populate('plantId', 'name')
     .sort(sortOption)
     .skip((safePage - 1) * safeLimit)
     .limit(safeLimit)
@@ -41,60 +64,41 @@ async function getAllPlantDiseases(filters = {}) {
   return { diseases, total, pages, currentPage: safePage };
 }
 
-/**
- * Lấy chi tiết một bệnh cây theo id.
- * @param {string} id - PlantDisease id
- * @returns {Promise<object|null>} PlantDisease document hoặc null
- */
 async function getPlantDiseaseById(id) {
-  if (!id) {
-    throw new Error('PlantDisease ID is required');
-  }
+  if (!id) throw new Error('PlantDisease ID is required');
   return PlantDisease.findById(id).lean();
 }
 
-/**
- * Tạo mới một bệnh cây.
- * @param {Object} data - Dữ liệu bệnh cây mới
- * @returns {Promise<object>} PlantDisease document đã tạo
- */
 async function createPlantDisease(data) {
-  if (!data.name || !data.name.trim()) {
+  if (!data.plantId) throw new Error('Plant ID is required');
+  if (typeof data.name !== 'string' || !data.name.trim()) {
     throw new Error('Disease name is required');
   }
 
-  const disease = new PlantDisease(data);
-  return disease.save();
+  return new PlantDisease(pickPlantDiseaseFields(data)).save();
 }
 
-/**
- * Cập nhật một bệnh cây theo id.
- * @param {string} id - PlantDisease id
- * @param {Object} data - Dữ liệu cập nhật
- * @returns {Promise<object|null>} PlantDisease document đã cập nhật hoặc null
- */
 async function updatePlantDisease(id, data) {
-  if (!id) {
-    throw new Error('PlantDisease ID is required');
-  }
+  if (!id) throw new Error('PlantDisease ID is required');
 
-  if (data.name !== undefined && !data.name.trim()) {
+  const updateData = pickPlantDiseaseFields(data);
+  if (updateData.plantId !== undefined && !updateData.plantId) {
+    throw new Error('Plant ID cannot be empty');
+  }
+  if (updateData.name !== undefined && (
+    typeof updateData.name !== 'string' || !updateData.name.trim()
+  )) {
     throw new Error('Disease name cannot be empty');
   }
 
-  return PlantDisease.findByIdAndUpdate(id, data, { new: true, runValidators: true }).lean();
+  return PlantDisease.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  }).lean();
 }
 
-/**
- * Xóa một bệnh cây theo id.
- * @param {string} id - PlantDisease id
- * @returns {Promise<object|null>} PlantDisease document đã xóa hoặc null
- */
 async function deletePlantDisease(id) {
-  if (!id) {
-    throw new Error('PlantDisease ID is required');
-  }
-
+  if (!id) throw new Error('PlantDisease ID is required');
   return PlantDisease.findByIdAndDelete(id);
 }
 

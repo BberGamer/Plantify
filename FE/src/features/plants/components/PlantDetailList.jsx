@@ -1,14 +1,7 @@
 // PlantDetailList.jsx - Component hiển thị danh sách Care Guides và Diseases
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Droplets, Leaf, AlertCircle, Scissors, Sprout, RefreshCw } from "lucide-react";
-
-const SEVERITY_CONFIG = {
-  low: { label: "Thấp", color: "bg-green-100 text-green-700 border-green-200" },
-  medium: { label: "Trung bình", color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-  high: { label: "Cao", color: "bg-red-100 text-red-700 border-red-200" },
-};
+import { Loader2, Droplets, Leaf, AlertCircle, Scissors, Sprout, RefreshCw, Bug } from "lucide-react";
 
 /**
  * CareGuideList - Danh sách Care Guides
@@ -96,14 +89,11 @@ export function CareGuideList({ careGuides, loading }) {
 /**
  * DiseaseList - Danh sách Bệnh cây
  */
-export function DiseaseList({ diseases, loading, onAdd }) {
+export function DiseaseList({ diseases, loading }) {
   return (
     <>
       <div className="plant-detail-tab-header">
         <h2 className="plant-detail-tab-title">Bệnh thường gặp</h2>
-        <Button onClick={onAdd}>
-          <AlertCircle className="w-4 h-4 mr-2" /> Thêm Bệnh
-        </Button>
       </div>
 
       {loading ? (
@@ -112,43 +102,67 @@ export function DiseaseList({ diseases, loading, onAdd }) {
         </div>
       ) : diseases.length === 0 ? (
         <Card className="plant-detail-empty">
-          <AlertCircle className="w-12 h-12 text-muted-foreground plant-detail-empty-icon" />
+          <Bug className="w-12 h-12 text-muted-foreground plant-detail-empty-icon" />
           <p className="plant-detail-empty-text">Chưa có thông tin bệnh cho cây này.</p>
-          <Button variant="outline" onClick={onAdd}>
-            <AlertCircle className="w-4 h-4 mr-2" /> Thêm bệnh đầu tiên
-          </Button>
         </Card>
       ) : (
         <div className="plant-detail-list-grid">
           {diseases.map((disease) => (
-            <Card key={disease._id || disease.id} className="plant-detail-card">
-              <div className="plant-detail-card-header">
-                <div className="plant-detail-card-title">
-                  <AlertCircle className="w-5 h-5 plant-detail-disease-icon" />
-                  <h3>{disease.name}</h3>
+            <Card key={disease._id} className="plant-detail-card flex flex-col justify-between">
+              <div>
+                <div className="plant-detail-card-header">
+                  <div className="plant-detail-card-title">
+                    <Bug className="w-5 h-5 plant-detail-disease-icon" />
+                    <h3>{disease.name}</h3>
+                  </div>
                 </div>
-                {disease.severity && (
-                  <Badge className={SEVERITY_CONFIG[disease.severity]?.color}>
-                    {SEVERITY_CONFIG[disease.severity]?.label}
-                  </Badge>
+                {disease.symptoms && (
+                  <div className="plant-detail-card-content">
+                    <span className="plant-detail-card-label">Triệu chứng: </span>
+                    {disease.symptoms}
+                  </div>
+                )}
+                {disease.causes && (
+                  <div className="plant-detail-card-content">
+                    <span className="plant-detail-card-label">Nguyên nhân: </span>
+                    {disease.causes}
+                  </div>
+                )}
+                {disease.treatment && (
+                  <div className="plant-detail-card-content">
+                    <span className="plant-detail-card-treatment">Điều trị: </span>
+                    {disease.treatment}
+                  </div>
+                )}
+                {disease.prevention && (
+                  <div className="plant-detail-card-content">
+                    <span className="plant-detail-card-label font-medium text-emerald-600">Phòng ngừa: </span>
+                    {disease.prevention}
+                  </div>
                 )}
               </div>
-              {disease.symptoms && (
-                <div className="plant-detail-card-content">
-                  <span className="plant-detail-card-label">Triệu chứng: </span>
-                  {disease.symptoms}
-                </div>
-              )}
-              {disease.causes && (
-                <div className="plant-detail-card-content">
-                  <span className="plant-detail-card-label">Nguyên nhân: </span>
-                  {disease.causes}
-                </div>
-              )}
-              {disease.treatment && (
-                <div className="plant-detail-card-content">
-                  <span className="plant-detail-card-treatment">Điều trị: </span>
-                  {disease.treatment}
+              {Array.isArray(disease.images) && disease.images.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-border/40">
+                  <div className="text-xs text-muted-foreground font-medium mb-1.5">Hình ảnh thực tế:</div>
+                  <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-muted">
+                    {disease.images.map((imgUrl, idx) => (
+                      <div
+                        key={idx}
+                        className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-border/60 hover:opacity-90 transition-opacity shadow-sm cursor-zoom-in"
+                        onClick={() => window.open(imgUrl, "_blank")}
+                      >
+                        <img
+                          src={imgUrl}
+                          alt={`${disease.name} ${idx + 1}`}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%23999' font-size='10'%3EẢnh lỗi%3C/text%3E%3C/svg%3E";
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </Card>
