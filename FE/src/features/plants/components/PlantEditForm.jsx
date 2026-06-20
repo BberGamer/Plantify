@@ -39,14 +39,6 @@ const EMPTY_PLANT_FORM = {
   tags: "",
 };
 
-const SEASON_OPTIONS = [
-  { value: "all", label: "Tất cả mùa" },
-  { value: "spring", label: "Mùa xuân" },
-  { value: "summer", label: "Mùa hè" },
-  { value: "autumn", label: "Mùa thu" },
-  { value: "winter", label: "Mùa đông" },
-];
-
 const toCommaString = (arr) => (Array.isArray(arr) && arr.length > 0 ? arr.join(", ") : "");
 const toCommaArray = (str) => (str ? str.split(",").map((t) => t.trim()).filter(Boolean) : []);
 
@@ -367,12 +359,10 @@ export function PlantEditForm({ plant, categories, onUpdate, loading }) {
 const CareGuideFormInner = forwardRef(({ plantId, plantName, onCreate, loading }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState({
-    title: "",
-    content: "",
-    season: "all",
-    wateringFrequency: "",
-    fertilizingFrequency: "",
-    pruningNotes: "",
+    watering: "",
+    propagation: "",
+    pruning: "",
+    repotting: "",
   });
 
   useImperativeHandle(ref, () => ({
@@ -383,7 +373,7 @@ const CareGuideFormInner = forwardRef(({ plantId, plantName, onCreate, loading }
     e.preventDefault();
     await onCreate({ ...form, plantId });
     setIsOpen(false);
-    setForm({ title: "", content: "", season: "all", wateringFrequency: "", fertilizingFrequency: "", pruningNotes: "" });
+    setForm({ watering: "", propagation: "", pruning: "", repotting: "" });
   };
 
   return (
@@ -393,42 +383,25 @@ const CareGuideFormInner = forwardRef(({ plantId, plantName, onCreate, loading }
           <DialogTitle>Thêm Care Guide cho {plantName}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="cg-title">Tiêu đề *</Label>
-            <Input id="cg-title" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder="VD: Hướng dẫn tưới nước mùa hè" required />
-          </div>
-
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="cg-season">Mùa</Label>
-              <Select value={form.season} onValueChange={(v) => setForm((p) => ({ ...p, season: v }))}>
-                <SelectTrigger id="cg-season"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {SEASON_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="cg-watering">Tưới nước</Label>
+              <Textarea id="cg-watering" value={form.watering} onChange={(e) => setForm((p) => ({ ...p, watering: e.target.value }))} rows={3} placeholder="VD: Tưới mỗi 1–2 tuần" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cg-watering">Tần suất tưới</Label>
-              <Input id="cg-watering" value={form.wateringFrequency} onChange={(e) => setForm((p) => ({ ...p, wateringFrequency: e.target.value }))} placeholder="VD: 2 lần/tuần" />
+              <Label htmlFor="cg-propagation">Nhân giống</Label>
+              <Textarea id="cg-propagation" value={form.propagation} onChange={(e) => setForm((p) => ({ ...p, propagation: e.target.value }))} rows={3} placeholder="VD: Giâm cành trong đất ẩm" />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cg-fertilizer">Tần suất bón phân</Label>
-            <Input id="cg-fertilizer" value={form.fertilizingFrequency} onChange={(e) => setForm((p) => ({ ...p, fertilizingFrequency: e.target.value }))} placeholder="VD: 1 tháng/lần" />
+            <Label htmlFor="cg-pruning">Cắt tỉa</Label>
+            <Textarea id="cg-pruning" value={form.pruning} onChange={(e) => setForm((p) => ({ ...p, pruning: e.target.value }))} rows={3} placeholder="Loại bỏ lá già, lá vàng và cành yếu" />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cg-pruning">Ghi chú cắt tỉa</Label>
-            <Textarea id="cg-pruning" value={form.pruningNotes} onChange={(e) => setForm((p) => ({ ...p, pruningNotes: e.target.value }))} rows={2} />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="cg-content">Nội dung chi tiết</Label>
-            <Textarea id="cg-content" value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} rows={4} placeholder="Nhập hướng dẫn chi tiết..." />
+            <Label htmlFor="cg-repotting">Thay chậu</Label>
+            <Textarea id="cg-repotting" value={form.repotting} onChange={(e) => setForm((p) => ({ ...p, repotting: e.target.value }))} rows={3} placeholder="VD: Thay chậu 1–2 năm/lần" />
           </div>
 
           <DialogFooter>

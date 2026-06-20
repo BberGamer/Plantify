@@ -2,24 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Droplets, Sun, Leaf, AlertCircle } from "lucide-react";
-
-// Constants
-const SEASON_OPTIONS = [
-  { value: "all", label: "Tất cả mùa" },
-  { value: "spring", label: "Mùa xuân" },
-  { value: "summer", label: "Mùa hè" },
-  { value: "autumn", label: "Mùa thu" },
-  { value: "winter", label: "Mùa đông" },
-];
-
-const SEASON_COLORS = {
-  spring: "bg-pink-100 text-pink-700 border-pink-200",
-  summer: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  autumn: "bg-orange-100 text-orange-700 border-orange-200",
-  winter: "bg-blue-100 text-blue-700 border-blue-200",
-  all: "bg-gray-100 text-gray-700 border-gray-200",
-};
+import { Loader2, Droplets, Leaf, AlertCircle, Scissors, Sprout, RefreshCw } from "lucide-react";
 
 const SEVERITY_CONFIG = {
   low: { label: "Thấp", color: "bg-green-100 text-green-700 border-green-200" },
@@ -30,14 +13,11 @@ const SEVERITY_CONFIG = {
 /**
  * CareGuideList - Danh sách Care Guides
  */
-export function CareGuideList({ careGuides, loading, onAdd }) {
+export function CareGuideList({ careGuides, loading }) {
   return (
     <>
       <div className="plant-detail-tab-header">
-        <h2 className="plant-detail-tab-title">Danh sách Care Guides</h2>
-        <Button onClick={onAdd}>
-          <Leaf className="w-4 h-4 mr-2" /> Thêm Care Guide
-        </Button>
+        <h2 className="plant-detail-tab-title">Danh sách Hướng dẫn chăm sóc</h2>
       </div>
 
       {loading ? (
@@ -47,43 +27,66 @@ export function CareGuideList({ careGuides, loading, onAdd }) {
       ) : careGuides.length === 0 ? (
         <Card className="plant-detail-empty">
           <Leaf className="w-12 h-12 text-muted-foreground plant-detail-empty-icon" />
-          <p className="plant-detail-empty-text">Chưa có Care Guide nào cho cây này.</p>
-          <Button variant="outline" onClick={onAdd}>
-            <Leaf className="w-4 h-4 mr-2" /> Thêm Care Guide đầu tiên
-          </Button>
+          <p className="plant-detail-empty-text">Chưa có hướng dẫn chăm sóc nào cho cây này.</p>
         </Card>
       ) : (
-        <div className="plant-detail-list-grid">
-          {careGuides.map((cg) => (
-            <Card key={cg._id || cg.id} className="plant-detail-card">
-              <div className="plant-detail-card-header">
-                <div className="plant-detail-card-title">
-                  <Droplets className="w-5 h-5" />
-                  <h3>{cg.title}</h3>
+        <div className="care-guide-list-vertical">
+          {careGuides.map((cg, index) => {
+            const items = [
+              {
+                id: "watering",
+                title: "Tưới nước",
+                icon: Droplets,
+                color: "text-blue-500",
+                content: cg.watering,
+              },
+              {
+                id: "pruning",
+                title: "Cắt tỉa",
+                icon: Scissors,
+                color: "text-orange-500",
+                content: cg.pruning,
+              },
+              {
+                id: "propagation",
+                title: "Nhân giống",
+                icon: Sprout,
+                color: "text-green-500",
+                content: cg.propagation,
+              },
+              {
+                id: "repotting",
+                title: "Thay chậu",
+                icon: RefreshCw,
+                color: "text-violet-500",
+                content: cg.repotting,
+              },
+            ];
+
+            return (
+              <div key={cg._id || index} className="care-guide-group">
+                <h4 className="care-guide-group-title">Hướng dẫn chăm sóc #{index + 1}</h4>
+                <div className="care-guide-group-items">
+                  {items
+                    .filter((item) => item.content)
+                    .map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <Card key={`${cg._id}-${item.id}`} className="care-guide-item-card">
+                          <div className="care-guide-item-header">
+                            <IconComponent className={`care-guide-item-icon ${item.color}`} />
+                            <h3 className="care-guide-item-title">{item.title}</h3>
+                          </div>
+                          <div className="care-guide-item-content">
+                            {item.content}
+                          </div>
+                        </Card>
+                      );
+                    })}
                 </div>
-                <Badge className={SEASON_COLORS[cg.season] || "bg-gray-100"}>
-                  {SEASON_OPTIONS.find((s) => s.value === cg.season)?.label || cg.season}
-                </Badge>
               </div>
-              <div className="plant-detail-card-meta">
-                {cg.wateringFrequency && (
-                  <div className="plant-detail-card-meta-item">
-                    <Droplets className="text-blue-400" />
-                    Tưới: {cg.wateringFrequency}
-                  </div>
-                )}
-                {cg.fertilizingFrequency && (
-                  <div className="plant-detail-card-meta-item">
-                    <Sun className="text-yellow-400" />
-                    Bón phân: {cg.fertilizingFrequency}
-                  </div>
-                )}
-              </div>
-              {cg.content && (
-                <p className="plant-detail-card-preview">{cg.content}</p>
-              )}
-            </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </>

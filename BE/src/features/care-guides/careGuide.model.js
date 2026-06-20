@@ -1,52 +1,43 @@
 // careGuide.model.js - Mongoose schema cho CareGuide
-// Chứa hướng dẫn chăm sóc cây: tưới nước, bón phân, cắt tỉa, theo mùa
+// Chứa hướng dẫn tưới nước, nhân giống, cắt tỉa và thay chậu cho từng cây.
 const mongoose = require('mongoose');
 
 const careGuideSchema = new mongoose.Schema(
   {
     plantId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Plant',
       required: true,
+    },
+    pruning: {
+      type: String,
       trim: true,
+      default: '',
     },
-    title: {
+    propagation: {
       type: String,
-      required: true,
       trim: true,
-    },
-    content: {
-      type: String,
       default: '',
     },
-    season: {
+    watering: {
       type: String,
-      enum: ['spring', 'summer', 'autumn', 'winter', 'all'],
-      default: 'all',
-    },
-    wateringFrequency: {
-      type: String,
+      trim: true,
       default: '',
     },
-    fertilizingFrequency: {
+    repotting: {
       type: String,
+      trim: true,
       default: '',
-    },
-    pruningNotes: {
-      type: String,
-      default: '',
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
     },
   },
   {
-    timestamps: true,
+    timestamps: { createdAt: true, updatedAt: false },
     collection: 'care_guides',
     id: false,
-    strict: false,
   }
 );
+
+careGuideSchema.index({ plantId: 1 });
 
 const CareGuide = mongoose.model('CareGuide', careGuideSchema);
 

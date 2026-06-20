@@ -11,6 +11,10 @@ const success = (res, message, data = null, statusCode = 200) => {
   return res.status(statusCode).json({ success: true, message, data });
 };
 
+const created = (res, message, data = null) => {
+  return success(res, message, data, 201);
+};
+
 /**
  * Trả về response lỗi
  * @param {object} res - Express response object
@@ -30,4 +34,4 @@ const notFound = (res, message = 'Không tìm thấy') => {
   return res.status(404).json({ success: false, message, data: null });
 };
 
-module.exports = { success, error, notFound };
+module.exports = { success, created, error, notFound };
