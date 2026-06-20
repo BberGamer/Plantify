@@ -45,6 +45,65 @@ function withRatingPipeline(extraStages = []) {
   ];
 }
 
+function normalizeStringArray(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter((item) => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Tạo bài viết mới cho customer đang đăng nhập.
+ * @param {Object} payload - Dữ liệu bài viết từ client
+ * @param {Object} currentUser - Thông tin user từ JWT
+ * @returns {Promise<Object>} Bài viết vừa tạo
+ */
+async function createPost(payload = {}, currentUser = {}) {
+  const title = typeof payload.title === 'string' ? payload.title.trim() : '';
+  const content = typeof payload.content === 'string' ? payload.content.trim() : '';
+  const userId = currentUser.id || currentUser._id || currentUser.userId;
+
+  if (!title) {
+    const error = new Error('Tiêu đề bài viết là bắt buộc');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!content) {
+    const error = new Error('Nội dung bài viết là bắt buộc');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    const error = new Error('Người dùng không hợp lệ');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const images = normalizeStringArray(payload.images);
+  const tags = normalizeStringArray(payload.tags);
+  const thumbnail = typeof payload.thumbnail === 'string' ? payload.thumbnail.trim() : '';
+  const category = typeof payload.category === 'string' ? payload.category.trim() : '';
+
+  return Post.create({
+    title,
+    content,
+    thumbnail,
+    images,
+    category,
+    author: currentUser.fullName || currentUser.email || '',
+    userId,
+    tags,
+    status: 'pending',
+    isApproved: false,
+  });
+}
+
 /**
  * Lấy danh sách bài viết, có hỗ trợ lọc theo category, title và phân trang.
  * @param {Object} filters - Query filter từ request
@@ -129,4 +188,4 @@ async function getFeaturedPosts(filters = {}) {
   return Post.aggregate(pipeline);
 }
 
-module.exports = { getAllPosts, getPostById, getFeaturedPosts };
+module.exports = { createPost, getAllPosts, getPostById, getFeaturedPosts };

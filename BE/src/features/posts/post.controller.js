@@ -3,6 +3,21 @@ const postService = require('./post.service');
 const apiResponse = require('../../utils/apiResponse');
 
 /**
+ * Xử lý request POST /api/posts.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Middleware xử lý lỗi
+ */
+async function createPost(req, res, next) {
+  try {
+    const post = await postService.createPost(req.body, req.user);
+    return apiResponse.success(res, 'Tạo bài viết thành công, đang chờ duyệt', post, 201);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
  * Xử lý request GET /api/posts.
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -47,4 +62,4 @@ async function getPostById(req, res, next) {
   }
 }
 
-module.exports = { getAllPosts, getFeaturedPosts, getPostById };
+module.exports = { createPost, getAllPosts, getFeaturedPosts, getPostById };
