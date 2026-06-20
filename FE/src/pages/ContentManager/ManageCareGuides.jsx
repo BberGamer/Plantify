@@ -130,9 +130,9 @@ function ManageCareGuides() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Content Manager</span><span>/</span><span className="font-medium text-foreground">Care Guides</span>
+            <span>Quản lý nội dung</span><span>/</span><span className="font-medium text-foreground">Hướng dẫn chăm sóc</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Quản lý Care Guides</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Quản lý Hướng dẫn chăm sóc</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Quản lý hướng dẫn chăm sóc chi tiết cho từng loài cây.
           </p>

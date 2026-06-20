@@ -221,7 +221,7 @@ function PlantDetail() {
         <TabsList className="plant-detail-tabs-list">
           <TabsTrigger value="overview">Tổng quan</TabsTrigger>
           <TabsTrigger value="care-guides">
-            Care Guides ({plantCareGuides.length})
+            Hướng dẫn chăm sóc ({plantCareGuides.length})
           </TabsTrigger>
           <TabsTrigger value="diseases">
             Bệnh cây ({plantDiseases.length})

@@ -53,12 +53,12 @@ const managerMenuConfig = {
   ],
   "content manager": [
     {
-      label: "Quản lý Plants",
+      label: "Quản lý Cây",
       path: "/content/plants",
       icon: Leaf
     },
     {
-      label: "Care Guides",
+      label: "Hướng dẫn chăm sóc",
       path: "/content/care-guides",
       icon: BookOpen
     },
@@ -77,7 +77,7 @@ const managerMenuConfig = {
 
 const managerRoleLabels = {
   "business manager": "Business Manager",
-  "content manager": "Content Manager"
+  "content manager": "Quản lý nội dung"
 };
 
 const getManagerRole = (role) => {

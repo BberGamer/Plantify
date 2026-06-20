@@ -17,7 +17,7 @@ export function CareGuideList({ careGuides, loading }) {
   return (
     <>
       <div className="plant-detail-tab-header">
-        <h2 className="plant-detail-tab-title">Danh sách Care Guides</h2>
+        <h2 className="plant-detail-tab-title">Danh sách Hướng dẫn chăm sóc</h2>
       </div>
 
       {loading ? (
@@ -27,7 +27,7 @@ export function CareGuideList({ careGuides, loading }) {
       ) : careGuides.length === 0 ? (
         <Card className="plant-detail-empty">
           <Leaf className="w-12 h-12 text-muted-foreground plant-detail-empty-icon" />
-          <p className="plant-detail-empty-text">Chưa có Care Guide nào cho cây này.</p>
+          <p className="plant-detail-empty-text">Chưa có hướng dẫn chăm sóc nào cho cây này.</p>
         </Card>
       ) : (
         <div className="care-guide-list-vertical">
