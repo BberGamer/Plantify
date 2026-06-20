@@ -42,9 +42,9 @@ const getTimestampFromId = (hexId) => {
 const formatDate = (dateStr, id) => {
   const dateObj = dateStr ? new Date(dateStr) : getTimestampFromId(id);
   if (!dateObj || isNaN(dateObj.getTime())) return "-";
-  return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(
-    dateObj.getDate()
-  ).padStart(2, "0")}`;
+  return `${String(dateObj.getDate()).padStart(2, "0")}/${String(
+    dateObj.getMonth() + 1
+  ).padStart(2, "0")}/${dateObj.getFullYear()}`;
 };
 
 export function ManageDiseases() {
