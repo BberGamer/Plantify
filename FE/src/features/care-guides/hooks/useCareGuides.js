@@ -21,8 +21,8 @@ export function useCareGuides({ page = 1, limit = 10, plantId } = {}) {
       const res = await getCareGuides(params);
       const result = res.result || res.data || res;
       setData(Array.isArray(result) ? result : result.careGuides || []);
-      if (result.total) setTotal(result.total);
-      if (result.pages) setPages(result.pages);
+      setTotal(result.total ?? (Array.isArray(result) ? result.length : 0));
+      setPages(result.pages ?? 1);
     } catch (err) {
       console.error("Error fetching care guides:", err);
     } finally {
