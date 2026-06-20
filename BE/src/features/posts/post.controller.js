@@ -1,50 +1,118 @@
-// post.controller.js - Xử lý request/response cho bài viết Plantify
+// post.controller.js - Xu ly request/response cho bai viet Plantify
 const postService = require('./post.service');
 const apiResponse = require('../../utils/apiResponse');
 
 /**
- * Xử lý request GET /api/posts.
+ * Xu ly request POST /api/posts.
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Middleware xử lý lỗi
+ * @param {Function} next - Middleware xu ly loi
+ */
+async function createPost(req, res, next) {
+  try {
+    const post = await postService.createPost(req.body, req.user);
+    return apiResponse.success(res, 'Tao bai viet thanh cong, dang cho duyet', post, 201);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * Xu ly request PATCH/PUT /api/posts/:id.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Middleware xu ly loi
+ */
+async function updatePost(req, res, next) {
+  try {
+    const post = await postService.updatePost(req.params.id, req.body, req.user);
+    return apiResponse.success(res, 'Cap nhat bai viet thanh cong, dang cho duyet', post);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * Xu ly request DELETE /api/posts/:id.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Middleware xu ly loi
+ */
+async function deletePost(req, res, next) {
+  try {
+    const post = await postService.deletePost(req.params.id, req.user);
+    return apiResponse.success(res, 'Xoa bai viet thanh cong', post);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * Xu ly request GET /api/posts/my.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Middleware xu ly loi
+ */
+async function getMyPosts(req, res, next) {
+  try {
+    const posts = await postService.getMyPosts(req.user, req.query);
+    return apiResponse.success(res, 'Lay danh sach bai viet cua toi thanh cong', posts);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * Xu ly request GET /api/posts.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Middleware xu ly loi
  */
 async function getAllPosts(req, res, next) {
   try {
     const posts = await postService.getAllPosts(req.query);
-    return apiResponse.success(res, 'Lấy danh sách bài viết thành công', posts);
+    return apiResponse.success(res, 'Lay danh sach bai viet thanh cong', posts);
   } catch (error) {
     return next(error);
   }
 }
 
 /**
- * Xử lý request GET /api/posts/featured.
+ * Xu ly request GET /api/posts/featured.
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Middleware xử lý lỗi
+ * @param {Function} next - Middleware xu ly loi
  */
 async function getFeaturedPosts(req, res, next) {
   try {
     const posts = await postService.getFeaturedPosts(req.query);
-    return apiResponse.success(res, 'Lấy danh sách bài viết nổi bật thành công', posts);
+    return apiResponse.success(res, 'Lay danh sach bai viet noi bat thanh cong', posts);
   } catch (error) {
     return next(error);
   }
 }
 
 /**
- * Xử lý request GET /api/posts/:id.
+ * Xu ly request GET /api/posts/:id.
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Middleware xử lý lỗi
+ * @param {Function} next - Middleware xu ly loi
  */
 async function getPostById(req, res, next) {
   try {
     const post = await postService.getPostById(req.params.id);
-    return apiResponse.success(res, 'Lấy chi tiết bài viết thành công', post);
+    return apiResponse.success(res, 'Lay chi tiet bai viet thanh cong', post);
   } catch (error) {
     return next(error);
   }
 }
 
-module.exports = { getAllPosts, getFeaturedPosts, getPostById };
+module.exports = {
+  createPost,
+  updatePost,
+  deletePost,
+  getMyPosts,
+  getAllPosts,
+  getFeaturedPosts,
+  getPostById,
+};

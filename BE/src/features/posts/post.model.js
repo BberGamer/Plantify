@@ -36,6 +36,16 @@ const postSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
+    isApproved: {
+      type: Boolean,
+      default: false,
     },
     tags: {
       type: [String],
@@ -62,6 +72,8 @@ const postSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+
+postSchema.index({ userId: 1 });
 
 postSchema.virtual('comments', {
   ref: 'Comment',

@@ -35,4 +35,12 @@ const authorizeContentManager = (req, res, next) => {
   next();
 };
 
-module.exports = { authenticate, authorizeAdmin, authorizeContentManager };
+const authorizeCustomer = (req, res, next) => {
+  if (req.user?.role !== 'customer') {
+    return error(res, 'Không có quyền truy cập', 403);
+  }
+
+  next();
+};
+
+module.exports = { authenticate, authorizeAdmin, authorizeContentManager, authorizeCustomer };

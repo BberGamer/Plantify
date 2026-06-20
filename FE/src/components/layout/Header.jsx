@@ -7,7 +7,8 @@ import {
   Settings,
   LogOut,
   Store,
-  ShoppingCart
+  ShoppingCart,
+  PenSquare
 } from "lucide-react";
 import {
   NavigationMenu,
@@ -161,6 +162,12 @@ function Header() {
                   <Link to={ROUTES.cart} className="cursor-pointer">
                     <ShoppingCart className="mr-2 h-4 w-4" />
                     Giỏ hàng
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to={ROUTES.myPosts} className="cursor-pointer">
+                    <PenSquare className="mr-2 h-4 w-4" />
+                    Bài viết của tôi
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
