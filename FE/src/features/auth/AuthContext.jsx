@@ -72,6 +72,16 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
   };
 
+  /**
+   * Cập nhật thông tin user trong context và localStorage
+   * Được gọi sau khi updateProfile thành công
+   * @param {object} updatedUser - Thông tin user mới từ API
+   */
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
   const value = {
     user,
     token,
@@ -79,6 +89,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUser,
     isAuthenticated: !!user,
   };
 
