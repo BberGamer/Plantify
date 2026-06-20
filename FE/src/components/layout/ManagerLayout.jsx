@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router";
 import {
   LayoutDashboard,
+  BookOpen,
   Leaf,
   Loader2,
   LogOut,
@@ -55,6 +56,11 @@ const managerMenuConfig = {
       label: "Quản lý Plants",
       path: "/content/plants",
       icon: Leaf
+    },
+    {
+      label: "Care Guides",
+      path: "/content/care-guides",
+      icon: BookOpen
     },
     {
       label: "Quản lý Danh mục",
@@ -150,7 +156,7 @@ function ManagerLayout({ children }) {
           isSidebarCollapsed ? "lg:pl-16" : "lg:pl-60"
         )}
       >
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 pt-20 sm:px-6 lg:px-8 lg:pl-14 lg:pt-8">
+        <main className="mx-auto w-full max-w-7xl px-4 py-6 pt-20 sm:px-6 lg:px-8 lg:pl-[10px] lg:pt-8">
           {children || <Outlet />}
         </main>
       </div>
