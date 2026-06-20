@@ -13,14 +13,11 @@ const SEVERITY_CONFIG = {
 /**
  * CareGuideList - Danh sách Care Guides
  */
-export function CareGuideList({ careGuides, loading, onAdd }) {
+export function CareGuideList({ careGuides, loading }) {
   return (
     <>
       <div className="plant-detail-tab-header">
         <h2 className="plant-detail-tab-title">Danh sách Care Guides</h2>
-        <Button onClick={onAdd}>
-          <Leaf className="w-4 h-4 mr-2" /> Thêm Care Guide
-        </Button>
       </div>
 
       {loading ? (
@@ -31,48 +28,65 @@ export function CareGuideList({ careGuides, loading, onAdd }) {
         <Card className="plant-detail-empty">
           <Leaf className="w-12 h-12 text-muted-foreground plant-detail-empty-icon" />
           <p className="plant-detail-empty-text">Chưa có Care Guide nào cho cây này.</p>
-          <Button variant="outline" onClick={onAdd}>
-            <Leaf className="w-4 h-4 mr-2" /> Thêm Care Guide đầu tiên
-          </Button>
         </Card>
       ) : (
-        <div className="plant-detail-list-grid">
-          {careGuides.map((cg) => (
-            <Card key={cg._id} className="plant-detail-card">
-              <div className="plant-detail-card-header">
-                <div className="plant-detail-card-title">
-                  <Droplets className="w-5 h-5" />
-                  <h3>Hướng dẫn chăm sóc</h3>
+        <div className="care-guide-list-vertical">
+          {careGuides.map((cg, index) => {
+            const items = [
+              {
+                id: "watering",
+                title: "Tưới nước",
+                icon: Droplets,
+                color: "text-blue-500",
+                content: cg.watering,
+              },
+              {
+                id: "pruning",
+                title: "Cắt tỉa",
+                icon: Scissors,
+                color: "text-orange-500",
+                content: cg.pruning,
+              },
+              {
+                id: "propagation",
+                title: "Nhân giống",
+                icon: Sprout,
+                color: "text-green-500",
+                content: cg.propagation,
+              },
+              {
+                id: "repotting",
+                title: "Thay chậu",
+                icon: RefreshCw,
+                color: "text-violet-500",
+                content: cg.repotting,
+              },
+            ];
+
+            return (
+              <div key={cg._id || index} className="care-guide-group">
+                <h4 className="care-guide-group-title">Hướng dẫn chăm sóc #{index + 1}</h4>
+                <div className="care-guide-group-items">
+                  {items
+                    .filter((item) => item.content)
+                    .map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <Card key={`${cg._id}-${item.id}`} className="care-guide-item-card">
+                          <div className="care-guide-item-header">
+                            <IconComponent className={`care-guide-item-icon ${item.color}`} />
+                            <h3 className="care-guide-item-title">{item.title}</h3>
+                          </div>
+                          <div className="care-guide-item-content">
+                            {item.content}
+                          </div>
+                        </Card>
+                      );
+                    })}
                 </div>
               </div>
-              <div className="plant-detail-card-meta">
-                {cg.watering && (
-                  <div className="plant-detail-card-meta-item">
-                    <Droplets className="text-blue-400" />
-                    Tưới: {cg.watering}
-                  </div>
-                )}
-                {cg.propagation && (
-                  <div className="plant-detail-card-meta-item">
-                    <Sprout className="text-green-500" />
-                    Nhân giống: {cg.propagation}
-                  </div>
-                )}
-                {cg.pruning && (
-                  <div className="plant-detail-card-meta-item">
-                    <Scissors className="text-orange-400" />
-                    Cắt tỉa: {cg.pruning}
-                  </div>
-                )}
-                {cg.repotting && (
-                  <div className="plant-detail-card-meta-item">
-                    <RefreshCw className="text-violet-400" />
-                    Thay chậu: {cg.repotting}
-                  </div>
-                )}
-              </div>
-            </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </>

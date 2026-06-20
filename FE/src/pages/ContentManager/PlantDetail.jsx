@@ -233,7 +233,7 @@ function PlantDetail() {
         </TabsContent>
 
         <TabsContent value="care-guides" className="plant-detail-tabs-content">
-          <CareGuideList careGuides={plantCareGuides} loading={loadingCareGuides} onAdd={openCareGuideForm} />
+          <CareGuideList careGuides={plantCareGuides} loading={loadingCareGuides} />
         </TabsContent>
 
         <TabsContent value="diseases" className="plant-detail-tabs-content">
