@@ -2,7 +2,7 @@
  * usePosts.js - Custom hooks fetch danh sach va chi tiet posts.
  */
 import { useEffect, useMemo, useState } from "react";
-import { getPostById, getPosts } from "../api";
+import { getMyPosts, getPostById, getPosts } from "../api";
 
 function normalizePostsPayload(payload) {
   if (Array.isArray(payload)) {
@@ -108,6 +108,50 @@ export function usePosts(filters = {}) {
   };
 
   return { posts, loading, error, searchTerm, setSearchTerm, category, setCategory, refetch };
+}
+
+/**
+ * Hook lay danh sach bai viet cua customer dang dang nhap.
+ * @param {Object} filters - Filter truyen len API nhu page, limit, status
+ * @returns {{ posts: Array, loading: boolean, error: string|null, refetch: Function }}
+ */
+export function useMyPosts(filters = {}) {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const filterKey = JSON.stringify(filters);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setLoading(true);
+    setError(null);
+
+    getMyPosts(filters)
+      .then((response) => {
+        if (!cancelled) {
+          setPosts(normalizePostsPayload(response.data));
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err.response?.data?.message || err.message);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [filterKey, refreshKey]);
+
+  const refetch = () => {
+    setRefreshKey((currentKey) => currentKey + 1);
+  };
+
+  return { posts, loading, error, refetch };
 }
 
 /**
