@@ -18,6 +18,7 @@ export function useProfile() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
     fullName: user?.fullName || "",
+    email: user?.email || "",
     phone: user?.phone || "",
     address: user?.address || "",
   });
@@ -27,6 +28,7 @@ export function useProfile() {
     if (user && !isEditingProfile) {
       setProfileForm({
         fullName: user.fullName || "",
+        email: user.email || "",
         phone: user.phone || "",
         address: user.address || "",
       });
@@ -48,6 +50,7 @@ export function useProfile() {
   const handleStartEditProfile = () => {
     setProfileForm({
       fullName: user?.fullName || "",
+      email: user?.email || "",
       phone: user?.phone || "",
       address: user?.address || "",
     });
@@ -60,6 +63,7 @@ export function useProfile() {
   const handleCancelEditProfile = () => {
     setProfileForm({
       fullName: user?.fullName || "",
+      email: user?.email || "",
       phone: user?.phone || "",
       address: user?.address || "",
     });

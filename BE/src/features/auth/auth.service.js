@@ -420,17 +420,29 @@ const verifyOTP = async (email, otp) => {
 /**
  * Cập nhật thông tin cá nhân của người dùng
  * @param {string} userId - ID người dùng từ token
- * @param {object} profileData - { fullName, phone, address }
+ * @param {object} profileData - { fullName, email, phone, address }
  * @returns {Promise<object>} user - Thông tin sau khi cập nhật (không bao gồm password)
  */
 const updateProfile = async (userId, profileData) => {
-  const { fullName, phone, address } = profileData;
+  const { fullName, email, phone, address } = profileData;
 
   const user = await User.findById(userId);
   if (!user) {
     const err = new Error('Không tìm thấy người dùng');
     err.statusCode = 404;
     throw err;
+  }
+
+  // Kiểm tra email không trùng với người dùng khác
+  if (email && email.trim() !== '') {
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingEmail = await User.findOne({ email: normalizedEmail, _id: { $ne: userId } });
+    if (existingEmail) {
+      const err = new Error('Email đã được sử dụng bởi tài khoản khác');
+      err.statusCode = 400;
+      throw err;
+    }
+    user.email = normalizedEmail;
   }
 
   // Kiểm tra số điện thoại không trùng với người dùng khác

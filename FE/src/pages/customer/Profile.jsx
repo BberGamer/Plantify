@@ -303,7 +303,7 @@ function Profile() {
                       </div>
                     </div>
 
-                    {/* Email — chỉ đọc */}
+                    {/* Email */}
                     <div className="space-y-3">
                       <Label htmlFor="email" className="text-slate-700 font-semibold text-[15px] flex items-center gap-1.5 mb-1.5">
                          Email
@@ -313,12 +313,13 @@ function Profile() {
                         <Input
                           id="email"
                           type="email"
-                          value={user?.email || ""}
-                          disabled
-                          className="pl-11 h-12 text-[15px] rounded-lg bg-slate-50 border-slate-200 text-slate-900 font-semibold cursor-not-allowed disabled:opacity-100 shadow-sm"
+                          value={profileForm.email}
+                          onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                          disabled={!isEditingProfile}
+                          className={`pl-11 h-12 text-[15px] rounded-lg transition-all ${!isEditingProfile ? 'bg-slate-50 border-slate-200 text-slate-900 font-semibold disabled:opacity-100 shadow-sm' : 'border-green-200 focus-visible:ring-green-500 text-slate-800'}`}
+                          placeholder="Nhập địa chỉ email"
                         />
                       </div>
-                      <p className="text-[13px] text-amber-600/90 font-medium pl-1">Email không thể thay đổi</p>
                     </div>
 
                     {/* Số điện thoại */}

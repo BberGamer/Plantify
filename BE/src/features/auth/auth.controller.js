@@ -319,7 +319,7 @@ const verifyOTP = async (req, res, next) => {
  */
 const updateProfile = async (req, res, next) => {
   try {
-    const { fullName, phone, address } = req.body;
+    const { fullName, email, phone, address } = req.body;
 
     // Validate họ tên
     if (fullName !== undefined) {
@@ -337,6 +337,22 @@ const updateProfile = async (req, res, next) => {
       }
     }
 
+    // Validate email mới (nếu có)
+    if (email !== undefined) {
+      const trimmedEmail = email.trim();
+      if (!trimmedEmail) {
+        const err = new Error('Email không được để trống');
+        err.statusCode = 400;
+        throw err;
+      }
+      const emailRegex = /^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i;
+      if (!emailRegex.test(trimmedEmail)) {
+        const err = new Error('Email không đúng định dạng (chỉ chấp nhận @gmail.com, @yahoo.com, @fpt.edu.vn)');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
     // Validate số điện thoại
     if (phone !== undefined && phone.trim() !== '') {
       const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
@@ -347,7 +363,7 @@ const updateProfile = async (req, res, next) => {
       }
     }
 
-    const updatedUser = await authService.updateProfile(req.user.id, { fullName, phone, address });
+    const updatedUser = await authService.updateProfile(req.user.id, { fullName, email, phone, address });
     return success(res, 'Cập nhật thông tin thành công', updatedUser, 200);
   } catch (error) {
     next(error);
