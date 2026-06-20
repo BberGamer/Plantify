@@ -4,19 +4,15 @@ const mongoose = require('mongoose');
 
 const plantDiseaseSchema = new mongoose.Schema(
   {
+    plantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Plant',
+      required: true,
+    },
     name: {
       type: String,
       required: true,
       trim: true,
-    },
-    plantId: {
-      type: String,
-      trim: true,
-    },
-    scientificName: {
-      type: String,
-      trim: true,
-      default: '',
     },
     symptoms: {
       type: String,
@@ -38,27 +34,14 @@ const plantDiseaseSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
-    affectedPlants: {
-      type: [String],
-      default: [],
-    },
-    severity: {
-      type: String,
-      enum: ['low', 'medium', 'high'],
-      default: 'medium',
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
   },
   {
-    timestamps: true,
     collection: 'plant_diseases',
     id: false,
-    strict: false,
   }
 );
+
+plantDiseaseSchema.index({ plantId: 1 });
 
 const PlantDisease = mongoose.model('PlantDisease', plantDiseaseSchema);
 
