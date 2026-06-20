@@ -228,20 +228,26 @@ function Profile() {
 
         {/* === Tabs điều hướng === */}
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto p-1.5 bg-slate-100/80 rounded-xl">
-            <TabsTrigger value="profile" className="flex items-center gap-2 py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all font-medium">
-              <User className="w-4 h-4" />
-              Thông tin
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center gap-2 py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all font-medium">
-              <Package className="w-4 h-4" />
-              Đơn hàng
-            </TabsTrigger>
-            <TabsTrigger value="saved" className="flex items-center gap-2 py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all font-medium">
-              <Heart className="w-4 h-4" />
-              Cây yêu thích
-            </TabsTrigger>
-          </TabsList>
+          <div className={user?.role === 'customer' ? '' : 'flex justify-center'}>
+            <TabsList className={`grid p-1.5 bg-slate-100/80 rounded-xl ${user?.role === 'customer' ? 'w-full grid-cols-3 lg:w-auto' : 'w-full max-w-[250px] grid-cols-1'}`}>
+              <TabsTrigger value="profile" className="flex items-center justify-center gap-2 py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all font-medium">
+                <User className="w-4 h-4" />
+                Thông tin
+              </TabsTrigger>
+              {user?.role === 'customer' && (
+                <>
+                  <TabsTrigger value="orders" className="flex items-center justify-center gap-2 py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all font-medium">
+                    <Package className="w-4 h-4" />
+                    Đơn hàng
+                  </TabsTrigger>
+                  <TabsTrigger value="saved" className="flex items-center justify-center gap-2 py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all font-medium">
+                    <Heart className="w-4 h-4" />
+                    Cây yêu thích
+                  </TabsTrigger>
+                </>
+              )}
+            </TabsList>
+          </div>
 
           {/* === Tab: Thông tin cá nhân + Đổi mật khẩu === */}
           <TabsContent value="profile" className="space-y-8">
@@ -497,7 +503,8 @@ function Profile() {
           </TabsContent>
 
           {/* === Tab: Đơn hàng === */}
-          <TabsContent value="orders" className="space-y-4">
+          {user?.role === 'customer' && (
+            <TabsContent value="orders" className="space-y-4">
             {mockOrders.map((order, index) => (
               <motion.div
                 key={order.id}
@@ -539,9 +546,11 @@ function Profile() {
               </motion.div>
             ))}
           </TabsContent>
+          )}
 
           {/* === Tab: Cây yêu thích === */}
-          <TabsContent value="saved" className="space-y-4">
+          {user?.role === 'customer' && (
+            <TabsContent value="saved" className="space-y-4">
             {mockSavedPlants.length === 0 ? (
               <EmptyState
                 icon={Heart}
@@ -585,6 +594,7 @@ function Profile() {
               </div>
             )}
           </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
