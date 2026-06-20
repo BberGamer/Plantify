@@ -8,7 +8,6 @@ import { AdminUsersCreateDialog } from "../../features/auth/components/AdminUser
 import { AdminUsersDeleteDialog } from "../../features/auth/components/AdminUsersDeleteDialog";
 import { AdminUsersFilters } from "../../features/auth/components/AdminUsersFilters";
 import { AdminUsersHeader } from "../../features/auth/components/AdminUsersHeader";
-import { AdminUsersStats } from "../../features/auth/components/AdminUsersStats";
 import { AdminUsersTable } from "../../features/auth/components/AdminUsersTable";
 import { initialCreateUserForm } from "../../features/auth/hooks/adminUsers.utils";
 import "@/styles/AdminUsers.css";
@@ -26,20 +25,6 @@ function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
 
-  const totalUsers = users.length;
-  const activeUsers = users.filter(
-    (user) => user.status
-  ).length;
-  const managedUsers = users.filter((user) => user.role !== "customer").length;
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 7);
-  const newUsersThisWeek = users.filter((user) => {
-    if (!user.createdAt) {
-      return false;
-    }
-
-    return new Date(user.createdAt) >= weekAgo;
-  }).length;
   const normalizedSearchTerm = searchTerm.trim().toLowerCase();
   const filteredUsers = users.filter((user) => {
     const matchesSearch = !normalizedSearchTerm || (user.fullName || "").toLowerCase().includes(normalizedSearchTerm);
@@ -189,13 +174,6 @@ function AdminUsers() {
 
         <div className="admin-users-content">
           <AdminUsersHeader onCreateClick={() => setIsCreateDialogOpen(true)} />
-
-          <AdminUsersStats
-            totalUsers={totalUsers}
-            activeUsers={activeUsers}
-            managedUsers={managedUsers}
-            newUsersThisWeek={newUsersThisWeek}
-          />
 
           <AdminUsersFilters
             searchTerm={searchTerm}

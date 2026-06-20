@@ -3,9 +3,9 @@ import { ShieldCheck, User, UserCheck, UserPlus } from "lucide-react";
 
 function AdminUsersStats({ totalUsers, activeUsers, managedUsers, newUsersThisWeek }) {
   return (
-    <section className="admin-users-stats-grid">
-      <Card className="admin-users-stat-card">
-        <CardContent className="admin-users-stat-content">
+    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+        <CardContent className="flex items-start justify-between gap-4 p-6">
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Tổng người dùng</p>
             <p className="text-4xl font-bold text-foreground">{totalUsers}</p>
@@ -17,8 +17,8 @@ function AdminUsersStats({ totalUsers, activeUsers, managedUsers, newUsersThisWe
         </CardContent>
       </Card>
 
-      <Card className="admin-users-stat-card">
-        <CardContent className="admin-users-stat-content">
+      <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+        <CardContent className="flex items-start justify-between gap-4 p-6">
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Đang hoạt động</p>
             <p className="text-4xl font-bold text-foreground">{activeUsers}</p>
@@ -30,8 +30,8 @@ function AdminUsersStats({ totalUsers, activeUsers, managedUsers, newUsersThisWe
         </CardContent>
       </Card>
 
-      <Card className="admin-users-stat-card">
-        <CardContent className="admin-users-stat-content">
+      <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+        <CardContent className="flex items-start justify-between gap-4 p-6">
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Admin / Business / Content</p>
             <p className="text-4xl font-bold text-foreground">{managedUsers}</p>
@@ -43,8 +43,8 @@ function AdminUsersStats({ totalUsers, activeUsers, managedUsers, newUsersThisWe
         </CardContent>
       </Card>
 
-      <Card className="admin-users-stat-card">
-        <CardContent className="admin-users-stat-content">
+      <Card className="border-green-200/60 bg-white/95 shadow-lg backdrop-blur-sm">
+        <CardContent className="flex items-start justify-between gap-4 p-6">
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Mới tuần này</p>
             <p className="text-4xl font-bold text-foreground">{newUsersThisWeek}</p>
