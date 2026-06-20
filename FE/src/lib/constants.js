@@ -27,6 +27,7 @@ const ROUTES = {
   register: "/register",
   forgotPassword: "/forgot-password",
   profile: "/profile",
+  myPosts: "/my-posts",
   settings: "/settings",
   cart: "/cart",
   checkout: "/checkout",
@@ -64,6 +65,7 @@ const PUBLIC_NAV = [
 const ROLE_SIDEBAR_NAV = {
   customer: [
     { path: "/profile", label: "Ho so", icon: User, roles: ["customer"] },
+    { path: "/my-posts", label: "Bai viet cua toi", icon: BookOpen, roles: ["customer"] },
     {
       path: "/cart",
       label: "Gio hang",

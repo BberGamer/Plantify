@@ -41,6 +41,7 @@ import { Profile } from "@/pages/customer/Profile";
 import { Settings } from "@/pages/customer/Settings";
 import { Cart } from "@/pages/customer/Cart";
 import { Checkout } from "@/pages/customer/Checkout";
+import { MyPosts } from "@/pages/customer/MyPosts";
 
 
 
@@ -83,6 +84,7 @@ const publicChildRoutes = [
   { path: "ai-doctor", element: <AIDoctor /> },
   { path: "knowledge-graph", element: <KnowledgeGraph /> },
   { path: "profile", element: <Profile /> },
+  { path: "my-posts", element: <MyPosts /> },
   { path: "settings", element: <Settings /> },
   { path: "cart", element: <Cart /> },
   { path: "checkout", element: <Checkout /> },
