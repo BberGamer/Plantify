@@ -56,6 +56,36 @@ function normalizeStringArray(value) {
     .filter(Boolean);
 }
 
+function buildPostUpdatePayload(payload = {}) {
+  const updates = {};
+
+  if (typeof payload.title === 'string') {
+    updates.title = payload.title.trim();
+  }
+
+  if (typeof payload.content === 'string') {
+    updates.content = payload.content.trim();
+  }
+
+  if (typeof payload.thumbnail === 'string') {
+    updates.thumbnail = payload.thumbnail.trim();
+  }
+
+  if (Array.isArray(payload.images)) {
+    updates.images = normalizeStringArray(payload.images);
+  }
+
+  if (typeof payload.category === 'string') {
+    updates.category = payload.category.trim();
+  }
+
+  if (Array.isArray(payload.tags)) {
+    updates.tags = normalizeStringArray(payload.tags);
+  }
+
+  return updates;
+}
+
 /**
  * Tạo bài viết mới cho customer đang đăng nhập.
  * @param {Object} payload - Dữ liệu bài viết từ client
@@ -102,6 +132,70 @@ async function createPost(payload = {}, currentUser = {}) {
     status: 'pending',
     isApproved: false,
   });
+}
+
+/**
+ * Cập nhật bài viết của chính customer đang đăng nhập.
+ * @param {string} id - Id bài viết
+ * @param {Object} payload - Dữ liệu cập nhật từ client
+ * @param {Object} currentUser - Thông tin user từ JWT
+ * @returns {Promise<Object>} Bài viết sau khi cập nhật
+ */
+async function updatePost(id, payload = {}, currentUser = {}) {
+  const userId = currentUser.id || currentUser._id || currentUser.userId;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const error = new Error('ID bài viết không hợp lệ');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    const error = new Error('Người dùng không hợp lệ');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const post = await Post.findById(id);
+
+  if (!post) {
+    const error = new Error('Không tìm thấy bài viết');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (post.userId?.toString() !== userId.toString()) {
+    const error = new Error('Bạn không có quyền cập nhật bài viết này');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const updates = buildPostUpdatePayload(payload);
+
+  if (!Object.keys(updates).length) {
+    const error = new Error('Không có dữ liệu cập nhật hợp lệ');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (updates.title !== undefined && !updates.title) {
+    const error = new Error('Tiêu đề bài viết là bắt buộc');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (updates.content !== undefined && !updates.content) {
+    const error = new Error('Nội dung bài viết là bắt buộc');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  Object.assign(post, updates, {
+    status: 'pending',
+    isApproved: false,
+  });
+
+  return post.save();
 }
 
 /**
@@ -188,4 +282,4 @@ async function getFeaturedPosts(filters = {}) {
   return Post.aggregate(pipeline);
 }
 
-module.exports = { createPost, getAllPosts, getPostById, getFeaturedPosts };
+module.exports = { createPost, updatePost, getAllPosts, getPostById, getFeaturedPosts };
