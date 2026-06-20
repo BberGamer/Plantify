@@ -247,6 +247,34 @@ async function deletePost(id, currentUser = {}) {
  * @param {Object} filters - Query filter từ request
  * @returns {Promise<Array>} Danh sách bài viết
  */
+async function getMyPosts(currentUser = {}, filters = {}) {
+  const userId = getCurrentUserId(currentUser);
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    const error = new Error('Người dùng không hợp lệ');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const query = { userId };
+
+  if (filters.status) {
+    query.status = filters.status;
+  }
+
+  const postQuery = Post.find(query)
+    .sort({ createdAt: -1 })
+    .select('-id -excerpt -likesCount -likeCount -isFeatured -isActive -readTime');
+
+  if (filters.page && filters.limit) {
+    const safePage = Math.max(Number(filters.page), 1);
+    const safeLimit = Math.max(Number(filters.limit), 1);
+    postQuery.skip((safePage - 1) * safeLimit).limit(safeLimit);
+  }
+
+  return postQuery.lean();
+}
+
 async function getAllPosts(filters = {}) {
   const { category, title, page, limit } = filters;
   const query = {};
@@ -326,4 +354,12 @@ async function getFeaturedPosts(filters = {}) {
   return Post.aggregate(pipeline);
 }
 
-module.exports = { createPost, updatePost, deletePost, getAllPosts, getPostById, getFeaturedPosts };
+module.exports = {
+  createPost,
+  updatePost,
+  deletePost,
+  getMyPosts,
+  getAllPosts,
+  getPostById,
+  getFeaturedPosts,
+};

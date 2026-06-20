@@ -14,6 +14,9 @@ router.get('/', postController.getAllPosts);
 // GET /api/posts/featured - Lay danh sach bai viet noi bat.
 router.get('/featured', postController.getFeaturedPosts);
 
+// GET /api/posts/my - Customer lay danh sach bai viet cua minh.
+router.get('/my', authenticate, authorizeCustomer, postController.getMyPosts);
+
 // PATCH /api/posts/:id - Customer cap nhat bai viet cua chinh minh.
 router.patch('/:id', authenticate, authorizeCustomer, postController.updatePost);
 

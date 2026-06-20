@@ -48,6 +48,21 @@ async function deletePost(req, res, next) {
 }
 
 /**
+ * Xu ly request GET /api/posts/my.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Middleware xu ly loi
+ */
+async function getMyPosts(req, res, next) {
+  try {
+    const posts = await postService.getMyPosts(req.user, req.query);
+    return apiResponse.success(res, 'Lay danh sach bai viet cua toi thanh cong', posts);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
  * Xu ly request GET /api/posts.
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -96,6 +111,7 @@ module.exports = {
   createPost,
   updatePost,
   deletePost,
+  getMyPosts,
   getAllPosts,
   getFeaturedPosts,
   getPostById,
