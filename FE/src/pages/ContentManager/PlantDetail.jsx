@@ -7,12 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ImageWithFallback } from "@/components/common/ImageWithFallback";
-import { PlantEditForm, CareGuideForm, DiseaseForm } from "@/features/plants/components/PlantEditForm";
+import { PlantEditForm, CareGuideForm } from "@/features/plants/components/PlantEditForm";
 import { PlantOverviewTab } from "@/features/plants/components/PlantOverviewTab";
 import { CareGuideList, DiseaseList } from "@/features/plants/components/PlantDetailList";
 import { usePlants, useUpdatePlant, useDeletePlant, usePlantCategories } from "@/features/plants/hooks";
 import { useCareGuides, useCreateCareGuide } from "@/features/care-guides/hooks";
-import { usePlantDiseases, useCreatePlantDisease } from "@/features/plant-diseases/hooks";
+import { usePlantDiseases } from "@/features/plant-diseases/hooks";
 import { toast } from "sonner";
 
 import "@/styles/ManagerPlantDetail.css";
@@ -27,7 +27,6 @@ function PlantDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const careGuideFormRef = useRef(null);
-  const diseaseFormRef = useRef(null);
 
   // Lấy plant
   const { plants, loading: loadingPlants, refetch: refetchPlants } = usePlants({ search: "", limit: 100 });
@@ -48,7 +47,6 @@ function PlantDetail() {
   const { update: updatePlant, loading: updatingPlant } = useUpdatePlant();
   const { remove: deletePlant, loading: deletingPlant } = useDeletePlant();
   const { create: createCareGuide, loading: creatingCareGuide } = useCreateCareGuide();
-  const { create: createDisease, loading: creatingDisease } = useCreatePlantDisease();
 
   // Image carousel state
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -78,14 +76,7 @@ function PlantDetail() {
     refetchCareGuides();
   };
 
-  const handleCreateDisease = async (payload) => {
-    await createDisease(payload);
-    toast.success("Thêm bệnh cây thành công");
-    refetchDiseases();
-  };
-
   const openCareGuideForm = () => careGuideFormRef.current?.open();
-  const openDiseaseForm = () => diseaseFormRef.current?.open();
 
   // Loading state
   if (loadingPlants) {
@@ -235,7 +226,7 @@ function PlantDetail() {
         </TabsContent>
 
         <TabsContent value="diseases" className="plant-detail-tabs-content">
-          <DiseaseList diseases={plantDiseases} loading={loadingDiseases} onAdd={openDiseaseForm} />
+          <DiseaseList diseases={plantDiseases} loading={loadingDiseases} />
         </TabsContent>
       </Tabs>
 
@@ -247,13 +238,6 @@ function PlantDetail() {
           plantName={plant.name}
           onCreate={handleCreateCareGuide}
           loading={creatingCareGuide}
-        />
-        <DiseaseForm
-          ref={diseaseFormRef}
-          plantId={id}
-          plantName={plant.name}
-          onCreate={handleCreateDisease}
-          loading={creatingDisease}
         />
       </div>
     </div>

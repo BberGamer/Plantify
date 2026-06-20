@@ -89,14 +89,11 @@ export function CareGuideList({ careGuides, loading }) {
 /**
  * DiseaseList - Danh sách Bệnh cây
  */
-export function DiseaseList({ diseases, loading, onAdd }) {
+export function DiseaseList({ diseases, loading }) {
   return (
     <>
       <div className="plant-detail-tab-header">
         <h2 className="plant-detail-tab-title">Bệnh thường gặp</h2>
-        <Button onClick={onAdd}>
-          <AlertCircle className="w-4 h-4 mr-2" /> Thêm Bệnh
-        </Button>
       </div>
 
       {loading ? (
@@ -107,9 +104,6 @@ export function DiseaseList({ diseases, loading, onAdd }) {
         <Card className="plant-detail-empty">
           <AlertCircle className="w-12 h-12 text-muted-foreground plant-detail-empty-icon" />
           <p className="plant-detail-empty-text">Chưa có thông tin bệnh cho cây này.</p>
-          <Button variant="outline" onClick={onAdd}>
-            <AlertCircle className="w-4 h-4 mr-2" /> Thêm bệnh đầu tiên
-          </Button>
         </Card>
       ) : (
         <div className="plant-detail-list-grid">
