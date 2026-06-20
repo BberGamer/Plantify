@@ -56,6 +56,7 @@ import { ManageProducts } from "@/pages/BusinessManager/ManageProducts";
 import { ProductDetail as BusinessProductDetail } from "@/pages/BusinessManager/ProductDetail";
 import { ManagePlants } from "@/pages/ContentManager/ManagePlants";
 import { ManageCategories } from "@/pages/ContentManager/ManageCategories";
+import { ManageReports } from "@/pages/ContentManager/ManageReports";
 import { PlantDetail as PlantDetailManager } from "@/pages/ContentManager/PlantDetail";
 
 // ============================================================
@@ -105,6 +106,7 @@ const managerChildRoutes = [
   { path: "content/plants", element: <ManagePlants /> },
   { path: "content/plants/:id", element: <PlantDetailManager /> },
   { path: "content/categories", element: <ManageCategories /> },
+  { path: "content/reports", element: <ManageReports /> },
 ];
 
 const adminChildRoutes = [
