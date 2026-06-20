@@ -3,7 +3,6 @@
 
 import { Link, Navigate, Outlet, useLocation } from "react-router";
 import {
-  Bell,
   LayoutDashboard,
   Leaf,
   Loader2,
@@ -11,21 +10,11 @@ import {
   Menu,
   Settings,
   ShoppingBag,
-  User,
   FolderOpen,
   Package,
   Tags
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -88,18 +77,6 @@ const getManagerRole = (role) => {
   return "business manager";
 };
 
-const getUserInitials = (user) => {
-  const displayName = user?.fullName || user?.name || user?.email || "Manager";
-
-  return displayName
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-};
-
 function ManagerLayout({ children }) {
   const { user, logout, loading, isAuthenticated } = useAuth();
   const location = useLocation();
@@ -125,12 +102,11 @@ function ManagerLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-border bg-card lg:block">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 border-r border-border bg-card lg:block">
         <ManagerSidebar
           pathname={location.pathname}
           roleLabel={roleLabel}
           menuItems={menuItems}
-          user={user}
           onLogout={logout}
         />
       </aside>
@@ -139,11 +115,10 @@ function ManagerLayout({ children }) {
         pathname={location.pathname}
         roleLabel={roleLabel}
         menuItems={menuItems}
-        user={user}
         onLogout={logout}
       />
 
-      <div className="min-h-screen lg:pl-72">
+      <div className="min-h-screen lg:pl-60">
         <main className="mx-auto w-full max-w-7xl px-4 py-6 pt-20 sm:px-6 lg:px-8 lg:pt-8">
           {children || <Outlet />}
         </main>
@@ -152,7 +127,7 @@ function ManagerLayout({ children }) {
   );
 }
 
-function MobileSidebar({ pathname, roleLabel, menuItems, user, onLogout }) {
+function MobileSidebar({ pathname, roleLabel, menuItems, onLogout }) {
   return (
     <div className="fixed left-4 top-4 z-50 lg:hidden">
       <Sheet>
@@ -162,7 +137,7 @@ function MobileSidebar({ pathname, roleLabel, menuItems, user, onLogout }) {
             <span className="sr-only">Mở menu quản lý</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-72 p-0">
+        <SheetContent side="left" className="w-64 p-0">
           <SheetHeader className="sr-only">
             <SheetTitle>Menu quản lý</SheetTitle>
           </SheetHeader>
@@ -170,7 +145,6 @@ function MobileSidebar({ pathname, roleLabel, menuItems, user, onLogout }) {
             pathname={pathname}
             roleLabel={roleLabel}
             menuItems={menuItems}
-            user={user}
             onLogout={onLogout}
           />
         </SheetContent>
@@ -179,10 +153,10 @@ function MobileSidebar({ pathname, roleLabel, menuItems, user, onLogout }) {
   );
 }
 
-function ManagerSidebar({ pathname, roleLabel, menuItems, user, onLogout }) {
+function ManagerSidebar({ pathname, roleLabel, menuItems, onLogout }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-border px-5 py-4">
+      <div className="border-b border-border px-4 py-4">
         <Link to={menuItems[0].path} className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Leaf className="h-5 w-5" />
@@ -204,62 +178,28 @@ function ManagerSidebar({ pathname, roleLabel, menuItems, user, onLogout }) {
         ))}
       </nav>
 
-      <SidebarAccountOptions user={user} onLogout={onLogout} />
+      <SidebarAccountOptions onLogout={onLogout} />
     </div>
   );
 }
 
-function SidebarAccountOptions({ user, onLogout }) {
+function SidebarAccountOptions({ onLogout }) {
   return (
-    <div className="space-y-2 border-t border-border p-3">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-auto w-full justify-start gap-3 px-3 py-2">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={user?.avatarUrl || user?.avatar} alt={user?.fullName || "Manager"} />
-              <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
-                {getUserInitials(user)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="min-w-0 flex-1 text-left">
-              <span className="block truncate text-sm font-medium">
-                {user?.fullName || user?.name || "Manager"}
-              </span>
-              <span className="block truncate text-xs font-normal text-muted-foreground">
-                {user?.email || "manager@plantify.local"}
-              </span>
-            </span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" align="end" className="w-56">
-          <DropdownMenuLabel>
-            <div className="flex flex-col">
-              <span>{user?.fullName || user?.name || "Manager"}</span>
-              <span className="truncate text-xs font-normal text-muted-foreground">
-                {user?.email || "manager@plantify.local"}
-              </span>
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link to="/profile">
-              <User className="h-4 w-4" />
-              Hồ sơ
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to="/settings">
-              <Settings className="h-4 w-4" />
-              Cài đặt
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={onLogout}>
-            <LogOut className="h-4 w-4" />
-            Đăng xuất
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="space-y-1 border-t border-border p-3">
+      <Button variant="ghost" className="w-full justify-start gap-3 px-3" asChild>
+        <Link to="/settings">
+          <Settings className="h-4 w-4" />
+          <span>Cài đặt</span>
+        </Link>
+      </Button>
+      <Button
+        variant="ghost"
+        className="w-full justify-start gap-3 px-3 text-destructive hover:text-destructive"
+        onClick={onLogout}
+      >
+        <LogOut className="h-4 w-4" />
+        <span>Đăng xuất</span>
+      </Button>
     </div>
   );
 }

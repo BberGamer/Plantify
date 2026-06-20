@@ -4,6 +4,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { getPostById, getPosts } from "../api";
 
+function normalizePostsPayload(payload) {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.posts)) {
+    return payload.posts;
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+
+  return [];
+}
+
 /**
  * Hook lấy danh sách bài viết từ API.
  * @param {Object} filters - Filter truyen len API nhu page, limit, category, title/search/searchTerm
@@ -67,7 +87,7 @@ export function usePosts(filters = {}) {
     getPosts(requestFilters)
       .then((response) => {
         if (!cancelled) {
-          setPosts(response.data || []);
+          setPosts(normalizePostsPayload(response.data));
           setLoading(false);
         }
       })
