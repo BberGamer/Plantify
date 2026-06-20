@@ -314,6 +314,91 @@ const verifyOTP = async (req, res, next) => {
   }
 };
 
+/**
+ * Cập nhật thông tin cá nhân của người dùng đang đăng nhập
+ */
+const updateProfile = async (req, res, next) => {
+  try {
+    const { fullName, phone, address } = req.body;
+
+    // Validate họ tên
+    if (fullName !== undefined) {
+      const trimmed = fullName.trim();
+      if (!trimmed) {
+        const err = new Error('Họ tên không được để trống');
+        err.statusCode = 400;
+        throw err;
+      }
+      const fullNameRegex = /^[\p{L}\s]+$/u;
+      if (!fullNameRegex.test(trimmed)) {
+        const err = new Error('Họ tên chỉ được chứa chữ cái và khoảng trắng');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    // Validate số điện thoại
+    if (phone !== undefined && phone.trim() !== '') {
+      const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+      if (!phoneRegex.test(phone.trim())) {
+        const err = new Error('Số điện thoại không hợp lệ (phải bắt đầu bằng 03, 05, 07, 08, 09 và gồm 10 chữ số)');
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    const updatedUser = await authService.updateProfile(req.user.id, { fullName, phone, address });
+    return success(res, 'Cập nhật thông tin thành công', updatedUser, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Đổi mật khẩu của người dùng đang đăng nhập
+ */
+const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    // Validate các trường bắt buộc
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      const err = new Error('Vui lòng nhập đầy đủ mật khẩu hiện tại, mật khẩu mới và xác nhận mật khẩu');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    // Validate độ dài mật khẩu mới
+    if (newPassword.length < 8) {
+      const err = new Error('Mật khẩu mới phải có tối thiểu 8 ký tự');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    // Validate độ phức tạp mật khẩu mới
+    const hasUpperCase = /[A-Z]/.test(newPassword);
+    const hasLowerCase = /[a-z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+      const err = new Error('Mật khẩu mới phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    // Validate xác nhận mật khẩu khớp
+    if (newPassword !== confirmPassword) {
+      const err = new Error('Mật khẩu xác nhận không khớp với mật khẩu mới');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    await authService.changePassword(req.user.id, { currentPassword, newPassword, confirmPassword });
+    return success(res, 'Đổi mật khẩu thành công', null, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   sendRegisterOTP,
@@ -327,4 +412,6 @@ module.exports = {
   forgotPassword,
   verifyOTP,
   resetPassword,
+  updateProfile,
+  changePassword,
 };
