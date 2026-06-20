@@ -42,9 +42,7 @@ function PlantDetail() {
 
   // Diseases
   const { diseases, loading: loadingDiseases, refetch: refetchDiseases } = usePlantDiseases({ limit: 100 });
-  const plantDiseases = diseases.filter((d) =>
-    (d.affectedPlants || []).some((p) => p.toLowerCase?.().includes(plant?.name?.toLowerCase() || ""))
-  );
+  const plantDiseases = diseases.filter((d) => String(d.plantId?._id || d.plantId) === id);
 
   // Mutations
   const { update: updatePlant, loading: updatingPlant } = useUpdatePlant();
@@ -252,6 +250,7 @@ function PlantDetail() {
         />
         <DiseaseForm
           ref={diseaseFormRef}
+          plantId={id}
           plantName={plant.name}
           onCreate={handleCreateDisease}
           loading={creatingDisease}
