@@ -338,9 +338,6 @@ function Profile() {
                           </div>
                         ))}
                       </div>
-                      <p className="profile-password-hint">
-                        Bấm <strong className="text-slate-700">Chỉnh sửa</strong> để thay đổi mật khẩu của bạn
-                      </p>
                     </div>
                   ) : (
                     /* Trạng thái chỉnh sửa: form nhập thật */
