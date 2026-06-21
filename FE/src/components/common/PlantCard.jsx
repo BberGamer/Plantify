@@ -1,9 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Droplets, Sun, Home } from "lucide-react";
+import { Droplets, Sun, Home, Heart } from "lucide-react";
 import { ImageWithFallback } from "@/components/common/ImageWithFallback";
+import { useFavorite } from "@/features/favorites/hooks";
 
 function PlantCard({
+  id,
   name,
   scientificName,
   difficulty,
@@ -12,6 +14,8 @@ function PlantCard({
   indoor,
   imageUrl
 }) {
+  const { isFavorited, loading, toggle } = useFavorite(id);
+
   const difficultyColor = {
     Dễ: "bg-green-100 text-green-700 border-green-200",
     "Trung bình": "bg-yellow-100 text-yellow-700 border-yellow-200",
@@ -37,19 +41,39 @@ function PlantCard({
         <p className="text-sm text-muted-foreground mb-4 italic">
           {scientificName}
         </p>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <Droplets className="w-4 h-4 text-primary" />
-            <span>{water}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Sun className="w-4 h-4 text-primary" />
-            <span>{light}</span>
-          </div>
-          {indoor && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">
-              <Home className="w-4 h-4 text-primary" />
+              <Droplets className="w-4 h-4 text-primary" />
+              <span>{water}</span>
             </div>
+            <div className="flex items-center gap-1.5">
+              <Sun className="w-4 h-4 text-primary" />
+              <span>{light}</span>
+            </div>
+            {indoor && (
+              <div className="flex items-center gap-1.5">
+                <Home className="w-4 h-4 text-primary" />
+              </div>
+            )}
+          </div>
+          {/* Nút yêu thích */}
+          {id && (
+            <button
+              type="button"
+              onClick={toggle}
+              disabled={loading}
+              aria-label={isFavorited ? "Bỏ yêu thích" : "Yêu thích"}
+              className="ml-2 flex-shrink-0 p-1.5 rounded-full transition-all duration-200 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 disabled:opacity-50"
+            >
+              <Heart
+                className={`w-5 h-5 transition-colors duration-200 ${
+                  isFavorited
+                    ? "fill-red-500 text-red-500"
+                    : "fill-white text-gray-400 stroke-[1.5]"
+                }`}
+              />
+            </button>
           )}
         </div>
       </CardContent>

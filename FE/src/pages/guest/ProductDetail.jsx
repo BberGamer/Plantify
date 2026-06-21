@@ -91,7 +91,7 @@ function ProductDetail() {
   const handleToggleFavorite = () => {
     const saved = localStorage.getItem("favorites");
     let favs = saved ? JSON.parse(saved) : [];
-    
+
     if (isFavorite) {
       favs = favs.filter(favId => favId !== id);
       setIsFavorite(false);

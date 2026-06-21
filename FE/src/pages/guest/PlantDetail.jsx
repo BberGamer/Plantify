@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Globe,
+  Heart,
   Loader2,
   Sprout,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { CareGuideList, DiseaseList } from "@/features/plants/components/PlantDe
 import { usePlant, usePlantCategories } from "@/features/plants/hooks";
 import { useCareGuides } from "@/features/care-guides/hooks";
 import { usePlantDiseases } from "@/features/plant-diseases/hooks";
+import { useFavorite } from "@/features/favorites/hooks";
 
 import "@/styles/ManagerPlantDetail.css";
 
@@ -42,6 +44,7 @@ function PlantDetail() {
 
   const { plant, loading, error } = usePlant(id);
   const { categories } = usePlantCategories();
+  const { isFavorited, loading: favLoading, toggle: toggleFavorite } = useFavorite(id);
   const { careGuides, loading: loadingCareGuides } = useCareGuides({
     plantId: id,
     limit: 100,
@@ -157,7 +160,24 @@ function PlantDetail() {
           </div>
 
           <div className="plant-detail-info">
-            <h2 className="plant-detail-name">{plant.name}</h2>
+            <div className="flex items-center gap-3 mb-1">
+              <h2 className="plant-detail-name mb-0">{plant.name}</h2>
+              <button
+                type="button"
+                onClick={toggleFavorite}
+                disabled={favLoading}
+                aria-label={isFavorited ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
+                className="flex-shrink-0 p-2 rounded-full transition-all duration-200 hover:bg-red-50 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 disabled:opacity-50"
+              >
+                <Heart
+                  className={`w-6 h-6 transition-colors duration-200 ${
+                    isFavorited
+                      ? "fill-red-500 text-red-500"
+                      : "fill-white text-gray-400 stroke-[1.5]"
+                  }`}
+                />
+              </button>
+            </div>
 
             {plant.scientificName && (
               <p className="plant-detail-scientific-name">{plant.scientificName}</p>
