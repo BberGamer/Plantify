@@ -50,6 +50,29 @@ function withRatingPipeline(extraStages = []) {
 }
 
 function normalizeStringArray(value) {
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return [];
+    }
+
+    try {
+      const parsedValue = JSON.parse(trimmedValue);
+
+      if (Array.isArray(parsedValue)) {
+        return normalizeStringArray(parsedValue);
+      }
+    } catch (error) {
+      // FormData may send arrays as comma-separated text.
+    }
+
+    return trimmedValue
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
   if (!Array.isArray(value)) {
     return [];
   }
@@ -75,7 +98,7 @@ function buildPostUpdatePayload(payload = {}) {
     updates.thumbnail = payload.thumbnail.trim();
   }
 
-  if (Array.isArray(payload.images)) {
+  if (payload.images !== undefined) {
     updates.images = normalizeStringArray(payload.images);
   }
 
@@ -83,7 +106,7 @@ function buildPostUpdatePayload(payload = {}) {
     updates.category = payload.category.trim();
   }
 
-  if (Array.isArray(payload.tags)) {
+  if (payload.tags !== undefined) {
     updates.tags = normalizeStringArray(payload.tags);
   }
 
@@ -121,7 +144,7 @@ async function createPost(payload = {}, currentUser = {}) {
 
   const images = normalizeStringArray(payload.images);
   const tags = normalizeStringArray(payload.tags);
-  const thumbnail = typeof payload.thumbnail === 'string' ? payload.thumbnail.trim() : '';
+  const thumbnail = typeof payload.thumbnail === 'string' ? payload.thumbnail.trim() : images[0] || '';
   const category = typeof payload.category === 'string' ? payload.category.trim() : '';
 
   return Post.create({
