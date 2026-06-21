@@ -3,7 +3,7 @@ const postService = require('./post.service');
 const apiResponse = require('../../utils/apiResponse');
 
 function getFileUrl(req, file) {
-  return `${req.protocol}://${req.get('host')}/uploads/posts/${file.filename}`;
+  return `/uploads/posts/${file.filename}`;
 }
 
 function buildPostPayload(req) {
