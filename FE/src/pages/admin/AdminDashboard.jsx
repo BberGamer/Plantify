@@ -88,15 +88,9 @@ function AdminDashboard() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <section className="rounded-3xl border border-green-100 bg-gradient-to-r from-green-50 via-background to-emerald-50 p-6 shadow-sm sm:p-8">
-        <Badge className="mb-3 w-fit border-transparent bg-green-100 text-green-700 hover:bg-green-100">
-          Admin Dashboard
-        </Badge>
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Quản trị hệ thống
         </h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
-          Theo dõi nhanh số lượng người dùng, mức tăng trưởng tài khoản và hoạt động gần đây trên nền tảng Plantify.
-        </p>
       </section>
 
       <AdminUsersStats

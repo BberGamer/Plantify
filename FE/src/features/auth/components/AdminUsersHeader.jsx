@@ -14,19 +14,10 @@ function AdminUsersHeader({ onCreateClick }) {
             <h1 className="admin-users-hero-title">
               Quản lý người dùng Plantify
             </h1>
-            <p className="admin-users-hero-description">
-              Theo dõi tài khoản hệ thống, phân loại vai trò và rà soát trạng thái hoạt động trên cùng một giao diện quản trị.
-            </p>
           </div>
         </div>
 
         <div className="admin-users-actions">
-          <Button
-            variant="outline"
-            className="border-green-200 bg-white/80 text-green-700 shadow-sm hover:bg-green-50"
-          >
-            Xuất danh sách
-          </Button>
           <Button
             className="bg-gradient-to-r from-primary to-green-600 text-white shadow-lg hover:from-primary hover:to-green-700"
             onClick={onCreateClick}
