@@ -27,7 +27,7 @@ function formatDate(value) {
 }
 
 function MyPostCard({ post, deleting = false, onDelete, onEdit }) {
-  const cover = post.thumbnail || post.images?.[0] || "";
+  const cover = post.images?.[0] || "";
 
   return (
     <Card className="overflow-hidden">

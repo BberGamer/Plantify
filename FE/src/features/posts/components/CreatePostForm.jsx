@@ -97,12 +97,10 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
     payload.append("content", formData.content);
 
     if (imageFiles.length > 0) {
-      payload.append("thumbnail", imageFiles[0]);
       imageFiles.forEach((file) => {
         payload.append("images", file);
       });
     } else if (initialPost) {
-      payload.append("thumbnail", initialPost.thumbnail || "");
       payload.append("images", JSON.stringify(initialPost.images || []));
     }
 
