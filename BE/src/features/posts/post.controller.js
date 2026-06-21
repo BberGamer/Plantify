@@ -2,6 +2,23 @@
 const postService = require('./post.service');
 const apiResponse = require('../../utils/apiResponse');
 
+function getFileUrl(req, file) {
+  return `${req.protocol}://${req.get('host')}/uploads/posts/${file.filename}`;
+}
+
+function buildPostPayload(req) {
+  const uploadedThumbnail = req.files?.thumbnail?.[0];
+  const uploadedImages = req.files?.images || [];
+  const imageUrls = uploadedImages.map((file) => getFileUrl(req, file));
+  const thumbnailUrl = uploadedThumbnail ? getFileUrl(req, uploadedThumbnail) : '';
+
+  return {
+    ...req.body,
+    ...(thumbnailUrl ? { thumbnail: thumbnailUrl } : {}),
+    ...(imageUrls.length ? { images: imageUrls } : {}),
+  };
+}
+
 /**
  * Xu ly request POST /api/posts.
  * @param {Object} req - Express request object
@@ -10,7 +27,7 @@ const apiResponse = require('../../utils/apiResponse');
  */
 async function createPost(req, res, next) {
   try {
-    const post = await postService.createPost(req.body, req.user);
+    const post = await postService.createPost(buildPostPayload(req), req.user);
     return apiResponse.success(res, 'Tao bai viet thanh cong, dang cho duyet', post, 201);
   } catch (error) {
     return next(error);
@@ -25,7 +42,7 @@ async function createPost(req, res, next) {
  */
 async function updatePost(req, res, next) {
   try {
-    const post = await postService.updatePost(req.params.id, req.body, req.user);
+    const post = await postService.updatePost(req.params.id, buildPostPayload(req), req.user);
     return apiResponse.success(res, 'Cap nhat bai viet thanh cong, dang cho duyet', post);
   } catch (error) {
     return next(error);
