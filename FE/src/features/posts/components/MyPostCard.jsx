@@ -4,18 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 
-const statusLabels = {
-  pending: "Chờ duyệt",
-  approved: "Đã duyệt",
-  rejected: "Từ chối"
-};
-
-const statusVariants = {
-  pending: "secondary",
-  approved: "default",
-  rejected: "destructive"
-};
-
 function formatDate(value) {
   if (!value) return "Chưa có ngày";
 
@@ -41,9 +29,6 @@ function MyPostCard({ post, deleting = false, onDelete, onEdit }) {
             <div className="min-w-0">
               <h3 className="truncate text-lg font-semibold">{post.title}</h3>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Badge variant={statusVariants[post.status] || "outline"}>
-                  {statusLabels[post.status] || post.status || "Chưa rõ"}
-                </Badge>
                 {post.category && <Badge variant="outline">{post.category}</Badge>}
               </div>
             </div>
