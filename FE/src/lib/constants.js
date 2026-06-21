@@ -53,12 +53,6 @@ const PUBLIC_NAV = [
     icon: Sparkles,
     roles: ["guest"]
   },
-  {
-    path: "/knowledge-graph",
-    label: "Đồ thị tri thức",
-    icon: Network,
-    roles: ["guest"]
-  },
   { path: "/blog", label: "Blog", icon: BookOpen, roles: ["guest"] }
 ];
 

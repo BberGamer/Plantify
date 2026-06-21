@@ -77,7 +77,6 @@ function Header() {
         </NavigationMenu>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          <ThemeToggle />
 
           <Sheet>
             <SheetTrigger asChild>
