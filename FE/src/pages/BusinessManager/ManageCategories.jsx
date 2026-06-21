@@ -11,7 +11,7 @@ import {
 } from "@/features/products/hooks";
 import { CategoryForm } from "@/features/products/components/CategoryForm";
 import { toast } from "sonner";
-import { FolderOpen, Loader2, Pencil, Tags, Trash2 } from "lucide-react";
+import { FolderOpen, Loader2, Pencil, Trash2 } from "lucide-react";
 
 function ManageCategories() {
   const { categories, loading, error, refetch } = useCategories();
@@ -64,22 +64,6 @@ function ManageCategories() {
           </div>
           <CategoryForm onSubmit={handleCreate} loading={creating} />
         </div>
-      </section>
-
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <Card className="border-green-200/60 bg-white/95 shadow-sm">
-          <CardContent className="flex items-center justify-between gap-4 p-6">
-            <div>
-              <p className="text-sm text-muted-foreground">Tổng danh mục</p>
-              <p className="mt-2 text-3xl font-bold text-foreground">
-                {loading ? "..." : categories.length}
-              </p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Tags className="h-6 w-6" />
-            </div>
-          </CardContent>
-        </Card>
       </section>
 
       <Card className="overflow-hidden border-green-200/60 bg-white/95 shadow-sm">

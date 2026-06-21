@@ -1,9 +1,9 @@
 // ManageProducts.jsx - Trang quản lý sản phẩm cho business manager
 import { useState } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -56,7 +56,6 @@ function ManageProducts() {
     }
   };
 
-
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <section className="rounded-3xl border border-green-100 bg-gradient-to-r from-green-50 via-background to-emerald-50 p-6 shadow-sm sm:p-8">
@@ -74,71 +73,51 @@ function ManageProducts() {
         </div>
       </section>
 
-      <Card className="border-green-200/60 bg-white/95 shadow-sm">
-        <CardHeader className="border-b border-green-100">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <CardTitle className="text-xl">Bộ lọc sản phẩm</CardTitle>
-            </div>
-            <Badge variant="outline" className="w-fit border-green-200 bg-green-50 text-green-700">
-              {loading ? "Đang tải..." : `${total} sản phẩm`}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4 p-6">
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-            <div className="relative lg:col-span-7">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchInput}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSearchInput(value);
-                  setSearch(value.trim());
-                  setPage(1);
-                }}
-                placeholder="Tìm kiếm theo tên hoặc mô tả sản phẩm"
-                className="pl-10"
-              />
-            </div>
-            <div className="lg:col-span-3">
-              <Select
-                value={categoryFilter}
-                onValueChange={(value) => {
-                  setCategoryFilter(value);
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn danh mục" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả danh mục</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem
-                      key={category._id || category.id}
-                      value={category._id || category.id}
-                    >
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              type="button"
-              className="lg:col-span-2"
-              onClick={() => {
-                setSearch(searchInput.trim());
-                setPage(1);
-              }}
-            >
-              <Search className="mr-2 h-4 w-4" />
-              Tìm kiếm
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="relative lg:col-span-7">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchInput}
+            onChange={(event) => {
+              const value = event.target.value;
+              setSearchInput(value);
+              setSearch(value.trim());
+              setPage(1);
+            }}
+            placeholder="Tìm kiếm theo tên hoặc mô tả sản phẩm"
+            className="pl-10"
+          />
+        </div>
+        <div className="lg:col-span-3">
+          <Select
+            value={categoryFilter}
+            onValueChange={(value) => {
+              setCategoryFilter(value);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn danh mục" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả danh mục</SelectItem>
+              {categories.map((category) => (
+                <SelectItem
+                  key={category._id || category.id}
+                  value={category._id || category.id}
+                >
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center lg:col-span-2">
+          <Badge variant="outline" className="w-full justify-center border-green-200 bg-green-50 px-4 py-2 text-green-700">
+            {loading ? "Đang tải..." : `${total} sản phẩm`}
+          </Badge>
+        </div>
+      </section>
 
       <section>
         {loading ? (
@@ -193,7 +172,6 @@ function ManageProducts() {
           </Button>
         </div>
       )}
-
     </div>
   );
 }
