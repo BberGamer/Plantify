@@ -9,20 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 const emptyForm = {
   title: "",
   category: "",
-  tagsText: "",
   content: ""
 };
-
-function toCommaText(value) {
-  return Array.isArray(value) ? value.join(", ") : "";
-}
-
-function splitCommaText(value) {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
 
 function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmit }) {
   const formId = useId();
@@ -30,7 +18,6 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
     title: `${formId}-post-title`,
     category: `${formId}-post-category`,
     images: `${formId}-post-images`,
-    tags: `${formId}-post-tags`,
     content: `${formId}-post-content`
   };
   const existingImages = useMemo(() => {
@@ -46,7 +33,6 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
         ? {
             title: initialPost.title || "",
             category: initialPost.category || "",
-            tagsText: toCommaText(initialPost.tags),
             content: initialPost.content || ""
           }
         : emptyForm,
@@ -93,7 +79,6 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
     const payload = new FormData();
     payload.append("title", formData.title);
     payload.append("category", formData.category);
-    payload.append("tags", JSON.stringify(splitCommaText(formData.tagsText)));
     payload.append("content", formData.content);
 
     if (imageFiles.length > 0) {
@@ -133,46 +118,34 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor={fieldIds.images}>Ảnh bài viết</Label>
-          <div className="rounded-md border border-dashed border-border bg-muted/30 p-4">
-            <Input
-              id={fieldIds.images}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-              className="hidden"
-            />
-            <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" variant="outline" asChild>
-                <label htmlFor={fieldIds.images} className="cursor-pointer">
-                  <Upload className="h-4 w-4" />
-                  Chọn ảnh
-                </label>
-              </Button>
-              {imageFiles.length > 0 && (
-                <Button type="button" variant="ghost" size="sm" onClick={handleClearImages}>
-                  <X className="h-4 w-4" />
-                  Xóa ảnh đã chọn
-                </Button>
-              )}
-              <span className="text-sm text-muted-foreground">
-                {imageFiles.length ? `${imageFiles.length} ảnh đã chọn` : "Chọn một hoặc nhiều ảnh từ máy"}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={fieldIds.tags}>Tags</Label>
+      <div className="space-y-2">
+        <Label htmlFor={fieldIds.images}>Ảnh bài viết</Label>
+        <div className="rounded-md border border-dashed border-border bg-muted/30 p-4">
           <Input
-            id={fieldIds.tags}
-            name="tagsText"
-            value={formData.tagsText}
-            onChange={handleChange}
-            placeholder="monstera, tưới nước, ánh sáng"
+            id={fieldIds.images}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageChange}
+            className="hidden"
           />
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="button" variant="outline" asChild>
+              <label htmlFor={fieldIds.images} className="cursor-pointer">
+                <Upload className="h-4 w-4" />
+                Chọn ảnh
+              </label>
+            </Button>
+            {imageFiles.length > 0 && (
+              <Button type="button" variant="ghost" size="sm" onClick={handleClearImages}>
+                <X className="h-4 w-4" />
+                Xóa ảnh đã chọn
+              </Button>
+            )}
+            <span className="text-sm text-muted-foreground">
+              {imageFiles.length ? `${imageFiles.length} ảnh đã chọn` : "Chọn một hoặc nhiều ảnh từ máy"}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -181,7 +154,7 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
           <Label>{imagePreviews.length > 0 ? "Preview ảnh đã chọn" : "Ảnh hiện tại"}</Label>
           <ImageCarousel
             images={imagePreviews.length > 0 ? imagePreviews.map((image) => image.url) : existingImages}
-            alt="Anh bai viet"
+            alt="Ảnh bài viết"
             className="aspect-video"
           />
         </div>

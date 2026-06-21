@@ -73,7 +73,6 @@ function MyPostCard({ post, deleting = false, onDelete, onEdit }) {
               <Calendar className="h-3.5 w-3.5" />
               {formatDate(post.updatedAt || post.createdAt)}
             </span>
-            {post.tags?.length > 0 && <span>{post.tags.map((tag) => `#${tag}`).join(" ")}</span>}
           </div>
         </div>
       </CardContent>

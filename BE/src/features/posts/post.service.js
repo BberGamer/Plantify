@@ -44,6 +44,7 @@ function withRatingPipeline(extraStages = []) {
         isFeatured: 0,
         isActive: 0,
         readTime: 0,
+        tags: 0,
       },
     },
   ];
@@ -106,10 +107,6 @@ function buildPostUpdatePayload(payload = {}) {
     updates.category = payload.category.trim();
   }
 
-  if (payload.tags !== undefined) {
-    updates.tags = normalizeStringArray(payload.tags);
-  }
-
   return updates;
 }
 
@@ -143,7 +140,6 @@ async function createPost(payload = {}, currentUser = {}) {
   }
 
   const images = normalizeStringArray(payload.images);
-  const tags = normalizeStringArray(payload.tags);
   const thumbnail = typeof payload.thumbnail === 'string' ? payload.thumbnail.trim() : images[0] || '';
   const category = typeof payload.category === 'string' ? payload.category.trim() : '';
 
@@ -155,7 +151,6 @@ async function createPost(payload = {}, currentUser = {}) {
     category,
     author: currentUser.fullName || currentUser.email || '',
     userId,
-    tags,
     status: 'pending',
     isApproved: false,
   });
@@ -287,7 +282,7 @@ async function getMyPosts(currentUser = {}, filters = {}) {
 
   const postQuery = Post.find(query)
     .sort({ createdAt: -1 })
-    .select('-id -excerpt -likesCount -likeCount -isFeatured -isActive -readTime');
+    .select('-id -excerpt -likesCount -likeCount -isFeatured -isActive -readTime -tags');
 
   if (filters.page && filters.limit) {
     const safePage = Math.max(Number(filters.page), 1);
@@ -331,7 +326,7 @@ async function getAllPosts(filters = {}) {
  */
 async function getPostById(id) {
   const post = await Post.findOne(buildPostIdQuery(id))
-    .select('-id -excerpt -likesCount -likeCount -isFeatured -isActive -readTime')
+    .select('-id -excerpt -likesCount -likeCount -isFeatured -isActive -readTime -tags')
     .populate({
       path: 'comments',
       populate: {

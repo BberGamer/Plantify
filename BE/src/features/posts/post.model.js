@@ -47,10 +47,6 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    tags: {
-      type: [String],
-      default: [],
-    },
     avgRating: {
       type: Number,
       default: 0,
