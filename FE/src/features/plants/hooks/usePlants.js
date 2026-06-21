@@ -77,7 +77,7 @@ export function usePlant(id) {
     setLoading(true);
     setError(null);
 
-    getPlantById(id, true)
+    getPlantById(id)
       .then((response) => {
         if (!cancelled) {
           setPlant(response.data || null);
