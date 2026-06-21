@@ -2,6 +2,7 @@ import { Calendar, Edit3, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 
 const statusLabels = {
   pending: "Chờ duyệt",
@@ -32,13 +33,7 @@ function MyPostCard({ post, deleting = false, onDelete, onEdit }) {
     <Card className="overflow-hidden">
       <CardContent className="grid gap-4 p-4 md:grid-cols-[180px_1fr]">
         <div className="aspect-[4/3] overflow-hidden rounded-md bg-muted">
-          {cover ? (
-            <img src={cover} alt={post.title} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              Chưa có ảnh
-            </div>
-          )}
+          <ImageWithFallback src={cover} alt={post.title} className="h-full w-full object-cover" />
         </div>
 
         <div className="min-w-0 space-y-3">

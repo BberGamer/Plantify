@@ -6,6 +6,7 @@ import BlogPostDetail, {
   BlogPostDetailError,
   BlogPostDetailSkeleton,
 } from "@/components/common/BlogPostDetail";
+import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -102,7 +103,7 @@ function mapPostToBlogCard(post) {
     content,
     category: formatVietnameseDisplayText(post.category),
     author: formatVietnameseDisplayText(post.author),
-    image: post.thumbnail || post.images?.[0],
+    image: post.thumbnail || post.images?.[0] || "",
     date: formatPostDate(post.createdAt),
     preview: getPostPreview(content)
   };
@@ -154,6 +155,11 @@ function Blog() {
 
   function handleOpenPreviewImage(event, post) {
     event.stopPropagation();
+
+    if (!post.image) {
+      return;
+    }
+
     setPreviewImage({
       src: post.image,
       alt: post.title
@@ -297,7 +303,7 @@ function Blog() {
                     className="aspect-video min-w-0 cursor-zoom-in overflow-hidden md:aspect-auto md:h-full"
                     onClick={(event) => handleOpenPreviewImage(event, featuredPost)}
                   >
-                    <img
+                    <ImageWithFallback
                       src={featuredPost.image}
                       alt={featuredPost.title}
                       className="w-full h-full object-cover"
@@ -357,7 +363,7 @@ function Blog() {
                         className="aspect-video w-full max-w-full cursor-zoom-in overflow-hidden"
                         onClick={(event) => handleOpenPreviewImage(event, post)}
                       >
-                        <img
+                        <ImageWithFallback
                           src={post.image}
                           alt={post.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -427,7 +433,7 @@ function Blog() {
             >
               <X className="h-6 w-6" />
             </Button>
-            <img
+            <ImageWithFallback
               src={previewImage.src}
               alt={previewImage.alt}
               className="max-h-[90vh] max-w-[95vw] rounded-lg object-contain"

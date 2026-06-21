@@ -351,7 +351,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                 <ImageWithFallback
                   src={images[0]}
                   alt={post.title}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain"
                 />
               </div>
               {images.length > 1 && (
