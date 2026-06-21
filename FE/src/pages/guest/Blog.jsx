@@ -24,6 +24,31 @@ const categories = [
   "Kỹ thuật"
 ];
 
+const vietnameseTextReplacements = [
+  [/\bBai dau tien\b/gi, "Bài đầu tiên"],
+  [/\bBai (?=\d)/g, "Bài "],
+  [/\bbai (?=\d)/g, "bài "],
+  [/\bquoc anh\b/gi, "Quốc Anh"],
+  [/\bTat ca\b/gi, "Tất cả"],
+  [/\bHuong dan\b/gi, "Hướng dẫn"],
+  [/\bBenh & Dieu tri\b/gi, "Bệnh & Điều trị"],
+  [/\bPhong ngua\b/gi, "Phòng ngừa"],
+  [/\bCham soc\b/gi, "Chăm sóc"],
+  [/\bThiet ke\b/gi, "Thiết kế"],
+  [/\bKy thuat\b/gi, "Kỹ thuật"]
+];
+
+function formatVietnameseDisplayText(value) {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  return vietnameseTextReplacements.reduce(
+    (text, [pattern, replacement]) => text.replace(pattern, replacement),
+    value
+  );
+}
+
 /**
  * Format ngày tạo bài viết để hiển thị trong UI blog.
  * @param {string|Date} date - Ngày tạo bài viết từ API
@@ -68,18 +93,25 @@ function RatingSummary({ value }) {
  * @returns {Object} Bài viết đã map field cho Blog page
  */
 function mapPostToBlogCard(post) {
+  const content = formatVietnameseDisplayText(post.content);
+
   return {
     ...post,
     id: post._id,
+    title: formatVietnameseDisplayText(post.title),
+    content,
+    category: formatVietnameseDisplayText(post.category),
+    author: formatVietnameseDisplayText(post.author),
     image: post.thumbnail || post.images?.[0],
     date: formatPostDate(post.createdAt),
-    preview: getPostPreview(post.content)
+    preview: getPostPreview(content)
   };
 }
 
 function Blog() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -101,6 +133,7 @@ function Blog() {
   const featuredPost = blogPosts[0];
   const gridPosts = blogPosts.slice(1);
   const activePost = detailPost || selectedPost;
+  const activeDisplayPost = activePost ? mapPostToBlogCard(activePost) : null;
   const activeComments = detailPost ? detailComments : selectedPost?.comments || [];
 
   /**
@@ -117,6 +150,18 @@ function Blog() {
    */
   function handleCloseDetail() {
     setShowDetail(false);
+  }
+
+  function handleOpenPreviewImage(event, post) {
+    event.stopPropagation();
+    setPreviewImage({
+      src: post.image,
+      alt: post.title
+    });
+  }
+
+  function handleClosePreviewImage() {
+    setPreviewImage(null);
   }
 
   function handleSelectCategory(category) {
@@ -139,12 +184,17 @@ function Blog() {
   }, [searchTerm]);
 
   useEffect(() => {
-    if (!showDetail) {
+    if (!showDetail && !previewImage) {
       return undefined;
     }
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
+        if (previewImage) {
+          handleClosePreviewImage();
+          return;
+        }
+
         handleCloseDetail();
       }
     }
@@ -154,7 +204,7 @@ function Blog() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showDetail]);
+  }, [showDetail, previewImage]);
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-hidden px-4 py-12 sm:px-6">
@@ -243,7 +293,10 @@ function Blog() {
                 }}
               >
                 <div className="grid w-full max-w-full overflow-hidden md:h-[360px] md:grid-cols-2">
-                  <div className="aspect-video min-w-0 overflow-hidden md:aspect-auto md:h-full">
+                  <div
+                    className="aspect-video min-w-0 cursor-zoom-in overflow-hidden md:aspect-auto md:h-full"
+                    onClick={(event) => handleOpenPreviewImage(event, featuredPost)}
+                  >
                     <img
                       src={featuredPost.image}
                       alt={featuredPost.title}
@@ -300,7 +353,10 @@ function Blog() {
                     onClick={() => handleOpenPost(post)}
                   >
                     <Card className="group h-full w-full max-w-full cursor-pointer overflow-hidden border border-border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                      <div className="aspect-video w-full max-w-full overflow-hidden">
+                      <div
+                        className="aspect-video w-full max-w-full cursor-zoom-in overflow-hidden"
+                        onClick={(event) => handleOpenPreviewImage(event, post)}
+                      >
                         <img
                           src={post.image}
                           alt={post.title}
@@ -345,12 +401,39 @@ function Blog() {
           <BlogPostDetailError message={detailError} onClose={handleCloseDetail} />
         )}
 
-        {showDetail && activePost && (!detailLoading || detailPost) && (
+        {showDetail && activeDisplayPost && (!detailLoading || detailPost) && (
           <BlogPostDetail
-            post={activePost}
+            post={activeDisplayPost}
             comments={activeComments}
             onClose={handleCloseDetail}
           />
+        )}
+
+        {previewImage && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Xem ảnh bài viết"
+            onClick={handleClosePreviewImage}
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-4 text-white hover:bg-white/20 hover:text-white"
+              aria-label="Đóng ảnh"
+              onClick={handleClosePreviewImage}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+            <img
+              src={previewImage.src}
+              alt={previewImage.alt}
+              className="max-h-[90vh] max-w-[95vw] rounded-lg object-contain"
+              onClick={(event) => event.stopPropagation()}
+            />
+          </div>
         )}
       </div>
     </div>

@@ -59,7 +59,7 @@ function getInitials(name = "") {
  */
 function getCommentAuthor(comment) {
   const author = comment.userId || comment.user || comment.author || {};
-  const name = author.fullName || author.name || comment.fullName || comment.name || "Nguoi dung Plantify";
+  const name = author.fullName || author.name || comment.fullName || comment.name || "Người dùng Plantify";
 
   return {
     name,
@@ -92,7 +92,7 @@ function RatingStars({ rating, onChange }) {
           }`}
           onClick={() => onChange?.(index + 1)}
           disabled={!onChange}
-          aria-label={`Chon ${index + 1} sao`}
+          aria-label={`Chọn ${index + 1} sao`}
         >
           <Star
             className={`h-4 w-4 ${index < safeRating ? "fill-current" : "text-muted-foreground/30"}`}
@@ -265,7 +265,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
     const trimmedContent = content.trim();
 
     if (!trimmedContent) {
-      setSubmitError("Vui long nhap noi dung binh luan");
+      setSubmitError("Vui lòng nhập nội dung bình luận");
       return;
     }
 
@@ -286,7 +286,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
       setContent("");
       setRating(5);
     } catch (error) {
-      setSubmitError(error.response?.data?.message || error.message || "Khong the gui binh luan");
+      setSubmitError(error.response?.data?.message || error.message || "Không thể gửi bình luận");
     } finally {
       setSubmitting(false);
     }
@@ -322,7 +322,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                 onClick={onClose}
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span className="hidden sm:inline">Quay lai</span>
+                <span className="hidden sm:inline">Quay lại</span>
               </Button>
               <Badge className="shrink-0 bg-green-100 text-green-700 hover:bg-green-100">
                 {post.category || "Blog"}
@@ -335,7 +335,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
               size="icon"
               className="shrink-0 rounded-full hover:bg-green-50 hover:text-green-700"
               onClick={onClose}
-              aria-label="Dong chi tiet bai viet"
+              aria-label="Đóng chi tiết bài viết"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -386,7 +386,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                 </div>
                 <div className="flex items-center gap-2">
                   <MessageCircle className="h-4 w-4 text-green-700" />
-                  <span>{commentCount} binh luan</span>
+                  <span>{commentCount} bình luận</span>
                 </div>
                 <RatingSummary value={post.avgRating} />
               </div>
@@ -399,7 +399,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
 
             <section className="space-y-5 border-t border-green-100 pt-8">
               <div className="flex items-center justify-between gap-4">
-                <h2 className="text-2xl font-bold text-foreground">Binh luan</h2>
+                <h2 className="text-2xl font-bold text-foreground">Bình luận</h2>
                 <Badge variant="secondary" className="bg-green-50 text-green-700">
                   {commentCount}
                 </Badge>
@@ -425,7 +425,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                   <Textarea
                     value={content}
                     onChange={(event) => setContent(event.target.value)}
-                    placeholder="Chia se cam nhan cua ban..."
+                    placeholder="Chia sẻ cảm nhận của bạn..."
                     className="min-h-28 border-green-200 bg-white focus-visible:ring-green-500/30"
                   />
                   {submitError && <p className="mt-2 text-sm text-destructive">{submitError}</p>}
@@ -436,26 +436,26 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                       className="bg-gradient-to-r from-primary to-green-600 text-white hover:from-primary hover:to-green-700"
                     >
                       <Send className="mr-2 h-4 w-4" />
-                      {submitting ? "Dang gui..." : "Gui binh luan"}
+                      {submitting ? "Đang gửi..." : "Gửi bình luận"}
                     </Button>
                   </div>
                 </form>
               ) : (
                 <div className="rounded-lg border border-green-100 bg-green-50/50 p-4 text-sm text-green-800">
-                  Dang nhap de them binh luan moi.
+                  Đăng nhập để thêm bình luận mới.
                 </div>
               )}
 
               <div className="space-y-4">
                 {commentsLoading && (
                   <div className="rounded-lg border border-green-100 bg-green-50/40 py-6 text-center text-sm text-green-700">
-                    Dang tai binh luan...
+                    Đang tải bình luận...
                   </div>
                 )}
 
                 {commentsError && (
                   <div className="rounded-lg border border-destructive/20 bg-destructive/5 py-4 text-center text-sm text-destructive">
-                    Khong the tai binh luan: {commentsError}
+                    Không thể tải bình luận: {commentsError}
                   </div>
                 )}
 
@@ -493,7 +493,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
                   })
                 ) : !commentsLoading && (
                   <div className="rounded-lg border border-dashed border-green-200 py-10 text-center text-muted-foreground">
-                    Chua co binh luan nao cho bai viet nay.
+                    Chưa có bình luận nào cho bài viết này.
                   </div>
                 )}
               </div>
