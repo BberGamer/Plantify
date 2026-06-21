@@ -47,10 +47,6 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    tags: {
-      type: [String],
-      default: [],
-    },
     avgRating: {
       type: Number,
       default: 0,
@@ -77,6 +73,14 @@ postSchema.index({ userId: 1 });
 
 postSchema.virtual('comments', {
   ref: 'Comment',
+  localField: '_id',
+  foreignField: 'postId',
+  justOne: false,
+  options: { sort: { createdAt: -1 } },
+});
+
+postSchema.virtual('reports', {
+  ref: 'Report',
   localField: '_id',
   foreignField: 'postId',
   justOne: false,

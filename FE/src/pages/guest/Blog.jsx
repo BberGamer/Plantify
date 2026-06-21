@@ -2,17 +2,26 @@
  * Blog.jsx - Trang blog co filter category/search va modal chi tiet bai viet.
  */
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import BlogPostDetail, {
   BlogPostDetailError,
   BlogPostDetailSkeleton,
 } from "@/components/common/BlogPostDetail";
 import { ImageWithFallback } from "@/components/common/ImageWithFallback";
+import { CreatePostForm } from "@/features/posts/components/CreatePostForm";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { usePostDetail, usePosts } from "@/features/posts/hooks";
-import { Search, Calendar, User, ArrowRight, X, Star } from "lucide-react";
+import { useCreatePost, usePostDetail, usePosts } from "@/features/posts/hooks";
+import { Search, Calendar, User, ArrowRight, X, Star, PenSquare } from "lucide-react";
 import { motion } from "motion/react";
 
 const categories = [
@@ -113,16 +122,19 @@ function Blog() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [creatingPost, setCreatingPost] = useState(false);
+  const [createFormKey, setCreateFormKey] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const hasActiveFilters = Boolean(selectedCategory || searchTerm.trim());
-  const { posts: apiPosts, loading, error } = usePosts({
+  const { posts: apiPosts, loading, error, refetch } = usePosts({
     page: 1,
     limit: 6,
     category: selectedCategory,
     search: debouncedSearchTerm,
   });
+  const { create, loading: creating } = useCreatePost();
   const {
     post: detailPost,
     comments: detailComments,
@@ -179,6 +191,18 @@ function Blog() {
     setSearchTerm("");
   }
 
+  async function handleCreatePost(payload) {
+    try {
+      await create(payload);
+      toast.success("Bài viết đã được gửi và đang chờ duyệt");
+      setCreateFormKey((current) => current + 1);
+      setCreatingPost(false);
+      refetch();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Không thể tạo bài viết");
+    }
+  }
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setDebouncedSearchTerm(searchTerm.trim());
@@ -216,11 +240,22 @@ function Blog() {
     <div className="min-h-screen w-full max-w-full overflow-hidden px-4 py-12 sm:px-6">
       <div className="mx-auto w-full max-w-7xl overflow-hidden">
         {/* Header */}
-        <div className="mb-10">
+        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
           <h1 className="text-5xl font-bold mb-2">Blog & Cộng đồng</h1>
           <p className="text-xl text-muted-foreground">
             Kiến thức, kinh nghiệm và câu chuyện từ cộng đồng yêu cây cảnh
           </p>
+          </div>
+          <Button
+            type="button"
+            size="icon"
+            className="self-end rounded-full shadow-md sm:self-start"
+            onClick={() => setCreatingPost(true)}
+            aria-label="Tạo bài viết mới"
+          >
+            <PenSquare className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Search & Categories */}
@@ -441,6 +476,23 @@ function Blog() {
             />
           </div>
         )}
+
+        <Dialog open={creatingPost} onOpenChange={setCreatingPost}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Tạo bài viết mới</DialogTitle>
+              <DialogDescription>
+                Bài viết của bạn sẽ ở trạng thái chờ duyệt sau khi gửi.
+              </DialogDescription>
+            </DialogHeader>
+            <CreatePostForm
+              key={createFormKey}
+              loading={creating}
+              onCancel={() => setCreatingPost(false)}
+              onSubmit={handleCreatePost}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

@@ -3,7 +3,6 @@ import { Navigate } from "react-router";
 import { toast } from "sonner";
 import { PenSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +26,7 @@ function MyPosts() {
   const { create, loading: creating } = useCreatePost();
   const { update, loading: updating } = useUpdatePost();
   const { remove, loading: deleting } = useDeletePost();
+  const [creatingPost, setCreatingPost] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [formKey, setFormKey] = useState(0);
@@ -44,6 +44,7 @@ function MyPosts() {
       await create(payload);
       toast.success("Bài viết đã được gửi và đang chờ duyệt");
       setFormKey((current) => current + 1);
+      setCreatingPost(false);
       refetch();
     } catch (err) {
       toast.error(err.response?.data?.message || "Không thể tạo bài viết");
@@ -86,7 +87,7 @@ function MyPosts() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Bài viết của tôi</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Tạo, chỉnh sửa và theo dõi trạng thái duyệt bài viết của bạn.
+              Theo dõi lịch sử, chỉnh sửa và xóa các bài viết của bạn.
             </p>
           </div>
           <Button type="button" variant="outline" onClick={refetch}>
@@ -94,28 +95,9 @@ function MyPosts() {
           </Button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
-                <PenSquare className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>Tạo bài viết mới</CardTitle>
-                <CardDescription>
-                  Bài viết của bạn sẽ ở trạng thái chờ duyệt sau khi gửi.
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <CreatePostForm key={formKey} loading={creating} onSubmit={handleCreate} />
-          </CardContent>
-        </Card>
-
         <section className="space-y-4">
           <div>
-            <h2 className="text-xl font-semibold">Danh sách bài viết</h2>
+            <h2 className="text-xl font-semibold">Lịch sử bài viết</h2>
             <p className="text-sm text-muted-foreground">
               Bạn có thể sửa hoặc xóa các bài viết do chính mình tạo.
             </p>
@@ -131,6 +113,33 @@ function MyPosts() {
           />
         </section>
       </div>
+
+      <Button
+        type="button"
+        size="icon"
+        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl hover:bg-primary/90"
+        onClick={() => setCreatingPost(true)}
+        aria-label="Tạo bài viết mới"
+      >
+        <PenSquare className="h-6 w-6" />
+      </Button>
+
+      <Dialog open={creatingPost} onOpenChange={setCreatingPost}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Tạo bài viết mới</DialogTitle>
+            <DialogDescription>
+              Bài viết của bạn sẽ ở trạng thái chờ duyệt sau khi gửi.
+            </DialogDescription>
+          </DialogHeader>
+          <CreatePostForm
+            key={formKey}
+            loading={creating}
+            onCancel={() => setCreatingPost(false)}
+            onSubmit={handleCreate}
+          />
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(editingPost)} onOpenChange={(open) => !open && setEditingPost(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">

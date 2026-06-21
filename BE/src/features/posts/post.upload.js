@@ -1,26 +1,11 @@
-// post.upload.js - Multer middleware cho upload ảnh bài viết
-const fs = require('fs');
-const path = require('path');
+// post.upload.js - Multer middleware cho upload anh bai viet vao memory de luu MongoDB
 const multer = require('multer');
 
-const uploadDir = path.join(__dirname, '../../../uploads/posts');
-
-fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const safeExt = path.extname(file.originalname || '').toLowerCase();
-    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${safeExt}`;
-    cb(null, uniqueName);
-  },
-});
+const storage = multer.memoryStorage();
 
 function imageFileFilter(req, file, cb) {
   if (!file.mimetype?.startsWith('image/')) {
-    const error = new Error('Chỉ hỗ trợ upload file ảnh');
+    const error = new Error('Chi ho tro upload file anh');
     error.statusCode = 400;
     cb(error);
     return;
@@ -33,7 +18,8 @@ const uploadPostImages = multer({
   storage,
   fileFilter: imageFileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    // Data URL luu truc tiep trong MongoDB tang ~33%, nen gioi han nho de tranh vuot 16MB/document.
+    fileSize: 1 * 1024 * 1024,
     files: 9,
   },
 }).fields([

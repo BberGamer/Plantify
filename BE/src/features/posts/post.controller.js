@@ -2,15 +2,15 @@
 const postService = require('./post.service');
 const apiResponse = require('../../utils/apiResponse');
 
-function getFileUrl(req, file) {
-  return `/uploads/posts/${file.filename}`;
+function getFileDataUrl(file) {
+  return `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
 }
 
 function buildPostPayload(req) {
   const uploadedThumbnail = req.files?.thumbnail?.[0];
   const uploadedImages = req.files?.images || [];
-  const imageUrls = uploadedImages.map((file) => getFileUrl(req, file));
-  const thumbnailUrl = uploadedThumbnail ? getFileUrl(req, uploadedThumbnail) : '';
+  const imageUrls = uploadedImages.map((file) => getFileDataUrl(file));
+  const thumbnailUrl = uploadedThumbnail ? getFileDataUrl(uploadedThumbnail) : '';
 
   return {
     ...req.body,

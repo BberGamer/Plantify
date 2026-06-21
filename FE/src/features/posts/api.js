@@ -3,13 +3,23 @@
  */
 import { api } from "@/lib/api";
 
+function withoutTags(value = {}) {
+  if (value instanceof FormData) {
+    value.delete("tags");
+    return value;
+  }
+
+  const { tags: _tags, ...rest } = value || {};
+  return rest;
+}
+
 /**
  * Lấy danh sách bài viết từ backend.
  * @param {Object} params - Query params nhu page, limit, category, title
  * @returns {Promise<object>} Response data từ API
  */
 export const getPosts = async (params = {}) => {
-  const response = await api.get("/posts", { params });
+  const response = await api.get("/posts", { params: withoutTags(params) });
   return response.data;
 };
 
@@ -39,12 +49,12 @@ export const getPostById = async (id) => {
 };
 
 export const createPost = async (data) => {
-  const response = await api.post("/posts", data);
+  const response = await api.post("/posts", withoutTags(data));
   return response.data;
 };
 
 export const updatePost = async (id, data) => {
-  const response = await api.patch(`/posts/${id}`, data);
+  const response = await api.patch(`/posts/${id}`, withoutTags(data));
   return response.data;
 };
 
