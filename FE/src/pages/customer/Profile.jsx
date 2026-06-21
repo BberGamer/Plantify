@@ -1,7 +1,9 @@
 // Profile.jsx
 // Trang hồ sơ người dùng: hiển thị thông tin thật từ DB, chức vụ, đổi mật khẩu theo cơ chế nút chỉnh sửa
 
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
+import { useMyFavorites } from "@/features/favorites/hooks";
+import { removeFavorite } from "@/features/favorites/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,18 +58,7 @@ const ROLE_CONFIG = {
   },
 };
 
-// === Dữ liệu mock đơn hàng và cây yêu thích (chờ API thật) ===
-const mockOrders = [
-  { id: "ORD-001", date: "2026-05-15", status: "Đã giao", total: "450,000đ", items: 2 },
-  { id: "ORD-002", date: "2026-05-10", status: "Đang vận chuyển", total: "280,000đ", items: 1 },
-  { id: "ORD-003", date: "2026-05-05", status: "Đã giao", total: "650,000đ", items: 3 },
-];
 
-const mockSavedPlants = [
-  { id: 1, name: "Monstera Deliciosa", image: "https://images.unsplash.com/photo-1614887410788-e158d6efb3be?w=400", savedDate: "2026-05-12" },
-  { id: 2, name: "Sen Đá", image: "https://images.unsplash.com/photo-1614425467998-8a7249179a53?w=400", savedDate: "2026-05-08" },
-  { id: 3, name: "Kim Tiền", image: "https://images.unsplash.com/photo-1611383856597-aae8f0cfd9e6?w=400", savedDate: "2026-05-01" },
-];
 
 /** Lấy chữ cái đầu của tên để hiển thị Avatar fallback */
 function getInitials(name) {
@@ -126,6 +117,25 @@ function PasswordInput({ id, value, onChange, disabled, placeholder, className }
 
 function Profile() {
   const navigate = useNavigate();
+  const { favorites, loading: favLoading, refetch: refetchFavorites } = useMyFavorites();
+
+  // Dữ liệu mock đơn hàng (chờ API thật)
+  const mockOrders = [
+    { id: "ORD-001", date: "2026-05-15", status: "Đã giao", total: "450,000đ", items: 2 },
+    { id: "ORD-002", date: "2026-05-10", status: "Đang vận chuyển", total: "280,000đ", items: 1 },
+    { id: "ORD-003", date: "2026-05-05", status: "Đã giao", total: "650,000đ", items: 3 },
+  ];
+
+  const handleUnfavorite = async (plantId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await removeFavorite(plantId);
+      refetchFavorites();
+    } catch {
+      // bỏ qua lỗi
+    }
+  };
 
   const {
     user,
@@ -416,7 +426,11 @@ function Profile() {
           {/* === Tab: Cây yêu thích (chỉ customer) === */}
           {user?.role === "customer" && (
             <TabsContent value="saved" className="space-y-4">
-              {mockSavedPlants.length === 0 ? (
+              {favLoading ? (
+                <div className="flex justify-center py-16">
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
+                </div>
+              ) : favorites.length === 0 ? (
                 <EmptyState
                   icon={Heart}
                   title="Chưa có cây yêu thích"
@@ -425,28 +439,51 @@ function Profile() {
                 />
               ) : (
                 <div className="profile-plants-grid">
-                  {mockSavedPlants.map((plant, index) => (
-                    <motion.div key={plant.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.1 }}>
-                      <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
-                        <div className="aspect-square overflow-hidden relative">
-                          <img src={plant.image} alt={plant.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                          <div className="absolute top-3 right-3">
-                            <button className="profile-plant-heart-btn">
-                              <Heart className="w-5 h-5 fill-red-500 text-red-500" />
-                            </button>
+                  {favorites.map((fav, index) => {
+                    const plant = fav.plantId;
+                    if (!plant) return null;
+                    const plantId = plant._id || plant.id;
+                    const imageUrl = plant.thumbnail || plant.images?.[0] || "";
+                    const savedDate = fav.createdAt
+                      ? new Date(fav.createdAt).toLocaleDateString("vi-VN")
+                      : "";
+                    return (
+                      <motion.div key={fav._id || plantId} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.1 }}>
+                        <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
+                          <div className="aspect-square overflow-hidden relative">
+                            <img
+                              src={imageUrl}
+                              alt={plant.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                            {/* Nút bỏ thích */}
+                            <div className="absolute top-3 right-3">
+                              <button
+                                onClick={(e) => handleUnfavorite(plantId, e)}
+                                className="profile-plant-heart-btn"
+                                aria-label="Bỏ yêu thích"
+                              >
+                                <Heart className="w-5 h-5 fill-red-500 text-red-500" />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold mb-1">{plant.name}</h3>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            Đã lưu: {plant.savedDate}
-                          </p>
-                          <Button className="w-full mt-4" variant="outline">Xem chi tiết</Button>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
+                          <CardContent className="p-4">
+                            <h3 className="font-semibold mb-1">{plant.name}</h3>
+                            {plant.scientificName && (
+                              <p className="text-xs text-muted-foreground italic mb-1">{plant.scientificName}</p>
+                            )}
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              Đã lưu: {savedDate}
+                            </p>
+                            <Button className="w-full mt-4" variant="outline" asChild>
+                              <Link to={`/plant/${plantId}`}>Xem chi tiết</Link>
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
             </TabsContent>
