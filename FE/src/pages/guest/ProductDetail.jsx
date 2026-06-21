@@ -65,7 +65,6 @@ function ProductDetail() {
           id: product._id,
           name: product.name,
           price: product.price,
-          originalPrice: product.originalPrice || Math.round(product.price * 1.2),
           quantity: quantity,
           stock: product.stock || 0,
           image: product.thumbnail || (product.images && product.images[0]) || "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400",
@@ -154,9 +153,6 @@ function ProductDetail() {
   if (!product) return null;
 
   const images = product.images?.length > 0 ? product.images : [product.thumbnail || "https://via.placeholder.com/800"];
-  const currentPrice = product.price ?? 0;
-  const originalPrice = product.originalPrice ?? product.price * 1.2 ?? 0;
-  const discount = Math.round((1 - currentPrice / originalPrice) * 100);
 
   const mockShop = {
     name: "Plantify Shop",
@@ -228,16 +224,8 @@ function ProductDetail() {
             <div className="bg-muted/50 rounded-lg p-6 mb-6">
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="text-4xl font-bold text-primary">
-                  {currentPrice.toLocaleString("vi-VN")}đ
+                  {(product.price ?? 0).toLocaleString("vi-VN")}đ
                 </span>
-                {discount > 0 && (
-                  <>
-                    <span className="text-lg text-muted-foreground line-through">
-                      {originalPrice.toLocaleString("vi-VN")}đ
-                    </span>
-                    <Badge variant="destructive">-{discount}%</Badge>
-                  </>
-                )}
               </div>
               <p className="text-sm text-muted-foreground">
                 Còn {product.stock || 0} sản phẩm

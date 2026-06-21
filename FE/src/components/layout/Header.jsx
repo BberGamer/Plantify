@@ -29,7 +29,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { PUBLIC_NAV } from "@/lib/constants";
 import { ROUTES } from "@/lib/constants";
-import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
@@ -107,15 +106,6 @@ function Header() {
               </nav>
             </SheetContent>
           </Sheet>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="hidden sm:inline-flex"
-            asChild
-          >
-            <Link to={ROUTES.aiDoctor}>Hỏi AI</Link>
-          </Button>
 
           {isAuthenticated && user ? (
             <DropdownMenu>
