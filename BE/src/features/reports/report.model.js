@@ -33,7 +33,7 @@ const reportSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    collection: 'reports',
+    collection: 'report_post',
     id: false,
   }
 );
