@@ -6,13 +6,6 @@ import { usePlants, usePlantTags } from "@/features/plants/hooks";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { Search, Filter, Loader2 } from "lucide-react";
 
 function Browse() {
@@ -21,9 +14,6 @@ function Browse() {
 
   const searchQuery = searchParams.get("q") || "";
   const tag = searchParams.get("tag") || "";
-  const difficulty = searchParams.get("difficulty") || "";
-  const sunlight = searchParams.get("sunlight") || "";
-  const watering = searchParams.get("watering") || "";
 
   // State cục bộ cho input search
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -35,9 +25,6 @@ function Browse() {
   const { plants, loading, error, total, pages, currentPage } = usePlants({
     search: searchQuery,
     tag: tag,
-    difficulty: difficulty,
-    sunlight: sunlight,
-    watering: watering,
     page: parseInt(searchParams.get("page")) || 1,
     limit: 9
   });
@@ -108,11 +95,7 @@ function Browse() {
     updateParams({ tag: selectedTag === tag ? "" : selectedTag });
   };
 
-  const handleFilterChange = (key, value) => {
-    updateParams({ [key]: value });
-  };
-
-  const hasActiveFilters = searchQuery || tag || difficulty || sunlight || watering;
+  const hasActiveFilters = searchQuery || tag;
 
   return (
     <div className="min-h-screen py-12 px-6">
@@ -163,50 +146,6 @@ function Browse() {
               </Badge>
             ))}
           </div>
-          {/* === Dropdown filters === */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select value={difficulty} onValueChange={(v) => handleFilterChange("difficulty", v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Độ khó" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Dễ</SelectItem>
-                <SelectItem value="medium">Trung bình</SelectItem>
-                <SelectItem value="high">Khó</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sunlight} onValueChange={(v) => handleFilterChange("sunlight", v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Ánh sáng" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Ít</SelectItem>
-                <SelectItem value="medium">Trung bình</SelectItem>
-                <SelectItem value="high">Nhiều</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={watering} onValueChange={(v) => handleFilterChange("watering", v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Tưới nước" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Ít</SelectItem>
-                <SelectItem value="medium">Trung bình</SelectItem>
-                <SelectItem value="high">Nhiều</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={searchParams.get("sort") || ""} onValueChange={(v) => handleFilterChange("sort", v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sắp xếp" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="popular">Phổ biến nhất</SelectItem>
-                <SelectItem value="az">A-Z</SelectItem>
-                <SelectItem value="za">Z-A</SelectItem>
-                <SelectItem value="difficulty">Độ khó</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
         {/* === Results header === */}
         <div className="mb-6 flex items-center justify-between">
@@ -219,7 +158,7 @@ function Browse() {
               </>
             )}
           </p>
-          {(searchQuery || tag || difficulty || sunlight || watering) && (
+          {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
