@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ImageUploader } from "@/components/common/ImageUploader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,12 +24,10 @@ import {
 const EMPTY_FORM = {
   name: "",
   categoryId: "",
-  images: "",
+  images: [],
   description: "",
   price: "",
   stock: "",
-  ratingAverage: "0",
-  ratingCount: "0",
   tags: "",
 };
 
@@ -61,12 +60,10 @@ export function ProductForm({ categories, onSubmit, loading, editProduct }) {
       setFormData({
         name: editProduct.name || "",
         categoryId: editProduct.categoryId?._id || editProduct.categoryId || "",
-        images: toCommaString(editProduct.images),
+        images: Array.isArray(editProduct.images) ? editProduct.images : [],
         description: editProduct.description || "",
         price: editProduct.price ?? "",
         stock: editProduct.stock ?? "",
-        ratingAverage: editProduct.ratingAverage ?? "0",
-        ratingCount: editProduct.ratingCount ?? "0",
         tags: toCommaString(editProduct.tags),
       });
       setIsOpen(true);
@@ -89,12 +86,10 @@ export function ProductForm({ categories, onSubmit, loading, editProduct }) {
       ...(isEditMode && { id: editProduct._id || editProduct.id }),
       name: formData.name.trim(),
       categoryId: formData.categoryId,
-      images: toCommaArray(formData.images),
+      images: formData.images,
       description: formData.description.trim(),
       price: Number(formData.price),
       stock: Number(formData.stock || 0),
-      ratingAverage: Number(formData.ratingAverage || 0),
-      ratingCount: Number(formData.ratingCount || 0),
       tags: toCommaArray(formData.tags),
     };
 
@@ -104,8 +99,8 @@ export function ProductForm({ categories, onSubmit, loading, editProduct }) {
 
   const dialogTitle = isEditMode ? "Sửa sản phẩm" : "Tạo sản phẩm mới";
   const dialogDescription = isEditMode
-    ? "Cập nhật thông tin sản phẩm hiện có trong hệ thống quản lý."
-    : "Nhập thông tin để tạo một sản phẩm mới cho business manager quản lý.";
+    ? "Cập nhật thông tin sản phẩm hiện có trong hệ thống."
+    : "Nhập thông tin để tạo sản phẩm mới.";
   const submitLabel = isEditMode ? "Lưu" : "Tạo mới";
 
   return (
@@ -154,17 +149,15 @@ export function ProductForm({ categories, onSubmit, loading, editProduct }) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="productImages">Images</Label>
-              <Input
-                id="productImages"
-                value={formData.images}
-                onChange={(e) => handleChange("images", e.target.value)}
-                placeholder="Nhập nhiều URL ảnh, ngăn cách bằng dấu phẩy"
+              <Label>Hình ảnh</Label>
+              <ImageUploader
+                images={formData.images}
+                onChange={(newImages) => handleChange("images", newImages)}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="productDescription">Description</Label>
+              <Label htmlFor="productDescription">Mô tả</Label>
               <Textarea
                 id="productDescription"
                 value={formData.description}
@@ -176,7 +169,7 @@ export function ProductForm({ categories, onSubmit, loading, editProduct }) {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="productPrice">Price *</Label>
+                <Label htmlFor="productPrice">Giá *</Label>
                 <Input
                   id="productPrice"
                   type="number"
@@ -188,7 +181,7 @@ export function ProductForm({ categories, onSubmit, loading, editProduct }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="productStock">Stock</Label>
+                <Label htmlFor="productStock">Tồn kho</Label>
                 <Input
                   id="productStock"
                   type="number"
@@ -200,35 +193,8 @@ export function ProductForm({ categories, onSubmit, loading, editProduct }) {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="productRatingAverage">ratingAverage</Label>
-                <Input
-                  id="productRatingAverage"
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  value={formData.ratingAverage}
-                  onChange={(e) => handleChange("ratingAverage", e.target.value)}
-                  placeholder="VD: 4.5"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="productRatingCount">ratingCount</Label>
-                <Input
-                  id="productRatingCount"
-                  type="number"
-                  min="0"
-                  value={formData.ratingCount}
-                  onChange={(e) => handleChange("ratingCount", e.target.value)}
-                  placeholder="VD: 12"
-                />
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <Label htmlFor="productTags">Tags</Label>
+              <Label htmlFor="productTags">Từ khóa</Label>
               <Input
                 id="productTags"
                 value={formData.tags}

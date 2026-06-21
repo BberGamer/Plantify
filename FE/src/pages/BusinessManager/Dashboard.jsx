@@ -25,7 +25,8 @@ import {
   XAxis,
   YAxis,
   BarChart,
-  Bar
+  Bar,
+  LabelList
 } from "recharts";
 
 const revenueData = [
@@ -80,10 +81,18 @@ function Dashboard() {
       return accumulator;
     }, {});
 
-    return categories.map((category) => ({
-      name: category.name,
-      total: productCountMap[category.name] || 0
-    }));
+    return categories
+      .map((category) => ({
+        name: category.name,
+        total: productCountMap[category.name] || 0
+      }))
+      .sort((firstCategory, secondCategory) => {
+        if (secondCategory.total !== firstCategory.total) {
+          return secondCategory.total - firstCategory.total;
+        }
+
+        return firstCategory.name.localeCompare(secondCategory.name, "vi");
+      });
   }, [categories, products]);
 
   const isLoading = productsLoading || categoriesLoading;
@@ -162,10 +171,15 @@ function Dashboard() {
 
         <Card className="overflow-hidden xl:col-span-2">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FolderTree className="h-5 w-5 text-primary" />
-              Loại sản phẩm
-            </CardTitle>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <FolderTree className="h-5 w-5 text-primary" />
+                Loại sản phẩm
+              </CardTitle>
+              <Badge variant="outline" className="w-fit border-green-200 bg-green-50 text-green-700">
+                {categories.length} danh mục
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -186,12 +200,36 @@ function Dashboard() {
                 }}
                 className="h-80"
               >
-                <BarChart data={productCategoryData} margin={{ top: 8, right: 12, left: -12, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" interval={0} tickMargin={8} />
-                  <YAxis allowDecimals={false} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="total" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} maxBarSize={56} />
+                <BarChart
+                  data={productCategoryData}
+                  layout="vertical"
+                  margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
+                  barCategoryGap={14}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} tickMargin={8} axisLine={false} tickLine={false} />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={110}
+                    tickMargin={10}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        labelFormatter={(_, payload) => payload?.[0]?.payload?.name || "Loại sản phẩm"}
+                      />
+                    }
+                  />
+                  <Bar dataKey="total" fill="var(--color-total)" radius={[0, 10, 10, 0]} maxBarSize={34}>
+                    <LabelList
+                      dataKey="total"
+                      position="right"
+                      className="fill-foreground text-xs font-medium"
+                    />
+                  </Bar>
                 </BarChart>
               </ChartContainer>
             )}

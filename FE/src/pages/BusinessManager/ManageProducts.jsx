@@ -1,6 +1,6 @@
 // ManageProducts.jsx - Trang quản lý sản phẩm cho business manager
-import { useMemo, useState } from "react";
-import { Search, Loader2, Package, Tags, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { Search, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,31 +43,8 @@ function ManageProducts() {
     sortBy: "newest",
   });
 
-  const { categories, loading: categoriesLoading } = useCategories();
+  const { categories } = useCategories();
   const { create, loading: creating } = useCreateProduct();
-
-  const activeCategoryLabel = useMemo(() => {
-    if (categoryFilter === "all") return "Tất cả danh mục";
-    const matchedCategory = categories.find(
-      (category) => (category._id || category.id) === categoryFilter
-    );
-    return matchedCategory?.name || "Tất cả danh mục";
-  }, [categories, categoryFilter]);
-
-  const hasActiveFilters = search !== "" || categoryFilter !== "all";
-
-  const handleSearchSubmit = (event) => {
-    event.preventDefault();
-    setSearch(searchInput.trim());
-    setPage(1);
-  };
-
-  const handleResetFilters = () => {
-    setSearchInput("");
-    setSearch("");
-    setCategoryFilter("all");
-    setPage(1);
-  };
 
   const handleCreate = async (payload) => {
     try {
@@ -97,36 +74,6 @@ function ManageProducts() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <Card className="border-green-200/60 bg-white/95 shadow-sm">
-          <CardContent className="flex items-center justify-between gap-4 p-6">
-            <div>
-              <p className="text-sm text-muted-foreground">Tổng sản phẩm</p>
-              <p className="mt-2 text-3xl font-bold text-foreground">
-                {loading ? "..." : total}
-              </p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Package className="h-6 w-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-green-200/60 bg-white/95 shadow-sm">
-          <CardContent className="flex items-center justify-between gap-4 p-6">
-            <div>
-              <p className="text-sm text-muted-foreground">Danh mục đang lọc</p>
-              <p className="mt-2 text-lg font-semibold text-foreground">
-                {categoriesLoading ? "Đang tải..." : activeCategoryLabel}
-              </p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Tags className="h-6 w-6" />
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
       <Card className="border-green-200/60 bg-white/95 shadow-sm">
         <CardHeader className="border-b border-green-100">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -139,12 +86,17 @@ function ManageProducts() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4 p-6">
-          <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-            <div className="relative lg:col-span-6">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+            <div className="relative lg:col-span-7">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearchInput(value);
+                  setSearch(value.trim());
+                  setPage(1);
+                }}
                 placeholder="Tìm kiếm theo tên hoặc mô tả sản phẩm"
                 className="pl-10"
               />
@@ -173,20 +125,18 @@ function ManageProducts() {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="lg:col-span-2">
+            <Button
+              type="button"
+              className="lg:col-span-2"
+              onClick={() => {
+                setSearch(searchInput.trim());
+                setPage(1);
+              }}
+            >
               <Search className="mr-2 h-4 w-4" />
               Tìm kiếm
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="lg:col-span-1"
-              onClick={handleResetFilters}
-              disabled={!hasActiveFilters && searchInput === ""}
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-          </form>
+          </div>
         </CardContent>
       </Card>
 
