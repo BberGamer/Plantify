@@ -25,21 +25,18 @@ const orderStats = [
   {
     title: "Tổng đơn hàng",
     value: "128",
-    description: "Dữ liệu mô phỏng",
     icon: ShoppingBag,
     trend: { value: 10, isPositive: true }
   },
   {
     title: "Đơn chờ xử lý",
     value: "24",
-    description: "Cần theo dõi",
     icon: Clock3,
     trend: { value: 6, isPositive: false }
   },
   {
     title: "Đơn hoàn thành",
     value: "86",
-    description: "Trạng thái mô phỏng",
     icon: PackageCheck,
     trend: { value: 9, isPositive: true }
   }
@@ -99,21 +96,10 @@ function Team() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <section className="rounded-3xl border border-green-100 bg-gradient-to-r from-green-50 via-background to-emerald-50 p-6 shadow-sm sm:p-8">
-        <div className="space-y-3">
-          <Badge className="w-fit border-transparent bg-green-100 text-green-700 hover:bg-green-100">
-            Order Management UI
-          </Badge>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Quản lý đơn hàng
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
-              Giao diện mô phỏng để business manager theo dõi đơn hàng, tìm kiếm, lọc và cập nhật trạng thái đơn.
-            </p>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Tất cả dữ liệu, filter, search và nút thao tác hiện chỉ là giao diện hiển thị.
-          </p>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Quản lý đơn hàng
+          </h1>
         </div>
       </section>
 
@@ -123,7 +109,6 @@ function Team() {
             key={stat.title}
             title={stat.title}
             value={stat.value}
-            description={stat.description}
             icon={stat.icon}
             trend={stat.trend}
           />
@@ -135,9 +120,6 @@ function Team() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <CardTitle className="text-xl">Bộ lọc đơn hàng</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Chỉ hiển thị giao diện search và filter, chưa có xử lý dữ liệu.
-              </p>
             </div>
             <Badge variant="outline" className="w-fit border-green-200 bg-green-50 text-green-700">
               UI mô phỏng
@@ -171,9 +153,6 @@ function Team() {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <CardTitle className="text-xl text-foreground">Danh sách đơn hàng</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Dữ liệu mẫu để minh họa giao diện quản lý đơn hàng.
-              </p>
             </div>
             <Badge className="border-transparent bg-primary/10 text-primary hover:bg-primary/10">
               {orders.length} đơn hàng

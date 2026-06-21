@@ -92,36 +92,27 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <section className="rounded-3xl border border-green-100 bg-gradient-to-r from-green-50 via-background to-emerald-50 p-6 shadow-sm sm:p-8">
-        <Badge className="mb-3 w-fit border-transparent bg-green-100 text-green-700 hover:bg-green-100">
-          Business Manager Dashboard
-        </Badge>
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Quản lý doanh thu, sản phẩm và loại sản phẩm
         </h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
-          Dashboard đang lấy dữ liệu thật cho sản phẩm và loại sản phẩm từ hệ thống hiện tại.
-        </p>
       </section>
 
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         <DashboardCard
           title="Doanh thu tổng quan"
           value="238 triệu"
-          description="Dữ liệu mô phỏng tháng hiện tại"
           icon={Wallet}
           trend={{ value: 12, isPositive: true }}
         />
         <DashboardCard
           title="Sản phẩm đang quản lý"
           value={productsLoading ? "..." : total.toString()}
-          description={productsError ? productsError : "Dữ liệu thật từ hệ thống"}
           icon={Package}
           trend={{ value: 8, isPositive: true }}
         />
         <DashboardCard
           title="Loại sản phẩm"
           value={categoriesLoading ? "..." : categories.length.toString()}
-          description={categoriesError ? categoriesError : "Dữ liệu thật từ hệ thống"}
           icon={Tags}
           trend={{ value: 0, isPositive: true }}
         />
@@ -166,9 +157,6 @@ function Dashboard() {
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Chức năng theo dõi doanh thu thực tế đang được phát triển.
-            </p>
           </CardContent>
         </Card>
 
@@ -235,7 +223,6 @@ function Dashboard() {
                   >
                     <div>
                       <p className="font-semibold text-foreground">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{item.categoryId?.name || "Chưa phân loại"}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline">{Number(item.price || 0).toLocaleString("vi-VN")}đ</Badge>

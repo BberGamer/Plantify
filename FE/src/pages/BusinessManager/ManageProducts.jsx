@@ -84,18 +84,10 @@ function ManageProducts() {
     <div className="mx-auto max-w-7xl space-y-6">
       <section className="rounded-3xl border border-green-100 bg-gradient-to-r from-green-50 via-background to-emerald-50 p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-3">
-            <Badge className="w-fit border-transparent bg-green-100 text-green-700 hover:bg-green-100">
-              Product Management
-            </Badge>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Quản lý sản phẩm
-              </h1>
-              <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
-                Business manager có thể thêm, sửa, xóa và theo dõi sản phẩm tại đây.
-              </p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              Quản lý sản phẩm
+            </h1>
           </div>
           <ProductForm
             categories={categories}
@@ -140,9 +132,6 @@ function ManageProducts() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <CardTitle className="text-xl">Bộ lọc sản phẩm</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Tìm kiếm theo tên hoặc mô tả và lọc theo danh mục sản phẩm.
-              </p>
             </div>
             <Badge variant="outline" className="w-fit border-green-200 bg-green-50 text-green-700">
               {loading ? "Đang tải..." : `${total} sản phẩm`}
@@ -198,11 +187,6 @@ function ManageProducts() {
               <RotateCcw className="h-4 w-4" />
             </Button>
           </form>
-          {hasActiveFilters && (
-            <p className="text-sm text-muted-foreground">
-              Đang lọc theo từ khóa "{search || ""}" và danh mục "{activeCategoryLabel}".
-            </p>
-          )}
         </CardContent>
       </Card>
 

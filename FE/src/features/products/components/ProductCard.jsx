@@ -25,24 +25,19 @@ export function ProductCard({ product }) {
         />
       </div>
       <CardContent className="space-y-4 p-4">
-        <div className="space-y-2">
+        <div>
           <h3 className="line-clamp-2 font-semibold text-foreground transition-colors group-hover:text-primary">
             {product.name}
           </h3>
-          <p className="line-clamp-2 text-sm text-muted-foreground">
-            {product.description || "Chưa có mô tả ngắn cho sản phẩm."}
-          </p>
         </div>
 
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs text-muted-foreground">Giá</p>
             <p className="text-lg font-bold text-primary">
               {Number(product.price || 0).toLocaleString("vi-VN")}đ
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Tồn kho</p>
             <p className={stock > 0 ? "font-semibold text-foreground" : "font-semibold text-rose-600"}>
               {stock}
             </p>
