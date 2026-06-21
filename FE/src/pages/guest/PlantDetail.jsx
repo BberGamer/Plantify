@@ -1,353 +1,235 @@
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft,
-  Droplets,
-  Sun,
-  Thermometer,
-  Wind,
-  AlertTriangle,
-  Calendar,
-  BookOpen,
-  Bug,
-  Sprout
+  ChevronLeft,
+  ChevronRight,
+  Globe,
+  Loader2,
+  Sprout,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { ImageWithFallback } from "@/components/common/ImageWithFallback";
+import { PlantOverviewTab } from "@/features/plants/components/PlantOverviewTab";
+import { CareGuideList, DiseaseList } from "@/features/plants/components/PlantDetailList";
+import { usePlant, usePlantCategories } from "@/features/plants/hooks";
+import { useCareGuides } from "@/features/care-guides/hooks";
+import { usePlantDiseases } from "@/features/plant-diseases/hooks";
+
+import "@/styles/ManagerPlantDetail.css";
+
+const DIFFICULTY_LABELS = {
+  low: "Dễ",
+  medium: "Trung bình",
+  high: "Khó",
+};
+
+const DIFFICULTY_COLORS = {
+  low: "text-green-600",
+  medium: "text-yellow-600",
+  high: "text-red-600",
+  "Dễ": "text-green-600",
+  "Trung bình": "text-yellow-600",
+  "Khó": "text-red-600",
+};
 
 function PlantDetail() {
   const { id } = useParams();
-  const plantData = {
-    name: "Monstera Deliciosa",
-    scientificName: "Monstera deliciosa",
-    commonNames: ["Cây Monstera", "Trầu Bà Lá Xẻ"],
-    difficulty: "Dễ",
-    imageUrl: "https://images.unsplash.com/photo-1614887410788-e158d6efb3be?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200",
-    description: "Monstera Deliciosa là loại cây cảnh nội thất phổ biến với lá xẻ độc đáo. Cây dễ trồng, thích hợp cho người mới bắt đầu và có khả năng thanh lọc không khí tốt.",
-    care: {
-      water: {
-        frequency: "7-10 ngày/lần",
-        amount: "Vừa phải",
-        note: "Tưới khi 2-3cm đất mặt khô. Tránh úng nước."
-      },
-      light: {
-        type: "Ánh sáng gián tiếp",
-        hours: "4-6 giờ/ngày",
-        note: "Tránh ánh sáng trực tiếp mặt trời."
-      },
-      temperature: {
-        min: "18°C",
-        max: "30°C",
-        optimal: "21-25°C"
-      },
-      humidity: {
-        min: "50%",
-        optimal: "60-80%",
-        note: "Phun sương lá 2-3 lần/tuần"
-      },
-      soil: "Đất pha trộn thoát nước tốt (50% đất sân + 30% xơ dừa + 20% perlite)",
-      fertilizer: "Phân NPK 20-20-20 loãng, 1 lần/tháng trong mùa sinh trưởng"
-    },
-    toxicity: {
-      level: "Độc nhẹ",
-      note: "Chứa calcium oxalate, gây kích ứng nếu ăn phải. Để xa tầm với của trẻ em và thú cưng."
-    },
-    commonDiseases: [
-      {
-        name: "Lá vàng",
-        cause: "Tưới nước quá nhiều hoặc thiếu ánh sáng",
-        solution: "Giảm tần suất tưới, di chuyển đến nơi sáng hơn"
-      },
-      {
-        name: "Lá nâu khô",
-        cause: "Độ ẩm thấp hoặc tưới không đủ",
-        solution: "Tăng độ ẩm, kiểm tra lịch tưới nước"
-      },
-      {
-        name: "Rệp sáp",
-        cause: "Môi trường khô, thiếu thông gió",
-        solution: "Lau bằng cồn 70%, tăng độ ẩm không khí"
-      }
-    ],
-    growthStages: [
-      { stage: "Tuần 1-4", description: "Mầm mới, lá nhỏ" },
-      { stage: "Tháng 2-6", description: "Lá bắt đầu xẻ" },
-      { stage: "Tháng 6-12", description: "Phát triển rễ khí" },
-      { stage: "Năm 2+", description: "Lá lớn hoàn toàn xẻ" }
-    ]
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const { plant, loading, error } = usePlant(id);
+  const { categories } = usePlantCategories();
+  const { careGuides, loading: loadingCareGuides } = useCareGuides({
+    plantId: id,
+    limit: 100,
+  });
+  const { diseases, loading: loadingDiseases } = usePlantDiseases({
+    plantId: id,
+    limit: 100,
+  });
+
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="plant-detail-loading min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error || !plant) {
+    return (
+      <div className="plant-detail-not-found min-h-[60vh]">
+        <h2>Không tìm thấy cây</h2>
+        {error && <p className="text-sm text-muted-foreground mb-4">{error}</p>}
+        <Button variant="outline" asChild>
+          <Link to="/browse">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Quay lại danh sách
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const images = Array.isArray(plant.images) ? plant.images.filter(Boolean) : [];
+  const mainImage = images[currentImageIndex] || images[0] || plant.thumbnail;
+  const hasMultipleImages = images.length > 1;
+  const category = categories.find(
+    (item) => String(item._id || item.id) === String(plant.categoryId?._id || plant.categoryId),
+  );
+  const difficulty = DIFFICULTY_LABELS[plant.difficultyLevel] || plant.difficultyLevel;
+
+  const goToPreviousImage = () => {
+    setCurrentImageIndex((index) => (index === 0 ? images.length - 1 : index - 1));
+  };
+
+  const goToNextImage = () => {
+    setCurrentImageIndex((index) => (index === images.length - 1 ? 0 : index + 1));
   };
 
   return (
-    <div className="min-h-screen pb-20">
-      <div className="bg-gradient-to-br from-green-50 via-white to-green-50/30 border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <Button variant="ghost" size="sm" className="mb-4" asChild>
-            <Link to="/browse">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Quay lại
-            </Link>
-          </Button>
-          <div className="grid md:grid-cols-2 gap-8 items-start">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="aspect-square rounded-2xl overflow-hidden border border-border shadow-lg"
-            >
-              <img
-                src={plantData.imageUrl}
-                alt={plantData.name}
+    <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="plant-detail">
+        <div className="plant-detail-header">
+          <div className="plant-detail-header-left">
+            <Button variant="ghost" size="icon" asChild>
+              <Link to="/browse" aria-label="Quay lại trang khám phá">
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+            </Button>
+            <h1 className="text-xl font-semibold">Chi tiết Cây</h1>
+          </div>
+        </div>
+
+        <div className="plant-detail-grid">
+          <div className="plant-detail-image-wrapper">
+            <div className="plant-detail-image">
+              <ImageWithFallback
+                src={mainImage}
+                alt={plant.name}
                 className="w-full h-full object-cover"
+                fallback={
+                  <div className="plant-detail-image-placeholder">
+                    <Sprout className="w-16 h-16 text-muted-foreground/50" />
+                    <span>Không có ảnh</span>
+                  </div>
+                }
               />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="py-4"
-            >
-              <Badge className="mb-4 bg-green-100 text-green-700 border-green-200">
-                {plantData.difficulty}
-              </Badge>
-              <h1 className="text-5xl font-bold mb-3">{plantData.name}</h1>
-              <p className="text-xl text-muted-foreground italic mb-4">
-                {plantData.scientificName}
-              </p>
-              <div className="flex flex-wrap gap-2 mb-6">
-                {plantData.commonNames.map((name) => (
-                  <Badge key={name} variant="secondary">
-                    {name}
+
+              {hasMultipleImages && (
+                <>
+                  <button
+                    type="button"
+                    className="plant-detail-image-nav plant-detail-image-nav-prev"
+                    onClick={goToPreviousImage}
+                    aria-label="Ảnh trước"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    type="button"
+                    className="plant-detail-image-nav plant-detail-image-nav-next"
+                    onClick={goToNextImage}
+                    aria-label="Ảnh tiếp theo"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                  <div className="plant-detail-image-dots">
+                    {images.map((image, index) => (
+                      <button
+                        type="button"
+                        key={`${image}-${index}`}
+                        className={`plant-detail-image-dot ${index === currentImageIndex ? "active" : ""}`}
+                        onClick={() => setCurrentImageIndex(index)}
+                        aria-label={`Xem ảnh ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="plant-detail-info">
+            <h2 className="plant-detail-name">{plant.name}</h2>
+
+            {plant.scientificName && (
+              <p className="plant-detail-scientific-name">{plant.scientificName}</p>
+            )}
+
+            {plant.origin && (
+              <div className="plant-detail-info-row">
+                <Globe className="w-4 h-4 text-muted-foreground" />
+                <span>Nguồn gốc:</span>
+                <span>{plant.origin}</span>
+              </div>
+            )}
+
+            {plant.shortDescription && (
+              <p className="plant-detail-short-desc">{plant.shortDescription}</p>
+            )}
+
+            <Separator />
+
+            {plant.description && (
+              <p className="plant-detail-description">{plant.description}</p>
+            )}
+
+            {difficulty && (
+              <div className="plant-detail-info-row">
+                <span>Độ khó:</span>
+                <span className={`font-medium ${DIFFICULTY_COLORS[plant.difficultyLevel] || DIFFICULTY_COLORS[difficulty] || ""}`}>
+                  {difficulty}
+                </span>
+              </div>
+            )}
+
+            {category?.name && (
+              <div className="plant-detail-info-row">
+                <span>Danh mục:</span>
+                <span>{category.name}</span>
+              </div>
+            )}
+
+            {plant.tags?.length > 0 && (
+              <div className="plant-detail-tags">
+                {plant.tags.map((tag) => (
+                  <Badge key={tag} variant="outline" className="plant-detail-tag">
+                    {tag}
                   </Badge>
                 ))}
               </div>
-              <p className="text-lg text-muted-foreground mb-6">
-                {plantData.description}
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="border border-border">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <Droplets className="w-8 h-8 text-blue-500" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Tưới nước</p>
-                      <p className="font-semibold">{plantData.care.water.frequency}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border border-border">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <Sun className="w-8 h-8 text-yellow-500" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Ánh sáng</p>
-                      <p className="font-semibold">{plantData.care.light.type}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border border-border">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <Thermometer className="w-8 h-8 text-red-500" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Nhiệt độ</p>
-                      <p className="font-semibold">{plantData.care.temperature.optimal}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border border-border">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <Wind className="w-8 h-8 text-cyan-500" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Độ ẩm</p>
-                      <p className="font-semibold">{plantData.care.humidity.optimal}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </motion.div>
+            )}
           </div>
         </div>
-      </div>
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <Tabs defaultValue="care" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="care">
-              <Droplets className="w-4 h-4 mr-2" />
-              Chăm sóc
+
+        <Tabs defaultValue="overview" className="plant-detail-tabs">
+          <TabsList className="plant-detail-tabs-list">
+            <TabsTrigger value="overview">Tổng quan</TabsTrigger>
+            <TabsTrigger value="care-guides">
+              Hướng dẫn chăm sóc ({careGuides.length})
             </TabsTrigger>
             <TabsTrigger value="diseases">
-              <Bug className="w-4 h-4 mr-2" />
-              Bệnh thường gặp
-            </TabsTrigger>
-            <TabsTrigger value="growth">
-              <Sprout className="w-4 h-4 mr-2" />
-              Giai đoạn phát triển
-            </TabsTrigger>
-            <TabsTrigger value="schedule">
-              <Calendar className="w-4 h-4 mr-2" />
-              Lịch chăm sóc
+              Bệnh cây ({diseases.length})
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="care" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Droplets className="w-5 h-5 text-blue-500" />
-                  Tưới nước
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Tần suất</p>
-                    <p className="font-semibold">{plantData.care.water.frequency}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Lượng nước</p>
-                    <p className="font-semibold">{plantData.care.water.amount}</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  💡 {plantData.care.water.note}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sun className="w-5 h-5 text-yellow-500" />
-                  Ánh sáng
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Loại</p>
-                    <p className="font-semibold">{plantData.care.light.type}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Thời lượng</p>
-                    <p className="font-semibold">{plantData.care.light.hours}</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  💡 {plantData.care.light.note}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-primary" />
-                  Đất & Phân bón
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Đất</p>
-                  <p>{plantData.care.soil}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Phân bón</p>
-                  <p>{plantData.care.fertilizer}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-yellow-200 bg-yellow-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-yellow-800">
-                  <AlertTriangle className="w-5 h-5" />
-                  Cảnh báo độc tính
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300 mb-2">
-                  {plantData.toxicity.level}
-                </Badge>
-                <p className="text-sm">{plantData.toxicity.note}</p>
-              </CardContent>
-            </Card>
+
+          <TabsContent value="overview" className="plant-detail-tabs-content">
+            <PlantOverviewTab plant={plant} />
           </TabsContent>
-          <TabsContent value="diseases" className="space-y-4">
-            {plantData.commonDiseases.map((disease, index) => (
-              <Card key={index}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bug className="w-5 h-5 text-red-500" />
-                    {disease.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Nguyên nhân</p>
-                    <p>{disease.cause}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Giải pháp</p>
-                    <p className="text-primary font-medium">{disease.solution}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            <Button className="w-full" variant="outline" asChild>
-              <Link to="/ai-doctor">Chẩn đoán bằng AI</Link>
-            </Button>
+
+          <TabsContent value="care-guides" className="plant-detail-tabs-content">
+            <CareGuideList careGuides={careGuides} loading={loadingCareGuides} />
           </TabsContent>
-          <TabsContent value="growth" className="space-y-4">
-            {plantData.growthStages.map((stage, index) => (
-              <Card key={index}>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Sprout className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold mb-1">{stage.stage}</h4>
-                      <p className="text-muted-foreground">{stage.description}</p>
-                      <Progress value={(index + 1) * 25} className="mt-3" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-          <TabsContent value="schedule">
-            <Card>
-              <CardHeader>
-                <CardTitle>Lịch chăm sóc hàng tuần</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Droplets className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <p className="font-semibold">Tưới nước</p>
-                      <p className="text-sm text-muted-foreground">Thứ 2, Thứ 5</p>
-                    </div>
-                  </div>
-                  <Badge>2 lần/tuần</Badge>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Sprout className="w-5 h-5 text-green-600" />
-                    <div>
-                      <p className="font-semibold">Phun sương</p>
-                      <p className="text-sm text-muted-foreground">Thứ 2, Thứ 4, Thứ 6</p>
-                    </div>
-                  </div>
-                  <Badge>3 lần/tuần</Badge>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-purple-600" />
-                    <div>
-                      <p className="font-semibold">Bón phân</p>
-                      <p className="text-sm text-muted-foreground">Cuối mỗi tháng</p>
-                    </div>
-                  </div>
-                  <Badge>1 lần/tháng</Badge>
-                </div>
-                <Button className="w-full mt-4">Đặt nhắc nhở trên lịch</Button>
-              </CardContent>
-            </Card>
+
+          <TabsContent value="diseases" className="plant-detail-tabs-content">
+            <DiseaseList diseases={diseases} loading={loadingDiseases} />
           </TabsContent>
         </Tabs>
       </div>
@@ -355,6 +237,4 @@ function PlantDetail() {
   );
 }
 
-export {
-  PlantDetail
-};
+export { PlantDetail };

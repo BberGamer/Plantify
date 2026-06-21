@@ -7,7 +7,7 @@ import {
   deletePlantDisease
 } from "../api";
 
-export function usePlantDiseases({ page = 1, limit = 10, search, severity } = {}) {
+export function usePlantDiseases({ page = 1, limit = 10, search, severity, plantId } = {}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
@@ -19,6 +19,7 @@ export function usePlantDiseases({ page = 1, limit = 10, search, severity } = {}
       const params = { page, limit };
       if (search) params.search = search;
       if (severity && severity !== "all") params.severity = severity;
+      if (plantId) params.plantId = plantId;
       const res = await getPlantDiseases(params);
       const result = res.result || res.data || res;
       setData(Array.isArray(result) ? result : result.diseases || []);
@@ -29,7 +30,7 @@ export function usePlantDiseases({ page = 1, limit = 10, search, severity } = {}
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, severity]);
+  }, [page, limit, search, severity, plantId]);
 
   useEffect(() => {
     fetch();

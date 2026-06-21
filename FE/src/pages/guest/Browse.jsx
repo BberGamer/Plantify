@@ -74,7 +74,7 @@ function Browse() {
 
   // Map plant data cho PlantCard
   const plantCards = plants.map((plant) => ({
-    id: plant.id || plant._id,
+    id: plant._id || plant.id,
     name: plant.name,
     scientificName: plant.scientificName,
     difficulty: difficultyLabel[plant.difficultyLevel] || plant.difficultyLevel,
@@ -247,7 +247,7 @@ function Browse() {
             </div>
           ) : plantCards.length > 0 ? (
             plantCards.map((plant) => (
-              <Link key={plant.id} to={`/plant/${plant.scientificName}`}>
+              <Link key={plant.id} to={`/plant/${plant.id}`}>
                 <PlantCard {...plant} />
               </Link>
             ))

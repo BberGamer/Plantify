@@ -68,7 +68,7 @@ function Home() {
   const levelLabel = { low: "Ít", medium: "Trung bình", high: "Nhiều" };
 
   const plantCards = apiPlants.map((plant) => ({
-    id: plant.id || plant._id || plant.scientificName,
+    id: plant._id || plant.id,
     name: plant.name,
     scientificName: plant.scientificName,
     difficulty: difficultyLabel[plant.difficultyLevel] || plant.difficultyLevel,
@@ -251,7 +251,7 @@ function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Link to={`/plant/${plant.scientificName}`}>
+                <Link to={`/plant/${plant.id}`}>
                   <PlantCard {...plant} />
                 </Link>
               </motion.div>
