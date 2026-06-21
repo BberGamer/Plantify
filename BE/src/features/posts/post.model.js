@@ -79,4 +79,12 @@ postSchema.virtual('comments', {
   options: { sort: { createdAt: -1 } },
 });
 
+postSchema.virtual('reports', {
+  ref: 'Report',
+  localField: '_id',
+  foreignField: 'postId',
+  justOne: false,
+  options: { sort: { createdAt: -1 } },
+});
+
 module.exports = mongoose.model('Post', postSchema);
