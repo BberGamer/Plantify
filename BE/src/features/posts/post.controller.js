@@ -10,7 +10,7 @@ function buildPostPayload(req) {
   const uploadedThumbnail = req.files?.thumbnail?.[0];
   const uploadedImages = req.files?.images || [];
   const imageUrls = uploadedImages.map((file) => getFileDataUrl(file));
-  const thumbnailUrl = uploadedThumbnail ? getFileDataUrl(uploadedThumbnail) : '';
+  const thumbnailUrl = uploadedThumbnail ? getFileDataUrl(uploadedThumbnail) : imageUrls[0] || '';
 
   return {
     ...req.body,

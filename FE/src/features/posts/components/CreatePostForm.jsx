@@ -36,7 +36,7 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
     images: `${formId}-post-images`,
     content: `${formId}-post-content`
   };
-  const existingImages = useMemo(() => {
+  const initialExistingImages = useMemo(() => {
     if (!initialPost) {
       return [];
     }
@@ -55,13 +55,15 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
     [initialPost]
   );
   const [formData, setFormData] = useState(initialValues);
+  const [existingImages, setExistingImages] = useState(initialExistingImages);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
 
   useEffect(() => {
     setFormData(initialValues);
+    setExistingImages(initialExistingImages);
     setImageFiles([]);
-  }, [initialValues]);
+  }, [initialExistingImages, initialValues]);
 
   useEffect(() => {
     const previews = imageFiles.map((file) => ({
@@ -89,6 +91,10 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
     setImageFiles([]);
   };
 
+  const handleRemoveExistingImage = (index) => {
+    setExistingImages((current) => current.filter((_, currentIndex) => currentIndex !== index));
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -102,7 +108,8 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
         payload.append("images", file);
       });
     } else if (initialPost) {
-      payload.append("images", JSON.stringify(initialPost.images || []));
+      payload.append("images", JSON.stringify(existingImages));
+      payload.append("thumbnail", existingImages[0] || "");
     }
 
     onSubmit(payload);
@@ -180,6 +187,8 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
             images={imagePreviews.length > 0 ? imagePreviews.map((image) => image.url) : existingImages}
             alt="Ảnh bài viết"
             className="aspect-video"
+            onRemove={imagePreviews.length > 0 ? undefined : handleRemoveExistingImage}
+            removeLabel="Xóa ảnh hiện tại"
           />
         </div>
       )}
