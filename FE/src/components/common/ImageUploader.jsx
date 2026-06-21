@@ -1,12 +1,12 @@
 // ImageUploader.jsx - Component dùng chung để quản lý danh sách URL hình ảnh
 import { useState } from "react";
-import { Plus, X, GripVertical, ImageIcon } from "lucide-react";
+import { Plus, X, ImageIcon } from "lucide-react";
+import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function ImageUploader({ images = [], onChange }) {
   const [newUrl, setNewUrl] = useState("");
-  const [draggedIndex, setDraggedIndex] = useState(null);
 
   const addImage = () => {
     const trimmed = newUrl.trim();
@@ -27,75 +27,16 @@ export function ImageUploader({ images = [], onChange }) {
     }
   };
 
-  // Drag and drop reordering
-  const handleDragStart = (index) => {
-    setDraggedIndex(index);
-  };
-
-  const handleDragOver = (e, index) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-
-    const newImages = [...images];
-    const draggedItem = newImages[draggedIndex];
-    newImages.splice(draggedIndex, 1);
-    newImages.splice(index, 0, draggedItem);
-    onChange(newImages);
-    setDraggedIndex(index);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-  };
-
   return (
     <div className="space-y-3">
-      {/* Grid thumbnails */}
       {images.length > 0 && (
-        <div className="grid grid-cols-4 gap-3">
-          {images.map((url, index) => (
-            <div
-              key={index}
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragEnd={handleDragEnd}
-              className={`relative group aspect-square rounded-lg overflow-hidden border-2 ${
-                draggedIndex === index ? "border-primary opacity-50" : "border-transparent"
-              } cursor-grab active:cursor-grabbing`}
-            >
-              <img
-                src={url}
-                alt={`Image ${index + 1}`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%23999' font-size='12'%3EError%3C/text%3E%3C/svg%3E";
-                }}
-              />
-
-              {/* Drag handle */}
-              <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="bg-black/50 rounded p-1">
-                  <GripVertical className="w-3 h-3 text-white" />
-                </div>
-              </div>
-
-              {/* Delete button */}
-              <button
-                type="button"
-                onClick={() => removeImage(index)}
-                className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/80"
-              >
-                <X className="w-3 h-3" />
-              </button>
-
-              {/* Index badge */}
-              <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                {index + 1}
-              </div>
-            </div>
-          ))}
-        </div>
+        <ImageCarousel
+          images={images}
+          alt="Anh"
+          className="aspect-video"
+          onRemove={removeImage}
+          removeLabel="Xoa anh hien tai"
+        />
       )}
 
       {/* Add image input */}

@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ArrowLeft, Loader2, Package, Pencil, Trash2 } from "lucide-react";
+import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,6 @@ function ProductDetail() {
   const { update, loading: updating } = useUpdateProduct();
   const { remove, loading: deleting } = useDeleteProduct();
   const [editingProduct, setEditingProduct] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(0);
 
   const imageList = useMemo(() => {
     if (!product) return [];
@@ -111,28 +111,13 @@ function ProductDetail() {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Card className="overflow-hidden border-green-200/60 bg-white/95 shadow-sm">
-          <CardContent className="space-y-4 p-6">
-            <div className="aspect-square overflow-hidden rounded-2xl bg-muted">
-              <img
-                src={imageList[selectedImage]}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
-            </div>
-            {imageList.length > 1 && (
-              <div className="grid grid-cols-4 gap-3">
-                {imageList.map((image, index) => (
-                  <button
-                    key={`${image}-${index}`}
-                    type="button"
-                    onClick={() => setSelectedImage(index)}
-                    className={`overflow-hidden rounded-xl border-2 ${selectedImage === index ? "border-primary" : "border-transparent"}`}
-                  >
-                    <img src={image} alt={`${product.name}-${index + 1}`} className="aspect-square h-full w-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
+          <CardContent className="p-6">
+            <ImageCarousel
+              images={imageList}
+              alt={product.name}
+              className="aspect-square rounded-2xl bg-muted"
+              imageClassName="object-cover"
+            />
           </CardContent>
         </Card>
 

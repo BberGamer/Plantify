@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ImageWithFallback } from "@/components/common/ImageWithFallback";
+import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { useAuth } from "@/features/auth/hooks";
 import { useComments } from "@/features/comments/hooks";
 
@@ -342,31 +342,8 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
           </div>
 
           {images.length > 0 && (
-            <section
-              className={`grid gap-3 bg-gradient-to-br from-green-50/60 to-white p-3 sm:p-4 ${
-                images.length > 1 ? "md:grid-cols-[1.5fr_1fr]" : ""
-              }`}
-            >
-              <div className="aspect-video overflow-hidden rounded-lg border border-green-100 bg-white">
-                <ImageWithFallback
-                  src={images[0]}
-                  alt={post.title}
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              {images.length > 1 && (
-                <div className="grid grid-cols-2 gap-3">
-                {images.slice(1, 5).map((image, index) => (
-                  <div key={image} className="aspect-video overflow-hidden rounded-lg border border-green-100 bg-white">
-                    <ImageWithFallback
-                      src={image}
-                      alt={`${post.title} ${index + 2}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ))}
-                </div>
-              )}
+            <section className="bg-gradient-to-br from-green-50/60 to-white p-3 sm:p-4">
+              <ImageCarousel images={images} alt={post.title} className="aspect-video" />
             </section>
           )}
 

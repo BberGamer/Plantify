@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ImageCarousel } from "@/components/common/ImageCarousel";
 import {
   Star,
   ShoppingCart,
@@ -30,7 +31,6 @@ function ProductDetail() {
   const [productKey, setProductKey] = useState(0);
   const { product, loading, error } = useProduct(id, productKey);
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
 
   // Refetch product sau khi user gui danh gia de cap nhat ratingAverage
   const handleRatingUpdate = useCallback(() => {
@@ -186,32 +186,14 @@ function ProductDetail() {
           >
             <Card className="overflow-hidden mb-4">
               <CardContent className="p-0">
-                <div className="aspect-square overflow-hidden">
-                  <img
-                    src={images[selectedImage]}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <ImageCarousel
+                  images={images}
+                  alt={product.name}
+                  className="aspect-square rounded-none border-0"
+                  imageClassName="object-cover"
+                />
               </CardContent>
             </Card>
-            {images.length > 1 && (
-              <div className="grid grid-cols-4 gap-3">
-                {images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? "border-primary" : "border-transparent hover:border-primary/50"}`}
-                  >
-                    <img
-                      src={image}
-                      alt={`${product.name} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
           </motion.div>
 
           {/* Product Info */}

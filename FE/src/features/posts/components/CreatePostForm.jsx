@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { Loader2, Save, Upload, X } from "lucide-react";
-import { ImageWithFallback } from "@/components/common/ImageWithFallback";
+import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -179,22 +179,11 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
       {(imagePreviews.length > 0 || existingImages.length > 0) && (
         <div className="space-y-2">
           <Label>{imagePreviews.length > 0 ? "Preview ảnh đã chọn" : "Ảnh hiện tại"}</Label>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {(imagePreviews.length > 0 ? imagePreviews : existingImages.map((url) => ({ name: url, url }))).map(
-              (image) => (
-                <div key={image.url} className="overflow-hidden rounded-md border bg-muted">
-                  <div className="aspect-video">
-                    <ImageWithFallback
-                      src={image.url}
-                      alt={image.name}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <p className="truncate px-3 py-2 text-xs text-muted-foreground">{image.name}</p>
-                </div>
-              )
-            )}
-          </div>
+          <ImageCarousel
+            images={imagePreviews.length > 0 ? imagePreviews.map((image) => image.url) : existingImages}
+            alt="Anh bai viet"
+            className="aspect-video"
+          />
         </div>
       )}
 
