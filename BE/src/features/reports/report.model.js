@@ -1,7 +1,7 @@
 // report.model.js - Mongoose schema cho bao cao bai viet Plantify
 const mongoose = require('mongoose');
 
-const REPORT_REASONS = ['spam', 'harassment', 'inappropriate', 'misinformation', 'other'];
+const REPORT_REASONS = ['spam', 'sensitive', 'copyright', 'inappropriate', 'harassment', 'misinformation', 'other'];
 const REPORT_STATUSES = ['pending', 'reviewed', 'resolved', 'rejected'];
 
 const reportSchema = new mongoose.Schema(

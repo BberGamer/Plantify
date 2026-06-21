@@ -4,7 +4,23 @@ import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+
+const POST_CATEGORIES = [
+  "Hướng dẫn",
+  "Bệnh & Điều trị",
+  "Phòng ngừa",
+  "Chăm sóc",
+  "Thiết kế",
+  "Kĩ thuật",
+];
 
 const emptyForm = {
   title: "",
@@ -20,7 +36,7 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
     images: `${formId}-post-images`,
     content: `${formId}-post-content`
   };
-  const existingImages = useMemo(() => {
+  const initialExistingImages = useMemo(() => {
     if (!initialPost) {
       return [];
     }
@@ -39,13 +55,15 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
     [initialPost]
   );
   const [formData, setFormData] = useState(initialValues);
+  const [existingImages, setExistingImages] = useState(initialExistingImages);
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
 
   useEffect(() => {
     setFormData(initialValues);
+    setExistingImages(initialExistingImages);
     setImageFiles([]);
-  }, [initialValues]);
+  }, [initialExistingImages, initialValues]);
 
   useEffect(() => {
     const previews = imageFiles.map((file) => ({
@@ -73,6 +91,10 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
     setImageFiles([]);
   };
 
+  const handleRemoveExistingImage = (index) => {
+    setExistingImages((current) => current.filter((_, currentIndex) => currentIndex !== index));
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -86,7 +108,8 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
         payload.append("images", file);
       });
     } else if (initialPost) {
-      payload.append("images", JSON.stringify(initialPost.images || []));
+      payload.append("images", JSON.stringify(existingImages));
+      payload.append("thumbnail", existingImages[0] || "");
     }
 
     onSubmit(payload);
@@ -108,13 +131,21 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
         </div>
         <div className="space-y-2">
           <Label htmlFor={fieldIds.category}>Danh mục</Label>
-          <Input
-            id={fieldIds.category}
-            name="category"
+          <Select
             value={formData.category}
-            onChange={handleChange}
-            placeholder="Ví dụ: Chăm sóc cây"
-          />
+            onValueChange={(value) => setFormData((current) => ({ ...current, category: value }))}
+          >
+            <SelectTrigger id={fieldIds.category}>
+              <SelectValue placeholder="Chọn danh mục" />
+            </SelectTrigger>
+            <SelectContent>
+              {POST_CATEGORIES.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -156,6 +187,8 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
             images={imagePreviews.length > 0 ? imagePreviews.map((image) => image.url) : existingImages}
             alt="Ảnh bài viết"
             className="aspect-video"
+            onRemove={imagePreviews.length > 0 ? undefined : handleRemoveExistingImage}
+            removeLabel="Xóa ảnh hiện tại"
           />
         </div>
       )}

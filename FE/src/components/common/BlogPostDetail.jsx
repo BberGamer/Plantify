@@ -6,6 +6,8 @@ import { motion } from "motion/react";
 import {
   ArrowLeft,
   Calendar,
+  Flag,
+  Loader2,
   MessageCircle,
   Send,
   Star,
@@ -16,10 +18,29 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { useAuth } from "@/features/auth/hooks";
 import { useComments } from "@/features/comments/hooks";
+import { useCreateReport } from "@/features/reports/hooks";
+import { toast } from "sonner";
+
+const REPORT_REASONS = [
+  { value: "spam", label: "Bài viết là spam" },
+  { value: "sensitive", label: "Nội dung nhạy cảm" },
+  { value: "copyright", label: "Vi phạm bản quyền" },
+  { value: "inappropriate", label: "Nội dung không phù hợp" },
+];
 
 /**
  * Format ngay gio theo ngon ngu hien tai cua UI.
@@ -219,6 +240,9 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
   const [rating, setRating] = useState(5);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState(REPORT_REASONS[0].value);
+  const { createReport, loading: reporting } = useCreateReport();
 
   const images = useMemo(() => {
     const gallery = [post?.thumbnail, ...(post?.images || [])].filter(Boolean);
@@ -235,7 +259,9 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
   useEffect(() => {
     function handleKeyDown(event) {
       if (event.key === "Escape") {
-        onClose?.();
+        if (!reportDialogOpen) {
+          onClose?.();
+        }
       }
     }
 
@@ -244,7 +270,7 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]);
+  }, [onClose, reportDialogOpen]);
 
   if (!post) {
     return null;
@@ -292,6 +318,33 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
     }
   }
 
+  function handleOpenReportDialog() {
+    if (!isAuthenticated || !user) {
+      toast.error("Vui lòng đăng nhập để báo cáo bài viết");
+      return;
+    }
+
+    setReportReason(REPORT_REASONS[0].value);
+    setReportDialogOpen(true);
+  }
+
+  async function handleSubmitReport(event) {
+    event.preventDefault();
+
+    if (!postId) {
+      toast.error("Không tìm thấy bài viết để báo cáo");
+      return;
+    }
+
+    try {
+      await createReport(postId, reportReason);
+      toast.success("Đã gửi báo cáo bài viết");
+      setReportDialogOpen(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || "Không thể gửi báo cáo");
+    }
+  }
+
   return (
     <motion.div
       className="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-3 py-4 backdrop-blur-sm sm:px-6 sm:py-6"
@@ -329,6 +382,16 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
               </Badge>
               <span className="truncate text-sm text-muted-foreground">{formatDate(post.createdAt)}</span>
             </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="shrink-0 rounded-full hover:bg-amber-50 hover:text-amber-700"
+              onClick={handleOpenReportDialog}
+              aria-label="Báo cáo bài viết"
+            >
+              <Flag className="h-5 w-5" />
+            </Button>
             <Button
               type="button"
               variant="ghost"
@@ -478,6 +541,42 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
           </CardContent>
         </Card>
       </motion.div>
+
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <form onSubmit={handleSubmitReport} className="space-y-5">
+            <DialogHeader>
+              <DialogTitle>Báo cáo bài viết</DialogTitle>
+              <DialogDescription>
+                Chọn lý do phù hợp để Plantify xem xét bài viết này.
+              </DialogDescription>
+            </DialogHeader>
+
+            <RadioGroup value={reportReason} onValueChange={setReportReason} className="gap-3">
+              {REPORT_REASONS.map((reason) => (
+                <Label
+                  key={reason.value}
+                  htmlFor={`report-${reason.value}`}
+                  className="flex cursor-pointer items-center gap-3 rounded-md border border-green-100 p-3 text-sm hover:bg-green-50"
+                >
+                  <RadioGroupItem id={`report-${reason.value}`} value={reason.value} />
+                  <span>{reason.label}</span>
+                </Label>
+              ))}
+            </RadioGroup>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setReportDialogOpen(false)} disabled={reporting}>
+                Hủy
+              </Button>
+              <Button type="submit" disabled={reporting || !reportReason}>
+                {reporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Flag className="h-4 w-4" />}
+                Gửi báo cáo
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

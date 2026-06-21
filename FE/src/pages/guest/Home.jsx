@@ -9,7 +9,6 @@ import BlogPostDetail, {
   BlogPostDetailSkeleton,
 } from "@/components/common/BlogPostDetail";
 import { PlantCard } from "@/components/common/PlantCard";
-import { DashboardCard } from "@/components/common/DashboardCard";
 import { usePlants } from "@/features/plants/hooks";
 import { usePostDetail, usePosts } from "@/features/posts/hooks";
 import { Button } from "@/components/ui/button";
@@ -19,14 +18,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Search,
   Sparkles,
-  TrendingUp,
   Bug,
   Calendar,
   Upload,
   Leaf,
-  BarChart3,
-  BookOpen,
-  Network,
   Store,
   ShoppingCart,
   Package
@@ -355,46 +350,6 @@ function Home() {
         </div>
       </section>
       <section className="py-20 px-6 max-w-7xl mx-auto">
-        <div className="mb-10 flex items-center justify-between">
-          <div>
-            <h2 className="text-4xl font-bold mb-2">Phân tích & Thống kê</h2>
-            <p className="text-muted-foreground">Xu hướng tìm kiếm và chăm sóc cây cảnh</p>
-          </div>
-          <Button variant="outline" size="lg" asChild>
-            <Link to="/dashboard">Xem chi tiết</Link>
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <DashboardCard
-            title="Cây được tìm nhiều nhất"
-            value="Monstera"
-            description="Tuần này"
-            icon={TrendingUp}
-            trend={{ value: 23, isPositive: true }}
-          />
-          <DashboardCard
-            title="Bệnh phổ biến"
-            value="Lá vàng"
-            description="127 trường hợp"
-            icon={Bug}
-            trend={{ value: 12, isPositive: false }}
-          />
-          <DashboardCard
-            title="Người dùng hoạt động"
-            value="12,450"
-            description="Tháng này"
-            icon={BarChart3}
-            trend={{ value: 18, isPositive: true }}
-          />
-          <DashboardCard
-            title="Bài viết mới"
-            value="48"
-            description="Tuần này"
-            icon={BookOpen}
-          />
-        </div>
-      </section>
-      <section className="py-20 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
             <Store className="w-4 h-4" />
@@ -443,48 +398,6 @@ function Home() {
               Khám phá gian hàng
             </Link>
           </Button>
-        </div>
-      </section>
-      <section className="py-20 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1604762524889-3e2fcc145683?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1920"
-            alt="Potted plant background"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-green-50/90 to-white/95" />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-green-100/20 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(45,106,79,0.05),transparent_70%)]" />
-        <div className="max-w-7xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">
-            <Network className="w-4 h-4" />
-            <span className="text-sm font-medium">Knowledge Graph</span>
-          </div>
-          <h2 className="text-4xl font-bold mb-4">Khám phá mối liên hệ giữa các yếu tố</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-10">
-            Sử dụng Neo4j để hiểu mối quan hệ giữa cây, bệnh, đất, nước, và ánh sáng
-          </p>
-          <Card className="max-w-4xl mx-auto bg-white/80 backdrop-blur-sm border-2 border-primary/10">
-            <CardContent className="p-12">
-              <div className="aspect-video rounded-xl bg-gradient-to-br from-primary/10 to-green-600/10 flex items-center justify-center">
-                <div className="text-center">
-                  <Network className="w-20 h-20 text-primary mx-auto mb-4" />
-                  <p className="text-muted-foreground">Biểu đồ kiến thức tương tác</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Cây → Bệnh → Đất → Nước → Ánh sáng
-                  </p>
-                </div>
-              </div>
-              <Button
-                size="lg"
-                className="mt-6 bg-gradient-to-r from-primary to-green-600"
-                asChild
-              >
-                <Link to="/knowledge-graph">Khám phá đồ thị</Link>
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </section>
       <section className="py-20 px-6 max-w-7xl mx-auto">
