@@ -25,7 +25,8 @@ import {
   XAxis,
   YAxis,
   BarChart,
-  Bar
+  Bar,
+  LabelList
 } from "recharts";
 
 const revenueData = [
@@ -80,10 +81,18 @@ function Dashboard() {
       return accumulator;
     }, {});
 
-    return categories.map((category) => ({
-      name: category.name,
-      total: productCountMap[category.name] || 0
-    }));
+    return categories
+      .map((category) => ({
+        name: category.name,
+        total: productCountMap[category.name] || 0
+      }))
+      .sort((firstCategory, secondCategory) => {
+        if (secondCategory.total !== firstCategory.total) {
+          return secondCategory.total - firstCategory.total;
+        }
+
+        return firstCategory.name.localeCompare(secondCategory.name, "vi");
+      });
   }, [categories, products]);
 
   const isLoading = productsLoading || categoriesLoading;
@@ -92,36 +101,27 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <section className="rounded-3xl border border-green-100 bg-gradient-to-r from-green-50 via-background to-emerald-50 p-6 shadow-sm sm:p-8">
-        <Badge className="mb-3 w-fit border-transparent bg-green-100 text-green-700 hover:bg-green-100">
-          Business Manager Dashboard
-        </Badge>
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Quản lý doanh thu, sản phẩm và loại sản phẩm
         </h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
-          Dashboard đang lấy dữ liệu thật cho sản phẩm và loại sản phẩm từ hệ thống hiện tại.
-        </p>
       </section>
 
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         <DashboardCard
           title="Doanh thu tổng quan"
           value="238 triệu"
-          description="Dữ liệu mô phỏng tháng hiện tại"
           icon={Wallet}
           trend={{ value: 12, isPositive: true }}
         />
         <DashboardCard
           title="Sản phẩm đang quản lý"
           value={productsLoading ? "..." : total.toString()}
-          description={productsError ? productsError : "Dữ liệu thật từ hệ thống"}
           icon={Package}
           trend={{ value: 8, isPositive: true }}
         />
         <DashboardCard
           title="Loại sản phẩm"
           value={categoriesLoading ? "..." : categories.length.toString()}
-          description={categoriesError ? categoriesError : "Dữ liệu thật từ hệ thống"}
           icon={Tags}
           trend={{ value: 0, isPositive: true }}
         />
@@ -166,18 +166,20 @@ function Dashboard() {
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Chức năng theo dõi doanh thu thực tế đang được phát triển.
-            </p>
           </CardContent>
         </Card>
 
         <Card className="overflow-hidden xl:col-span-2">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FolderTree className="h-5 w-5 text-primary" />
-              Loại sản phẩm
-            </CardTitle>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <FolderTree className="h-5 w-5 text-primary" />
+                Loại sản phẩm
+              </CardTitle>
+              <Badge variant="outline" className="w-fit border-green-200 bg-green-50 text-green-700">
+                {categories.length} danh mục
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -198,12 +200,36 @@ function Dashboard() {
                 }}
                 className="h-80"
               >
-                <BarChart data={productCategoryData} margin={{ top: 8, right: 12, left: -12, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" interval={0} tickMargin={8} />
-                  <YAxis allowDecimals={false} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="total" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} maxBarSize={56} />
+                <BarChart
+                  data={productCategoryData}
+                  layout="vertical"
+                  margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
+                  barCategoryGap={14}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} tickMargin={8} axisLine={false} tickLine={false} />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={110}
+                    tickMargin={10}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        labelFormatter={(_, payload) => payload?.[0]?.payload?.name || "Loại sản phẩm"}
+                      />
+                    }
+                  />
+                  <Bar dataKey="total" fill="var(--color-total)" radius={[0, 10, 10, 0]} maxBarSize={34}>
+                    <LabelList
+                      dataKey="total"
+                      position="right"
+                      className="fill-foreground text-xs font-medium"
+                    />
+                  </Bar>
                 </BarChart>
               </ChartContainer>
             )}
@@ -235,7 +261,6 @@ function Dashboard() {
                   >
                     <div>
                       <p className="font-semibold text-foreground">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{item.categoryId?.name || "Chưa phân loại"}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline">{Number(item.price || 0).toLocaleString("vi-VN")}đ</Badge>

@@ -104,15 +104,9 @@ function ProductDetail() {
       </div>
 
       <section className="rounded-3xl border border-green-100 bg-gradient-to-r from-green-50 via-background to-emerald-50 p-6 shadow-sm sm:p-8">
-        <Badge className="mb-3 w-fit border-transparent bg-green-100 text-green-700 hover:bg-green-100">
-          Product Detail
-        </Badge>
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           {product.name}
         </h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
-          {product.description || "Chưa có mô tả sản phẩm."}
-        </p>
       </section>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">

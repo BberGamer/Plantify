@@ -57,18 +57,10 @@ function ManageCategories() {
     <div className="mx-auto max-w-7xl space-y-6">
       <section className="rounded-3xl border border-green-100 bg-gradient-to-r from-green-50 via-background to-emerald-50 p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-3">
-            <Badge className="w-fit border-transparent bg-green-100 text-green-700 hover:bg-green-100">
-              Product Category Management
-            </Badge>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Quản lý loại sản phẩm
-              </h1>
-              <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
-                Business manager có thể thêm, sửa và xóa danh mục sản phẩm tại đây.
-              </p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              Quản lý loại sản phẩm
+            </h1>
           </div>
           <CategoryForm onSubmit={handleCreate} loading={creating} />
         </div>
@@ -95,9 +87,6 @@ function ManageCategories() {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <CardTitle className="text-xl text-foreground">Danh sách loại sản phẩm</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Danh mục được dùng để phân loại sản phẩm trong hệ thống.
-              </p>
             </div>
             <Badge className="border-transparent bg-primary/10 text-primary hover:bg-primary/10">
               {loading ? "Đang tải..." : `${categories.length} danh mục`}
@@ -132,7 +121,6 @@ function ManageCategories() {
                     </div>
                     <div>
                       <p className="font-semibold text-foreground">{category.name}</p>
-                      <p className="text-sm text-muted-foreground">Danh mục #{index + 1}</p>
                     </div>
                   </div>
 

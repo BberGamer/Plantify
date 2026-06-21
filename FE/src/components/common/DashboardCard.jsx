@@ -10,20 +10,7 @@ function DashboardCard({ title, value, description, icon: Icon, trend }) {
         <Icon className="w-5 h-5 text-primary" />
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-semibold mb-1">{value}</div>
-        {description && (
-          <p className="text-xs text-muted-foreground">{description}</p>
-        )}
-        {trend && (
-          <div
-            className={`text-xs mt-2 ${
-              trend.isPositive ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {trend.isPositive ? "↑" : "↓"} {Math.abs(trend.value)}% so với tháng
-            trước
-          </div>
-        )}
+        <div className="text-3xl font-semibold">{value}</div>
       </CardContent>
     </Card>
   );
