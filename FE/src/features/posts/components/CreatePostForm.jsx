@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Loader2, Save, Upload, X } from "lucide-react";
 import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,14 @@ function splitCommaText(value) {
 }
 
 function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmit }) {
+  const formId = useId();
+  const fieldIds = {
+    title: `${formId}-post-title`,
+    category: `${formId}-post-category`,
+    images: `${formId}-post-images`,
+    tags: `${formId}-post-tags`,
+    content: `${formId}-post-content`
+  };
   const existingImages = useMemo(() => {
     if (!initialPost) {
       return [];
@@ -105,9 +113,9 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="post-title">Tiêu đề</Label>
+          <Label htmlFor={fieldIds.title}>Tiêu đề</Label>
           <Input
-            id="post-title"
+            id={fieldIds.title}
             name="title"
             value={formData.title}
             onChange={handleChange}
@@ -116,9 +124,9 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="post-category">Danh mục</Label>
+          <Label htmlFor={fieldIds.category}>Danh mục</Label>
           <Input
-            id="post-category"
+            id={fieldIds.category}
             name="category"
             value={formData.category}
             onChange={handleChange}
@@ -129,10 +137,10 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="post-images">Ảnh bài viết</Label>
+          <Label htmlFor={fieldIds.images}>Ảnh bài viết</Label>
           <div className="rounded-md border border-dashed border-border bg-muted/30 p-4">
             <Input
-              id="post-images"
+              id={fieldIds.images}
               type="file"
               accept="image/*"
               multiple
@@ -141,7 +149,7 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
             />
             <div className="flex flex-wrap items-center gap-3">
               <Button type="button" variant="outline" asChild>
-                <label htmlFor="post-images" className="cursor-pointer">
+                <label htmlFor={fieldIds.images} className="cursor-pointer">
                   <Upload className="h-4 w-4" />
                   Chọn ảnh
                 </label>
@@ -159,9 +167,9 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="post-tags">Tags</Label>
+          <Label htmlFor={fieldIds.tags}>Tags</Label>
           <Input
-            id="post-tags"
+            id={fieldIds.tags}
             name="tagsText"
             value={formData.tagsText}
             onChange={handleChange}
@@ -193,9 +201,9 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="post-content">Nội dung</Label>
+        <Label htmlFor={fieldIds.content}>Nội dung</Label>
         <Textarea
-          id="post-content"
+          id={fieldIds.content}
           name="content"
           value={formData.content}
           onChange={handleChange}
