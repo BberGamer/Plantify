@@ -28,12 +28,6 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 
-const quickTags = [
-  { value: "easy-care", label: "Dễ chăm" },
-  { value: "indoor", label: "Trong nhà" },
-  { value: "air-purifying", label: "Lọc không khí" },
-  { value: "beginner-friendly", label: "Người mới" },
-];
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -112,24 +106,7 @@ function Home() {
 
   return (
     <div className="min-h-screen">
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1604762524889-3e2fcc145683?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1920"
-            alt="Potted plant background"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-green-50/90 to-white/95" />
-        </div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(45,106,79,0.08),transparent_60%)] z-0" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(82,183,136,0.08),transparent_60%)] z-0" />
-        <div
-          className="absolute inset-0 z-0 opacity-30"
-          style={{
-            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(45, 106, 79, 0.15) 1px, transparent 0)`,
-            backgroundSize: "32px 32px"
-          }}
-        />
+      <section className="relative overflow-hidden">     
         <motion.div
           className="absolute top-20 left-10 w-32 h-32 rounded-full bg-green-200/20 blur-2xl"
           animate={{
@@ -198,19 +175,6 @@ function Home() {
                   </Button>
                 </div>
               </form>
-              {/* === Quick search tags === */}
-              <div className="flex flex-wrap gap-2 justify-center mt-6">
-                {quickTags.map((item) => (
-                  <Badge
-                    key={item.value}
-                    variant="secondary"
-                    className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors"
-                    onClick={() => navigate(`/browse?tag=${encodeURIComponent(item.value)}`)}
-                  >
-                    {item.label}
-                  </Badge>
-                ))}
-              </div>
             </div>
           </motion.div>
         </div>

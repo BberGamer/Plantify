@@ -119,13 +119,6 @@ function Profile() {
   const navigate = useNavigate();
   const { favorites, loading: favLoading, refetch: refetchFavorites } = useMyFavorites();
 
-  // Dữ liệu mock đơn hàng (chờ API thật)
-  const mockOrders = [
-    { id: "ORD-001", date: "2026-05-15", status: "Đã giao", total: "450,000đ", items: 2 },
-    { id: "ORD-002", date: "2026-05-10", status: "Đang vận chuyển", total: "280,000đ", items: 1 },
-    { id: "ORD-003", date: "2026-05-05", status: "Đã giao", total: "650,000đ", items: 3 },
-  ];
-
   const handleUnfavorite = async (plantId, e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -393,33 +386,12 @@ function Profile() {
           {/* === Tab: Đơn hàng (chỉ customer) === */}
           {user?.role === "customer" && (
             <TabsContent value="orders" className="space-y-4">
-              {mockOrders.map((order, index) => (
-                <motion.div key={order.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
-                  <Card className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="profile-order-row">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="font-mono font-semibold">{order.id}</span>
-                            <Badge variant={order.status === "Đã giao" ? "default" : "secondary"}>{order.status}</Badge>
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />{order.date}</span>
-                            <span className="flex items-center gap-1"><Package className="w-4 h-4" />{order.items} sản phẩm</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <p className="text-sm text-muted-foreground">Tổng tiền</p>
-                            <p className="text-xl font-bold text-primary">{order.total}</p>
-                          </div>
-                          <Button variant="outline">Xem chi tiết</Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+              <EmptyState
+                icon={Package}
+                title="Chưa có đơn hàng"
+                description="Bạn chưa có đơn hàng nào. Hãy khám phá sản phẩm của chúng tôi!"
+                action={{ label: "Khám phá sản phẩm", onClick: () => navigate("/marketplace") }}
+              />
             </TabsContent>
           )}
 

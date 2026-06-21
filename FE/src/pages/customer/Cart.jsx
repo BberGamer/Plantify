@@ -1,49 +1,12 @@
-import { Fragment, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import { EmptyState } from "@/components/common/EmptyState";
-
-const mockCartItems = [
-  {
-    id: 1,
-    name: "Phân bón hữu cơ NPK",
-    price: 85000,
-    originalPrice: 120000,
-    quantity: 2,
-    stock: 150,
-    image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400",
-    shop: "Green Garden",
-    selected: true
-  },
-  {
-    id: 2,
-    name: "Bộ dụng cụ trồng cây mini",
-    price: 150000,
-    originalPrice: 150000,
-    quantity: 1,
-    stock: 45,
-    image: "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=400",
-    shop: "Plant Tools Pro",
-    selected: true
-  },
-  {
-    id: 3,
-    name: "Chậu gốm tráng men cao cấp",
-    price: 280000,
-    originalPrice: 350000,
-    quantity: 1,
-    stock: 98,
-    image: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400",
-    shop: "Ceramic House",
-    selected: false
-  }
-];
 
 function Cart() {
   const navigate = useNavigate();
@@ -89,10 +52,6 @@ function Cart() {
   const selectedItems = cartItems.filter((item) => item.selected);
   const subtotal = selectedItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const discount = selectedItems.reduce(
-    (sum, item) => sum + (item.originalPrice - item.price) * item.quantity,
     0
   );
   const shipping = subtotal > 0 ? 30000 : 0;
@@ -177,16 +136,6 @@ function Cart() {
                           <span className="text-lg font-bold text-primary">
                             {item.price.toLocaleString("vi-VN")}đ
                           </span>
-                          {item.originalPrice > item.price && (
-                            <Fragment>
-                              <span className="text-sm text-muted-foreground line-through">
-                                {item.originalPrice.toLocaleString("vi-VN")}đ
-                              </span>
-                              <Badge variant="destructive" className="text-xs">
-                                -{Math.round((1 - item.price / item.originalPrice) * 100)}%
-                              </Badge>
-                            </Fragment>
-                          )}
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center border rounded-lg">
@@ -243,14 +192,6 @@ function Cart() {
                       {subtotal.toLocaleString("vi-VN")}đ
                     </span>
                   </div>
-                  {discount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Giảm giá</span>
-                      <span className="font-medium text-green-600">
-                        -{discount.toLocaleString("vi-VN")}đ
-                      </span>
-                    </div>
-                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Phí vận chuyển</span>
                     <span className="font-medium">
