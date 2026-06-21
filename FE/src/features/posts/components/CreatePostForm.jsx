@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Upload, X } from "lucide-react";
+import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,8 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 const emptyForm = {
   title: "",
   category: "",
-  thumbnail: "",
-  imagesText: "",
   tagsText: "",
   content: ""
 };
@@ -26,14 +25,19 @@ function splitCommaText(value) {
 }
 
 function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmit }) {
+  const existingImages = useMemo(() => {
+    if (!initialPost) {
+      return [];
+    }
+
+    return Array.from(new Set([initialPost.thumbnail, ...(initialPost.images || [])].filter(Boolean)));
+  }, [initialPost]);
   const initialValues = useMemo(
     () =>
       initialPost
         ? {
             title: initialPost.title || "",
             category: initialPost.category || "",
-            thumbnail: initialPost.thumbnail || "",
-            imagesText: toCommaText(initialPost.images),
             tagsText: toCommaText(initialPost.tags),
             content: initialPost.content || ""
           }
@@ -41,26 +45,60 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
     [initialPost]
   );
   const [formData, setFormData] = useState(initialValues);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   useEffect(() => {
     setFormData(initialValues);
+    setImageFiles([]);
   }, [initialValues]);
+
+  useEffect(() => {
+    const previews = imageFiles.map((file) => ({
+      name: file.name,
+      url: URL.createObjectURL(file)
+    }));
+
+    setImagePreviews(previews);
+
+    return () => {
+      previews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    };
+  }, [imageFiles]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
   };
 
+  const handleImageChange = (event) => {
+    setImageFiles(Array.from(event.target.files || []));
+  };
+
+  const handleClearImages = () => {
+    setImageFiles([]);
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
-    onSubmit({
-      title: formData.title,
-      category: formData.category,
-      thumbnail: formData.thumbnail,
-      images: splitCommaText(formData.imagesText),
-      tags: splitCommaText(formData.tagsText),
-      content: formData.content
-    });
+
+    const payload = new FormData();
+    payload.append("title", formData.title);
+    payload.append("category", formData.category);
+    payload.append("tags", JSON.stringify(splitCommaText(formData.tagsText)));
+    payload.append("content", formData.content);
+
+    if (imageFiles.length > 0) {
+      payload.append("thumbnail", imageFiles[0]);
+      imageFiles.forEach((file) => {
+        payload.append("images", file);
+      });
+    } else if (initialPost) {
+      payload.append("thumbnail", initialPost.thumbnail || "");
+      payload.append("images", JSON.stringify(initialPost.images || []));
+    }
+
+    onSubmit(payload);
   };
 
   return (
@@ -89,27 +127,36 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="post-thumbnail">Ảnh đại diện</Label>
-        <Input
-          id="post-thumbnail"
-          name="thumbnail"
-          value={formData.thumbnail}
-          onChange={handleChange}
-          placeholder="https://..."
-        />
-      </div>
-
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="post-images">Ảnh bổ sung</Label>
-          <Input
-            id="post-images"
-            name="imagesText"
-            value={formData.imagesText}
-            onChange={handleChange}
-            placeholder="Mỗi URL cách nhau bằng dấu phẩy"
-          />
+          <Label htmlFor="post-images">Ảnh bài viết</Label>
+          <div className="rounded-md border border-dashed border-border bg-muted/30 p-4">
+            <Input
+              id="post-images"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="button" variant="outline" asChild>
+                <label htmlFor="post-images" className="cursor-pointer">
+                  <Upload className="h-4 w-4" />
+                  Chọn ảnh
+                </label>
+              </Button>
+              {imageFiles.length > 0 && (
+                <Button type="button" variant="ghost" size="sm" onClick={handleClearImages}>
+                  <X className="h-4 w-4" />
+                  Xóa ảnh đã chọn
+                </Button>
+              )}
+              <span className="text-sm text-muted-foreground">
+                {imageFiles.length ? `${imageFiles.length} ảnh đã chọn` : "Chọn một hoặc nhiều ảnh từ máy"}
+              </span>
+            </div>
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="post-tags">Tags</Label>
@@ -122,6 +169,28 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
           />
         </div>
       </div>
+
+      {(imagePreviews.length > 0 || existingImages.length > 0) && (
+        <div className="space-y-2">
+          <Label>{imagePreviews.length > 0 ? "Preview ảnh đã chọn" : "Ảnh hiện tại"}</Label>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {(imagePreviews.length > 0 ? imagePreviews : existingImages.map((url) => ({ name: url, url }))).map(
+              (image) => (
+                <div key={image.url} className="overflow-hidden rounded-md border bg-muted">
+                  <div className="aspect-video">
+                    <ImageWithFallback
+                      src={image.url}
+                      alt={image.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <p className="truncate px-3 py-2 text-xs text-muted-foreground">{image.name}</p>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="post-content">Nội dung</Label>
