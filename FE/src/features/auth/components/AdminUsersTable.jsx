@@ -3,12 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import {
   Table,
   TableBody,
   TableCell,
@@ -18,7 +12,6 @@ import {
 } from "@/components/ui/table";
 import {
   Loader2,
-  MoreHorizontal,
   Trash2,
   UserCheck,
   UserX
@@ -49,9 +42,6 @@ function AdminUsersTable({
         <div className="admin-users-table-header-content">
           <div className="admin-users-table-header-copy">
             <CardTitle className="text-xl text-foreground">Danh sách người dùng</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Dữ liệu đang được lấy trực tiếp từ hệ thống tài khoản hiện tại.
-            </p>
           </div>
           <Badge className="admin-users-table-badge">
             {filteredUsers.length} tài khoản hiển thị
@@ -116,9 +106,8 @@ function AdminUsersTable({
                               {getInitials(user.fullName)}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="space-y-1">
+                          <div>
                             <p className="font-semibold text-foreground">{user.fullName}</p>
-                            <p className="text-sm text-muted-foreground">{roleLabel}</p>
                           </div>
                         </div>
                       </TableCell>
@@ -143,46 +132,40 @@ function AdminUsersTable({
                       </TableCell>
                       <TableCell className="px-4 py-4 text-right">
                         {canUpdateStatus ? (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="rounded-full text-muted-foreground hover:bg-green-50 hover:text-primary"
-                                aria-label={`Tùy chọn cho ${user.fullName}`}
-                                disabled={isUpdatingStatus || deleting}
-                              >
-                                {isUpdatingStatus || (deleting && deleteTargetUser?._id === user._id) ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <MoreHorizontal className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => onStatusChange(user)}
-                                variant={!nextStatus ? "destructive" : "default"}
-                                disabled={isUpdatingStatus || deleting}
-                              >
-                                {nextStatus ? (
-                                  <UserCheck className="h-4 w-4" />
-                                ) : (
-                                  <UserX className="h-4 w-4" />
-                                )}
-
-                                {nextStatus ? "Kích hoạt" : "Tạm khóa"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => onDeleteClick(user)}
-                                variant="destructive"
-                                disabled={isUpdatingStatus || deleting}
-                              >
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 rounded-full border-green-200 text-green-700 hover:bg-green-50"
+                              aria-label={nextStatus ? `Kích hoạt ${user.fullName}` : `Tạm khóa ${user.fullName}`}
+                              title={nextStatus ? "Kích hoạt" : "Tạm khóa"}
+                              onClick={() => onStatusChange(user)}
+                              disabled={isUpdatingStatus || deleting}
+                            >
+                              {isUpdatingStatus ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : nextStatus ? (
+                                <UserCheck className="h-4 w-4" />
+                              ) : (
+                                <UserX className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-9 w-9 rounded-full border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                              aria-label={`Xóa ${user.fullName}`}
+                              title="Xóa người dùng"
+                              onClick={() => onDeleteClick(user)}
+                              disabled={isUpdatingStatus || deleting}
+                            >
+                              {deleting && deleteTargetUser?._id === user._id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
                                 <Trash2 className="h-4 w-4" />
-                                Xóa người dùng
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                              )}
+                            </Button>
+                          </div>
                         ) : (
                           <span className="text-sm text-muted-foreground">--</span>
                         )}

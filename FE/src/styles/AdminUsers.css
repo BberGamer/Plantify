@@ -87,12 +87,6 @@
   letter-spacing: -0.025em;
 }
 
-.admin-users-hero-description {
-  max-width: 42rem;
-  font-size: 0.875rem;
-  color: hsl(var(--muted-foreground));
-}
-
 .admin-users-actions {
   display: flex;
   flex-wrap: wrap;
