@@ -19,6 +19,7 @@ const plantDiseaseRoutes = require('./features/plant-diseases/plantDisease.route
 const errorHandler = require('./middlewares/errorHandler');
 const favoriteRoutes = require('./features/favorites/favorite.routes');
 const weatherRoutes = require('./features/weather/weather.routes');
+const aiRoutes = require('./features/ai/ai.routes');
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use('/api/care-guides', careGuideRoutes);
 app.use('/api/plant-diseases', plantDiseaseRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/weather', weatherRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error Handler Middleware (sau tất cả các route)
 app.use(errorHandler);
