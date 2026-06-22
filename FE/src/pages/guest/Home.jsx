@@ -13,6 +13,7 @@ import { usePlants } from "@/features/plants/hooks";
 import { getCareGuides } from "@/features/care-guides/api";
 import { getPlantDiseases } from "@/features/plant-diseases/api";
 import { usePostDetail, usePosts } from "@/features/posts/hooks";
+import { getWeatherByCity } from "@/features/weather/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +27,11 @@ import {
   Leaf,
   Store,
   ShoppingCart,
-  Package
+  Package,
+  CloudSun,
+  Droplets,
+  Gauge,
+  Wind
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -66,6 +71,10 @@ const matchesQuery = (value, normalizedQuery) =>
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [weatherCity, setWeatherCity] = useState("Ho Chi Minh");
+  const [weather, setWeather] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState("");
   const [selectedPostHome, setSelectedPostHome] = useState(null);
   const [showDetailHome, setShowDetailHome] = useState(false);
   const navigate = useNavigate();
@@ -144,6 +153,36 @@ function Home() {
     navigate(`/browse?q=${encodeURIComponent(trimmedQuery)}`);
   };
 
+  const fetchWeather = async (city) => {
+    const trimmedCity = city.trim();
+    if (!trimmedCity) {
+      setWeatherError("Vui lòng nhập tên thành phố");
+      return;
+    }
+
+    setWeatherLoading(true);
+    setWeatherError("");
+
+    try {
+      const response = await getWeatherByCity(trimmedCity);
+      setWeather(response.data);
+    } catch (error) {
+      setWeather(null);
+      setWeatherError(
+        error.response?.data?.message
+          || error.message
+          || "Không thể tải thông tin thời tiết"
+      );
+    } finally {
+      setWeatherLoading(false);
+    }
+  };
+
+  const handleWeatherSearch = (event) => {
+    event.preventDefault();
+    fetchWeather(weatherCity);
+  };
+
   const difficultyLabel = { low: "Dễ", medium: "Trung bình", high: "Khó" };
   const levelLabel = { low: "Ít", medium: "Trung bình", high: "Nhiều" };
 
@@ -195,6 +234,10 @@ function Home() {
     };
   }, [showDetailHome]);
 
+  useEffect(() => {
+    fetchWeather("Ho Chi Minh");
+  }, []);
+
   return (
     <div className="min-h-screen">
       <section className="relative overflow-hidden">     
@@ -227,6 +270,79 @@ function Home() {
         </div>
         <div className="absolute bottom-24 left-16 opacity-10">
           <Leaf className="w-32 h-32 text-green-600 -rotate-45" />
+        </div>
+        <div className="relative z-20 mx-auto max-w-7xl px-6 pt-6 lg:absolute lg:right-8 lg:top-6 lg:mx-0 lg:w-80 lg:px-0 lg:pt-0">
+          <Card className="border border-green-200/70 bg-white/95 shadow-lg backdrop-blur-sm">
+            <CardContent className="p-4">
+              <div className="mb-3 flex items-center gap-2 font-semibold text-primary">
+                <CloudSun className="h-4 w-4" />
+                <span className="text-sm">Thời tiết chăm cây</span>
+              </div>
+              <form onSubmit={handleWeatherSearch} className="mb-3 flex gap-2">
+                <Input
+                  value={weatherCity}
+                  onChange={(event) => setWeatherCity(event.target.value)}
+                  placeholder="Thành phố..."
+                  className="h-9 min-w-0 text-sm"
+                />
+                <Button type="submit" size="sm" className="h-9 px-3" disabled={weatherLoading}>
+                  {weatherLoading ? "..." : "Xem"}
+                </Button>
+              </form>
+              {weatherError && (
+                <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                  {weatherError}
+                </div>
+              )}
+              {weather && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    {weather.iconUrl && (
+                      <img
+                        src={weather.iconUrl}
+                        alt={weather.description || "Weather icon"}
+                        className="h-12 w-12"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold">
+                        {weather.cityName}, {weather.country}
+                      </div>
+                      <div className="text-2xl font-bold leading-tight">
+                        {Math.round(weather.temperature)}°C
+                      </div>
+                      <div className="truncate text-xs capitalize text-muted-foreground">
+                        {weather.description}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="rounded-md bg-blue-50 p-2">
+                      <div className="mb-1 flex items-center gap-1 text-muted-foreground">
+                        <Droplets className="h-3.5 w-3.5 text-blue-600" />
+                        Ẩm
+                      </div>
+                      <div className="font-semibold">{weather.humidity}%</div>
+                    </div>
+                    <div className="rounded-md bg-sky-50 p-2">
+                      <div className="mb-1 flex items-center gap-1 text-muted-foreground">
+                        <Wind className="h-3.5 w-3.5 text-sky-600" />
+                        Gió
+                      </div>
+                      <div className="font-semibold">{weather.windSpeed} m/s</div>
+                    </div>
+                    <div className="rounded-md bg-amber-50 p-2">
+                      <div className="mb-1 flex items-center gap-1 text-muted-foreground">
+                        <Gauge className="h-3.5 w-3.5 text-amber-600" />
+                        hPa
+                      </div>
+                      <div className="font-semibold">{weather.pressure}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
         <div className="max-w-7xl mx-auto px-6 py-24 relative z-10">
           <motion.div
