@@ -1,11 +1,41 @@
 // AIDoctor.jsx - Trang AI Doctor chẩn đoán bệnh cây cảnh
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Camera, Sparkles, Bug, Leaf, ArrowRight } from "lucide-react";
+import { api } from "@/lib/api";
+import { Upload, Camera, Sparkles, Bug, Leaf, ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 
 function AIDoctor() {
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleAskGemini = async () => {
+    const trimmedQuestion = question.trim();
+
+    if (!trimmedQuestion) {
+      setError("Vui lòng nhập câu hỏi cho Gemini");
+      setAnswer("");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await api.post("/ai/chat", { prompt: trimmedQuestion });
+      setAnswer(response.data?.data?.text || "Gemini chưa trả về nội dung.");
+    } catch (apiError) {
+      setAnswer("");
+      setError(apiError.response?.data?.message || "Không thể gọi Gemini lúc này");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen py-12 px-6">
       <div className="max-w-6xl mx-auto">
@@ -58,7 +88,7 @@ function AIDoctor() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-primary" />
-                  Hỏi AI Assistant
+                  Hỏi Gemini AI
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -66,11 +96,25 @@ function AIDoctor() {
                   placeholder="Ví dụ: Tại sao lá cây tôi bị vàng? Cách xử lý thế nào?"
                   rows={4}
                   className="resize-none"
+                  value={question}
+                  onChange={(event) => setQuestion(event.target.value)}
                 />
-                <Button className="w-full">
-                  Gửi câu hỏi
+                <Button className="w-full" onClick={handleAskGemini} disabled={loading}>
+                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Gửi cho Gemini
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
+                {error && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                    {error}
+                  </div>
+                )}
+                {answer && (
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-4">
+                    <p className="mb-2 text-sm font-medium text-primary">Phản hồi từ Gemini</p>
+                    <p className="whitespace-pre-wrap text-sm text-foreground">{answer}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
