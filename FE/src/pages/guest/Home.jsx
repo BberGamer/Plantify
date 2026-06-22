@@ -13,6 +13,7 @@ import { usePlants } from "@/features/plants/hooks";
 import { getCareGuides } from "@/features/care-guides/api";
 import { getPlantDiseases } from "@/features/plant-diseases/api";
 import { usePostDetail, usePosts } from "@/features/posts/hooks";
+import { getWeatherByCity } from "@/features/weather/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +27,11 @@ import {
   Leaf,
   Store,
   ShoppingCart,
-  Package
+  Package,
+  CloudSun,
+  Droplets,
+  Gauge,
+  Wind
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -66,6 +71,10 @@ const matchesQuery = (value, normalizedQuery) =>
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [weatherCity, setWeatherCity] = useState("Ho Chi Minh");
+  const [weather, setWeather] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState("");
   const [selectedPostHome, setSelectedPostHome] = useState(null);
   const [showDetailHome, setShowDetailHome] = useState(false);
   const navigate = useNavigate();
@@ -144,6 +153,36 @@ function Home() {
     navigate(`/browse?q=${encodeURIComponent(trimmedQuery)}`);
   };
 
+  const fetchWeather = async (city) => {
+    const trimmedCity = city.trim();
+    if (!trimmedCity) {
+      setWeatherError("Vui lòng nhập tên thành phố");
+      return;
+    }
+
+    setWeatherLoading(true);
+    setWeatherError("");
+
+    try {
+      const response = await getWeatherByCity(trimmedCity);
+      setWeather(response.data);
+    } catch (error) {
+      setWeather(null);
+      setWeatherError(
+        error.response?.data?.message
+          || error.message
+          || "Không thể tải thông tin thời tiết"
+      );
+    } finally {
+      setWeatherLoading(false);
+    }
+  };
+
+  const handleWeatherSearch = (event) => {
+    event.preventDefault();
+    fetchWeather(weatherCity);
+  };
+
   const difficultyLabel = { low: "Dễ", medium: "Trung bình", high: "Khó" };
   const levelLabel = { low: "Ít", medium: "Trung bình", high: "Nhiều" };
 
@@ -194,6 +233,10 @@ function Home() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [showDetailHome]);
+
+  useEffect(() => {
+    fetchWeather("Ho Chi Minh");
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -268,6 +311,93 @@ function Home() {
               </form>
             </div>
           </motion.div>
+        </div>
+      </section>
+      <section className="px-6 pb-8">
+        <div className="max-w-7xl mx-auto">
+          <Card className="border border-green-200/70 bg-white/90 shadow-sm">
+            <CardContent className="p-6">
+              <div className="grid gap-6 lg:grid-cols-[1.1fr_1.4fr] lg:items-center">
+                <div>
+                  <div className="inline-flex items-center gap-2 text-primary font-semibold mb-2">
+                    <CloudSun className="w-5 h-5" />
+                    Thời tiết chăm cây
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2">
+                    Kiểm tra thời tiết theo thành phố
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Dữ liệu từ OpenWeatherMap giúp bạn xem nhanh nhiệt độ, độ ẩm và gió trước khi tưới cây.
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  <form onSubmit={handleWeatherSearch} className="flex flex-col gap-3 sm:flex-row">
+                    <Input
+                      value={weatherCity}
+                      onChange={(event) => setWeatherCity(event.target.value)}
+                      placeholder="Nhập tên thành phố..."
+                      className="h-11"
+                    />
+                    <Button type="submit" className="h-11 sm:w-32" disabled={weatherLoading}>
+                      {weatherLoading ? "Đang tải" : "Xem"}
+                    </Button>
+                  </form>
+                  {weatherError && (
+                    <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                      {weatherError}
+                    </div>
+                  )}
+                  {weather && (
+                    <div className="grid gap-3 sm:grid-cols-4">
+                      <div className="sm:col-span-2 rounded-md border bg-green-50/60 p-4">
+                        <div className="flex items-center gap-3">
+                          {weather.iconUrl && (
+                            <img
+                              src={weather.iconUrl}
+                              alt={weather.description || "Weather icon"}
+                              className="h-14 w-14"
+                            />
+                          )}
+                          <div>
+                            <div className="font-semibold">
+                              {weather.cityName}, {weather.country}
+                            </div>
+                            <div className="text-3xl font-bold">
+                              {Math.round(weather.temperature)}°C
+                            </div>
+                            <div className="capitalize text-sm text-muted-foreground">
+                              {weather.description}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="rounded-md border p-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Droplets className="w-4 h-4 text-blue-600" />
+                          Độ ẩm
+                        </div>
+                        <div className="mt-2 text-xl font-semibold">{weather.humidity}%</div>
+                      </div>
+                      <div className="rounded-md border p-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Wind className="w-4 h-4 text-sky-600" />
+                          Gió
+                        </div>
+                        <div className="mt-2 text-xl font-semibold">{weather.windSpeed} m/s</div>
+                      </div>
+                      <div className="rounded-md border p-4 sm:col-span-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Gauge className="w-4 h-4 text-amber-600" />
+                          Áp suất
+                        </div>
+                        <div className="mt-2 text-xl font-semibold">{weather.pressure} hPa</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
       <section className="py-20 px-6 max-w-7xl mx-auto">
