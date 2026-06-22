@@ -7,7 +7,7 @@ import {
   deleteCareGuide
 } from "../api";
 
-export function useCareGuides({ page = 1, limit = 10, plantId } = {}) {
+export function useCareGuides({ page = 1, limit = 10, plantId, search } = {}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
@@ -18,6 +18,7 @@ export function useCareGuides({ page = 1, limit = 10, plantId } = {}) {
     try {
       const params = { page, limit };
       if (plantId) params.plantId = plantId;
+      if (search) params.search = search;
       const res = await getCareGuides(params);
       const result = res.result || res.data || res;
       setData(Array.isArray(result) ? result : result.careGuides || []);
@@ -28,7 +29,7 @@ export function useCareGuides({ page = 1, limit = 10, plantId } = {}) {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, plantId]);
+  }, [page, limit, plantId, search]);
 
   useEffect(() => {
     fetch();

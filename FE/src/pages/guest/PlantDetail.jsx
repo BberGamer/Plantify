@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router";
+import { useParams, Link, useSearchParams } from "react-router";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -38,9 +38,14 @@ const DIFFICULTY_COLORS = {
   "Khó": "text-red-600",
 };
 
+const VALID_TABS = new Set(["overview", "care-guides", "diseases"]);
+
 function PlantDetail() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState(VALID_TABS.has(initialTab) ? initialTab : "overview");
 
   const { plant, loading, error } = usePlant(id);
   const { categories } = usePlantCategories();
@@ -57,6 +62,11 @@ function PlantDetail() {
   useEffect(() => {
     setCurrentImageIndex(0);
   }, [id]);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    setActiveTab(VALID_TABS.has(tab) ? tab : "overview");
+  }, [searchParams]);
 
   if (loading) {
     return (
@@ -231,7 +241,7 @@ function PlantDetail() {
           </div>
         </div>
 
-        <Tabs defaultValue="overview" className="plant-detail-tabs">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="plant-detail-tabs">
           <TabsList className="plant-detail-tabs-list">
             <TabsTrigger value="overview">Tổng quan</TabsTrigger>
             <TabsTrigger value="care-guides">

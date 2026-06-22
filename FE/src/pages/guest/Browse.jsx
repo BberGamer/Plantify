@@ -65,7 +65,7 @@ function Browse() {
     name: plant.name,
     scientificName: plant.scientificName,
     difficulty: difficultyLabel[plant.difficultyLevel] || plant.difficultyLevel,
-    water: levelLabel[plant.watering] || plant.watering,
+    humidity: plant.humidity,
     light: levelLabel[plant.sunlight] || plant.sunlight,
     indoor: plant.isIndoor,
     imageUrl: plant.thumbnail || plant.images?.[0],
