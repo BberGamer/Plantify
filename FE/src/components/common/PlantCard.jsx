@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Droplets, Sun, Home, Heart } from "lucide-react";
+import { Wind, Sun, Home, Heart } from "lucide-react";
 import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 import { useFavorite } from "@/features/favorites/hooks";
 
@@ -9,7 +9,7 @@ function PlantCard({
   name,
   scientificName,
   difficulty,
-  water,
+  humidity,
   light,
   indoor,
   imageUrl
@@ -44,8 +44,8 @@ function PlantCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">
-              <Droplets className="w-4 h-4 text-primary" />
-              <span>{water}</span>
+              <Wind className="w-4 h-4 text-primary" />
+              <span>{humidity}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Sun className="w-4 h-4 text-primary" />
