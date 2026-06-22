@@ -1,5 +1,12 @@
 // PlantDetailList.jsx - Component hiển thị danh sách Care Guides và Diseases
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Droplets, Leaf, AlertCircle, Scissors, Sprout, RefreshCw, Bug } from "lucide-react";
 
@@ -90,6 +97,14 @@ export function CareGuideList({ careGuides, loading }) {
  * DiseaseList - Danh sách Bệnh cây
  */
 export function DiseaseList({ diseases, loading }) {
+  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedDiseaseName, setSelectedDiseaseName] = useState("");
+
+  const openImagePreview = (imageUrl, diseaseName) => {
+    setSelectedImage(imageUrl);
+    setSelectedDiseaseName(diseaseName);
+  };
+
   return (
     <>
       <div className="plant-detail-tab-header">
@@ -146,10 +161,11 @@ export function DiseaseList({ diseases, loading }) {
                   <div className="text-xs text-muted-foreground font-medium mb-1.5">Hình ảnh thực tế:</div>
                   <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-muted">
                     {disease.images.map((imgUrl, idx) => (
-                      <div
+                      <button
+                        type="button"
                         key={idx}
-                        className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-border/60 hover:opacity-90 transition-opacity shadow-sm cursor-zoom-in"
-                        onClick={() => window.open(imgUrl, "_blank")}
+                        className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-border/60 transition-opacity shadow-sm cursor-zoom-in hover:opacity-90"
+                        onClick={() => openImagePreview(imgUrl, disease.name)}
                       >
                         <img
                           src={imgUrl}
@@ -160,7 +176,7 @@ export function DiseaseList({ diseases, loading }) {
                             e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%23999' font-size='10'%3EẢnh lỗi%3C/text%3E%3C/svg%3E";
                           }}
                         />
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -169,6 +185,25 @@ export function DiseaseList({ diseases, loading }) {
           ))}
         </div>
       )}
+
+      <Dialog open={Boolean(selectedImage)} onOpenChange={(open) => !open && setSelectedImage("")}>
+        <DialogContent className="max-w-4xl border-none bg-transparent p-0 shadow-none">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Ảnh bệnh cây {selectedDiseaseName}</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-hidden rounded-2xl bg-background">
+            <img
+              src={selectedImage}
+              alt={selectedDiseaseName}
+              className="max-h-[80vh] w-full object-contain"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect fill='%23f0f0f0' width='600' height='400'/%3E%3Ctext x='300' y='205' text-anchor='middle' fill='%23999' font-size='20'%3EẢnh lỗi%3C/text%3E%3C/svg%3E";
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

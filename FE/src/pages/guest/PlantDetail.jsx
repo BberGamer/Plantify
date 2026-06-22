@@ -185,8 +185,10 @@ function PlantDetail() {
 
             {plant.origin && (
               <div className="plant-detail-info-row">
-                <Globe className="w-4 h-4 text-muted-foreground" />
-                <span>Nguồn gốc:</span>
+                <span className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-muted-foreground" />
+                  <span>Nguồn gốc:</span>
+                </span>
                 <span>{plant.origin}</span>
               </div>
             )}
