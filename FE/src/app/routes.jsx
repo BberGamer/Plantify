@@ -26,7 +26,6 @@ import { Blog } from "@/pages/guest/Blog";
 import { Shop } from "@/pages/guest/Shop";
 import { ProductDetail } from "@/pages/guest/ProductDetail";
 import { AIDoctor } from "@/pages/guest/AIDoctor";
-import { KnowledgeGraph } from "@/pages/guest/KnowledgeGraph";
 import { Login } from "@/pages/guest/Login";
 import { Register } from "@/pages/guest/Register";
 import { RegisterVerifyOtp } from "@/pages/guest/RegisterVerifyOtp";
@@ -84,7 +83,6 @@ const publicChildRoutes = [
   { path: "marketplace", element: <Shop /> },
   { path: "product/:id", element: <ProductDetail /> },
   { path: "ai-doctor", element: <AIDoctor /> },
-  { path: "knowledge-graph", element: <KnowledgeGraph /> },
   { path: "profile", element: <Profile /> },
   { path: "my-posts", element: <MyPosts /> },
   { path: "settings", element: <Settings /> },
