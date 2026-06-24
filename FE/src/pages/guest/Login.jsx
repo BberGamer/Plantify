@@ -29,10 +29,9 @@ function Login() {
     switch (role) {
       case "admin":
         return "/admin";
-      case "manager":
-      case "business manager":
-        return "/dashboard";
-      case "content manager":
+      case "business_manager":
+        return "/business";
+      case "content_manager":
         return "/content/plants";
       default:
         return "/";
