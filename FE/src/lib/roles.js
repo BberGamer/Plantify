@@ -27,3 +27,13 @@ export const ROLE_RANK = {
 export function hasMinimumRole(userRole, requiredRole) {
   return ROLE_RANK[userRole] >= ROLE_RANK[requiredRole];
 }
+
+// Ánh xạ role từ backend (có khoảng trắng) sang FE (underscore)
+export const BACKEND_ROLE_MAP = {
+  "business manager": "business_manager",
+  "content manager": "content_manager",
+};
+
+export function mapBackendRoleToFeRole(backendRole) {
+  return BACKEND_ROLE_MAP[backendRole] || backendRole || "customer";
+}

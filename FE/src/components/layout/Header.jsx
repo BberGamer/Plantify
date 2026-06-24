@@ -29,6 +29,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { PUBLIC_NAV } from "@/lib/constants";
 import { ROUTES } from "@/lib/constants";
+import { mapBackendRoleToFeRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
@@ -128,13 +129,13 @@ function Header() {
                     Hồ sơ
                   </Link>
                 </DropdownMenuItem>
-                {(user.role === "admin" || user.role === "business_manager" || user.role === "content_manager") && (
+                {(user.role === "admin" || user.role === "business_manager" || user.role === "content_manager" || user.role === "business manager" || user.role === "content manager") && (
                   <DropdownMenuItem asChild>
                     <Link
                       to={
-                        user.role === "admin"
+                        mapBackendRoleToFeRole(user.role) === "admin"
                           ? ROUTES.admin
-                          : user.role === "business_manager"
+                          : mapBackendRoleToFeRole(user.role) === "business_manager"
                           ? ROUTES.business
                           : ROUTES.contentDashboard
                       }

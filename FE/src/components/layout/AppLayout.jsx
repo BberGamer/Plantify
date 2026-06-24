@@ -8,13 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ROLE_SIDEBAR_NAV } from "@/lib/constants";
 import { useAuth } from "@/features/auth/hooks";
-import { hasMinimumRole } from "@/lib/roles";
+import { hasMinimumRole, mapBackendRoleToFeRole } from "@/lib/roles";
 import { Loader2 } from "lucide-react";
-
-// Ánh xạ vai trò từ DB sang FE role 
-const mapDbRoleToFeRole = (dbRole) => {
-  return dbRole || "customer";
-};
 
 function AppLayout() {
   const { pathname } = useLocation();
@@ -32,7 +27,7 @@ function AppLayout() {
     return <Navigate to="/login" replace />;
   }
 
-  const sidebarRole = mapDbRoleToFeRole(user.role);
+  const sidebarRole = mapBackendRoleToFeRole(user.role);
 
   // Kiểm tra quyền truy cập (Route Guarding)
   let requiredRole = "customer";
