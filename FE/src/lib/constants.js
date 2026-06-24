@@ -5,7 +5,6 @@ import {
   BookOpen,
   Home,
   LayoutDashboard,
-  Network,
   Settings,
   ShoppingCart,
   Sparkles,
@@ -21,7 +20,6 @@ const ROUTES = {
   marketplace: "/marketplace",
   productDetail: (id) => `/product/${id}`,
   aiDoctor: "/ai-doctor",
-  knowledgeGraph: "/knowledge-graph",
   blog: "/blog",
   login: "/login",
   register: "/register",
@@ -31,7 +29,8 @@ const ROUTES = {
   settings: "/settings",
   cart: "/cart",
   checkout: "/checkout",
-  dashboard: "/dashboard",
+  dashboard: "/business",
+  business: "/business",
   contentDashboard: "/content/plants",
   admin: "/admin",
   adminUsers: "/admin/users",
@@ -73,18 +72,32 @@ const ROLE_SIDEBAR_NAV = {
       roles: ["customer"]
     }
   ],
-  manager: [
+  business_manager: [
     {
-      path: "/dashboard",
+      path: "/business",
       label: "Thống kê",
       icon: BarChart3,
-      roles: ["manager"]
+      roles: ["business_manager"]
     },
     {
-      path: "/dashboard/team",
+      path: "/business/team",
       label: "Đội ngũ",
       icon: Users,
-      roles: ["manager"]
+      roles: ["business_manager"]
+    }
+  ],
+  content_manager: [
+    {
+      path: "/content/plants",
+      label: "Quản lý cây",
+      icon: BarChart3,
+      roles: ["content_manager"]
+    },
+    {
+      path: "/content/categories",
+      label: "Danh mục",
+      icon: Users,
+      roles: ["content_manager"]
     }
   ],
   admin: [
