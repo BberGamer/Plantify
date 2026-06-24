@@ -1,8 +1,7 @@
 // ai.routes.js - Định nghĩa các route cho AI features (chat, chẩn đoán bệnh cây)
 const express = require('express');
 const aiController = require('./ai.controller');
-const aiDiagnosisController = require('../controllers/aiDiagnosisController');
-const { uploadDiagnosisImage } = require('../middlewares/aiDiagnosis.upload');
+const { uploadDiagnosisImage } = require('../../middlewares/aiDiagnosis.upload');
 
 const router = express.Router();
 
@@ -10,6 +9,6 @@ const router = express.Router();
 router.post('/chat', aiController.generateText);
 
 // POST /api/ai/diagnose - Chẩn đoán bệnh cây từ ảnh.
-router.post('/diagnose', uploadDiagnosisImage, aiDiagnosisController.diagnosePlantDisease);
+router.post('/diagnose', uploadDiagnosisImage, aiController.diagnosePlantDisease);
 
 module.exports = router;
