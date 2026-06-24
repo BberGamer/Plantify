@@ -3,22 +3,25 @@
 export const USER_ROLES = [
   "guest",
   "customer",
-  "manager",
+  "business_manager",
+  "content_manager",
   "admin"
 ];
 
 export const ROLE_LABELS = {
   guest: "Khach",
   customer: "Khach hang",
-  manager: "Quan ly",
+  business_manager: "Quan ly kinh doanh",
+  content_manager: "Quan ly noi dung",
   admin: "Quan tri vien"
 };
 
 export const ROLE_RANK = {
   guest: 0,
   customer: 1,
-  manager: 2,
-  admin: 3
+  business_manager: 2,
+  content_manager: 3,
+  admin: 4
 };
 
 export function hasMinimumRole(userRole, requiredRole) {
