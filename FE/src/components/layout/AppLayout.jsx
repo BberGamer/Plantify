@@ -11,10 +11,8 @@ import { useAuth } from "@/features/auth/hooks";
 import { hasMinimumRole } from "@/lib/roles";
 import { Loader2 } from "lucide-react";
 
-// Ánh xạ vai trò từ DB sang FE role
+// Ánh xạ vai trò từ DB sang FE role 
 const mapDbRoleToFeRole = (dbRole) => {
-  if (dbRole === "business manager") return "manager";
-  if (dbRole === "content manager") return "manager";
   return dbRole || "customer";
 };
 
@@ -40,8 +38,10 @@ function AppLayout() {
   let requiredRole = "customer";
   if (pathname.startsWith("/admin")) {
     requiredRole = "admin";
-  } else if (pathname.startsWith("/dashboard") || pathname.startsWith("/content")) {
-    requiredRole = "manager";
+  } else if (pathname.startsWith("/business")) {
+    requiredRole = "business_manager";
+  } else if (pathname.startsWith("/content")) {
+    requiredRole = "content_manager";
   }
 
   if (!hasMinimumRole(sidebarRole, requiredRole)) {
