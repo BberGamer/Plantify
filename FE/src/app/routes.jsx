@@ -100,11 +100,11 @@ const appChildRoutes = [
 ];
 
 const managerChildRoutes = [
-  { path: "dashboard", element: <Dashboard /> },
-  { path: "dashboard/team", element: <Team /> },
-  { path: "dashboard/products", element: <ManageProducts /> },
-  { path: "dashboard/products/:id", element: <BusinessProductDetail /> },
-  { path: "dashboard/categories", element: <ManageProductCategories /> },
+  { path: "business", element: <Dashboard /> },
+  { path: "business/team", element: <Team /> },
+  { path: "business/products", element: <ManageProducts /> },
+  { path: "business/products/:id", element: <BusinessProductDetail /> },
+  { path: "business/categories", element: <ManageProductCategories /> },
   { path: "content/plants", element: <ManagePlants /> },
   { path: "content/plants/:id", element: <PlantDetailManager /> },
   { path: "content/care-guides", element: <ManageCareGuides /> },

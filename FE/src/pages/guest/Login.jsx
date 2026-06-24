@@ -15,6 +15,7 @@ import { Leaf, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
+import { mapBackendRoleToFeRole } from "@/lib/roles";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -26,7 +27,8 @@ function Login() {
   const navigate = useNavigate();
 
   const getRedirectPath = (role) => {
-    switch (role) {
+    const feRole = mapBackendRoleToFeRole(role);
+    switch (feRole) {
       case "admin":
         return "/admin";
       case "business_manager":

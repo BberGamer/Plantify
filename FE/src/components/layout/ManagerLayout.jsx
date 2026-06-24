@@ -33,22 +33,22 @@ const managerMenuConfig = {
   "business manager": [
     {
       label: "Dashboard",
-      path: "/dashboard",
+      path: "/business",
       icon: LayoutDashboard
     },
     {
       label: "Quản lý đơn hàng",
-      path: "/dashboard/team",
+      path: "/business/team",
       icon: ShoppingBag
     },
     {
       label: "Quản lý sản phẩm",
-      path: "/dashboard/products",
+      path: "/business/products",
       icon: Package
     },
     {
       label: "Loại sản phẩm",
-      path: "/dashboard/categories",
+      path: "/business/categories",
       icon: Tags
     }
   ],
@@ -116,7 +116,7 @@ function ManagerLayout({ children }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!managerMenuConfig[user.role]) {
+  if (!managerMenuConfig[managerRole]) {
     return <Navigate to="/unauthorized" replace />;
   }
 
