@@ -20,7 +20,7 @@ function validateReason(reason) {
 }
 
 async function ensurePostExists(postId) {
-  const post = await Post.findById(postId).select('_id').lean();
+  const post = await Post.findById(postId).select('_id userId').lean();
 
   if (!post) {
     const error = new Error('Khong tim thay bai viet');
@@ -35,7 +35,13 @@ async function createReport(postId, userId, reason) {
   ensureObjectId(postId, 'Post ID khong hop le');
   ensureObjectId(userId, 'User ID khong hop le');
   validateReason(reason);
-  await ensurePostExists(postId);
+  const post = await ensurePostExists(postId);
+
+  if (post.userId?.toString() === userId.toString()) {
+    const error = new Error('Ban khong the bao cao bai viet cua chinh minh');
+    error.statusCode = 403;
+    throw error;
+  }
 
   const existingReport = await Report.findOne({ postId, userId }).lean();
 
