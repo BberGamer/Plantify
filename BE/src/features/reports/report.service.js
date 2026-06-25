@@ -2,6 +2,7 @@
 const mongoose = require('mongoose');
 const Report = require('./report.model');
 const Post = require('../posts/post.model');
+const { createNotification } = require('../notifications/notification.service');
 
 const RESTORE_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
 const REPORT_POST_SELECT =
@@ -81,11 +82,21 @@ async function createReport(postId, userId, reason) {
     throw error;
   }
 
-  return Report.create({
+  const report = await Report.create({
     postId,
     userId,
     reason,
   });
+
+  await createNotification({
+    recipientId: post.userId,
+    actorId: userId,
+    type: 'post_reported_under_review',
+    postId: post._id,
+    reportId: report._id,
+  });
+
+  return report;
 }
 
 async function getAllReports(filters = {}) {
