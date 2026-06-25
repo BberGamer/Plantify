@@ -26,6 +26,7 @@ const EMPTY_FORM = {
   categoryId: "",
   images: [],
   description: "",
+  usageGuide: "",
   price: "",
   stock: "",
   tags: "",
@@ -62,6 +63,7 @@ export function ProductForm({ categories, onSubmit, loading, editProduct }) {
         categoryId: editProduct.categoryId?._id || editProduct.categoryId || "",
         images: Array.isArray(editProduct.images) ? editProduct.images : [],
         description: editProduct.description || "",
+        usageGuide: editProduct.usageGuide || "",
         price: editProduct.price ?? "",
         stock: editProduct.stock ?? "",
         tags: toCommaString(editProduct.tags),
@@ -88,6 +90,7 @@ export function ProductForm({ categories, onSubmit, loading, editProduct }) {
       categoryId: formData.categoryId,
       images: formData.images,
       description: formData.description.trim(),
+      usageGuide: formData.usageGuide.trim(),
       price: Number(formData.price),
       stock: Number(formData.stock || 0),
       tags: toCommaArray(formData.tags),
@@ -163,6 +166,17 @@ export function ProductForm({ categories, onSubmit, loading, editProduct }) {
                 value={formData.description}
                 onChange={(e) => handleChange("description", e.target.value)}
                 placeholder="Nhập mô tả sản phẩm"
+                rows={4}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="productUsageGuide">Hướng dẫn sử dụng</Label>
+              <Textarea
+                id="productUsageGuide"
+                value={formData.usageGuide}
+                onChange={(e) => handleChange("usageGuide", e.target.value)}
+                placeholder="Nhập hướng dẫn sử dụng sản phẩm"
                 rows={4}
               />
             </div>

@@ -308,6 +308,7 @@ function ProductDetail() {
           <Tabs defaultValue="description" className="w-full">
             <TabsList className="w-full justify-start">
               <TabsTrigger value="description">Mô tả sản phẩm</TabsTrigger>
+              <TabsTrigger value="usage-guide">Hướng dẫn sử dụng</TabsTrigger>
               <TabsTrigger value="specifications">Thông số kỹ thuật</TabsTrigger>
             </TabsList>
 
@@ -318,6 +319,18 @@ function ProductDetail() {
                     <div className="whitespace-pre-line">{product.description}</div>
                   ) : (
                     <p className="text-muted-foreground italic">Chưa có mô tả sản phẩm.</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="usage-guide">
+              <Card>
+                <CardContent className="p-6">
+                  {product.usageGuide ? (
+                    <div className="whitespace-pre-line">{product.usageGuide}</div>
+                  ) : (
+                    <p className="text-muted-foreground italic">Chưa có hướng dẫn sử dụng.</p>
                   )}
                 </CardContent>
               </Card>

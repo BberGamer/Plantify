@@ -1,8 +1,9 @@
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
   Bell,
   Leaf,
+  Loader2,
   Menu,
   User,
   Settings,
@@ -28,23 +29,74 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { PUBLIC_NAV } from "@/lib/constants";
-import { ROUTES } from "@/lib/constants";
+import { PUBLIC_NAV, ROUTES } from "@/lib/constants";
+import { useNotifications } from "@/features/notifications/hooks";
 import { mapBackendRoleToFeRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
-import { useNavigate } from "react-router";
+
+function formatNotificationMessage(notification) {
+  if (notification.type === "post_commented") {
+    const actorName = notification.actorId?.fullName || "Có người";
+    return `${actorName} vừa bình luận vào bài viết của bạn`;
+  }
+
+  if (notification.type === "post_reported_under_review") {
+    return "Bài viết của bạn đang được xem xét do có báo cáo";
+  }
+
+  return "Bạn có thông báo mới";
+}
 
 function Header() {
   const location = useLocation();
-  const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { user, logout, isAuthenticated } = useAuth();
+  const normalizedRole = user ? mapBackendRoleToFeRole(user.role) : null;
+  const canViewNotifications = isAuthenticated && normalizedRole === "customer";
+  const {
+    notifications,
+    unreadCount,
+    loading: notificationsLoading,
+    error: notificationsError,
+    readNotification,
+    readAllNotifications,
+  } = useNotifications(canViewNotifications);
 
   const handleLogout = () => {
     logout();
     toast.success("Đăng xuất thành công!");
     navigate("/login");
+  };
+
+  const handleOpenNotification = async (notification) => {
+    try {
+      if (!notification.readAt) {
+        await readNotification(notification._id);
+      }
+
+      if (notification.postId?._id || notification.postId) {
+        const postId = notification.postId?._id || notification.postId;
+        navigate(ROUTES.blog, {
+          state: { openPostId: postId },
+        });
+        return;
+      }
+
+      navigate(ROUTES.blog);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể mở thông báo");
+    }
+  };
+
+  const handleReadAllNotifications = async () => {
+    try {
+      await readAllNotifications();
+      toast.success("Đã đánh dấu tất cả là đã đọc");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể cập nhật thông báo");
+    }
   };
 
   return (
@@ -78,14 +130,9 @@ function Header() {
         </NavigationMenu>
 
         <div className="flex items-center gap-1 sm:gap-2">
-
           <Sheet>
             <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-              >
+              <Button variant="ghost" size="icon" className="lg:hidden">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Menu</span>
               </Button>
@@ -98,8 +145,7 @@ function Header() {
                     to={item.path}
                     className={cn(
                       "rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent",
-                      location.pathname === item.path &&
-                        "bg-accent text-primary"
+                      location.pathname === item.path && "bg-accent text-primary"
                     )}
                   >
                     {item.label}
@@ -111,9 +157,67 @@ function Header() {
 
           {isAuthenticated && user ? (
             <>
-              <Button variant="ghost" size="icon" className="rounded-full" aria-label="Thông báo">
-                <Bell className="h-5 w-5" />
-              </Button>
+              {canViewNotifications && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative rounded-full" aria-label="Thông báo">
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-80">
+                    <DropdownMenuLabel className="flex items-center justify-between gap-2">
+                      <span>Thông báo</span>
+                      {unreadCount > 0 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto px-2 py-1 text-xs"
+                          onClick={handleReadAllNotifications}
+                        >
+                          Đọc tất cả
+                        </Button>
+                      )}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {notificationsLoading ? (
+                      <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Đang tải thông báo...
+                      </div>
+                    ) : notificationsError ? (
+                      <div className="px-3 py-6 text-sm text-destructive">Không thể tải thông báo.</div>
+                    ) : notifications.length ? (
+                      notifications.map((notification) => (
+                        <DropdownMenuItem
+                          key={notification._id}
+                          className="flex cursor-pointer items-start gap-3 whitespace-normal py-3"
+                          onClick={() => handleOpenNotification(notification)}
+                        >
+                          <div className={cn(
+                            "mt-1 h-2.5 w-2.5 rounded-full",
+                            notification.readAt ? "bg-muted" : "bg-primary"
+                          )} />
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-5">{formatNotificationMessage(notification)}</p>
+                            <p className="line-clamp-1 text-xs text-muted-foreground">
+                              {notification.postId?.title || "Bài viết liên quan"}
+                            </p>
+                          </div>
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <div className="px-3 py-6 text-sm text-muted-foreground">Chưa có thông báo nào.</div>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -125,57 +229,57 @@ function Header() {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>{user.fullName}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to={ROUTES.profile} className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    Hồ sơ
-                  </Link>
-                </DropdownMenuItem>
-                {(user.role === "admin" || user.role === "business_manager" || user.role === "content_manager" || user.role === "business manager" || user.role === "content manager") && (
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>{user.fullName}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link
-                      to={
-                        mapBackendRoleToFeRole(user.role) === "admin"
-                          ? ROUTES.admin
-                          : mapBackendRoleToFeRole(user.role) === "business_manager"
-                          ? ROUTES.business
-                          : ROUTES.contentDashboard
-                      }
-                      className="cursor-pointer"
-                    >
-                      <Store className="mr-2 h-4 w-4" />
-                      Trang quản lý
+                    <Link to={ROUTES.profile} className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      Hồ sơ
                     </Link>
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuItem asChild>
-                  <Link to={ROUTES.cart} className="cursor-pointer">
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Giỏ hàng
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to={ROUTES.myPosts} className="cursor-pointer">
-                    <PenSquare className="mr-2 h-4 w-4" />
-                    Bài viết của tôi
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to={ROUTES.settings} className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Cài đặt
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Đăng xuất
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  {(user.role === "admin" || user.role === "business_manager" || user.role === "content_manager" || user.role === "business manager" || user.role === "content manager") && (
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to={
+                          normalizedRole === "admin"
+                            ? ROUTES.admin
+                            : normalizedRole === "business_manager"
+                              ? ROUTES.business
+                              : ROUTES.contentDashboard
+                        }
+                        className="cursor-pointer"
+                      >
+                        <Store className="mr-2 h-4 w-4" />
+                        Trang quản lý
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <Link to={ROUTES.cart} className="cursor-pointer">
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Giỏ hàng
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={ROUTES.myPosts} className="cursor-pointer">
+                      <PenSquare className="mr-2 h-4 w-4" />
+                      Bài viết của tôi
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={ROUTES.settings} className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Cài đặt
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Đăng xuất
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <div className="flex items-center gap-2">

@@ -2,6 +2,7 @@
  * Blog.jsx - Trang blog co filter category/search va modal chi tiet bai viet.
  */
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 import BlogPostDetail, {
   BlogPostDetailError,
@@ -136,6 +137,8 @@ function mapPostToBlogCard(post) {
 }
 
 function Blog() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedPost, setSelectedPost] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
@@ -265,6 +268,18 @@ function Blog() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [showDetail, previewImage]);
+
+  useEffect(() => {
+    const openPostId = location.state?.openPostId;
+
+    if (!openPostId) {
+      return;
+    }
+
+    setSelectedPost({ _id: openPostId, id: openPostId });
+    setShowDetail(true);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, location.state, navigate]);
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-hidden px-4 py-12 sm:px-6">

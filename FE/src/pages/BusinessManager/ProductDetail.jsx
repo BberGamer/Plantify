@@ -33,6 +33,7 @@ function ProductDetail() {
         categoryId: payload.categoryId,
         images: payload.images,
         description: payload.description,
+        usageGuide: payload.usageGuide,
         price: payload.price,
         stock: payload.stock,
         ratingAverage: payload.ratingAverage,
@@ -54,7 +55,7 @@ function ProductDetail() {
     try {
       await remove(product._id || product.id);
       toast.success("Xóa sản phẩm thành công");
-      navigate("/dashboard/products", { replace: true });
+      navigate("/business/products", { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || "Đã xảy ra lỗi");
     }
@@ -75,7 +76,7 @@ function ProductDetail() {
         <CardContent className="space-y-4 py-16 text-center">
           <p className="text-sm text-destructive">{error || "Không tìm thấy sản phẩm"}</p>
           <Button asChild variant="outline">
-            <Link to="/dashboard/products">Quay lại danh sách sản phẩm</Link>
+            <Link to="/business/products">Quay lại danh sách sản phẩm</Link>
           </Button>
         </CardContent>
       </Card>
@@ -86,7 +87,7 @@ function ProductDetail() {
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button variant="outline" asChild>
-          <Link to="/dashboard/products">
+          <Link to="/business/products">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại danh sách
           </Link>
@@ -142,6 +143,13 @@ function ProductDetail() {
               <p className="text-sm font-medium text-foreground">Mô tả</p>
               <p className="rounded-2xl bg-muted/50 p-4 text-sm text-muted-foreground">
                 {product.description || "Chưa có mô tả sản phẩm."}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">Hướng dẫn sử dụng</p>
+              <p className="rounded-2xl bg-muted/50 p-4 text-sm text-muted-foreground whitespace-pre-line">
+                {product.usageGuide || "Chưa có hướng dẫn sử dụng."}
               </p>
             </div>
 

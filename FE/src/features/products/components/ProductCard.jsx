@@ -15,7 +15,7 @@ export function ProductCard({ product }) {
   return (
     <Card
       className="group cursor-pointer overflow-hidden border-green-200/60 bg-white/95 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
-      onClick={() => navigate(`/dashboard/products/${productId}`)}
+      onClick={() => navigate(`/business/products/${productId}`)}
     >
       <div className="aspect-[4/3] overflow-hidden bg-muted">
         <img

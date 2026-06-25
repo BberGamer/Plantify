@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Comment = require('./comment.model');
 const Post = require('../posts/post.model');
 const Product = require('../products/product.model');
+const { createNotification } = require('../notifications/notification.service');
 
 function ensureObjectId(id, message = 'ID khong hop le') {
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -73,6 +74,14 @@ async function createComment(payload) {
   });
 
   await syncPostRating(post._id);
+
+  await createNotification({
+    recipientId: post.userId,
+    actorId: payload.userId,
+    type: 'post_commented',
+    postId: post._id,
+    commentId: comment._id,
+  });
 
   return Comment.findById(comment._id)
     .populate('userId', 'fullName email')

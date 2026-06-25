@@ -22,6 +22,7 @@ const errorHandler = require('./middlewares/errorHandler');
 const favoriteRoutes = require('./features/favorites/favorite.routes');
 const weatherRoutes = require('./features/weather/weather.routes');
 const aiRoutes = require('./features/ai/ai.routes');
+const notificationRoutes = require('./features/notifications/notification.routes');
 
 const app = express();
 const OLD_RESOLVED_POST_TTL_MS = 2 * 24 * 60 * 60 * 1000;
@@ -71,6 +72,7 @@ app.use('/api/plant-diseases', plantDiseaseRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error Handler Middleware (sau tất cả các route)
 app.use(errorHandler);
