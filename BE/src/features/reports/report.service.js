@@ -4,6 +4,8 @@ const Report = require('./report.model');
 const Post = require('../posts/post.model');
 
 const RESTORE_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
+const REPORT_POST_SELECT =
+  'title content thumbnail images author category status isApproved avgRating commentsCount deletedAt processedAt createdAt userId';
 
 function ensureObjectId(id, message = 'ID khong hop le') {
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -109,7 +111,7 @@ async function getAllReports(filters = {}) {
   const skip = (page - 1) * limit;
 
   return Report.find(query)
-    .populate('postId', 'title author category status isApproved deletedAt createdAt')
+    .populate('postId', REPORT_POST_SELECT)
     .populate('userId', 'fullName email')
     .populate('processedBy', 'fullName email')
     .sort({ createdAt: -1 })
@@ -167,7 +169,7 @@ async function processReport(reportId, managerId, action) {
   await report.save();
 
   return Report.findById(report._id)
-    .populate('postId', 'title author category status isApproved deletedAt createdAt')
+    .populate('postId', REPORT_POST_SELECT)
     .populate('userId', 'fullName email')
     .populate('processedBy', 'fullName email')
     .lean();

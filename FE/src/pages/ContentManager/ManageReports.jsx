@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import BlogPostDetail from "@/components/common/BlogPostDetail";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -146,6 +147,7 @@ function ManageReports() {
   const [error, setError] = useState(null);
   const [processingId, setProcessingId] = useState(null);
   const [restoringPostId, setRestoringPostId] = useState(null);
+  const [selectedPost, setSelectedPost] = useState(null);
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
@@ -197,6 +199,15 @@ function ManageReports() {
     } finally {
       setRestoringPostId(null);
     }
+  }
+
+  function handleOpenPostDetail(post) {
+    if (!post || typeof post === "string") {
+      toast.error("Không tìm thấy dữ liệu bài viết");
+      return;
+    }
+
+    setSelectedPost(post);
   }
 
   function renderReportsTable() {
@@ -259,7 +270,13 @@ function ManageReports() {
               <TableRow key={report._id || report.id} className="border-green-100/80 hover:bg-green-50/30">
                 <TableCell className="max-w-[320px] px-4 py-4 align-top">
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-foreground">{getPostTitle(post)}</p>
+                    <button
+                      type="button"
+                      className="max-w-full truncate text-left font-medium text-foreground underline-offset-4 hover:text-primary hover:underline"
+                      onClick={() => handleOpenPostDetail(post)}
+                    >
+                      {getPostTitle(post)}
+                    </button>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {post?.category || "Chưa phân loại"}
                     </p>
@@ -359,6 +376,14 @@ function ManageReports() {
           </TabsContent>
         ))}
       </Tabs>
+
+      {selectedPost && (
+        <BlogPostDetail
+          post={selectedPost}
+          comments={selectedPost.comments || []}
+          onClose={() => setSelectedPost(null)}
+        />
+      )}
     </div>
   );
 }
