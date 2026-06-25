@@ -192,6 +192,7 @@ async function createProduct(data) {
     brand: data.brand?.trim() || '',
     thumbnail: data.thumbnail?.trim() || '',
     description: data.description?.trim() || '',
+    usageGuide: data.usageGuide?.trim() || '',
     price: Number(data.price),
     stock: Number(data.stock || 0),
     tags: Array.isArray(data.tags) ? data.tags : []
@@ -225,6 +226,7 @@ async function updateProduct(id, data) {
   if (data.brand !== undefined) updateData.brand = data.brand?.trim() || '';
   if (data.thumbnail !== undefined) updateData.thumbnail = data.thumbnail?.trim() || '';
   if (data.description !== undefined) updateData.description = data.description?.trim() || '';
+  if (data.usageGuide !== undefined) updateData.usageGuide = data.usageGuide?.trim() || '';
   if (data.price !== undefined) updateData.price = Number(data.price);
   if (data.stock !== undefined) updateData.stock = Number(data.stock || 0);
   if (data.tags !== undefined) updateData.tags = Array.isArray(data.tags) ? data.tags : [];
