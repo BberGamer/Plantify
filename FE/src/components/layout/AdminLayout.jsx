@@ -3,12 +3,12 @@
 
 import { Link, Navigate, Outlet, useLocation } from "react-router";
 import {
+  Bell,
   LayoutDashboard,
   Leaf,
   Loader2,
   LogOut,
   Menu,
-  Settings,
   Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -126,11 +126,9 @@ function AdminSidebar({ pathname, onLogout }) {
 function SidebarAccountOptions({ onLogout }) {
   return (
     <div className="space-y-1 border-t border-border p-3">
-      <Button variant="ghost" className="w-full justify-start gap-3 px-3" asChild>
-        <Link to="/settings">
-          <Settings className="h-4 w-4" />
-          <span>Cài đặt</span>
-        </Link>
+      <Button variant="ghost" className="w-full justify-start gap-3 px-3" type="button">
+        <Bell className="h-4 w-4" />
+        <span>Thông báo</span>
       </Button>
       <Button
         variant="ghost"
