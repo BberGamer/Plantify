@@ -15,6 +15,14 @@ function getCurrentUserId(currentUser = {}) {
   return currentUser.id || currentUser._id || currentUser.userId;
 }
 
+function buildPublicPostQuery(extraQuery = {}) {
+  return {
+    ...extraQuery,
+    status: { $ne: 'resolved' },
+    deletedAt: null,
+  };
+}
+
 function withRatingPipeline(extraStages = []) {
   return [
     ...extraStages,
@@ -332,7 +340,7 @@ async function getMyPosts(currentUser = {}, filters = {}) {
 
 async function getAllPosts(filters = {}) {
   const { category, title } = filters;
-  const query = {};
+  const query = buildPublicPostQuery();
   const pagination = buildPagination(filters);
 
   if (category) {
@@ -361,7 +369,7 @@ async function getAllPosts(filters = {}) {
  * @returns {Promise<Object>} Chi tiết bài viết
  */
 async function getPostById(id) {
-  const post = await Post.findOne(buildPostIdQuery(id))
+  const post = await Post.findOne(buildPublicPostQuery(buildPostIdQuery(id)))
     .select('-id -excerpt -likesCount -likeCount -isFeatured -isActive -readTime -tags')
     .populate({
       path: 'comments',
@@ -401,7 +409,7 @@ async function getPostById(id) {
  */
 async function getFeaturedPosts(filters = {}) {
   const pagination = buildPagination(filters, 3);
-  const pipeline = withRatingPipeline([]);
+  const pipeline = withRatingPipeline([{ $match: buildPublicPostQuery() }]);
 
   pipeline.push(
     { $sort: { commentsCount: -1, createdAt: -1 } },
