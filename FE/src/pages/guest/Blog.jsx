@@ -128,7 +128,7 @@ function Blog() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const hasActiveFilters = Boolean(selectedCategory || searchTerm.trim());
-  const { posts: apiPosts, loading, error, refetch } = usePosts({
+  const { posts: apiPosts, loading, loadingMore, error, hasMore, loadMore, refetch } = usePosts({
     page: 1,
     limit: 6,
     category: selectedCategory,
@@ -430,9 +430,13 @@ function Blog() {
         )}
 
         {/* Load More */}
-        <div className="mt-12 text-center">
-          <Button size="lg" variant="outline">Xem thêm bài viết</Button>
-        </div>
+        {hasMore && (
+          <div className="mt-12 text-center" aria-busy={loadingMore}>
+            <Button size="lg" variant="outline" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? "Đang tải..." : "Xem thêm bài viết"}
+            </Button>
+          </div>
+        )}
 
         {showDetail && detailLoading && !detailPost && (
           <BlogPostDetailSkeleton onClose={handleCloseDetail} />
