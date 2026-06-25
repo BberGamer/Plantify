@@ -173,6 +173,11 @@ function Blog() {
   const activePost = detailPost || selectedPost;
   const activeDisplayPost = activePost ? mapPostToBlogCard(activePost) : null;
   const activeComments = detailPost ? detailComments : selectedPost?.comments || [];
+  const showInitialLoading = loading && !blogPosts.length;
+  const showErrorState = Boolean(error) && !loading;
+  const showEmptyState = !loading && !error && !featuredPost;
+  const showPosts = !loading && !error && featuredPost;
+  const showLoadMore = showPosts && hasMore;
 
   /**
    * Mo modal chi tiet va kich hoat hook fetch full data cho bai viet duoc chon.
@@ -320,25 +325,28 @@ function Blog() {
           </div>
         </div>
 
-        {loading && (
+        {showInitialLoading && (
           <div className="py-12 text-center text-muted-foreground">
             Đang tải danh sách bài viết...
           </div>
         )}
 
-        {error && (
-          <div className="py-12 text-center text-destructive">
-            Không thể tải danh sách bài viết: {error}
+        {showErrorState && (
+          <div className="py-12 text-center">
+            <p className="mb-4 text-destructive">Không thể tải danh sách bài viết: {error}</p>
+            <Button type="button" variant="outline" onClick={refetch}>
+              Thử lại
+            </Button>
           </div>
         )}
 
-        {!loading && !error && !featuredPost && (
+        {showEmptyState && (
           <div className="py-12 text-center text-muted-foreground">
             {hasActiveFilters ? "Không tìm thấy bài viết phù hợp." : "Chưa có bài viết nào."}
           </div>
         )}
 
-        {!loading && !error && featuredPost && (
+        {showPosts && (
           <>
             {/* Featured Post */}
             <motion.div
@@ -455,7 +463,7 @@ function Blog() {
         )}
 
         {/* Load More */}
-        {!loading && !error && hasMore && featuredPost && (
+        {showLoadMore && (
           <div className="mt-12 text-center" aria-busy={loadingMore}>
             <Button size="lg" variant="outline" onClick={loadMore} disabled={loadingMore}>
               {loadingMore ? "Đang tải..." : "Xem thêm bài viết"}
