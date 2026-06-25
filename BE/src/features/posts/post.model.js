@@ -58,6 +58,10 @@ const postSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -70,6 +74,7 @@ const postSchema = new mongoose.Schema(
 );
 
 postSchema.index({ userId: 1 });
+postSchema.index({ deletedAt: 1 });
 
 postSchema.virtual('comments', {
   ref: 'Comment',
