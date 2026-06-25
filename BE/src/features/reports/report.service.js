@@ -143,6 +143,7 @@ async function processReport(reportId, managerId, action) {
     post.status = 'approved';
     post.isApproved = true;
     post.deletedAt = null;
+    post.processedAt = null;
   }
 
   if (action === 'reject') {
@@ -151,9 +152,10 @@ async function processReport(reportId, managerId, action) {
   }
 
   if (action === 'remove') {
-    post.status = 'rejected';
+    post.status = 'resolved';
     post.isApproved = false;
     post.deletedAt = new Date();
+    post.processedAt = new Date();
   }
 
   report.status = 'resolved';
@@ -200,6 +202,7 @@ async function restorePost(postId) {
   post.deletedAt = null;
   post.status = 'approved';
   post.isApproved = true;
+  post.processedAt = null;
 
   return post.save();
 }

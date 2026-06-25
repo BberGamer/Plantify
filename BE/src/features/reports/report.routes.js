@@ -14,7 +14,4 @@ router.post('/', authenticate, authorizeCustomer, reportController.createReport)
 // PATCH /api/reports/:id/process - Content Manager xu ly bao cao.
 router.patch('/:id/process', authenticate, authorizeContentManager, reportController.processReport);
 
-// PATCH /api/reports/posts/:postId/restore - Content Manager khoi phuc bai viet da xoa mem.
-router.patch('/posts/:postId/restore', authenticate, authorizeContentManager, reportController.restorePost);
-
 module.exports = router;
