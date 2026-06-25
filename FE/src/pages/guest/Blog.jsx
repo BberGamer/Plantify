@@ -1,7 +1,7 @@
 /**
  * Blog.jsx - Trang blog co filter category/search va modal chi tiet bai viet.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import BlogPostDetail, {
   BlogPostDetailError,
@@ -33,6 +33,9 @@ const categories = [
   "Thiết kế",
   "Kỹ thuật"
 ];
+
+const BLOG_GRID_PAGE_SIZE = 6;
+const BLOG_FIRST_PAGE_LIMIT = BLOG_GRID_PAGE_SIZE + 1;
 
 const vietnameseTextReplacements = [
   [/\bBai dau tien\b/gi, "Bài đầu tiên"],
@@ -86,6 +89,20 @@ function getPostPreview(content = "", maxLength = 140) {
   return `${plainText.slice(0, maxLength).trim()}...`;
 }
 
+function getPostIdentity(post) {
+  return post?._id || post?.id;
+}
+
+function compareFeaturedPosts(postA, postB) {
+  const commentsDelta = (Number(postB.commentsCount) || 0) - (Number(postA.commentsCount) || 0);
+
+  if (commentsDelta !== 0) {
+    return commentsDelta;
+  }
+
+  return new Date(postB.createdAt || 0).getTime() - new Date(postA.createdAt || 0).getTime();
+}
+
 function RatingSummary({ value }) {
   const safeValue = Math.max(0, Math.min(Number(value) || 0, 5));
 
@@ -130,7 +147,7 @@ function Blog() {
   const hasActiveFilters = Boolean(selectedCategory || searchTerm.trim());
   const { posts: apiPosts, loading, loadingMore, error, hasMore, loadMore, refetch } = usePosts({
     page: 1,
-    limit: 6,
+    limit: BLOG_FIRST_PAGE_LIMIT,
     category: selectedCategory,
     search: debouncedSearchTerm,
   });
@@ -142,9 +159,17 @@ function Blog() {
     error: detailError,
   } = usePostDetail(showDetail ? selectedPost?._id || selectedPost?.id : null);
 
-  const blogPosts = apiPosts.map(mapPostToBlogCard);
-  const featuredPost = blogPosts[0];
-  const gridPosts = blogPosts.slice(1);
+  const blogPosts = useMemo(() => apiPosts.map(mapPostToBlogCard), [apiPosts]);
+  const featuredPost = useMemo(() => {
+    const firstPagePosts = blogPosts.slice(0, BLOG_FIRST_PAGE_LIMIT);
+
+    return [...firstPagePosts].sort(compareFeaturedPosts)[0] || null;
+  }, [blogPosts]);
+  const gridPosts = useMemo(() => {
+    const featuredPostId = getPostIdentity(featuredPost);
+
+    return blogPosts.filter((post) => getPostIdentity(post) !== featuredPostId);
+  }, [blogPosts, featuredPost]);
   const activePost = detailPost || selectedPost;
   const activeDisplayPost = activePost ? mapPostToBlogCard(activePost) : null;
   const activeComments = detailPost ? detailComments : selectedPost?.comments || [];
@@ -430,7 +455,7 @@ function Blog() {
         )}
 
         {/* Load More */}
-        {hasMore && (
+        {!loading && !error && hasMore && featuredPost && (
           <div className="mt-12 text-center" aria-busy={loadingMore}>
             <Button size="lg" variant="outline" onClick={loadMore} disabled={loadingMore}>
               {loadingMore ? "Đang tải..." : "Xem thêm bài viết"}
