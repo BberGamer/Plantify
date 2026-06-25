@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
+  Bell,
   Leaf,
   Menu,
   User,
@@ -109,17 +110,21 @@ function Header() {
           </Sheet>
 
           {isAuthenticated && user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar>
-                    <AvatarImage src={user.avatarUrl} alt={user.fullName} />
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-green-600 text-primary-foreground">
-                      {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
+            <>
+              <Button variant="ghost" size="icon" className="rounded-full" aria-label="Thông báo">
+                <Bell className="h-5 w-5" />
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar>
+                      <AvatarImage src={user.avatarUrl} alt={user.fullName} />
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-green-600 text-primary-foreground">
+                        {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>{user.fullName}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -171,6 +176,7 @@ function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </>
           ) : (
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" asChild>

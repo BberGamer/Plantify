@@ -77,7 +77,7 @@ export function HeroSection() {
               <div className="relative flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-2 border border-green-200/50">
                 <Search className="w-5 h-5 text-muted-foreground ml-4" />
                 <input
-                  placeholder="Tìm cây cảnh, bệnh lá, cách chăm sóc..."
+                  placeholder="Tìm tên cây hoặc bệnh cây..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 border-0 focus-visible:ring-0 text-lg bg-transparent outline-none"
