@@ -40,7 +40,7 @@ const postSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
+      enum: ['pending', 'approved', 'rejected', 'resolved'],
       default: 'pending',
     },
     isApproved: {
@@ -58,6 +58,14 @@ const postSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    processedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -70,6 +78,8 @@ const postSchema = new mongoose.Schema(
 );
 
 postSchema.index({ userId: 1 });
+postSchema.index({ deletedAt: 1 });
+postSchema.index({ status: 1, processedAt: 1 });
 
 postSchema.virtual('comments', {
   ref: 'Comment',

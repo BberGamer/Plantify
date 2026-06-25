@@ -7,7 +7,9 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
+const cron = require('node-cron');
 const connectDB = require('./config/db');
+const Post = require('./features/posts/post.model');
 const authRoutes = require('./features/auth/auth.routes');
 const productRoutes = require('./features/products/product.routes');
 const plantRoutes = require('./features/plants/plant.routes');
@@ -22,6 +24,27 @@ const weatherRoutes = require('./features/weather/weather.routes');
 const aiRoutes = require('./features/ai/ai.routes');
 
 const app = express();
+const OLD_RESOLVED_POST_TTL_MS = 2 * 24 * 60 * 60 * 1000;
+
+cron.schedule(
+  '5 0 * * *',
+  async () => {
+    try {
+      const cutoffDate = new Date(Date.now() - OLD_RESOLVED_POST_TTL_MS);
+      const result = await Post.deleteMany({
+        status: 'resolved',
+        processedAt: { $ne: null, $lte: cutoffDate },
+      });
+
+      console.log(`[cron] Deleted ${result.deletedCount || 0} old resolved posts`);
+    } catch (error) {
+      console.error('[cron] Failed to delete old resolved posts:', error);
+    }
+  },
+  {
+    timezone: 'Asia/Ho_Chi_Minh',
+  }
+);
 
 // Connect to MongoDB
 connectDB();

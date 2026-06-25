@@ -1,7 +1,7 @@
 /**
  * Blog.jsx - Trang blog co filter category/search va modal chi tiet bai viet.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import BlogPostDetail, {
   BlogPostDetailError,
@@ -33,6 +33,9 @@ const categories = [
   "Thiết kế",
   "Kỹ thuật"
 ];
+
+const BLOG_GRID_PAGE_SIZE = 6;
+const BLOG_FIRST_PAGE_LIMIT = BLOG_GRID_PAGE_SIZE + 1;
 
 const vietnameseTextReplacements = [
   [/\bBai dau tien\b/gi, "Bài đầu tiên"],
@@ -86,6 +89,20 @@ function getPostPreview(content = "", maxLength = 140) {
   return `${plainText.slice(0, maxLength).trim()}...`;
 }
 
+function getPostIdentity(post) {
+  return post?._id || post?.id;
+}
+
+function compareFeaturedPosts(postA, postB) {
+  const commentsDelta = (Number(postB.commentsCount) || 0) - (Number(postA.commentsCount) || 0);
+
+  if (commentsDelta !== 0) {
+    return commentsDelta;
+  }
+
+  return new Date(postB.createdAt || 0).getTime() - new Date(postA.createdAt || 0).getTime();
+}
+
 function RatingSummary({ value }) {
   const safeValue = Math.max(0, Math.min(Number(value) || 0, 5));
 
@@ -128,9 +145,9 @@ function Blog() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const hasActiveFilters = Boolean(selectedCategory || searchTerm.trim());
-  const { posts: apiPosts, loading, error, refetch } = usePosts({
+  const { posts: apiPosts, loading, loadingMore, error, hasMore, loadMore, refetch } = usePosts({
     page: 1,
-    limit: 6,
+    limit: BLOG_FIRST_PAGE_LIMIT,
     category: selectedCategory,
     search: debouncedSearchTerm,
   });
@@ -142,12 +159,25 @@ function Blog() {
     error: detailError,
   } = usePostDetail(showDetail ? selectedPost?._id || selectedPost?.id : null);
 
-  const blogPosts = apiPosts.map(mapPostToBlogCard);
-  const featuredPost = blogPosts[0];
-  const gridPosts = blogPosts.slice(1);
+  const blogPosts = useMemo(() => apiPosts.map(mapPostToBlogCard), [apiPosts]);
+  const featuredPost = useMemo(() => {
+    const firstPagePosts = blogPosts.slice(0, BLOG_FIRST_PAGE_LIMIT);
+
+    return [...firstPagePosts].sort(compareFeaturedPosts)[0] || null;
+  }, [blogPosts]);
+  const gridPosts = useMemo(() => {
+    const featuredPostId = getPostIdentity(featuredPost);
+
+    return blogPosts.filter((post) => getPostIdentity(post) !== featuredPostId);
+  }, [blogPosts, featuredPost]);
   const activePost = detailPost || selectedPost;
   const activeDisplayPost = activePost ? mapPostToBlogCard(activePost) : null;
   const activeComments = detailPost ? detailComments : selectedPost?.comments || [];
+  const showInitialLoading = loading && !blogPosts.length;
+  const showErrorState = Boolean(error) && !loading;
+  const showEmptyState = !loading && !error && !featuredPost;
+  const showPosts = !loading && !error && featuredPost;
+  const showLoadMore = showPosts && hasMore;
 
   /**
    * Mo modal chi tiet va kich hoat hook fetch full data cho bai viet duoc chon.
@@ -295,25 +325,28 @@ function Blog() {
           </div>
         </div>
 
-        {loading && (
+        {showInitialLoading && (
           <div className="py-12 text-center text-muted-foreground">
             Đang tải danh sách bài viết...
           </div>
         )}
 
-        {error && (
-          <div className="py-12 text-center text-destructive">
-            Không thể tải danh sách bài viết: {error}
+        {showErrorState && (
+          <div className="py-12 text-center">
+            <p className="mb-4 text-destructive">Không thể tải danh sách bài viết: {error}</p>
+            <Button type="button" variant="outline" onClick={refetch}>
+              Thử lại
+            </Button>
           </div>
         )}
 
-        {!loading && !error && !featuredPost && (
+        {showEmptyState && (
           <div className="py-12 text-center text-muted-foreground">
             {hasActiveFilters ? "Không tìm thấy bài viết phù hợp." : "Chưa có bài viết nào."}
           </div>
         )}
 
-        {!loading && !error && featuredPost && (
+        {showPosts && (
           <>
             {/* Featured Post */}
             <motion.div
@@ -430,9 +463,13 @@ function Blog() {
         )}
 
         {/* Load More */}
-        <div className="mt-12 text-center">
-          <Button size="lg" variant="outline">Xem thêm bài viết</Button>
-        </div>
+        {showLoadMore && (
+          <div className="mt-12 text-center" aria-busy={loadingMore}>
+            <Button size="lg" variant="outline" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? "Đang tải..." : "Xem thêm bài viết"}
+            </Button>
+          </div>
+        )}
 
         {showDetail && detailLoading && !detailPost && (
           <BlogPostDetailSkeleton onClose={handleCloseDetail} />

@@ -28,7 +28,7 @@ const authorizeAdmin = (req, res, next) => {
 };
 
 const authorizeContentManager = (req, res, next) => {
-  if (req.user?.role !== 'content_manager') {
+  if (!['content_manager', 'content manager'].includes(req.user?.role)) {
     return error(res, 'Không có quyền truy cập', 403);
   }
 

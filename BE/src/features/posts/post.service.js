@@ -15,6 +15,14 @@ function getCurrentUserId(currentUser = {}) {
   return currentUser.id || currentUser._id || currentUser.userId;
 }
 
+function buildPublicPostQuery(extraQuery = {}) {
+  return {
+    ...extraQuery,
+    status: { $ne: 'resolved' },
+    deletedAt: null,
+  };
+}
+
 function withRatingPipeline(extraStages = []) {
   return [
     ...extraStages,
@@ -108,6 +116,43 @@ function buildPostUpdatePayload(payload = {}) {
   }
 
   return updates;
+}
+
+function hasQueryValue(value) {
+  return value !== undefined && value !== null && value !== '';
+}
+
+function parsePositiveInteger(value, fallback) {
+  const parsedValue = Number(value);
+
+  if (!Number.isFinite(parsedValue)) {
+    return fallback;
+  }
+
+  return Math.max(Math.trunc(parsedValue), 1);
+}
+
+function buildPagination(filters = {}, fallbackLimit) {
+  const hasPage = hasQueryValue(filters.page);
+  const hasLimit = hasQueryValue(filters.limit);
+
+  if (!hasPage && !hasLimit && fallbackLimit === undefined) {
+    return null;
+  }
+
+  const limit = parsePositiveInteger(filters.limit, fallbackLimit);
+
+  if (!limit) {
+    return null;
+  }
+
+  const page = parsePositiveInteger(filters.page, 1);
+
+  return {
+    page,
+    limit,
+    skip: (page - 1) * limit,
+  };
 }
 
 /**
@@ -294,8 +339,9 @@ async function getMyPosts(currentUser = {}, filters = {}) {
 }
 
 async function getAllPosts(filters = {}) {
-  const { category, title, page, limit } = filters;
-  const query = {};
+  const { category, title } = filters;
+  const query = buildPublicPostQuery();
+  const pagination = buildPagination(filters);
 
   if (category) {
     query.category = category;
@@ -310,10 +356,8 @@ async function getAllPosts(filters = {}) {
     { $sort: { createdAt: -1 } },
   ]);
 
-  if (page && limit) {
-    const safePage = Math.max(Number(page), 1);
-    const safeLimit = Math.max(Number(limit), 1);
-    pipeline.push({ $skip: (safePage - 1) * safeLimit }, { $limit: safeLimit });
+  if (pagination) {
+    pipeline.push({ $skip: pagination.skip }, { $limit: pagination.limit });
   }
 
   return Post.aggregate(pipeline);
@@ -325,7 +369,7 @@ async function getAllPosts(filters = {}) {
  * @returns {Promise<Object>} Chi tiết bài viết
  */
 async function getPostById(id) {
-  const post = await Post.findOne(buildPostIdQuery(id))
+  const post = await Post.findOne(buildPublicPostQuery(buildPostIdQuery(id)))
     .select('-id -excerpt -likesCount -likeCount -isFeatured -isActive -readTime -tags')
     .populate({
       path: 'comments',
@@ -364,10 +408,14 @@ async function getPostById(id) {
  * @returns {Promise<Array>} Danh sách bài viết nổi bật
  */
 async function getFeaturedPosts(filters = {}) {
-  const safeLimit = Math.max(Number(filters.limit) || 3, 1);
-  const pipeline = withRatingPipeline([]);
+  const pagination = buildPagination(filters, 3);
+  const pipeline = withRatingPipeline([{ $match: buildPublicPostQuery() }]);
 
-  pipeline.push({ $sort: { avgRating: -1, createdAt: -1 } }, { $limit: safeLimit });
+  pipeline.push(
+    { $sort: { commentsCount: -1, createdAt: -1 } },
+    { $skip: pagination.skip },
+    { $limit: pagination.limit }
+  );
 
   return Post.aggregate(pipeline);
 }

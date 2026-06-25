@@ -88,6 +88,18 @@ function getCommentAuthor(comment) {
   };
 }
 
+function getEntityId(entity) {
+  if (!entity) {
+    return "";
+  }
+
+  if (typeof entity === "string") {
+    return entity;
+  }
+
+  return entity._id || entity.id || entity.userId || "";
+}
+
 /**
  * Render rating bang icon sao de giu UI gon va de scan.
  * @param {object} props - Component props
@@ -255,6 +267,9 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
     error: commentsError,
     createPostComment,
   } = useComments(postId, comments);
+  const currentUserId = getEntityId(user);
+  const postOwnerId = getEntityId(post?.userId);
+  const isOwnPost = Boolean(currentUserId && postOwnerId && currentUserId === postOwnerId);
 
   useEffect(() => {
     function handleKeyDown(event) {
@@ -324,6 +339,11 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
       return;
     }
 
+    if (isOwnPost) {
+      toast.error("Bạn không thể báo cáo bài viết của chính mình");
+      return;
+    }
+
     setReportReason(REPORT_REASONS[0].value);
     setReportDialogOpen(true);
   }
@@ -382,16 +402,18 @@ function BlogPostDetail({ post, onClose, comments = [] }) {
               </Badge>
               <span className="truncate text-sm text-muted-foreground">{formatDate(post.createdAt)}</span>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="shrink-0 rounded-full hover:bg-amber-50 hover:text-amber-700"
-              onClick={handleOpenReportDialog}
-              aria-label="Báo cáo bài viết"
-            >
-              <Flag className="h-5 w-5" />
-            </Button>
+            {!isOwnPost && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full hover:bg-amber-50 hover:text-amber-700"
+                onClick={handleOpenReportDialog}
+                aria-label="Báo cáo bài viết"
+              >
+                <Flag className="h-5 w-5" />
+              </Button>
+            )}
             <Button
               type="button"
               variant="ghost"

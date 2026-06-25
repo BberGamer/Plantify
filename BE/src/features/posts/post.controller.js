@@ -1,5 +1,6 @@
 // post.controller.js - Xu ly request/response cho bai viet Plantify
 const postService = require('./post.service');
+const reportService = require('../reports/report.service');
 const apiResponse = require('../../utils/apiResponse');
 
 function getFileDataUrl(file) {
@@ -59,6 +60,15 @@ async function deletePost(req, res, next) {
   try {
     const post = await postService.deletePost(req.params.id, req.user);
     return apiResponse.success(res, 'Xoa bai viet thanh cong', post);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function restorePost(req, res, next) {
+  try {
+    const post = await reportService.restorePost(req.params.id);
+    return apiResponse.success(res, 'Khoi phuc bai viet thanh cong', post);
   } catch (error) {
     return next(error);
   }
@@ -128,6 +138,7 @@ module.exports = {
   createPost,
   updatePost,
   deletePost,
+  restorePost,
   getMyPosts,
   getAllPosts,
   getFeaturedPosts,

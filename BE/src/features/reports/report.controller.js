@@ -17,6 +17,38 @@ async function createReport(req, res, next) {
   }
 }
 
+async function getAllReports(req, res, next) {
+  try {
+    const reports = await reportService.getAllReports(req.query);
+    return apiResponse.success(res, 'Lay danh sach bao cao thanh cong', reports);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function processReport(req, res, next) {
+  try {
+    const { action } = req.body;
+    const report = await reportService.processReport(req.params.id, getCurrentUserId(req), action);
+
+    return apiResponse.success(res, 'Xu ly bao cao thanh cong', report);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function restorePost(req, res, next) {
+  try {
+    const post = await reportService.restorePost(req.params.postId);
+    return apiResponse.success(res, 'Khoi phuc bai viet thanh cong', post);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   createReport,
+  getAllReports,
+  processReport,
+  restorePost,
 };

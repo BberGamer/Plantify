@@ -2,7 +2,7 @@
 const express = require('express');
 const postController = require('./post.controller');
 const { uploadPostImages } = require('./post.upload');
-const { authenticate, authorizeCustomer } = require('../../middlewares/auth');
+const { authenticate, authorizeContentManager, authorizeCustomer } = require('../../middlewares/auth');
 
 const router = express.Router();
 
@@ -26,6 +26,9 @@ router.put('/:id', authenticate, authorizeCustomer, uploadPostImages, postContro
 
 // DELETE /api/posts/:id - Customer xoa bai viet cua chinh minh.
 router.delete('/:id', authenticate, authorizeCustomer, postController.deletePost);
+
+// PATCH /api/posts/:id/restore - Content Manager khoi phuc bai viet da xoa mem.
+router.patch('/:id/restore', authenticate, authorizeContentManager, postController.restorePost);
 
 // GET /api/posts/:id - Lay chi tiet bai viet.
 router.get('/:id', postController.getPostById);
