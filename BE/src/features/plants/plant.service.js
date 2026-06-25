@@ -2,6 +2,7 @@
 // Cung cấp các hàm CRUD: lấy danh sách, chi tiết, tạo, cập nhật, xóa cây
 const Plant = require('./plant.model');
 const PlantCategory = require('./plantCategory.model');
+const PlantDisease = require('../plant-diseases/plantDisease.model');
 
 const toSlug = (str) =>
   str
@@ -27,15 +28,6 @@ async function getAllPlants(filters = {}) {
     query.categoryId = category;
   }
 
-  // Search theo name, scientificName, commonNames
-  if (search) {
-    query.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { scientificName: { $regex: search, $options: 'i' } },
-      { commonNames: { $regex: search, $options: 'i' } }
-    ];
-  }
-
   // Filter theo tag
   if (tag) {
     query.tags = tag;
@@ -56,10 +48,39 @@ async function getAllPlants(filters = {}) {
     query.watering = watering;
   }
 
+  const keyword = String(search || '').trim();
+  if (keyword) {
+    const diseaseMatches = await PlantDisease.find({
+      $or: [
+        { name: { $regex: keyword, $options: 'i' } },
+        { symptoms: { $regex: keyword, $options: 'i' } },
+        { causes: { $regex: keyword, $options: 'i' } },
+        { treatment: { $regex: keyword, $options: 'i' } },
+        { prevention: { $regex: keyword, $options: 'i' } },
+      ],
+    }).select('plantId').lean();
+
+    const diseasePlantIds = [...new Set(
+      diseaseMatches
+        .map((disease) => disease.plantId?.toString())
+        .filter(Boolean)
+    )];
+
+    query.$or = [
+      { name: { $regex: keyword, $options: 'i' } },
+      { scientificName: { $regex: keyword, $options: 'i' } },
+      { commonNames: { $regex: keyword, $options: 'i' } },
+    ];
+
+    if (diseasePlantIds.length > 0) {
+      query.$or.push({ _id: { $in: diseasePlantIds } });
+    }
+  }
+
+  const safePage = Math.max(Number(page) || 1, 1);
+  const safeLimit = Math.max(Number(limit) || 9, 9);
   const total = await Plant.countDocuments(query);
-  const pages = Math.ceil(total / limit);
-  const safePage = Math.max(Number(page), 1);
-  const safeLimit = Math.max(Number(limit), 9);
+  const pages = Math.max(Math.ceil(total / safeLimit), 1);
 
   // Sort options
   let sortOption = { name: 1 };
