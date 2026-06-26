@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +37,22 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
 
+const CART_UPDATED_EVENT = "cart-updated";
+
+function getCartItemCount() {
+  try {
+    const savedCart = localStorage.getItem("cart");
+    if (!savedCart) return 0;
+
+    const cart = JSON.parse(savedCart);
+    if (!Array.isArray(cart)) return 0;
+
+    return cart.reduce((total, item) => total + Number(item.quantity || 1), 0);
+  } catch {
+    return 0;
+  }
+}
+
 function formatNotificationMessage(notification) {
   if (notification.type === "post_commented") {
     const actorName = notification.actorId?.fullName || "Có người";
@@ -52,6 +69,7 @@ function formatNotificationMessage(notification) {
 function Header() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [cartItemCount, setCartItemCount] = useState(() => getCartItemCount());
   const { user, logout, isAuthenticated } = useAuth();
   const normalizedRole = user ? mapBackendRoleToFeRole(user.role) : null;
   const canViewNotifications = isAuthenticated && normalizedRole === "customer";
@@ -63,6 +81,21 @@ function Header() {
     readNotification,
     readAllNotifications,
   } = useNotifications(canViewNotifications);
+
+  useEffect(() => {
+    const updateCartItemCount = () => setCartItemCount(getCartItemCount());
+
+    updateCartItemCount();
+    window.addEventListener(CART_UPDATED_EVENT, updateCartItemCount);
+    window.addEventListener("storage", updateCartItemCount);
+    window.addEventListener("focus", updateCartItemCount);
+
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, updateCartItemCount);
+      window.removeEventListener("storage", updateCartItemCount);
+      window.removeEventListener("focus", updateCartItemCount);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -154,6 +187,17 @@ function Header() {
               </nav>
             </SheetContent>
           </Sheet>
+
+          <Button variant="ghost" size="icon" className="relative rounded-full" aria-label="Giỏ hàng" asChild>
+            <Link to={ROUTES.cart}>
+              <ShoppingCart className="h-5 w-5" />
+              {cartItemCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                  {cartItemCount > 99 ? "99+" : cartItemCount}
+                </span>
+              )}
+            </Link>
+          </Button>
 
           {isAuthenticated && user ? (
             <>
