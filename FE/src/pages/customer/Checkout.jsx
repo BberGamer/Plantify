@@ -9,12 +9,13 @@ import { Check, ShieldCheck, Landmark, Banknote, CreditCard, ArrowLeft, Shopping
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { useAuth } from "@/features/auth/hooks";
+import { getMyAddressesApi } from "@/features/auth/api";
 import { getCart, removeSelectedCartItems } from "@/features/cart/api";
 import { extractCartPayload, notifyCartUpdated } from "@/features/cart/cartStorage";
 
 function Checkout() {
   const navigate = useNavigate();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
 
   // Selected items from cart
   const [selectedItems, setSelectedItems] = useState([]);
@@ -38,6 +39,43 @@ function Checkout() {
   
   // Checkout success state
   const [isSuccess, setIsSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setForm((prev) => ({
+      ...prev,
+      fullName: user.fullName || "",
+      phone: user.phone || "",
+      email: user.email || "",
+      address: user.address || "",
+    }));
+  }, [user]);
+
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+
+    async function fillDefaultAddress() {
+      try {
+        const response = await getMyAddressesApi();
+        const addresses = response?.data || [];
+        const defaultAddress = addresses.find((address) => address.isDefault);
+
+        if (!defaultAddress) return;
+
+        setForm((prev) => ({
+          ...prev,
+          fullName: defaultAddress.receiverName || prev.fullName,
+          phone: defaultAddress.phone || prev.phone,
+          address: defaultAddress.fullAddress || prev.address,
+        }));
+      } catch {
+        // Khong chan checkout neu so dia chi chua tai duoc.
+      }
+    }
+
+    fillDefaultAddress();
+  }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
