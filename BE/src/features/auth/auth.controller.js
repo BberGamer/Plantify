@@ -373,6 +373,73 @@ const updateProfile = async (req, res, next) => {
 /**
  * Đổi mật khẩu của người dùng đang đăng nhập
  */
+const validateAddressInput = (addressData) => {
+  const requiredFields = ['street', 'provinceCode', 'provinceName', 'wardCode', 'wardName'];
+  const missingField = requiredFields.find((field) => !addressData[field] || !String(addressData[field]).trim());
+
+  if (missingField) {
+    const err = new Error('Vui lòng chọn đầy đủ tỉnh/thành phố, xã/phường và nhập địa chỉ chi tiết');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (addressData.phone && addressData.phone.trim() !== '') {
+    const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+    if (!phoneRegex.test(addressData.phone.trim())) {
+      const err = new Error('Số điện thoại không hợp lệ');
+      err.statusCode = 400;
+      throw err;
+    }
+  }
+};
+
+const getAddresses = async (req, res, next) => {
+  try {
+    const addresses = await authService.getAddresses(req.user.id);
+    return success(res, 'Lấy sổ địa chỉ thành công', addresses, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createAddress = async (req, res, next) => {
+  try {
+    validateAddressInput(req.body);
+    const addresses = await authService.createAddress(req.user.id, req.body);
+    return success(res, 'Thêm địa chỉ thành công', addresses, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateAddress = async (req, res, next) => {
+  try {
+    validateAddressInput(req.body);
+    const addresses = await authService.updateAddress(req.user.id, req.params.addressId, req.body);
+    return success(res, 'Cập nhật địa chỉ thành công', addresses, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteAddress = async (req, res, next) => {
+  try {
+    const addresses = await authService.deleteAddress(req.user.id, req.params.addressId);
+    return success(res, 'Xóa địa chỉ thành công', addresses, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const setDefaultAddress = async (req, res, next) => {
+  try {
+    const addresses = await authService.setDefaultAddress(req.user.id, req.params.addressId);
+    return success(res, 'Đã đặt địa chỉ mặc định', addresses, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword, confirmPassword } = req.body;
@@ -429,5 +496,10 @@ module.exports = {
   verifyOTP,
   resetPassword,
   updateProfile,
+  getAddresses,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
   changePassword,
 };
