@@ -230,7 +230,7 @@ function Shop() {
                 <div className="mt-8 pt-6 border-t">
                   <h3 className="font-semibold mb-4">Đánh giá</h3>
                   <div className="space-y-2">
-                    {[5, 4, 3].map((stars) => (
+                    {[5, 4, 3, 2, 1].map((stars) => (
                       <button
                         key={stars}
                         onClick={() => {
