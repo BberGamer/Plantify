@@ -32,26 +32,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { PUBLIC_NAV, ROUTES } from "@/lib/constants";
 import { useNotifications } from "@/features/notifications/hooks";
+import { getCart } from "@/features/cart/api";
+import { CART_UPDATED_EVENT, extractCartPayload, getLocalCartItemCount } from "@/features/cart/cartStorage";
 import { mapBackendRoleToFeRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
-
-const CART_UPDATED_EVENT = "cart-updated";
-
-function getCartItemCount() {
-  try {
-    const savedCart = localStorage.getItem("cart");
-    if (!savedCart) return 0;
-
-    const cart = JSON.parse(savedCart);
-    if (!Array.isArray(cart)) return 0;
-
-    return cart.reduce((total, item) => total + Number(item.quantity || 1), 0);
-  } catch {
-    return 0;
-  }
-}
 
 function formatNotificationMessage(notification) {
   if (notification.type === "post_commented") {
@@ -69,7 +55,7 @@ function formatNotificationMessage(notification) {
 function Header() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [cartItemCount, setCartItemCount] = useState(() => getCartItemCount());
+  const [cartItemCount, setCartItemCount] = useState(() => getLocalCartItemCount());
   const { user, logout, isAuthenticated } = useAuth();
   const normalizedRole = user ? mapBackendRoleToFeRole(user.role) : null;
   const canViewNotifications = isAuthenticated && normalizedRole === "customer";
@@ -83,7 +69,19 @@ function Header() {
   } = useNotifications(canViewNotifications);
 
   useEffect(() => {
-    const updateCartItemCount = () => setCartItemCount(getCartItemCount());
+    const updateCartItemCount = async () => {
+      if (!isAuthenticated) {
+        setCartItemCount(getLocalCartItemCount());
+        return;
+      }
+
+      try {
+        const response = await getCart();
+        setCartItemCount(extractCartPayload(response).totalItems || 0);
+      } catch {
+        setCartItemCount(0);
+      }
+    };
 
     updateCartItemCount();
     window.addEventListener(CART_UPDATED_EVENT, updateCartItemCount);
@@ -95,7 +93,7 @@ function Header() {
       window.removeEventListener("storage", updateCartItemCount);
       window.removeEventListener("focus", updateCartItemCount);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     logout();
