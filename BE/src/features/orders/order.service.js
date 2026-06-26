@@ -210,6 +210,9 @@ async function verifyVnpayReturn(vnpParams) {
   const order = await Order.findOne({ orderCode });
 
   if (!order) {
+    if (responseCode !== '00') {
+      return { isValid: true, responseCode, order: null };
+    }
     return { isValid: false, responseCode: '01', order: null };
   }
 
@@ -231,13 +234,13 @@ async function verifyVnpayReturn(vnpParams) {
       { userId: order.userId },
       { $pull: { items: { selected: true } } }
     ).catch((err) => console.error('[Order Service] Lỗi khi xóa sản phẩm giỏ hàng sau thanh toán:', err));
-  } else {
-    // Thanh toán thất bại hoặc bị hủy
-    order.paymentStatus = 'failed';
-    order.status = 'cancelled';
-  }
 
-  await order.save();
+    await order.save();
+  } else {
+    // Thanh toán thất bại hoặc bị hủy -> Xóa đơn hàng khỏi DB để không lưu vết
+    await Order.deleteOne({ orderCode });
+    return { isValid: true, responseCode, order: null };
+  }
 
   return { isValid: true, responseCode, order };
 }
@@ -301,12 +304,13 @@ async function handleVnpayIPN(vnpParams) {
       { userId: order.userId },
       { $pull: { items: { selected: true } } }
     ).catch((err) => console.error('[Order Service] Lỗi khi xóa sản phẩm giỏ hàng trong IPN:', err));
+
+    await order.save();
   } else {
-    order.paymentStatus = 'failed';
-    order.status = 'cancelled';
+    // Thanh toán thất bại hoặc bị hủy -> Xóa đơn hàng khỏi DB
+    await Order.deleteOne({ orderCode: orderId });
   }
 
-  await order.save();
   return { rspCode: '00', message: 'Success' };
 }
 
