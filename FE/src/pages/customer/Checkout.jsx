@@ -60,6 +60,7 @@ function Checkout() {
   const [isFailed, setIsFailed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingCart, setIsLoadingCart] = useState(!new URLSearchParams(window.location.search).has("vnp_ResponseCode"));
   const [orderCode, setOrderCode] = useState("");
 
   // === KHỞI TẠO ===
@@ -116,9 +117,15 @@ function Checkout() {
 
   // 3. Tải giỏ hàng từ backend API
   useEffect(() => {
-    if (isVnpayCallback || authLoading || !isAuthenticated) return;
+    if (isVnpayCallback || authLoading) return;
+
+    if (!isAuthenticated) {
+      setIsLoadingCart(false);
+      return;
+    }
 
     async function loadSelectedItems() {
+      setIsLoadingCart(true);
       try {
         const response = await getCart();
         const cart = extractCartPayload(response).items || [];
@@ -139,6 +146,8 @@ function Checkout() {
         }
 
         toast.error(error.response?.data?.message || "Không thể tải giỏ hàng.");
+      } finally {
+        setIsLoadingCart(false);
       }
     }
 
@@ -323,8 +332,8 @@ function Checkout() {
   // RENDER
   // ========================================
 
-  // === ĐANG TẢI THÔNG TIN AUTH ===
-  if (authLoading && !isProcessing) {
+  // === ĐANG TẢI THÔNG TIN HỆ THỐNG ===
+  if ((authLoading || isLoadingCart) && !isProcessing) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white py-16 px-4 flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
