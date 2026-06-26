@@ -36,6 +36,10 @@ async function getWeatherByCity(city) {
     throw createHttpError('Khong tim thay thong tin thoi tiet cho thanh pho nay', 404);
   }
 
+  if (response.status === 401) {
+    throw createHttpError('OPENWEATHER_API_KEY khong hop le hoac da het han', 502);
+  }
+
   if (!response.ok) {
     throw createHttpError(data.message || 'Khong the lay thong tin thoi tiet', response.status);
   }

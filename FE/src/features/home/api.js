@@ -10,6 +10,10 @@ import { api } from "@/lib/api";
  * @returns {Promise<object>}
  */
 export async function getWeatherByCity(city) {
-  const response = await api.get("/weather", { params: { city } });
+  const response = await api.get("/weather", {
+    params: { city },
+    skipAuth: true,
+    skipAuthExpiry: true,
+  });
   return response.data.data;
 }
