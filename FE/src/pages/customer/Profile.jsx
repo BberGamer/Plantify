@@ -30,7 +30,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProfile } from "@/features/auth/hooks/useProfile";
 import "@/styles/Profile.css";
 
@@ -57,6 +57,9 @@ const ROLE_CONFIG = {
     className: "bg-purple-100 text-purple-700 border-purple-200",
   },
 };
+
+// Số cây yêu thích hiển thị mỗi trang
+const FAV_PER_PAGE = 6;
 
 
 
@@ -118,6 +121,17 @@ function PasswordInput({ id, value, onChange, disabled, placeholder, className }
 function Profile() {
   const navigate = useNavigate();
   const { favorites, loading: favLoading, refetch: refetchFavorites } = useMyFavorites();
+
+  // === Pagination cho cây yêu thích ===
+  const [favPage, setFavPage] = useState(1);
+  const favTotalPages = Math.ceil(favorites.length / FAV_PER_PAGE);
+
+  // Reset về trang 1 khi danh sách thay đổi hoặc trang vượt quá
+  useEffect(() => {
+    if (favPage > favTotalPages && favTotalPages > 0) {
+      setFavPage(favTotalPages);
+    }
+  }, [favorites.length, favPage, favTotalPages]);
 
   const handleUnfavorite = async (plantId, e) => {
     e.preventDefault();
@@ -410,53 +424,88 @@ function Profile() {
                   action={{ label: "Khám phá cây cảnh", onClick: () => navigate("/browse") }}
                 />
               ) : (
-                <div className="profile-plants-grid">
-                  {favorites.map((fav, index) => {
-                    const plant = fav.plantId;
-                    if (!plant) return null;
-                    const plantId = plant._id || plant.id;
-                    const imageUrl = plant.thumbnail || plant.images?.[0] || "";
-                    const savedDate = fav.createdAt
-                      ? new Date(fav.createdAt).toLocaleDateString("vi-VN")
-                      : "";
-                    return (
-                      <motion.div key={fav._id || plantId} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.1 }}>
-                        <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
-                          <div className="aspect-square overflow-hidden relative">
-                            <img
-                              src={imageUrl}
-                              alt={plant.name}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                            {/* Nút bỏ thích */}
-                            <div className="absolute top-3 right-3">
-                              <button
-                                onClick={(e) => handleUnfavorite(plantId, e)}
-                                className="profile-plant-heart-btn"
-                                aria-label="Bỏ yêu thích"
-                              >
-                                <Heart className="w-5 h-5 fill-red-500 text-red-500" />
-                              </button>
-                            </div>
-                          </div>
-                          <CardContent className="p-4">
-                            <h3 className="font-semibold mb-1">{plant.name}</h3>
-                            {plant.scientificName && (
-                              <p className="text-xs text-muted-foreground italic mb-1">{plant.scientificName}</p>
-                            )}
-                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              Đã lưu: {savedDate}
-                            </p>
-                            <Button className="w-full mt-4" variant="outline" asChild>
-                              <Link to={`/plant/${plantId}`}>Xem chi tiết</Link>
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                <>
+                  <div className="profile-plants-grid">
+                    {favorites
+                      .slice((favPage - 1) * FAV_PER_PAGE, favPage * FAV_PER_PAGE)
+                      .map((fav, index) => {
+                        const plant = fav.plantId;
+                        if (!plant) return null;
+                        const plantId = plant._id || plant.id;
+                        const imageUrl = plant.thumbnail || plant.images?.[0] || "";
+                        const savedDate = fav.createdAt
+                          ? new Date(fav.createdAt).toLocaleDateString("vi-VN")
+                          : "";
+                        return (
+                          <motion.div key={fav._id || plantId} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.1 }}>
+                            <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
+                              <div className="aspect-square overflow-hidden relative">
+                                <img
+                                  src={imageUrl}
+                                  alt={plant.name}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                />
+                                {/* Nút bỏ thích */}
+                                <div className="absolute top-3 right-3">
+                                  <button
+                                    onClick={(e) => handleUnfavorite(plantId, e)}
+                                    className="profile-plant-heart-btn"
+                                    aria-label="Bỏ yêu thích"
+                                  >
+                                    <Heart className="w-5 h-5 fill-red-500 text-red-500" />
+                                  </button>
+                                </div>
+                              </div>
+                              <CardContent className="p-4">
+                                <h3 className="font-semibold mb-1">{plant.name}</h3>
+                                {plant.scientificName && (
+                                  <p className="text-xs text-muted-foreground italic mb-1">{plant.scientificName}</p>
+                                )}
+                                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  Đã lưu: {savedDate}
+                                </p>
+                                <Button className="w-full mt-4" variant="outline" asChild>
+                                  <Link to={`/plant/${plantId}`}>Xem chi tiết</Link>
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        );
+                      })}
+                  </div>
+                  {/* === Pagination === */}
+                  {favTotalPages > 1 && (
+                    <div className="mt-12 flex items-center justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        disabled={favPage <= 1}
+                        onClick={() => setFavPage((p) => p - 1)}
+                      >
+                        Trước
+                      </Button>
+                      <div className="flex gap-1">
+                        {Array.from({ length: favTotalPages }, (_, i) => i + 1).map((pageNum) => (
+                          <Button
+                            key={pageNum}
+                            variant={pageNum === favPage ? "default" : "outline"}
+                            size="icon"
+                            onClick={() => setFavPage(pageNum)}
+                          >
+                            {pageNum}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        disabled={favPage >= favTotalPages}
+                        onClick={() => setFavPage((p) => p + 1)}
+                      >
+                        Sau
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </TabsContent>
           )}
