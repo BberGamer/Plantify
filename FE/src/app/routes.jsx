@@ -37,6 +37,7 @@ import { Unauthorized } from "@/pages/guest/Unauthorized";
 // Customer Pages (Người dùng đã đăng nhập - vai trò Customer)
 // ============================================================
 import { Profile } from "@/pages/customer/Profile";
+import { AddressBook } from "@/pages/customer/AddressBook";
 import { Settings } from "@/pages/customer/Settings";
 import { Cart } from "@/pages/customer/Cart";
 import { Checkout } from "@/pages/customer/Checkout";
@@ -84,6 +85,7 @@ const publicChildRoutes = [
   { path: "product/:id", element: <ProductDetail /> },
   { path: "ai-doctor", element: <AIDoctor /> },
   { path: "profile", element: <Profile /> },
+  { path: "address-book", element: <AddressBook /> },
   { path: "my-posts", element: <MyPosts /> },
   { path: "settings", element: <Settings /> },
   { path: "cart", element: <Cart /> },
