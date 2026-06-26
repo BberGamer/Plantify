@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { PUBLIC_NAV, ROUTES } from "@/lib/constants";
 import { useNotifications } from "@/features/notifications/hooks";
+import { getCart } from "@/features/cart/api";
+import { CART_UPDATED_EVENT, extractCartPayload, getLocalCartItemCount } from "@/features/cart/cartStorage";
 import { mapBackendRoleToFeRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/hooks";
@@ -52,6 +55,7 @@ function formatNotificationMessage(notification) {
 function Header() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [cartItemCount, setCartItemCount] = useState(() => getLocalCartItemCount());
   const { user, logout, isAuthenticated } = useAuth();
   const normalizedRole = user ? mapBackendRoleToFeRole(user.role) : null;
   const canViewNotifications = isAuthenticated && normalizedRole === "customer";
@@ -63,6 +67,33 @@ function Header() {
     readNotification,
     readAllNotifications,
   } = useNotifications(canViewNotifications);
+
+  useEffect(() => {
+    const updateCartItemCount = async () => {
+      if (!isAuthenticated) {
+        setCartItemCount(getLocalCartItemCount());
+        return;
+      }
+
+      try {
+        const response = await getCart();
+        setCartItemCount(extractCartPayload(response).totalItems || 0);
+      } catch {
+        setCartItemCount(0);
+      }
+    };
+
+    updateCartItemCount();
+    window.addEventListener(CART_UPDATED_EVENT, updateCartItemCount);
+    window.addEventListener("storage", updateCartItemCount);
+    window.addEventListener("focus", updateCartItemCount);
+
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, updateCartItemCount);
+      window.removeEventListener("storage", updateCartItemCount);
+      window.removeEventListener("focus", updateCartItemCount);
+    };
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     logout();
@@ -154,6 +185,17 @@ function Header() {
               </nav>
             </SheetContent>
           </Sheet>
+
+          <Button variant="ghost" size="icon" className="relative rounded-full" aria-label="Giỏ hàng" asChild>
+            <Link to={ROUTES.cart}>
+              <ShoppingCart className="h-5 w-5" />
+              {cartItemCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                  {cartItemCount > 99 ? "99+" : cartItemCount}
+                </span>
+              )}
+            </Link>
+          </Button>
 
           {isAuthenticated && user ? (
             <>

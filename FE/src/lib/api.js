@@ -11,7 +11,7 @@ const api = axios.create({
 });
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  if (token) {
+  if (token && !config.skipAuth) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
@@ -29,9 +29,16 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     // Nếu token hết hạn hoặc không hợp lệ (401), có thể tự động clear localStorage
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+    if (error.response && error.response.status === 401 && !error.config?.skipAuthExpiry) {
+      const requestAuthHeader = error.config?.headers?.Authorization;
+      const currentToken = localStorage.getItem("token");
+      const currentAuthHeader = currentToken ? `Bearer ${currentToken}` : null;
+
+      if (!requestAuthHeader || requestAuthHeader === currentAuthHeader) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.dispatchEvent(new Event("auth-expired"));
+      }
     }
     return Promise.reject(error);
   }

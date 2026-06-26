@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, Navigate, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,9 +8,13 @@ import { Separator } from "@/components/ui/separator";
 import { Check, ShieldCheck, Landmark, Banknote, CreditCard, ArrowLeft, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import { useAuth } from "@/features/auth/hooks";
+import { getCart, removeSelectedCartItems } from "@/features/cart/api";
+import { extractCartPayload, notifyCartUpdated } from "@/features/cart/cartStorage";
 
 function Checkout() {
   const navigate = useNavigate();
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   // Selected items from cart
   const [selectedItems, setSelectedItems] = useState([]);
@@ -36,16 +40,31 @@ function Checkout() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      const cart = JSON.parse(savedCart);
-      const selected = cart.filter(item => item.selected);
-      setSelectedItems(selected);
-      
-      const sum = selected.reduce((total, item) => total + (item.price * item.quantity), 0);
-      setSubtotal(sum);
+    if (authLoading || !isAuthenticated) return;
+
+    async function loadSelectedItems() {
+      try {
+        const response = await getCart();
+        const cart = extractCartPayload(response).items;
+        const selected = cart.filter(item => item.selected);
+
+        setSelectedItems(selected);
+
+        const sum = selected.reduce((total, item) => total + (item.price * item.quantity), 0);
+        setSubtotal(sum);
+      } catch (error) {
+        if (error.response?.status === 401) {
+          toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          navigate("/login", { state: { from: "/checkout" }, replace: true });
+          return;
+        }
+
+        toast.error(error.response?.data?.message || "Không thể tải giỏ hàng.");
+      }
     }
-  }, []);
+
+    loadSelectedItems();
+  }, [authLoading, isAuthenticated, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -98,14 +117,24 @@ function Checkout() {
       origin: { y: 0.6 }
     });
 
-    // 3. Clear selected items from cart in localStorage
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      const cart = JSON.parse(savedCart);
-      const remainingCart = cart.filter(item => !item.selected);
-      localStorage.setItem("cart", JSON.stringify(remainingCart));
-    }
+    removeSelectedCartItems()
+      .then(() => notifyCartUpdated())
+      .catch((error) => {
+        toast.error(error.response?.data?.message || "Không thể cập nhật giỏ hàng.");
+      });
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Đang kiểm tra đăng nhập...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: "/checkout" }} replace />;
+  }
 
   if (isSuccess) {
     return (

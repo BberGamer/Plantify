@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,8 @@ import { motion } from "motion/react";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
 import { mapBackendRoleToFeRole } from "@/lib/roles";
+import { mergeCart } from "@/features/cart/api";
+import { clearLocalCart, notifyCartUpdated, readLocalCart } from "@/features/cart/cartStorage";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -25,6 +27,7 @@ function Login() {
   const [submitting, setSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const getRedirectPath = (role) => {
     const feRole = mapBackendRoleToFeRole(role);
@@ -58,8 +61,22 @@ function Login() {
       const user = await login(email, password);
       toast.success(`Chào mừng trở lại, ${user.fullName}!`);
 
+      if (mapBackendRoleToFeRole(user.role) === "customer") {
+        const localCart = readLocalCart();
+        if (localCart.length > 0) {
+          try {
+            await mergeCart(localCart);
+            clearLocalCart();
+          } catch (error) {
+            toast.error(error.response?.data?.message || "Không thể đồng bộ giỏ hàng.");
+          }
+        } else {
+          notifyCartUpdated();
+        }
+      }
+
       // Chuyển hướng theo role
-      const redirectPath = getRedirectPath(user.role);
+      const redirectPath = location.state?.from || getRedirectPath(user.role);
       navigate(redirectPath, { replace: true });
     } catch (error) {
       console.error(error);
