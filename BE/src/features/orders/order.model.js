@@ -127,6 +127,15 @@ const orderSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    // Lưu vết cổng thanh toán VNPay
+    vnpayTransactionNo: {
+      type: String,
+      default: null,
+    },
+    paidAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
