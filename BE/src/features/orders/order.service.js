@@ -122,8 +122,6 @@ async function createOrder(userId, orderData) {
  * @returns {string} URL thanh toán VNPay hoàn chỉnh
  */
 function createVnpayPaymentUrl(order, ipAddr) {
-  process.env.TZ = 'Asia/Ho_Chi_Minh';
-
   const tmnCode = process.env.VNPAY_TMN_CODE;
   const secretKey = process.env.VNPAY_HASH_SECRET;
   const vnpUrl = process.env.VNPAY_URL;
@@ -188,12 +186,15 @@ async function verifyVnpayReturn(vnpParams) {
   const secureHash = vnpParams['vnp_SecureHash'];
   const secretKey = process.env.VNPAY_HASH_SECRET;
 
+  // Clone vnpParams tránh side-effect biến gốc
+  const params = { ...vnpParams };
+
   // 1. Xóa các trường hash trước khi verify (theo tài liệu VNPay)
-  delete vnpParams['vnp_SecureHash'];
-  delete vnpParams['vnp_SecureHashType'];
+  delete params['vnp_SecureHash'];
+  delete params['vnp_SecureHashType'];
 
   // 2. Sắp xếp và tạo chữ ký để so sánh
-  const sortedParams = sortObject(vnpParams);
+  const sortedParams = sortObject(params);
   const signData = qs.stringify(sortedParams, { encode: false });
   const hmac = crypto.createHmac('sha512', secretKey);
   const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
@@ -204,8 +205,8 @@ async function verifyVnpayReturn(vnpParams) {
   }
 
   // 4. Tìm đơn hàng theo mã TxnRef (chính là orderCode)
-  const orderCode = vnpParams['vnp_TxnRef'];
-  const responseCode = vnpParams['vnp_ResponseCode'];
+  const orderCode = params['vnp_TxnRef'];
+  const responseCode = params['vnp_ResponseCode'];
   const order = await Order.findOne({ orderCode });
 
   if (!order) {
@@ -222,7 +223,7 @@ async function verifyVnpayReturn(vnpParams) {
     // Thanh toán thành công
     order.paymentStatus = 'paid';
     order.status = 'confirmed';
-    order.vnpayTransactionNo = vnpParams['vnp_TransactionNo'] || null;
+    order.vnpayTransactionNo = params['vnp_TransactionNo'] || null;
     order.paidAt = new Date();
 
     // Tự động xóa sản phẩm đã mua khỏi giỏ hàng
@@ -251,15 +252,18 @@ async function handleVnpayIPN(vnpParams) {
   const secureHash = vnpParams['vnp_SecureHash'];
   const secretKey = process.env.VNPAY_HASH_SECRET;
 
-  const orderId = vnpParams['vnp_TxnRef'];
-  const rspCode = vnpParams['vnp_ResponseCode'];
+  // Clone vnpParams tránh side-effect biến gốc
+  const params = { ...vnpParams };
+
+  const orderId = params['vnp_TxnRef'];
+  const rspCode = params['vnp_ResponseCode'];
 
   // 1. Xóa hash fields trước khi verify
-  delete vnpParams['vnp_SecureHash'];
-  delete vnpParams['vnp_SecureHashType'];
+  delete params['vnp_SecureHash'];
+  delete params['vnp_SecureHashType'];
 
   // 2. Verify checksum
-  const sortedParams = sortObject(vnpParams);
+  const sortedParams = sortObject(params);
   const signData = qs.stringify(sortedParams, { encode: false });
   const hmac = crypto.createHmac('sha512', secretKey);
   const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
