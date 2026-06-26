@@ -24,12 +24,16 @@ import { motion } from "motion/react";
 import { useProduct } from "@/features/products/hooks";
 import { toast } from "sonner";
 import { ProductReviews } from "@/components/common/ProductReviews";
+import { useAuth } from "@/features/auth/hooks";
+import { addCartItem } from "@/features/cart/api";
+import { notifyCartUpdated, readLocalCart, writeLocalCart } from "@/features/cart/cartStorage";
 
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [productKey, setProductKey] = useState(0);
   const { product, loading, error } = useProduct(id, productKey);
+  const { isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
 
   // Refetch product sau khi user gui danh gia de cap nhat ratingAverage
@@ -44,11 +48,21 @@ function ProductDetail() {
     return favs.includes(id);
   });
 
-  const handleAddToCart = () => {
-    if (!product) return;
+  const handleAddToCart = async () => {
+    if (!product) return false;
     try {
-      const savedCart = localStorage.getItem("cart");
-      let cart = savedCart ? JSON.parse(savedCart) : [];
+      if (isAuthenticated) {
+        await addCartItem({
+          productId: product._id,
+          quantity,
+          selected: true,
+        });
+        notifyCartUpdated();
+        toast.success("Đã thêm vào giỏ hàng thành công!");
+        return true;
+      }
+
+      let cart = readLocalCart();
       const existingItemIndex = cart.findIndex((item) => item.id === product._id);
 
       if (existingItemIndex > -1) {
@@ -75,16 +89,20 @@ function ProductDetail() {
         toast.success("Đã thêm vào giỏ hàng thành công!");
       }
 
-      localStorage.setItem("cart", JSON.stringify(cart));
+      writeLocalCart(cart);
+      return true;
     } catch (err) {
       console.error(err);
       toast.error("Không thể thêm vào giỏ hàng.");
+      return false;
     }
   };
 
-  const handleBuyNow = () => {
-    handleAddToCart();
-    navigate("/cart");
+  const handleBuyNow = async () => {
+    const added = await handleAddToCart();
+    if (added) {
+      navigate("/cart");
+    }
   };
 
   const handleToggleFavorite = () => {

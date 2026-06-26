@@ -7,46 +7,149 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import { EmptyState } from "@/components/common/EmptyState";
+import { useAuth } from "@/features/auth/hooks";
+import { getCart, removeCartItem, updateCartItem } from "@/features/cart/api";
+import { extractCartPayload, normalizeCartItems, notifyCartUpdated, readLocalCart, writeLocalCart } from "@/features/cart/cartStorage";
+import { toast } from "sonner";
 
 function Cart() {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState(() => {
-    const saved = localStorage.getItem("cart");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const [cartItems, setCartItems] = useState(() => readLocalCart());
+  const [cartLoading, setCartLoading] = useState(false);
+  const [cartError, setCartError] = useState("");
 
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (authLoading) return;
 
-  const updateQuantity = (id, delta) => {
-    setCartItems(
-      cartItems.map(
-        (item) => item.id === id ? {
-          ...item,
-          quantity: Math.max(1, Math.min(item.stock, item.quantity + delta))
-        } : item
-      )
-    );
+    if (!isAuthenticated) {
+      setCartItems(readLocalCart());
+      return;
+    }
+
+    async function loadCart() {
+      setCartLoading(true);
+      setCartError("");
+      try {
+        const response = await getCart();
+        const cart = extractCartPayload(response);
+        setCartItems(cart.items);
+      } catch (error) {
+        if (error.response?.status === 401) {
+          toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          navigate("/login", { state: { from: "/cart" }, replace: true });
+          return;
+        }
+
+        const message = error.response?.data?.message || "Không thể tải giỏ hàng.";
+        setCartError(message);
+        toast.error(message);
+      } finally {
+        setCartLoading(false);
+      }
+    }
+
+    loadCart();
+  }, [authLoading, isAuthenticated, navigate]);
+
+  const updateQuantity = async (id, delta) => {
+    const nextItems = cartItems.map((item) => (
+      item.id === id
+        ? {
+            ...item,
+            quantity: Math.max(1, Math.min(item.stock, item.quantity + delta))
+          }
+        : item
+    ));
+
+    setCartItems(nextItems);
+
+    if (!isAuthenticated) {
+      writeLocalCart(nextItems);
+      return;
+    }
+
+    const nextItem = nextItems.find((item) => item.id === id);
+    try {
+      const response = await updateCartItem(id, { quantity: nextItem.quantity });
+      setCartItems(extractCartPayload(response).items || normalizeCartItems(nextItems));
+      notifyCartUpdated();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể cập nhật giỏ hàng.");
+    }
   };
 
-  const toggleSelect = (id) => {
-    setCartItems(
-      cartItems.map(
-        (item) => item.id === id ? { ...item, selected: !item.selected } : item
-      )
-    );
+  const toggleSelect = async (id) => {
+    const nextItems = cartItems.map((item) => (
+      item.id === id ? { ...item, selected: !item.selected } : item
+    ));
+
+    setCartItems(nextItems);
+
+    if (!isAuthenticated) {
+      writeLocalCart(nextItems);
+      return;
+    }
+
+    const nextItem = nextItems.find((item) => item.id === id);
+    try {
+      const response = await updateCartItem(id, { selected: nextItem.selected });
+      setCartItems(extractCartPayload(response).items || normalizeCartItems(nextItems));
+      notifyCartUpdated();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể cập nhật giỏ hàng.");
+    }
   };
 
-  const toggleSelectAll = () => {
+  const toggleSelectAll = async () => {
     const allSelected = cartItems.every((item) => item.selected);
-    setCartItems(
-      cartItems.map((item) => ({ ...item, selected: !allSelected }))
-    );
+    const nextItems = cartItems.map((item) => ({ ...item, selected: !allSelected }));
+
+    setCartItems(nextItems);
+
+    if (!isAuthenticated) {
+      writeLocalCart(nextItems);
+      return;
+    }
+
+    try {
+      const responses = await Promise.all(
+        nextItems.map((item) => updateCartItem(item.id, { selected: item.selected }))
+      );
+      const lastResponse = responses[responses.length - 1];
+      setCartItems(extractCartPayload(lastResponse).items || normalizeCartItems(nextItems));
+      notifyCartUpdated();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể cập nhật giỏ hàng.");
+    }
   };
 
-  const removeItem = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
+  const removeItem = async (id) => {
+    const nextItems = cartItems.filter((item) => item.id !== id);
+    setCartItems(nextItems);
+
+    if (!isAuthenticated) {
+      writeLocalCart(nextItems);
+      return;
+    }
+
+    try {
+      const response = await removeCartItem(id);
+      setCartItems(extractCartPayload(response).items || normalizeCartItems(nextItems));
+      notifyCartUpdated();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể xóa sản phẩm.");
+    }
+  };
+
+  const handleCheckout = () => {
+    if (!isAuthenticated) {
+      toast.error("Vui lòng đăng nhập để thanh toán.");
+      navigate("/login", { state: { from: "/checkout" } });
+      return;
+    }
+
+    navigate("/checkout");
   };
 
   const selectedItems = cartItems.filter((item) => item.selected);
@@ -56,6 +159,29 @@ function Cart() {
   );
   const shipping = subtotal > 0 ? 30000 : 0;
   const total = subtotal + shipping;
+
+  if (authLoading || cartLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white py-12 px-4 flex items-center justify-center">
+        <p className="text-muted-foreground">Đang tải giỏ hàng...</p>
+      </div>
+    );
+  }
+
+  if (cartError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white py-12 px-4 flex items-center justify-center">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-8 text-center">
+            <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Không thể tải giỏ hàng</h2>
+            <p className="text-muted-foreground mb-4">{cartError}</p>
+            <Button onClick={() => window.location.reload()}>Tải lại</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -134,7 +260,7 @@ function Cart() {
                         <p className="text-sm text-muted-foreground mb-2">{item.shop}</p>
                         <div className="flex items-center gap-3 mb-3">
                           <span className="text-lg font-bold text-primary">
-                            {item.price.toLocaleString("vi-VN")}đ
+                            {Number(item.price || 0).toLocaleString("vi-VN")}đ
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -210,7 +336,7 @@ function Cart() {
                   size="lg"
                   className="w-full bg-gradient-to-r from-primary to-green-600"
                   disabled={selectedItems.length === 0}
-                  onClick={() => navigate("/checkout")}
+                  onClick={handleCheckout}
                 >
                   Thanh toán ({selectedItems.length})
                   <ArrowRight className="w-5 h-5 ml-2" />
