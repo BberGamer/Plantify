@@ -1,6 +1,61 @@
 // auth.model.js - Mongoose schema cho User (đăng ký, đăng nhập)
 const mongoose = require('mongoose');
 
+const addressSchema = new mongoose.Schema(
+  {
+    label: {
+      type: String,
+      default: 'Nhà riêng',
+      trim: true,
+    },
+    receiverName: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    phone: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    street: {
+      type: String,
+      required: [true, 'Địa chỉ chi tiết là bắt buộc'],
+      trim: true,
+    },
+    provinceCode: {
+      type: String,
+      required: [true, 'Tỉnh/thành phố là bắt buộc'],
+      trim: true,
+    },
+    provinceName: {
+      type: String,
+      required: [true, 'Tỉnh/thành phố là bắt buộc'],
+      trim: true,
+    },
+    wardCode: {
+      type: String,
+      required: [true, 'Xã/phường là bắt buộc'],
+      trim: true,
+    },
+    wardName: {
+      type: String,
+      required: [true, 'Xã/phường là bắt buộc'],
+      trim: true,
+    },
+    fullAddress: {
+      type: String,
+      required: [true, 'Địa chỉ đầy đủ là bắt buộc'],
+      trim: true,
+    },
+    isDefault: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true }
+);
+
 const userSchema = new mongoose.Schema(
   {
     fullName: {
@@ -45,6 +100,10 @@ const userSchema = new mongoose.Schema(
     resetPasswordOTPExpires: {
       type: Date,
       default: null,
+    },
+    addresses: {
+      type: [addressSchema],
+      default: [],
     },
   },
   { timestamps: true }

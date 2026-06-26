@@ -42,6 +42,11 @@ router.post('/reset-password', authController.resetPassword);
 
 // Cập nhật thông tin cá nhân của người dùng đang đăng nhập
 router.patch('/me', authenticate, authController.updateProfile);
+router.get('/me/addresses', authenticate, authController.getAddresses);
+router.post('/me/addresses', authenticate, authController.createAddress);
+router.patch('/me/addresses/:addressId', authenticate, authController.updateAddress);
+router.delete('/me/addresses/:addressId', authenticate, authController.deleteAddress);
+router.patch('/me/addresses/:addressId/default', authenticate, authController.setDefaultAddress);
 
 // Đổi mật khẩu của người dùng đang đăng nhập
 router.patch('/me/password', authenticate, authController.changePassword);

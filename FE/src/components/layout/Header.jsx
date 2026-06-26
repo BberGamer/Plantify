@@ -9,6 +9,7 @@ import {
   User,
   Settings,
   LogOut,
+  MapPin,
   Store,
   ShoppingCart,
   PenSquare
@@ -278,6 +279,12 @@ function Header() {
                     <Link to={ROUTES.profile} className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
                       Hồ sơ
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={ROUTES.addressBook} className="cursor-pointer">
+                      <MapPin className="mr-2 h-4 w-4" />
+                      Sổ địa chỉ
                     </Link>
                   </DropdownMenuItem>
                   {(user.role === "admin" || user.role === "business_manager" || user.role === "content_manager" || user.role === "business manager" || user.role === "content manager") && (

@@ -138,6 +138,31 @@ export const updateProfileApi = async (profileData) => {
   return response.data;
 };
 
+export const getMyAddressesApi = async () => {
+  const response = await api.get('/auth/me/addresses');
+  return response.data;
+};
+
+export const createMyAddressApi = async (addressData) => {
+  const response = await api.post('/auth/me/addresses', addressData);
+  return response.data;
+};
+
+export const updateMyAddressApi = async (addressId, addressData) => {
+  const response = await api.patch(`/auth/me/addresses/${addressId}`, addressData);
+  return response.data;
+};
+
+export const deleteMyAddressApi = async (addressId) => {
+  const response = await api.delete(`/auth/me/addresses/${addressId}`);
+  return response.data;
+};
+
+export const setDefaultAddressApi = async (addressId) => {
+  const response = await api.patch(`/auth/me/addresses/${addressId}/default`);
+  return response.data;
+};
+
 /**
  * Đổi mật khẩu của người dùng đang đăng nhập
  * @param {object} passwordData - { currentPassword, newPassword, confirmPassword }

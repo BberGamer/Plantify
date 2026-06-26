@@ -5,6 +5,7 @@ import {
   BookOpen,
   Home,
   LayoutDashboard,
+  MapPin,
   Settings,
   ShoppingCart,
   Sparkles,
@@ -25,6 +26,7 @@ const ROUTES = {
   register: "/register",
   forgotPassword: "/forgot-password",
   profile: "/profile",
+  addressBook: "/address-book",
   myPosts: "/my-posts",
   settings: "/settings",
   cart: "/cart",
@@ -58,6 +60,7 @@ const PUBLIC_NAV = [
 const ROLE_SIDEBAR_NAV = {
   customer: [
     { path: "/profile", label: "Hồ sơ", icon: User, roles: ["customer"] },
+    { path: "/address-book", label: "Sổ địa chỉ", icon: MapPin, roles: ["customer"] },
     { path: "/my-posts", label: "Bài viết của tôi", icon: BookOpen, roles: ["customer"] },
     {
       path: "/cart",

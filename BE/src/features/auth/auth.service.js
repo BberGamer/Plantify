@@ -473,6 +473,155 @@ const updateProfile = async (userId, profileData) => {
  * @param {object} passwordData - { currentPassword, newPassword, confirmPassword }
  * @returns {Promise<void>}
  */
+const getAddresses = async (userId) => {
+  const user = await User.findById(userId).select('addresses');
+  if (!user) {
+    const err = new Error('Không tìm thấy người dùng');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  return user.addresses.sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
+};
+
+const buildAddressPayload = (addressData) => {
+  const {
+    label,
+    receiverName,
+    phone,
+    street,
+    provinceCode,
+    provinceName,
+    wardCode,
+    wardName,
+    isDefault,
+  } = addressData;
+
+  const fullAddress = [street, wardName, provinceName]
+    .map((part) => (part || '').trim())
+    .filter(Boolean)
+    .join(', ');
+
+  return {
+    label: (label || 'Nhà riêng').trim(),
+    receiverName: (receiverName || '').trim(),
+    phone: (phone || '').trim(),
+    street: street.trim(),
+    provinceCode: String(provinceCode).trim(),
+    provinceName: provinceName.trim(),
+    wardCode: String(wardCode).trim(),
+    wardName: wardName.trim(),
+    fullAddress,
+    isDefault: Boolean(isDefault),
+  };
+};
+
+const createAddress = async (userId, addressData) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const err = new Error('Không tìm thấy người dùng');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const payload = buildAddressPayload(addressData);
+  if (!user.addresses.length || payload.isDefault) {
+    user.addresses.forEach((address) => {
+      address.isDefault = false;
+    });
+    payload.isDefault = true;
+    user.address = payload.fullAddress;
+  }
+
+  user.addresses.push(payload);
+  await user.save();
+  return user.addresses.sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
+};
+
+const updateAddress = async (userId, addressId, addressData) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const err = new Error('Không tìm thấy người dùng');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const address = user.addresses.id(addressId);
+  if (!address) {
+    const err = new Error('Không tìm thấy địa chỉ');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const payload = buildAddressPayload(addressData);
+  if (payload.isDefault) {
+    user.addresses.forEach((item) => {
+      item.isDefault = false;
+    });
+    user.address = payload.fullAddress;
+  } else if (address.isDefault) {
+    payload.isDefault = true;
+    user.address = payload.fullAddress;
+  }
+
+  address.set(payload);
+  await user.save();
+  return user.addresses.sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
+};
+
+const deleteAddress = async (userId, addressId) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const err = new Error('Không tìm thấy người dùng');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const address = user.addresses.id(addressId);
+  if (!address) {
+    const err = new Error('Không tìm thấy địa chỉ');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const wasDefault = address.isDefault;
+  user.addresses.pull(addressId);
+
+  if (wasDefault && user.addresses.length > 0) {
+    user.addresses[0].isDefault = true;
+    user.address = user.addresses[0].fullAddress;
+  } else if (!user.addresses.length) {
+    user.address = '';
+  }
+
+  await user.save();
+  return user.addresses.sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
+};
+
+const setDefaultAddress = async (userId, addressId) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const err = new Error('Không tìm thấy người dùng');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const address = user.addresses.id(addressId);
+  if (!address) {
+    const err = new Error('Không tìm thấy địa chỉ');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  user.addresses.forEach((item) => {
+    item.isDefault = item._id.toString() === addressId;
+  });
+  user.address = address.fullAddress;
+
+  await user.save();
+  return user.addresses.sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
+};
+
 const changePassword = async (userId, passwordData) => {
   const { currentPassword, newPassword } = passwordData;
 
@@ -519,5 +668,10 @@ module.exports = {
   verifyOTP,
   resetPassword,
   updateProfile,
+  getAddresses,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
   changePassword,
 };

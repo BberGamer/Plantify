@@ -9,12 +9,14 @@ import { Check, ShieldCheck, Landmark, Banknote, CreditCard, ArrowLeft, Shopping
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { useAuth } from "@/features/auth/hooks";
-import { getCart, removeSelectedCartItems } from "@/features/cart/api";
+import { getMyAddressesApi } from "@/features/auth/api";
+import { getCart } from "@/features/cart/api";
 import { extractCartPayload, notifyCartUpdated } from "@/features/cart/cartStorage";
+import { createOrder } from "@/features/orders/api";
 
 function Checkout() {
   const navigate = useNavigate();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
 
   // Selected items from cart
   const [selectedItems, setSelectedItems] = useState([]);
@@ -38,6 +40,45 @@ function Checkout() {
   
   // Checkout success state
   const [isSuccess, setIsSuccess] = useState(false);
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [createdOrder, setCreatedOrder] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setForm((prev) => ({
+      ...prev,
+      fullName: user.fullName || "",
+      phone: user.phone || "",
+      email: user.email || "",
+      address: user.address || "",
+    }));
+  }, [user]);
+
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+
+    async function fillDefaultAddress() {
+      try {
+        const response = await getMyAddressesApi();
+        const addresses = response?.data || [];
+        const defaultAddress = addresses.find((address) => address.isDefault);
+
+        if (!defaultAddress) return;
+
+        setForm((prev) => ({
+          ...prev,
+          fullName: defaultAddress.receiverName || prev.fullName,
+          phone: defaultAddress.phone || prev.phone,
+          address: defaultAddress.fullAddress || prev.address,
+        }));
+      } catch {
+        // Khong chan checkout neu so dia chi chua tai duoc.
+      }
+    }
+
+    fillDefaultAddress();
+  }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
@@ -93,9 +134,9 @@ function Checkout() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handlePlaceOrder = (e) => {
+  const handlePlaceOrder = async (e) => {
     e.preventDefault();
-    
+
     if (selectedItems.length === 0) {
       toast.error("Không có sản phẩm nào được chọn để thanh toán.");
       return;
@@ -106,24 +147,35 @@ function Checkout() {
       return;
     }
 
-    // 1. Success action
-    setIsSuccess(true);
-    toast.success("Đặt hàng thành công!");
-    
-    // 2. Trigger Confetti
-    confetti({
-      particleCount: 150,
-      spread: 80,
-      origin: { y: 0.6 }
-    });
-
-    removeSelectedCartItems()
-      .then(() => notifyCartUpdated())
-      .catch((error) => {
-        toast.error(error.response?.data?.message || "Không thể cập nhật giỏ hàng.");
+    try {
+      setPlacingOrder(true);
+      const response = await createOrder({
+        shippingInfo: form,
+        paymentMethod,
       });
-  };
 
+      setCreatedOrder(response.data);
+      setIsSuccess(true);
+      notifyCartUpdated();
+      toast.success("Đặt hàng thành công!");
+
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+    } catch (error) {
+      if (error.response?.status === 401) {
+        toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        navigate("/login", { state: { from: "/checkout" }, replace: true });
+        return;
+      }
+
+      toast.error(error.response?.data?.message || "Không thể tạo đơn hàng.");
+    } finally {
+      setPlacingOrder(false);
+    }
+  };
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -149,11 +201,12 @@ function Checkout() {
               Cảm ơn bạn đã mua sắm tại Plantify. Đơn hàng của bạn đang được xử lý và sẽ sớm giao tới bạn.
             </p>
             <div className="bg-muted/50 rounded-xl p-4 mb-8 text-left text-sm space-y-2">
+              {createdOrder?.orderCode && <p><strong>Mã đơn:</strong> {createdOrder.orderCode}</p>}
               <p><strong>Người nhận:</strong> {form.fullName}</p>
               <p><strong>Số điện thoại:</strong> {form.phone}</p>
               <p><strong>Địa chỉ:</strong> {form.address}</p>
               <p><strong>Thanh toán:</strong> {paymentMethod === "COD" ? "Thanh toán COD khi nhận hàng" : "Chuyển khoản Internet Banking"}</p>
-              <p><strong>Tổng thanh toán:</strong> {(subtotal + shippingFee).toLocaleString("vi-VN")}đ</p>
+              <p><strong>Tổng thanh toán:</strong> {(createdOrder?.total || subtotal + shippingFee).toLocaleString("vi-VN")}đ</p>
             </div>
             <Button
               size="lg"
@@ -389,9 +442,10 @@ function Checkout() {
                     size="lg"
                     className="w-full bg-gradient-to-r from-primary to-green-600 text-white rounded-xl py-6 font-semibold flex items-center justify-center gap-2 shadow-lg shadow-green-600/10 hover:shadow-green-600/25 transition-all"
                     onClick={handlePlaceOrder}
+                    disabled={placingOrder}
                   >
                     <Check className="w-5 h-5 stroke-[2.5]" />
-                    Xác nhận đặt hàng
+                    {placingOrder ? "Đang tạo đơn..." : "Xác nhận đặt hàng"}
                   </Button>
 
                   {/* SSL info */}
