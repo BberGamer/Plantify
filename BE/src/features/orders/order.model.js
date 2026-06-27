@@ -109,7 +109,9 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'shipping', 'completed', 'cancelled'],
+      // pending: chờ xử lý | packing: đang đóng hàng | sented: đã gửi hàng
+      // succeeded: nhận hàng thành công | returning: đang hoàn trả | cancelled: đã hủy
+      enum: ['pending', 'packing', 'sented', 'succeeded', 'returning', 'cancelled'],
       default: 'pending',
     },
     subtotal: {
@@ -133,6 +135,11 @@ const orderSchema = new mongoose.Schema(
       default: null,
     },
     paidAt: {
+      type: Date,
+      default: null,
+    },
+    // Thời điểm đơn hàng bị hủy (BM hủy hoặc xác nhận hoàn trả)
+    cancelledAt: {
       type: Date,
       default: null,
     },
