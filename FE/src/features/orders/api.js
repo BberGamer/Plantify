@@ -35,3 +35,32 @@ export const verifyVnpayPayment = (params) => {
 export const getMyOrders = () => {
   return api.get('/orders');
 };
+
+/**
+ * Lấy danh sách tất cả đơn hàng (cho business manager)
+ * @returns {Promise}
+ */
+export const getAllOrders = () => {
+  return api.get('/orders/all');
+};
+
+/**
+ * Cập nhật đơn hàng bởi business manager (trạng thái)
+ * @param {string} orderId
+ * @param {Object} updateData - { status }
+ * @returns {Promise}
+ */
+export const updateOrder = (orderId, updateData) => {
+  return api.put(`/orders/${orderId}`, updateData);
+};
+
+/**
+ * Khách hàng thực hiện hành động trên đơn hàng (chỉ khi status = 'sented')
+ * @param {string} orderId - ID đơn hàng
+ * @param {string} action - 'succeeded' (nhận hàng) | 'returning' (yêu cầu hoàn trả)
+ * @returns {Promise}
+ */
+export const customerUpdateOrder = (orderId, action) => {
+  return api.put(`/orders/${orderId}/customer-action`, { action });
+};
+

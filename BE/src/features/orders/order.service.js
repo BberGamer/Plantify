@@ -69,7 +69,7 @@ function sortObject(obj) {
 
 /**
  * Tạo đơn hàng mới (dùng cho cả COD và VNPay)
- * - COD: status = 'confirmed' (xác nhận ngay)
+ * - COD: status = 'pending' (chờ xử lý/xác nhận)
  * - BANK: status = 'pending' (chờ thanh toán)
  * @param {string} userId - ID người dùng từ JWT token
  * @param {Object} orderData - { items, shippingInfo, paymentMethod, subtotal, shippingFee, total }
@@ -99,9 +99,9 @@ async function createOrder(userId, orderData) {
     total: orderData.total ?? orderData.totalAmount,
   });
 
-  // COD: xác nhận đơn ngay, BANK: chờ thanh toán thành công mới xác nhận
+  // COD và BANK: mặc định đơn hàng mới đều có status = 'pending'
   if (orderData.paymentMethod === 'COD') {
-    order.status = 'confirmed';
+    order.status = 'pending';
     
     // Tự động xóa các sản phẩm đã được chọn mua khỏi giỏ hàng của user
     await Cart.updateOne(
@@ -225,7 +225,7 @@ async function verifyVnpayReturn(vnpParams) {
   if (responseCode === '00') {
     // Thanh toán thành công
     order.paymentStatus = 'paid';
-    order.status = 'confirmed';
+    order.status = 'pending';
     order.vnpayTransactionNo = params['vnp_TransactionNo'] || null;
     order.paidAt = new Date();
 
@@ -295,7 +295,7 @@ async function handleVnpayIPN(vnpParams) {
   // 6. Cập nhật trạng thái
   if (rspCode === '00') {
     order.paymentStatus = 'paid';
-    order.status = 'confirmed';
+    order.status = 'pending';
     order.vnpayTransactionNo = vnpParams['vnp_TransactionNo'] || null;
     order.paidAt = new Date();
 
@@ -323,10 +323,118 @@ async function getOrdersByUser(userId) {
   return Order.find({ userId }).sort({ createdAt: -1 });
 }
 
+/**
+ * Lấy danh sách tất cả đơn hàng (cho quản lý)
+ * @returns {Array} Danh sách đơn hàng
+ */
+async function getAllOrders() {
+  return Order.find({}).sort({ createdAt: -1 });
+}
+
+/**
+ * Map các chuyển đổi trạng thái được phép theo role
+ * - businessManager: pending → packing, packing → sented, returning → cancelled, pending → cancelled
+ * - customer: sented → succeeded, sented → returning
+ */
+const ALLOWED_TRANSITIONS_BM = {
+  pending: ['packing', 'cancelled'],
+  packing: ['sented'],
+  returning: ['cancelled'],
+};
+
+const ALLOWED_TRANSITIONS_CUSTOMER = {
+  sented: ['succeeded', 'returning'],
+};
+
+/**
+ * Cập nhật trạng thái đơn hàng bởi Business Manager
+ * Kiểm tra chuyển đổi hợp lệ, xử lý logic đặc biệt khi hủy đơn
+ * @param {string} orderId - ID đơn hàng
+ * @param {Object} updateData - { status }
+ * @returns {Object} Đơn hàng sau cập nhật
+ * @throws {Error} Nếu trạng thái chuyển đổi không hợp lệ
+ */
+async function updateOrder(orderId, updateData) {
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new Error('Không tìm thấy đơn hàng');
+  }
+
+  if (updateData.status) {
+    const allowedNext = ALLOWED_TRANSITIONS_BM[order.status] || [];
+    if (!allowedNext.includes(updateData.status)) {
+      throw new Error(
+        `Không thể chuyển từ "${order.status}" sang "${updateData.status}"`
+      );
+    }
+
+    order.status = updateData.status;
+
+    // Khi hủy đơn: ghi lại thời điểm hủy
+    if (updateData.status === 'cancelled') {
+      order.cancelledAt = new Date();
+    }
+  }
+
+  if (updateData.paymentStatus) {
+    order.paymentStatus = updateData.paymentStatus;
+    if (updateData.paymentStatus === 'paid' && !order.paidAt) {
+      order.paidAt = new Date();
+    }
+  }
+
+  await order.save();
+  return order;
+}
+
+/**
+ * Xử lý hành động của khách hàng trên đơn hàng (chỉ khi status = 'sented')
+ * - succeeded: khách xác nhận đã nhận hàng → COD tự động đánh dấu paid
+ * - returning: khách yêu cầu hoàn trả hàng
+ * @param {string} orderId - ID đơn hàng
+ * @param {string} userId - ID khách hàng (kiểm tra chủ đơn)
+ * @param {string} action - 'succeeded' | 'returning'
+ * @returns {Object} Đơn hàng sau cập nhật
+ * @throws {Error} Nếu hành động không hợp lệ hoặc không đúng chủ đơn
+ */
+async function customerActionOrder(orderId, userId, action) {
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new Error('Không tìm thấy đơn hàng');
+  }
+
+  // Bảo mật: chỉ cho phép chủ đơn hàng thao tác
+  if (order.userId.toString() !== userId.toString()) {
+    throw new Error('Bạn không có quyền thao tác đơn hàng này');
+  }
+
+  const allowedNext = ALLOWED_TRANSITIONS_CUSTOMER[order.status] || [];
+  if (!allowedNext.includes(action)) {
+    throw new Error(
+      `Không thể thực hiện hành động "${action}" khi đơn hàng đang ở trạng thái "${order.status}"`
+    );
+  }
+
+  order.status = action;
+
+  // Nếu nhận hàng thành công và thanh toán COD → đánh dấu đã thanh toán
+  if (action === 'succeeded' && order.paymentStatus !== 'paid') {
+    order.paymentStatus = 'paid';
+    order.paidAt = new Date();
+  }
+
+  await order.save();
+  return order;
+}
+
 module.exports = {
   createOrder,
   createVnpayPaymentUrl,
   verifyVnpayReturn,
   handleVnpayIPN,
   getOrdersByUser,
+  getAllOrders,
+  updateOrder,
+  customerActionOrder,
 };
+
