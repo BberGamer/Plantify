@@ -93,7 +93,11 @@ const getManagerRole = (role) => {
     return "content manager";
   }
 
-  return "business manager";
+  if (normalizedRole === "business manager") {
+    return "business manager";
+  }
+
+  return null;
 };
 
 function ManagerLayout({ children }) {
