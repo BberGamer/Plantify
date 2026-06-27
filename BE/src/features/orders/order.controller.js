@@ -118,10 +118,83 @@ const getMyOrders = async (req, res) => {
   }
 };
 
+/**
+ * Lấy danh sách tất cả đơn hàng (cho business manager / admin)
+ * GET /api/orders/all
+ */
+const getAllOrders = async (req, res) => {
+  try {
+    const orders = await orderService.getAllOrders();
+    return success(res, 'Lấy danh sách tất cả đơn hàng thành công', { orders });
+  } catch (err) {
+    console.error('[Orders] Lỗi lấy tất cả đơn hàng:', err);
+    return error(res, 'Không thể lấy danh sách đơn hàng', 500);
+  }
+};
+
+/**
+ * Cập nhật đơn hàng (cho business manager)
+ * PUT /api/orders/:id
+ */
+const updateOrder = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const { status, paymentStatus } = req.body;
+
+    const order = await orderService.updateOrder(orderId, { status, paymentStatus });
+    return success(res, 'Cập nhật đơn hàng thành công', { order });
+  } catch (err) {
+    console.error('[Orders] Lỗi cập nhật đơn hàng:', err);
+    if (err.message === 'Không tìm thấy đơn hàng') {
+      return error(res, err.message, 404);
+    }
+    // Lỗi chuyển đổi trạng thái không hợp lệ → 400 Bad Request
+    if (err.message.startsWith('Không thể chuyển')) {
+      return error(res, err.message, 400);
+    }
+    return error(res, 'Không thể cập nhật đơn hàng', 500);
+  }
+};
+
+/**
+ * Xử lý hành động của khách hàng trên đơn hàng (Nhận hàng / Yêu cầu hoàn trả)
+ * PUT /api/orders/:id/customer-action
+ * @param {string} req.body.action - 'succeeded' | 'returning'
+ */
+const customerAction = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const userId = req.user.id;
+    const { action } = req.body;
+
+    if (!['succeeded', 'returning'].includes(action)) {
+      return error(res, 'Hành động không hợp lệ. Chỉ chấp nhận: succeeded, returning', 400);
+    }
+
+    const order = await orderService.customerActionOrder(orderId, userId, action);
+    return success(res, 'Cập nhật đơn hàng thành công', { order });
+  } catch (err) {
+    console.error('[Orders] Lỗi customer action:', err);
+    if (err.message === 'Không tìm thấy đơn hàng') {
+      return error(res, err.message, 404);
+    }
+    if (err.message === 'Bạn không có quyền thao tác đơn hàng này') {
+      return error(res, err.message, 403);
+    }
+    if (err.message.startsWith('Không thể thực hiện')) {
+      return error(res, err.message, 400);
+    }
+    return error(res, 'Không thể cập nhật đơn hàng', 500);
+  }
+};
+
 module.exports = {
   createOrder,
   createVnpayPayment,
   vnpayReturn,
   vnpayIPN,
   getMyOrders,
+  getAllOrders,
+  updateOrder,
+  customerAction,
 };
