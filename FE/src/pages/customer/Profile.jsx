@@ -3,7 +3,10 @@
 
 import { useNavigate, Link } from "react-router";
 import { useMyFavorites } from "@/features/favorites/hooks";
+import { useMyOrders } from "@/features/orders/hooks";
 import { removeFavorite } from "@/features/favorites/api";
+import { customerUpdateOrder } from "@/features/orders/api";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,6 +60,70 @@ const ROLE_CONFIG = {
     className: "bg-purple-100 text-purple-700 border-purple-200",
   },
 };
+
+// === Cấu hình hiển thị trạng thái đơn hàng (khớp với enum order.model.js) ===
+const STATUS_CONFIG = {
+  pending: {
+    label: "Chờ xử lý",
+    className: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  packing: {
+    label: "Đang đóng hàng",
+    className: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  sented: {
+    label: "Đã gửi hàng",
+    className: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  },
+  succeeded: {
+    label: "Nhận hàng thành công",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  returning: {
+    label: "Đang hoàn trả",
+    className: "bg-orange-50 text-orange-700 border-orange-200",
+  },
+  cancelled: {
+    label: "Đã hủy",
+    className: "bg-rose-50 text-rose-700 border-rose-200",
+  },
+};
+
+const PAYMENT_STATUS_CONFIG = {
+  pending: {
+    label: "Chưa thanh toán",
+    className: "bg-orange-50 text-orange-700 border-orange-200",
+  },
+  paid: {
+    label: "Đã thanh toán",
+    className: "bg-teal-50 text-teal-700 border-teal-200",
+  },
+  failed: {
+    label: "Thanh toán lỗi",
+    className: "bg-red-50 text-red-700 border-red-200",
+  },
+};
+
+/** Format giá tiền sang VND */
+function formatVND(amount) {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
+}
+
+/** Format ngày đặt hàng đầy đủ */
+function formatOrderDate(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleString("vi-VN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 // Số cây yêu thích hiển thị mỗi trang
 const FAV_PER_PAGE = 6;
@@ -121,6 +188,7 @@ function PasswordInput({ id, value, onChange, disabled, placeholder, className }
 function Profile() {
   const navigate = useNavigate();
   const { favorites, loading: favLoading, refetch: refetchFavorites } = useMyFavorites();
+  const { orders, loading: ordersLoading, refetch: refetchOrders } = useMyOrders();
 
   // === Pagination cho cây yêu thích ===
   const [favPage, setFavPage] = useState(1);
@@ -141,6 +209,30 @@ function Profile() {
       refetchFavorites();
     } catch {
       // bỏ qua lỗi
+    }
+  };
+
+  /**
+   * Khách hàng xác nhận đã nhận hàng (succeeded) hoặc yêu cầu hoàn trả (returning)
+   * Chỉ khả dụng khi đơn hàng ở trạng thái 'sented'
+   * @param {string} orderId - ID đơn hàng
+   * @param {'succeeded'|'returning'} action - Hành động
+   */
+  const handleCustomerAction = async (orderId, action) => {
+    const actionLabel = action === 'succeeded' ? 'Đã nhận hàng' : 'Yêu cầu hoàn trả';
+    const confirmMsg = action === 'succeeded'
+      ? 'Bạn xác nhận đã nhận được hàng?'
+      : 'Bạn có muốn yêu cầu hoàn trả đơn hàng này không?';
+
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      await customerUpdateOrder(orderId, action);
+      toast.success(`${actionLabel} thành công!`);
+      refetchOrders();
+    } catch (err) {
+      console.error('Lỗi customer action:', err);
+      toast.error(err.response?.data?.message || err.message || 'Thao tác thất bại.');
     }
   };
 
@@ -363,17 +455,17 @@ function Profile() {
                       <div className="profile-field">
                         <Label htmlFor="currentPassword" className="profile-field-label">Mật khẩu hiện tại</Label>
                         <div className="profile-input-wrapper">
-                          <Lock className="profile-input-icon" style={{ zIndex: 10 }} />
+                          <Lock className="profile-input-icon profile-input-icon-lifted" />
                           <PasswordInput id="currentPassword" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} placeholder="Nhập mật khẩu hiện tại" className="border-green-200 focus-visible:ring-green-500 pl-11 h-12 text-[15px] rounded-lg" />
                         </div>
                       </div>
 
                       {/* Mật khẩu mới + Xác nhận */}
-                      <div className="profile-form-grid" style={{ padding: 0 }}>
+                      <div className="profile-form-grid profile-form-grid-nopad">
                         <div className="profile-field">
                           <Label htmlFor="newPassword" className="profile-field-label">Mật khẩu mới</Label>
                           <div className="profile-input-wrapper">
-                            <Lock className="profile-input-icon" style={{ zIndex: 10 }} />
+                            <Lock className="profile-input-icon profile-input-icon-lifted" />
                             <PasswordInput id="newPassword" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} placeholder="Tối thiểu 8 ký tự" className="border-green-200 focus-visible:ring-green-500 pl-11 h-12 text-[15px] rounded-lg" />
                           </div>
                         </div>
@@ -381,7 +473,7 @@ function Profile() {
                         <div className="profile-field">
                           <Label htmlFor="confirmPassword" className="profile-field-label">Xác nhận mật khẩu mới</Label>
                           <div className="profile-input-wrapper">
-                            <Lock className="profile-input-icon" style={{ zIndex: 10 }} />
+                            <Lock className="profile-input-icon profile-input-icon-lifted" />
                             <PasswordInput id="confirmPassword" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} placeholder="Nhập lại mật khẩu mới" className="border-green-200 focus-visible:ring-green-500 pl-11 h-12 text-[15px] rounded-lg" />
                           </div>
                         </div>
@@ -399,13 +491,165 @@ function Profile() {
 
           {/* === Tab: Đơn hàng (chỉ customer) === */}
           {user?.role === "customer" && (
-            <TabsContent value="orders" className="space-y-4">
-              <EmptyState
-                icon={Package}
-                title="Chưa có đơn hàng"
-                description="Bạn chưa có đơn hàng nào. Hãy khám phá sản phẩm của chúng tôi!"
-                action={{ label: "Khám phá sản phẩm", onClick: () => navigate("/marketplace") }}
-              />
+            <TabsContent value="orders" className="space-y-6">
+              {ordersLoading ? (
+                <div className="flex justify-center py-16">
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
+                </div>
+              ) : orders.length === 0 ? (
+                <EmptyState
+                  icon={Package}
+                  title="Chưa có đơn hàng"
+                  description="Bạn chưa có đơn hàng nào. Hãy khám phá sản phẩm của chúng tôi!"
+                  action={{ label: "Khám phá sản phẩm", onClick: () => navigate("/marketplace") }}
+                />
+              ) : (
+                <div className="space-y-6">
+                  {orders.map((order, idx) => (
+                    <motion.div
+                      key={order._id || order.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <Card className="profile-order-card">
+                        {/* Order Header */}
+                        <div className="profile-order-header">
+                          <div>
+                            <div className="profile-order-code-row">
+                              <Package className="w-5 h-5 text-slate-500" />
+                              <span className="profile-order-code">
+                                MÃ ĐƠN: {order.orderCode}
+                              </span>
+                            </div>
+                            <p className="profile-order-date">
+                              <Calendar className="w-3.5 h-3.5" />
+                              Đặt ngày: {formatOrderDate(order.createdAt)}
+                            </p>
+                          </div>
+                          <div className="profile-order-badges">
+                            {/* Payment Status Badge */}
+                            {(() => {
+                              const payConfig = PAYMENT_STATUS_CONFIG[order.paymentStatus] || PAYMENT_STATUS_CONFIG.pending;
+                              return (
+                                <Badge variant="outline" className={`px-2.5 py-1 text-xs font-semibold ${payConfig.className}`}>
+                                  {payConfig.label}
+                                </Badge>
+                              );
+                            })()}
+                            
+                            {/* Order Status Badge */}
+                            {(() => {
+                              const stConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
+                              return (
+                                <Badge variant="outline" className={`px-2.5 py-1 text-xs font-semibold ${stConfig.className}`}>
+                                  {stConfig.label}
+                                </Badge>
+                              );
+                            })()}
+                          </div>
+                        </div>
+
+                        {/* Order Items */}
+                        <CardContent className="p-6">
+                          <div className="profile-order-items-list">
+                            {order.items?.map((item) => (
+                              <div key={item.productId} className="profile-order-item">
+                                <img
+                                  src={item.image || "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=100&auto=format&fit=crop&q=60"}
+                                  alt={item.name}
+                                  className="profile-order-item-img"
+                                />
+                                <div className="profile-order-item-details">
+                                  <h4 className="profile-order-item-name">
+                                    {item.name}
+                                  </h4>
+                                  <p className="profile-order-item-quantity">
+                                    Số lượng: <span className="profile-order-item-qty-val">{item.quantity}</span>
+                                  </p>
+                                </div>
+                                <div className="profile-order-item-price-col">
+                                  <p className="profile-order-item-price">
+                                    {formatVND(item.price)}
+                                  </p>
+                                  <p className="profile-order-item-total">
+                                    Tổng: {formatVND(item.lineTotal || (item.price * item.quantity))}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Order Footer & Metadata */}
+                          <div className="profile-order-footer">
+                            <div className="profile-order-shipping-summary">
+                              <p>
+                                <span className="profile-order-shipping-label">Người nhận:</span> {order.shippingInfo?.fullName} ({order.shippingInfo?.phone})
+                              </p>
+                              <p className="line-clamp-2">
+                                <span className="profile-order-shipping-label">Địa chỉ giao:</span> {order.shippingInfo?.address}
+                              </p>
+                              {order.shippingInfo?.notes && (
+                                <p className="profile-order-shipping-notes">
+                                  Lưu ý: "{order.shippingInfo.notes}"
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="profile-order-price-summary">
+                              <div className="profile-order-summary-fees">
+                                <div className="profile-order-fee-row">
+                                  <span>Tạm tính:</span>
+                                  <span className="profile-order-fee-val">{formatVND(order.subtotal)}</span>
+                                </div>
+                                <div className="profile-order-fee-row">
+                                  <span>Phí vận chuyển:</span>
+                                  <span className="profile-order-fee-val">{formatVND(order.shippingFee)}</span>
+                                </div>
+                                {order.paymentMethod && (
+                                  <div className="profile-order-payment-method-row">
+                                    <span>Phương thức:</span>
+                                    <span className="profile-order-payment-method-badge">
+                                      {order.paymentMethod === 'COD' ? 'COD (Thanh toán khi nhận)' : 'Chuyển khoản (VNPay)'}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="profile-order-grand-total-row">
+                                <span className="profile-order-total-label">Thành tiền:</span>
+                                <span className="profile-order-total-amount">
+                                  {formatVND(order.total)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Hành động của khách - chỉ hiện khi status = sented */}
+                          {order.status === 'sented' && (
+                            <div className="profile-order-actions">
+                              <Button
+                                size="sm"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm"
+                                onClick={() => handleCustomerAction(order._id || order.id, 'succeeded')}
+                              >
+                                ✓ Đã nhận hàng
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700 font-medium"
+                                onClick={() => handleCustomerAction(order._id || order.id, 'returning')}
+                              >
+                                ↩ Yêu cầu hoàn trả
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           )}
 
