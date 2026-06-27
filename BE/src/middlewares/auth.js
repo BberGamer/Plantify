@@ -19,6 +19,12 @@ const authenticate = (req, res, next) => {
   }
 };
 
+/**
+ * Kiểm tra quyền Admin
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ * @param {Function} next - Next middleware function
+ */
 const authorizeAdmin = (req, res, next) => {
   if (req.user?.role !== 'admin') {
     return error(res, 'Không có quyền truy cập', 403);
@@ -27,6 +33,12 @@ const authorizeAdmin = (req, res, next) => {
   next();
 };
 
+/**
+ * Kiểm tra quyền Content Manager (Quản lý nội dung)
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ * @param {Function} next - Next middleware function
+ */
 const authorizeContentManager = (req, res, next) => {
   if (!['content_manager', 'content manager'].includes(req.user?.role)) {
     return error(res, 'Không có quyền truy cập', 403);
@@ -35,6 +47,12 @@ const authorizeContentManager = (req, res, next) => {
   next();
 };
 
+/**
+ * Kiểm tra quyền Customer (Khách hàng)
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ * @param {Function} next - Next middleware function
+ */
 const authorizeCustomer = (req, res, next) => {
   if (req.user?.role !== 'customer') {
     return error(res, 'Không có quyền truy cập', 403);
@@ -43,4 +61,19 @@ const authorizeCustomer = (req, res, next) => {
   next();
 };
 
-module.exports = { authenticate, authorizeAdmin, authorizeContentManager, authorizeCustomer };
+/**
+ * Kiểm tra quyền Business Manager (Quản lý kinh doanh)
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ * @param {Function} next - Next middleware function
+ */
+const authorizeBusinessManager = (req, res, next) => {
+  if (req.user?.role !== 'business manager') {
+    return error(res, 'Không có quyền truy cập', 403);
+  }
+
+  next();
+};
+
+module.exports = { authenticate, authorizeAdmin, authorizeContentManager, authorizeCustomer, authorizeBusinessManager };
+
