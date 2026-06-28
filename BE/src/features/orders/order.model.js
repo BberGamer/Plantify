@@ -139,6 +139,10 @@ const orderSchema = new mongoose.Schema(
       default: null,
     },
     // Thời điểm đơn hàng bị hủy (BM hủy hoặc xác nhận hoàn trả)
+    inventoryApplied: {
+      type: Boolean,
+      default: false,
+    },
     cancelledAt: {
       type: Date,
       default: null,

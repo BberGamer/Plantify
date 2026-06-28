@@ -1,6 +1,7 @@
 // product.service.js - Business logic cho Products
 const Product = require('./product.model');
 const ProductCategory = require('./product-category.model');
+const Order = require('../orders/order.model');
 const mongoose = require('mongoose');
 
 const toSlug = (str) =>
@@ -13,17 +14,60 @@ const toSlug = (str) =>
     .replace(/-+/g, '-')
     .trim();
 
+async function getSoldCountMap(productIds) {
+  const ids = productIds
+    .filter((id) => mongoose.Types.ObjectId.isValid(id))
+    .map((id) => new mongoose.Types.ObjectId(id));
+
+  if (ids.length === 0) {
+    return new Map();
+  }
+
+  const soldCounts = await Order.aggregate([
+    {
+      $match: {
+        status: { $ne: 'cancelled' },
+        $or: [
+          { paymentMethod: 'COD' },
+          { paymentStatus: 'paid' },
+        ],
+      },
+    },
+    { $unwind: '$items' },
+    { $match: { 'items.productId': { $in: ids } } },
+    {
+      $group: {
+        _id: '$items.productId',
+        soldCount: { $sum: '$items.quantity' },
+      },
+    },
+  ]);
+
+  return new Map(soldCounts.map((item) => [String(item._id), Number(item.soldCount || 0)]));
+}
+
+async function attachSoldCounts(products) {
+  const productList = Array.isArray(products) ? products : [products];
+  const soldCountMap = await getSoldCountMap(productList.map((product) => String(product._id)));
+  const withCounts = productList.map((product) => ({
+    ...product,
+    soldCount: soldCountMap.get(String(product._id)) ?? Number(product.soldCount || 0),
+  }));
+
+  return Array.isArray(products) ? withCounts : withCounts[0];
+}
+
 /**
  * Lấy product theo id, populate category
  * @param {string} id - Product id
  * @returns {Promise<Object>} Product object
  */
 async function getProductById(id) {
-  const product = await Product.findById(id).populate('categoryId');
+  const product = await Product.findById(id).populate('categoryId').lean();
   if (!product) {
     throw new Error('Product not found');
   }
-  return product;
+  return attachSoldCounts(product);
 }
 
 /**
@@ -92,6 +136,7 @@ async function getAllProducts({ search, category, minPrice, maxPrice, minRating,
     sort.ratingAverage = -1;
   } else {
     // Phổ biến nhất (mặc định)
+    sort.soldCount = -1;
     sort.ratingCount = -1;
   }
 
@@ -101,12 +146,13 @@ async function getAllProducts({ search, category, minPrice, maxPrice, minRating,
     .populate('categoryId')
     .sort(sort)
     .skip(skip)
-    .limit(limit);
+    .limit(limit)
+    .lean();
 
   const total = await Product.countDocuments(query);
 
   return {
-    products,
+    products: await attachSoldCounts(products),
     total,
     pages: Math.ceil(total / limit),
     currentPage: Number(page)
@@ -195,6 +241,7 @@ async function createProduct(data) {
     usageGuide: data.usageGuide?.trim() || '',
     price: Number(data.price),
     stock: Number(data.stock || 0),
+    soldCount: Number(data.soldCount || 0),
     tags: Array.isArray(data.tags) ? data.tags : []
   });
 
@@ -229,6 +276,7 @@ async function updateProduct(id, data) {
   if (data.usageGuide !== undefined) updateData.usageGuide = data.usageGuide?.trim() || '';
   if (data.price !== undefined) updateData.price = Number(data.price);
   if (data.stock !== undefined) updateData.stock = Number(data.stock || 0);
+  if (data.soldCount !== undefined) updateData.soldCount = Number(data.soldCount || 0);
   if (data.tags !== undefined) updateData.tags = Array.isArray(data.tags) ? data.tags : [];
 
   return Product.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).lean();
