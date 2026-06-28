@@ -109,6 +109,20 @@
   text-align: left;
 }
 
+.plant-detail-origin-row {
+  grid-template-columns: auto max-content 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.plant-detail-origin-row svg {
+  flex-shrink: 0;
+}
+
+.plant-detail-origin-row span {
+  white-space: nowrap;
+}
+
 .plant-detail-short-desc {
   font-size: 1rem;
   font-weight: 500;

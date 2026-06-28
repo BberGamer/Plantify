@@ -160,7 +160,7 @@ function PlantDetail() {
           )}
 
           {plant.origin && (
-            <div className="plant-detail-info-row">
+            <div className="plant-detail-info-row plant-detail-origin-row">
               <Globe className="w-4 h-4 text-muted-foreground" />
               <span>Nguồn gốc:</span>
               <span>{plant.origin}</span>
