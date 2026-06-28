@@ -7,6 +7,7 @@ export function ProductCard({ product }) {
   const navigate = useNavigate();
   const productId = product._id || product.id;
   const stock = Number(product.stock || 0);
+  const soldCount = Number(product.soldCount || 0);
   const imageUrl =
     product.images?.[0] ||
     product.thumbnail ||
@@ -38,9 +39,11 @@ export function ProductCard({ product }) {
             </p>
           </div>
           <div className="text-right">
+            <p className="text-xs text-muted-foreground">Tồn kho</p>
             <p className={stock > 0 ? "font-semibold text-foreground" : "font-semibold text-rose-600"}>
               {stock}
             </p>
+            <p className="text-xs text-muted-foreground">Đã bán {soldCount}</p>
           </div>
         </div>
       </CardContent>

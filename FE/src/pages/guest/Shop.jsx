@@ -380,12 +380,13 @@ function Shop() {
                                 </span>
                               </div>
                               <span className="text-sm text-muted-foreground">
-                                Đã bán {product.ratingCount || 0}
+                                Đã bán {product.soldCount || 0}
                               </span>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-3">
-                              {product.brand || "Plantify"}
-                            </p>
+                            <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground mb-3">
+                              <span>{product.brand || "Plantify"}</span>
+                              <span>Còn {product.stock || 0}</span>
+                            </div>
                           </div>
                           <div className="flex items-center justify-between mt-auto pt-2">
                             <p className="text-xl font-bold text-primary">
