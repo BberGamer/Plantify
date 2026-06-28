@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const qs = require('qs');
 const Order = require('./order.model');
 const Cart = require('../cart/cart.model');
+const Product = require('../products/product.model');
 
 // ========== HELPER FUNCTIONS ==========
 
@@ -65,6 +66,84 @@ function sortObject(obj) {
   return sorted;
 }
 
+function normalizeOrderQuantity(quantity) {
+  const normalized = Number(quantity);
+  if (!Number.isFinite(normalized) || normalized < 1) {
+    return 1;
+  }
+  return Math.floor(normalized);
+}
+
+async function buildOrderItemsFromProducts(items = []) {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error('Đơn hàng phải có ít nhất một sản phẩm');
+  }
+
+  const requestedItems = items.map((item) => ({
+    productId: item.productId || item.id,
+    quantity: normalizeOrderQuantity(item.quantity),
+  }));
+  const productIds = requestedItems.map((item) => item.productId).filter(Boolean);
+
+  if (productIds.length !== requestedItems.length) {
+    throw new Error('Sản phẩm trong đơn hàng không hợp lệ');
+  }
+
+  const products = await Product.find({ _id: { $in: productIds } }).lean();
+  const productMap = new Map(products.map((product) => [String(product._id), product]));
+
+  return requestedItems.map((item) => {
+    const product = productMap.get(String(item.productId));
+
+    if (!product || product.isActive === false) {
+      throw new Error('Sản phẩm không tồn tại hoặc đã ngừng bán');
+    }
+
+    if ((product.stock || 0) < item.quantity) {
+      throw new Error(`Sản phẩm "${product.name}" chỉ còn ${product.stock || 0} sản phẩm`);
+    }
+
+    const price = Number(product.price || 0);
+
+    return {
+      productId: product._id,
+      name: product.name,
+      image: product.thumbnail || product.images?.[0] || '',
+      price,
+      quantity: item.quantity,
+      lineTotal: price * item.quantity,
+    };
+  });
+}
+
+async function applyOrderInventory(order) {
+  if (!order || order.inventoryApplied) {
+    return;
+  }
+
+  for (const item of order.items) {
+    const updatedProduct = await Product.findOneAndUpdate(
+      {
+        _id: item.productId,
+        stock: { $gte: item.quantity },
+      },
+      {
+        $inc: {
+          stock: -item.quantity,
+          soldCount: item.quantity,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
+      throw new Error(`Sản phẩm "${item.name}" không đủ tồn kho để hoàn tất đơn hàng`);
+    }
+  }
+
+  order.inventoryApplied = true;
+}
+
 // ========== SERVICE FUNCTIONS ==========
 
 /**
@@ -108,6 +187,38 @@ async function createOrder(userId, orderData) {
       { userId },
       { $pull: { items: { selected: true } } }
     ).catch((err) => console.error('[Order Service] Lỗi khi xóa sản phẩm giỏ hàng COD:', err));
+  }
+
+  await order.save();
+  return order;
+}
+
+async function createOrderFromProducts(userId, orderData) {
+  const orderCode = generateOrderCode();
+  const mappedItems = await buildOrderItemsFromProducts(orderData.items);
+  const subtotal = mappedItems.reduce((total, item) => total + item.lineTotal, 0);
+  const shippingFee = Number(orderData.shippingFee ?? 30000);
+
+  const order = new Order({
+    userId,
+    orderCode,
+    items: mappedItems,
+    shippingInfo: orderData.shippingInfo,
+    paymentMethod: orderData.paymentMethod,
+    subtotal,
+    shippingFee,
+    total: subtotal + shippingFee,
+  });
+
+  if (orderData.paymentMethod === 'COD') {
+    order.status = 'pending';
+    await order.validate();
+    await applyOrderInventory(order);
+
+    await Cart.updateOne(
+      { userId },
+      { $pull: { items: { selected: true } } }
+    ).catch((err) => console.error('[Order Service] Loi khi xoa san pham gio hang COD:', err));
   }
 
   await order.save();
@@ -228,6 +339,7 @@ async function verifyVnpayReturn(vnpParams) {
     order.status = 'pending';
     order.vnpayTransactionNo = params['vnp_TransactionNo'] || null;
     order.paidAt = new Date();
+    await applyOrderInventory(order);
 
     // Tự động xóa sản phẩm đã mua khỏi giỏ hàng
     await Cart.updateOne(
@@ -298,6 +410,7 @@ async function handleVnpayIPN(vnpParams) {
     order.status = 'pending';
     order.vnpayTransactionNo = vnpParams['vnp_TransactionNo'] || null;
     order.paidAt = new Date();
+    await applyOrderInventory(order);
 
     // Tự động xóa sản phẩm đã mua khỏi giỏ hàng
     await Cart.updateOne(
@@ -428,7 +541,7 @@ async function customerActionOrder(orderId, userId, action) {
 }
 
 module.exports = {
-  createOrder,
+  createOrder: createOrderFromProducts,
   createVnpayPaymentUrl,
   verifyVnpayReturn,
   handleVnpayIPN,

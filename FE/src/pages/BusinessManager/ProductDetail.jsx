@@ -134,6 +134,7 @@ function ProductDetail() {
               <DetailItem label="Danh mục" value={product.categoryId?.name || "Chưa phân loại"} />
               <DetailItem label="Giá" value={`${Number(product.price || 0).toLocaleString("vi-VN")}đ`} />
               <DetailItem label="Tồn kho" value={product.stock || 0} />
+              <DetailItem label="Đã bán" value={product.soldCount || 0} />
               <DetailItem label="ratingAverage" value={product.ratingAverage || 0} />
               <DetailItem label="ratingCount" value={product.ratingCount || 0} />
               <DetailItem label="Số ảnh" value={product.images?.length || 0} />

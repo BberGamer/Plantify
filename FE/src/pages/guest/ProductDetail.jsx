@@ -235,7 +235,7 @@ function ProductDetail() {
               </div>
               <Separator orientation="vertical" className="h-4" />
               <span className="text-muted-foreground">
-                Đã bán {product.ratingCount || 0}
+                Đã bán {product.soldCount || 0}
               </span>
             </div>
 
