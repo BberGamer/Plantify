@@ -35,3 +35,11 @@ Thumbs.db
 
 # Chỉ giữ lại thư mục rules
 !.cursor/rules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# AI Service
+AI-Service/__pycache__/
