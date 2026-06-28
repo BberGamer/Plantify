@@ -4,7 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ArrowRight, CheckCircle2, FileText, Minus, Plus, ShieldCheck, ShoppingBag, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useAuth } from "@/features/auth/hooks";
@@ -12,12 +21,22 @@ import { getCart, removeCartItem, updateCartItem } from "@/features/cart/api";
 import { extractCartPayload, normalizeCartItems, notifyCartUpdated, readLocalCart, writeLocalCart } from "@/features/cart/cartStorage";
 import { toast } from "sonner";
 
+const CART_TERMS = [
+  "Khách hàng cung cấp đầy đủ và chính xác thông tin khi đặt hàng.",
+  "Đơn hàng chỉ được xác nhận sau khi hệ thống hoặc nhân viên xác nhận.",
+  "Giá sản phẩm là giá hiển thị tại thời điểm đặt hàng.",
+  "Khách hàng có trách nhiệm thanh toán đầy đủ theo phương thức đã chọn.",
+  "Đơn hàng có thể bị hủy nếu phát hiện thông tin không chính xác hoặc vi phạm chính sách của cửa hàng.",
+  "Trường hợp hoàn tiền vui lòng liên hệ riêng với chúng tôi cung cấp thông tin để được hoàn tiền.",
+];
+
 function Cart() {
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [cartItems, setCartItems] = useState(() => readLocalCart());
   const [cartLoading, setCartLoading] = useState(false);
   const [cartError, setCartError] = useState("");
+  const [termsOpen, setTermsOpen] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -201,6 +220,63 @@ function Cart() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white py-12 px-4">
+      <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
+        <DialogContent className="overflow-hidden border-0 p-0 shadow-2xl sm:max-w-2xl">
+          <div className="bg-gradient-to-r from-primary via-green-600 to-emerald-500 px-6 py-6 text-white">
+            <DialogHeader className="gap-4 text-left">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white/20 shadow-inner">
+                  <ShieldCheck className="h-6 w-6" />
+                </div>
+                <div>
+                  <DialogTitle className="text-2xl font-bold leading-tight">
+                    Điều khoản mua sắm
+                  </DialogTitle>
+                  <DialogDescription className="mt-2 text-sm leading-6 text-white/90">
+                    Vui lòng đọc các điều khoản trước khi tiếp tục thanh toán tại Plantify.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+          </div>
+
+          <div className="space-y-5 px-6 py-5">
+            <div className="flex gap-3 rounded-lg border border-green-100 bg-green-50/80 p-4 text-sm text-green-900">
+              <FileText className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
+              <p>
+                Các điều khoản này giúp Plantify xử lý đơn hàng rõ ràng, minh bạch và đúng thông tin khách hàng cung cấp.
+              </p>
+            </div>
+
+            <ol className="grid gap-3">
+              {CART_TERMS.map((term, index) => (
+                <li
+                  key={term}
+                  className="flex gap-3 rounded-lg border border-border bg-white p-3 text-sm leading-6 shadow-sm"
+                >
+                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                    {index + 1}
+                  </span>
+                  <span className="text-foreground">{term}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <DialogFooter className="border-t bg-muted/40 px-6 py-4 sm:items-center sm:justify-between">
+            <p className="text-xs text-muted-foreground">
+              Bạn có thể đóng thông báo này bằng nút X để quay lại giỏ hàng.
+            </p>
+            <DialogClose asChild>
+              <Button className="gap-2 bg-gradient-to-r from-primary to-green-600 text-white">
+                <CheckCircle2 className="h-4 w-4" />
+                Tôi đã hiểu
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -343,9 +419,13 @@ function Cart() {
                 </Button>
                 <p className="text-xs text-muted-foreground text-center mt-4">
                   Bằng việc tiếp tục, bạn đồng ý với{" "}
-                  <Link to="/terms" className="text-primary hover:underline">
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => setTermsOpen(true)}
+                  >
                     Điều khoản
-                  </Link>{" "}
+                  </button>{" "}
                   của Plantify
                 </p>
               </CardContent>
