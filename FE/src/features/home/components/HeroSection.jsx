@@ -2,16 +2,26 @@
  * HeroSection.jsx - Hero section với search form và weather widget
  */
 import { motion } from "motion/react";
+import { Search, Sparkles, Leaf, X } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router";
-import { Search, Sparkles, Leaf } from "lucide-react";
+import { PlantCard } from "@/components/common/PlantCard";
 import { useHomeSearch } from "../hooks";
 import { WeatherWidget } from "./WeatherWidget";
 
 export function HeroSection() {
-  const { searchQuery, setSearchQuery, handleSearch } = useHomeSearch();
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const {
+    searchQuery,
+    setSearchQuery,
+    suggestions,
+    loadingSuggestions,
+    shouldShowSuggestions,
+  } = useHomeSearch();
+  const showSuggestions = isSearchFocused && shouldShowSuggestions;
 
   return (
-    <section className="relative overflow-hidden pt-16 lg:pt-20">
+    <section className="relative overflow-visible pt-16 lg:pt-20">
       {/* Animated blobs */}
       <motion.div
         className="absolute top-20 left-10 w-32 h-32 rounded-full bg-green-200/20 blur-2xl hero-blob-1"
@@ -71,25 +81,66 @@ export function HeroSection() {
           </p>
 
           {/* Search Form */}
-          <div className="max-w-2xl mx-auto">
-            <form onSubmit={handleSearch} className="relative group">
+          <div className="mx-auto max-w-6xl">
+            <div className="relative group">
+              <div className="relative mx-auto max-w-2xl">
               <div className="absolute inset-0 bg-gradient-to-r from-primary to-green-600 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity" />
-              <div className="relative flex items-center gap-3 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-2 border border-green-200/50">
-                <Search className="w-5 h-5 text-muted-foreground ml-4" />
-                <input
-                  placeholder="Tìm tên cây hoặc bệnh cây..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 border-0 focus-visible:ring-0 text-lg bg-transparent outline-none"
-                />
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary to-green-600 text-white font-medium"
-                >
-                  Tìm kiếm
-                </button>
+              <div className="relative overflow-hidden rounded-2xl border border-green-200/50 bg-white/95 shadow-2xl backdrop-blur-md">
+                <div className="flex items-center gap-3 px-2 py-2">
+                  <Search className="ml-4 w-5 h-5 text-muted-foreground" />
+                  <input
+                    placeholder="Tìm tên cây hoặc bệnh cây..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                    className="flex-1 border-0 bg-transparent text-lg outline-none focus-visible:ring-0"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setSearchQuery("")}
+                      className="mr-3 inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-green-50 hover:text-foreground"
+                      aria-label="Xoa tim kiem"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
               </div>
-            </form>
+              </div>
+
+              {showSuggestions && (
+                <div
+                  className="absolute left-0 right-0 top-full z-30 mt-4 rounded-2xl border border-green-100 bg-white/95 p-4 text-left shadow-2xl backdrop-blur-md"
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  {loadingSuggestions ? (
+                    <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                      Đang tìm kiếm...
+                    </div>
+                  ) : suggestions.length > 0 ? (
+                    <div className="grid max-h-[520px] grid-cols-1 gap-4 overflow-y-auto md:grid-cols-2 lg:grid-cols-3">
+                      {suggestions.map((suggestion) => (
+                        <Link
+                          key={suggestion.id}
+                          to={`/plant/${suggestion.id}`}
+                          className="block"
+                        >
+                          <PlantCard {...suggestion} />
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                      Không tìm thấy gợi ý phù hợp.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </motion.div>
       </div>
