@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from "react-router";
+import { Outlet, useLocation, useNavigate } from "react-router";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingAIButton } from "@/components/common/FloatingAIButton";
@@ -11,6 +11,16 @@ const NATURE_BG_DARK =
 
 function PublicLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleFloatingAIButtonClick = () => {
+    if (location.pathname === ROUTES.aiDoctor) {
+      window.dispatchEvent(new Event("plantify:toggle-gemini-chat"));
+      return;
+    }
+
+    navigate(ROUTES.aiDoctor);
+  };
 
   return (
     <div
@@ -25,7 +35,7 @@ function PublicLayout() {
         <Outlet />
       </main>
       <Footer />
-      <FloatingAIButton onClick={() => navigate(ROUTES.aiDoctor)} />
+      <FloatingAIButton onClick={handleFloatingAIButtonClick} />
     </div>
   );
 }
