@@ -9,8 +9,13 @@ import { Search, ShoppingCart, Star, Store } from "lucide-react";
 import { motion } from "motion/react";
 import { useProducts } from "@/features/products/hooks";
 import { getCategories } from "@/features/products/api";
+import { useAuth } from "@/features/auth/hooks";
+import { addCartItem } from "@/features/cart/api";
+import { notifyCartUpdated, readLocalCart, writeLocalCart } from "@/features/cart/cartStorage";
+import { toast } from "sonner";
 
 function Shop() {
+  const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParam, setSearchParam] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
@@ -101,6 +106,58 @@ function Shop() {
     setMinPrice("");
     setMaxPrice("");
     setPage(1);
+  };
+
+  const handleAddToCart = async (event, product) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!product) return;
+
+    try {
+      if (isAuthenticated) {
+        await addCartItem({
+          productId: product._id,
+          quantity: 1,
+          selected: true,
+        });
+        notifyCartUpdated();
+        toast.success("Đã thêm vào giỏ hàng thành công!");
+        return;
+      }
+
+      let cart = readLocalCart();
+      const existingItemIndex = cart.findIndex((item) => item.id === product._id);
+      const stock = product.stock || 0;
+
+      if (existingItemIndex > -1) {
+        const newQty = cart[existingItemIndex].quantity + 1;
+        if (stock && newQty > stock) {
+          cart[existingItemIndex].quantity = stock;
+          toast.warning(`Chỉ có thể thêm tối đa ${stock} sản phẩm này.`);
+        } else {
+          cart[existingItemIndex].quantity = newQty;
+          toast.success("Đã cập nhật số lượng giỏ hàng!");
+        }
+      } else {
+        cart.push({
+          id: product._id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+          stock,
+          image: product.thumbnail || product.images?.[0] || "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400",
+          shop: product.brand || "Plantify Shop",
+          selected: true,
+        });
+        toast.success("Đã thêm vào giỏ hàng thành công!");
+      }
+
+      writeLocalCart(cart);
+    } catch (err) {
+      console.error(err);
+      toast.error("Không thể thêm vào giỏ hàng.");
+    }
   };
 
 
@@ -334,7 +391,13 @@ function Shop() {
                             <p className="text-xl font-bold text-primary">
                               {product.price.toLocaleString("vi-VN")}đ
                             </p>
-                            <Button size="sm" variant="outline" className="hover:bg-primary hover:text-white transition-colors">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="hover:bg-primary hover:text-white transition-colors"
+                              onClick={(event) => handleAddToCart(event, product)}
+                              aria-label={`Thêm ${product.name} vào giỏ hàng`}
+                            >
                               <ShoppingCart className="w-4 h-4" />
                             </Button>
                           </div>
