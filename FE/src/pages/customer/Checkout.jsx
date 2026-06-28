@@ -62,6 +62,7 @@ function Checkout() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingCart, setIsLoadingCart] = useState(!new URLSearchParams(window.location.search).has("vnp_ResponseCode"));
   const [orderCode, setOrderCode] = useState("");
+  const [orderTotal, setOrderTotal] = useState(0);
 
   // === KHỞI TẠO ===
   useEffect(() => {
@@ -182,6 +183,7 @@ function Checkout() {
           notes: order.shippingInfo.notes || "",
         });
         setSubtotal(order.subtotal);
+        setOrderTotal(order.total ?? (order.subtotal + (order.shippingFee ?? shippingFee)));
         setPaymentMethod("BANK");
         setIsSuccess(true);
 
@@ -300,7 +302,10 @@ function Checkout() {
         // === LUỒNG COD ===
         const { data } = await createOrder(orderData);
         if (data.success) {
-          setOrderCode(data.data.order.orderCode);
+          const order = data.data.order;
+          setOrderCode(order.orderCode);
+          setSubtotal(order.subtotal ?? subtotal);
+          setOrderTotal(order.total ?? ((order.subtotal ?? subtotal) + (order.shippingFee ?? shippingFee)));
           setIsSuccess(true);
           notifyCartUpdated(); // Thông báo giỏ hàng đã thay đổi
           toast.success("Đặt hàng thành công!");
@@ -442,16 +447,26 @@ function Checkout() {
               </p>
               <p>
                 <strong>Tổng thanh toán:</strong>{" "}
-                {(subtotal + shippingFee).toLocaleString("vi-VN")}đ
+                {(orderTotal || subtotal + shippingFee).toLocaleString("vi-VN")}đ
               </p>
             </div>
-            <Button
-              size="lg"
-              className="w-full bg-gradient-to-r from-primary to-green-600 text-white rounded-xl"
-              onClick={() => navigate("/marketplace")}
-            >
-              Tiếp tục mua sắm
-            </Button>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full rounded-xl border-primary text-primary hover:bg-primary/5"
+                onClick={() => navigate("/marketplace")}
+              >
+                {"Ti\u1ebfp t\u1ee5c mua s\u1eafm"}
+              </Button>
+              <Button
+                size="lg"
+                className="w-full rounded-xl bg-gradient-to-r from-primary to-green-600 text-white"
+                onClick={() => navigate("/profile?tab=orders")}
+              >
+                {"L\u1ecbch s\u1eed \u0111\u01a1n h\u00e0ng"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -775,7 +790,7 @@ function Checkout() {
                       Tổng cộng
                     </span>
                     <span className="text-2xl font-bold text-primary">
-                      {(subtotal + shippingFee).toLocaleString("vi-VN")}đ
+                      {(orderTotal || subtotal + shippingFee).toLocaleString("vi-VN")}đ
                     </span>
                   </div>
 

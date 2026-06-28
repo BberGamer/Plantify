@@ -1,7 +1,7 @@
 // Profile.jsx
 // Trang hồ sơ người dùng: hiển thị thông tin thật từ DB, chức vụ, đổi mật khẩu theo cơ chế nút chỉnh sửa
 
-import { useNavigate, Link } from "react-router";
+import { useNavigate, Link, useSearchParams } from "react-router";
 import { useMyFavorites } from "@/features/favorites/hooks";
 import { useMyOrders } from "@/features/orders/hooks";
 import { removeFavorite } from "@/features/favorites/api";
@@ -187,6 +187,9 @@ function PasswordInput({ id, value, onChange, disabled, placeholder, className }
 
 function Profile() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(requestedTab === "orders" ? "orders" : "profile");
   const { favorites, loading: favLoading, refetch: refetchFavorites } = useMyFavorites();
   const { orders, loading: ordersLoading, refetch: refetchOrders } = useMyOrders();
 
@@ -200,6 +203,21 @@ function Profile() {
       setFavPage(favTotalPages);
     }
   }, [favorites.length, favPage, favTotalPages]);
+
+  useEffect(() => {
+    if (requestedTab === "orders") {
+      setActiveTab("orders");
+    }
+  }, [requestedTab]);
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    if (value === "orders") {
+      setSearchParams({ tab: "orders" });
+      return;
+    }
+    setSearchParams({});
+  };
 
   const handleUnfavorite = async (plantId, e) => {
     e.preventDefault();
@@ -316,7 +334,7 @@ function Profile() {
         </motion.div>
 
         {/* === Tabs điều hướng === */}
-        <Tabs defaultValue="profile" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <div className={user?.role === "customer" ? "" : "profile-tabs-centered"}>
             <TabsList className={`grid p-1.5 bg-slate-100/80 rounded-xl ${user?.role === "customer" ? "w-full grid-cols-3 lg:w-auto" : "w-full max-w-[250px] grid-cols-1"}`}>
               <TabsTrigger value="profile" className="flex items-center justify-center gap-2 py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all font-medium">
