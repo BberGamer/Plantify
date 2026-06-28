@@ -1,18 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
 import {
   Star,
   ShoppingCart,
-  Heart,
-  Share2,
-  Store,
   Shield,
   Truck,
   MessageCircle,
@@ -41,12 +37,6 @@ function ProductDetail() {
     setProductKey((k) => k + 1);
   }, []);
 
-  const [isFavorite, setIsFavorite] = useState(() => {
-    const saved = localStorage.getItem("favorites");
-    if (!saved) return false;
-    const favs = JSON.parse(saved);
-    return favs.includes(id);
-  });
 
   const handleAddToCart = async () => {
     if (!product) return false;
@@ -105,40 +95,6 @@ function ProductDetail() {
     }
   };
 
-  const handleToggleFavorite = () => {
-    const saved = localStorage.getItem("favorites");
-    let favs = saved ? JSON.parse(saved) : [];
-
-    if (isFavorite) {
-      favs = favs.filter(favId => favId !== id);
-      setIsFavorite(false);
-      toast.success("Đã xóa khỏi danh sách yêu thích!");
-    } else {
-      favs.push(id);
-      setIsFavorite(true);
-      toast.success("Đã thêm vào danh sách yêu thích!");
-    }
-    localStorage.setItem("favorites", JSON.stringify(favs));
-  };
-
-  const handleShare = () => {
-    const shareUrl = window.location.href;
-    if (navigator.share) {
-      navigator.share({
-        title: product?.name,
-        text: `Xem sản phẩm ${product?.name} trên Plantify!`,
-        url: shareUrl
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(shareUrl)
-        .then(() => {
-          toast.success("Đã sao chép liên kết sản phẩm!");
-        })
-        .catch(() => {
-          toast.error("Không thể sao chép liên kết.");
-        });
-    }
-  };
 
   if (loading) {
     return (
@@ -290,14 +246,6 @@ function ProductDetail() {
               >
                 Mua ngay
               </Button>
-              <div className="flex gap-2 justify-center">
-                <Button size="lg" variant="outline" onClick={handleToggleFavorite}>
-                  <Heart className={`w-5 h-5 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
-                </Button>
-                <Button size="lg" variant="outline" onClick={handleShare}>
-                  <Share2 className="w-5 h-5" />
-                </Button>
-              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4 mt-6">
