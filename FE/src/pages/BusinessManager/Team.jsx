@@ -5,7 +5,15 @@ import { DashboardCard } from "@/components/common/DashboardCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
@@ -23,7 +31,8 @@ import {
   Ban,
   Package,
   Truck,
-  RotateCcw
+  RotateCcw,
+  Eye
 } from "lucide-react";
 import { getAllOrders, updateOrder } from "@/features/orders/api";
 import { useAuth } from "@/features/auth/hooks";
@@ -98,6 +107,22 @@ function formatDate(dateStr) {
   return date.toLocaleDateString("vi-VN");
 }
 
+function formatDateTime(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleString("vi-VN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getPaymentMethodLabel(method) {
+  return method === "COD" ? "Thanh toán khi nhận hàng" : "Chuyển khoản Internet Banking";
+}
+
 // === MAIN COMPONENT ===
 
 function Team() {
@@ -108,6 +133,7 @@ function Team() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   // === FETCH DATA ===
 
@@ -252,6 +278,121 @@ function Team() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
+      <Dialog open={Boolean(selectedOrder)} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+          {selectedOrder && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">Chi tiết đơn hàng</DialogTitle>
+                <DialogDescription>
+                  Mã đơn {selectedOrder.orderCode} - đặt lúc {formatDateTime(selectedOrder.createdAt)}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+                <Card className="border-green-100 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Thông tin khách hàng</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="grid gap-1">
+                      <span className="text-muted-foreground">Người nhận</span>
+                      <span className="font-semibold">{selectedOrder.shippingInfo?.fullName || "Chưa có thông tin"}</span>
+                    </div>
+                    <div className="grid gap-1">
+                      <span className="text-muted-foreground">Số điện thoại</span>
+                      <span className="font-semibold">{selectedOrder.shippingInfo?.phone || "Chưa có thông tin"}</span>
+                    </div>
+                    <div className="grid gap-1">
+                      <span className="text-muted-foreground">Email</span>
+                      <span className="font-semibold">{selectedOrder.shippingInfo?.email || "Chưa có thông tin"}</span>
+                    </div>
+                    <div className="grid gap-1">
+                      <span className="text-muted-foreground">Địa chỉ giao hàng</span>
+                      <span className="font-semibold leading-6">{selectedOrder.shippingInfo?.address || "Chưa có thông tin"}</span>
+                    </div>
+                    {selectedOrder.shippingInfo?.notes && (
+                      <div className="grid gap-1">
+                        <span className="text-muted-foreground">Ghi chú</span>
+                        <span className="leading-6">{selectedOrder.shippingInfo.notes}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="border-green-100 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Thanh toán và trạng thái</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">Trạng thái đơn</span>
+                      <Badge variant="outline" className={`font-semibold ${getStatusClassName(selectedOrder.status)}`}>
+                        {STATUS_LABELS[selectedOrder.status] || selectedOrder.status}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">Thanh toán</span>
+                      {(() => {
+                        const payConfig = PAYMENT_STATUS_CONFIG[selectedOrder.paymentStatus] || PAYMENT_STATUS_CONFIG.pending;
+                        return (
+                          <Badge variant="outline" className={`font-semibold ${payConfig.className}`}>
+                            {payConfig.label}
+                          </Badge>
+                        );
+                      })()}
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">Phương thức</span>
+                      <span className="font-semibold text-right">{getPaymentMethodLabel(selectedOrder.paymentMethod)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Tạm tính</span>
+                      <span className="font-semibold">{formatVND(selectedOrder.subtotal || 0)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Phí vận chuyển</span>
+                      <span className="font-semibold">{formatVND(selectedOrder.shippingFee || 0)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-base">
+                      <span className="font-semibold">Tổng thanh toán</span>
+                      <span className="text-xl font-bold text-primary">{formatVND(selectedOrder.total || 0)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="border-green-100 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Sản phẩm trong đơn</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {(selectedOrder.items || []).map((item, index) => (
+                    <div key={`${item.productId}-${item.name}-${index}`} className="flex gap-3 rounded-lg border border-green-100 bg-green-50/40 p-3">
+                      <img
+                        src={item.image || "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400"}
+                        alt={item.name}
+                        className="h-16 w-16 flex-shrink-0 rounded-md border object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <h4 className="line-clamp-2 font-semibold text-foreground">{item.name}</h4>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {formatVND(item.price)} x {item.quantity}
+                        </p>
+                      </div>
+                      <div className="text-right font-bold text-primary">
+                        {formatVND(item.lineTotal || item.price * item.quantity)}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <section className="rounded-3xl border border-green-100 bg-gradient-to-r from-green-50 via-background to-emerald-50 p-6 shadow-sm sm:p-8">
         <div>
@@ -445,7 +586,15 @@ function Team() {
                     {/* Hành động */}
                     <TableCell className="px-4 py-4">
                       <div className="flex justify-end gap-2 flex-wrap">
-
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 font-medium transition-all duration-200"
+                          onClick={() => setSelectedOrder(order)}
+                        >
+                          <Eye className="mr-1.5 h-3.5 w-3.5" />
+                          Chi tiết
+                        </Button>
                         {/* pending → Đóng hàng hoặc Hủy */}
                         {order.status === "pending" && (
                           <>
