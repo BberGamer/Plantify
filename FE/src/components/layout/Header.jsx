@@ -12,7 +12,11 @@ import {
   MapPin,
   Store,
   ShoppingCart,
-  PenSquare
+  PenSquare,
+  Package,
+  MessageCircle,
+  AlertTriangle,
+  CheckCheck,
 } from "lucide-react";
 import {
   NavigationMenu,
@@ -40,7 +44,41 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
 
+function formatRelativeTime(dateString) {
+  if (!dateString) return "";
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffMs = now - date;
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSeconds < 60) return "Vừa xong";
+  if (diffMinutes < 60) return `${diffMinutes} phút trước`;
+  if (diffHours < 24) return `${diffHours} giờ trước`;
+  if (diffDays < 7) return `${diffDays} ngày trước`;
+  return date.toLocaleDateString("vi-VN");
+}
+
+function getNotificationIcon(type) {
+  switch (type) {
+    case "order_status_updated":
+      return <Package className="h-4 w-4 text-blue-500" />;
+    case "post_commented":
+      return <MessageCircle className="h-4 w-4 text-green-500" />;
+    case "post_reported_under_review":
+      return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+    default:
+      return <Bell className="h-4 w-4 text-muted-foreground" />;
+  }
+}
+
 function formatNotificationMessage(notification) {
+  if (notification.type === "order_status_updated") {
+    return notification.message || "Đơn hàng của bạn đã được cập nhật trạng thái";
+  }
+
   if (notification.type === "post_commented") {
     const actorName = notification.actorId?.fullName || "Có người";
     return `${actorName} vừa bình luận vào bài viết của bạn`;
@@ -51,6 +89,16 @@ function formatNotificationMessage(notification) {
   }
 
   return "Bạn có thông báo mới";
+}
+
+function getNotificationSubtext(notification) {
+  if (notification.type === "order_status_updated") {
+    return notification.orderId?.orderCode || "Đơn hàng";
+  }
+  if (notification.type === "post_commented" || notification.type === "post_reported_under_review") {
+    return notification.postId?.title || "Bài viết liên quan";
+  }
+  return "";
 }
 
 function Header() {
@@ -106,6 +154,12 @@ function Header() {
     try {
       if (!notification.readAt) {
         await readNotification(notification._id);
+      }
+
+      // Thông báo đơn hàng → điều hướng đến trang Profile (xem đơn hàng)
+      if (notification.type === "order_status_updated") {
+        navigate(ROUTES.profile + "?tab=orders");
+        return;
       }
 
       if (notification.postId?._id || notification.postId) {
@@ -206,57 +260,85 @@ function Header() {
                     <Button variant="ghost" size="icon" className="relative rounded-full" aria-label="Thông báo">
                       <Bell className="h-5 w-5" />
                       {unreadCount > 0 && (
-                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground animate-in zoom-in-50">
                           {unreadCount > 99 ? "99+" : unreadCount}
                         </span>
                       )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-80">
-                    <DropdownMenuLabel className="flex items-center justify-between gap-2">
-                      <span>Thông báo</span>
+                  <DropdownMenuContent align="end" className="w-[360px] p-0">
+                    <div className="flex items-center justify-between border-b px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold">Thông báo</span>
+                        {unreadCount > 0 && (
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </div>
                       {unreadCount > 0 && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-auto px-2 py-1 text-xs"
+                          className="h-auto gap-1 px-2 py-1 text-xs text-primary hover:text-primary"
                           onClick={handleReadAllNotifications}
                         >
+                          <CheckCheck className="h-3.5 w-3.5" />
                           Đọc tất cả
                         </Button>
                       )}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {notificationsLoading ? (
-                      <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Đang tải thông báo...
-                      </div>
-                    ) : notificationsError ? (
-                      <div className="px-3 py-6 text-sm text-destructive">Không thể tải thông báo.</div>
-                    ) : notifications.length ? (
-                      notifications.map((notification) => (
-                        <DropdownMenuItem
-                          key={notification._id}
-                          className="flex cursor-pointer items-start gap-3 whitespace-normal py-3"
-                          onClick={() => handleOpenNotification(notification)}
-                        >
-                          <div className={cn(
-                            "mt-1 h-2.5 w-2.5 rounded-full",
-                            notification.readAt ? "bg-muted" : "bg-primary"
-                          )} />
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <p className="text-sm font-medium leading-5">{formatNotificationMessage(notification)}</p>
-                            <p className="line-clamp-1 text-xs text-muted-foreground">
-                              {notification.postId?.title || "Bài viết liên quan"}
-                            </p>
+                    </div>
+                    <div className="max-h-[380px] overflow-y-auto">
+                      {notificationsLoading ? (
+                        <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Đang tải thông báo...
+                        </div>
+                      ) : notificationsError ? (
+                        <div className="px-4 py-10 text-center text-sm text-destructive">Không thể tải thông báo.</div>
+                      ) : notifications.length ? (
+                        notifications.map((notification) => (
+                          <div
+                            key={notification._id}
+                            className={cn(
+                              "flex cursor-pointer items-start gap-3 border-b border-border/50 px-4 py-3 transition-colors hover:bg-accent/50 last:border-b-0",
+                              !notification.readAt && "bg-primary/[0.03]"
+                            )}
+                            onClick={() => handleOpenNotification(notification)}
+                          >
+                            <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted/80">
+                              {getNotificationIcon(notification.type)}
+                            </div>
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                              <p className={cn(
+                                "text-sm leading-5",
+                                notification.readAt ? "text-muted-foreground" : "font-medium text-foreground"
+                              )}>
+                                {formatNotificationMessage(notification)}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="line-clamp-1 text-xs text-muted-foreground">
+                                  {getNotificationSubtext(notification)}
+                                </p>
+                                <span className="text-[10px] text-muted-foreground/70">•</span>
+                                <span className="whitespace-nowrap text-[11px] text-muted-foreground/70">
+                                  {formatRelativeTime(notification.createdAt)}
+                                </span>
+                              </div>
+                            </div>
+                            {!notification.readAt && (
+                              <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
+                            )}
                           </div>
-                        </DropdownMenuItem>
-                      ))
-                    ) : (
-                      <div className="px-3 py-6 text-sm text-muted-foreground">Chưa có thông báo nào.</div>
-                    )}
+                        ))
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-2 px-4 py-10">
+                          <Bell className="h-8 w-8 text-muted-foreground/40" />
+                          <p className="text-sm text-muted-foreground">Chưa có thông báo nào.</p>
+                        </div>
+                      )}
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}

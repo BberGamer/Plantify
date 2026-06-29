@@ -82,7 +82,13 @@ function Register() {
       toast.success("Mã OTP 6 số đã được gửi đến Gmail của bạn!");
       // Chỉ navigate sau khi gửi email thành công
       navigate("/register/verify-otp", {
-        state: { email: formData.email.trim() }
+        state: {
+          fullName: formData.fullName,
+          email: formData.email.trim(),
+          phone: formData.phone,
+          address: formData.address,
+          password: formData.password,
+        }
       });
     } catch (error) {
       const msg = error.response?.data?.message || error.message || "Đã có lỗi xảy ra.";
