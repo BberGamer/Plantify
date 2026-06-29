@@ -1,6 +1,7 @@
 // Dashboard.jsx - Trang dashboard giao diện riêng cho business manager
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DashboardCard } from "@/components/common/DashboardCard";
+import { getDashboardStats } from "@/features/orders/api";
 import { useCategories, useProducts } from "@/features/products/hooks";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,14 +30,15 @@ import {
   LabelList
 } from "recharts";
 
-const revenueData = [
-  { month: "T1", revenue: 120 },
-  { month: "T2", revenue: 148 },
-  { month: "T3", revenue: 172 },
-  { month: "T4", revenue: 196 },
-  { month: "T5", revenue: 214 },
-  { month: "T6", revenue: 238 }
-];
+const EMPTY_DASHBOARD_STATS = {
+  totalRevenue: 0,
+  monthlyRevenue: []
+};
+
+function formatRevenueValue(value) {
+  const amount = Number(value || 0);
+  return amount.toLocaleString("vi-VN", { maximumFractionDigits: 0 });
+}
 
 function getStockLabel(stock) {
   if (stock <= 0) {
@@ -71,6 +73,47 @@ function Dashboard() {
     loading: categoriesLoading,
     error: categoriesError
   } = useCategories();
+  const [dashboardStats, setDashboardStats] = useState(EMPTY_DASHBOARD_STATS);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setStatsLoading(true);
+    setStatsError(null);
+
+    getDashboardStats()
+      .then((res) => {
+        if (cancelled) {
+          return;
+        }
+
+        const stats = res?.data?.data || EMPTY_DASHBOARD_STATS;
+
+        setDashboardStats({
+          totalRevenue: Number(stats.totalRevenue || 0),
+          monthlyRevenue: Array.isArray(stats.monthlyRevenue)
+            ? stats.monthlyRevenue.map((item) => ({
+                month: item.month,
+                revenue: Number(item.revenue || 0)
+              }))
+            : [],
+          year: stats.year
+        });
+        setStatsLoading(false);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setStatsError(err.response?.data?.message || err.message);
+          setStatsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const productItems = useMemo(() => products.slice(0, 3), [products]);
 
@@ -95,6 +138,8 @@ function Dashboard() {
       });
   }, [categories, products]);
 
+  const revenueData = dashboardStats.monthlyRevenue;
+  const revenueBadge = dashboardStats.year ? `Năm ${dashboardStats.year}` : "Doanh thu thực";
   const isLoading = productsLoading || categoriesLoading;
   const error = productsError || categoriesError;
 
@@ -109,9 +154,9 @@ function Dashboard() {
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         <DashboardCard
           title="Doanh thu tổng quan"
-          value="238 triệu"
+          value={statsLoading ? "..." : statsError ? "--" : formatRevenueValue(dashboardStats.totalRevenue)}
           icon={Wallet}
-          trend={{ value: 12, isPositive: true }}
+          trend={{ value: 0, isPositive: true }}
         />
         <DashboardCard
           title="Sản phẩm đang quản lý"
@@ -135,37 +180,52 @@ function Dashboard() {
                 <TrendingUp className="h-5 w-5 text-primary" />
                 Doanh thu theo tháng
               </CardTitle>
-              <Badge variant="outline" className="w-fit border-amber-200 bg-amber-50 text-amber-700">
-                Dữ liệu mô phỏng
+              <Badge variant="outline" className="w-fit border-green-200 bg-green-50 text-green-700">
+                {revenueBadge}
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
-            <ChartContainer
-              config={{
-                revenue: {
-                  label: "Doanh thu (triệu)",
-                  color: "hsl(var(--primary))"
-                }
-              }}
-              className="h-80"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={3}
-                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 0 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+            {statsLoading ? (
+              <div className="flex h-80 items-center justify-center text-sm text-muted-foreground">
+                Đang tải dữ liệu doanh thu...
+              </div>
+            ) : statsError ? (
+              <div className="flex h-80 items-center justify-center text-sm text-destructive">
+                {statsError}
+              </div>
+            ) : (
+              <ChartContainer
+                config={{
+                  revenue: {
+                    label: "Doanh thu",
+                    color: "#16a34a"
+                  }
+                }}
+                className="h-80"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis tickFormatter={(value) => formatRevenueValue(value)} width={80} />
+                    <ChartTooltip
+                      content={<ChartTooltipContent formatter={(value) => formatRevenueValue(value)} />}
+                    />
+                    <Line
+                      type="linear"
+                      dataKey="revenue"
+                      stroke="#16a34a"
+                      strokeWidth={4}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      dot={{ fill: "#16a34a", stroke: "#16a34a", strokeWidth: 1, r: 4 }}
+                      activeDot={{ r: 6, fill: "#16a34a", stroke: "#16a34a" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            )}
           </CardContent>
         </Card>
 
