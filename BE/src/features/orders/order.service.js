@@ -4,6 +4,7 @@ const qs = require('qs');
 const Order = require('./order.model');
 const Cart = require('../cart/cart.model');
 const Product = require('../products/product.model');
+const { createOrderNotification } = require('../notifications/notification.service');
 
 // ========== HELPER FUNCTIONS ==========
 
@@ -181,7 +182,7 @@ async function createOrder(userId, orderData) {
   // COD và BANK: mặc định đơn hàng mới đều có status = 'pending'
   if (orderData.paymentMethod === 'COD') {
     order.status = 'pending';
-    
+
     // Tự động xóa các sản phẩm đã được chọn mua khỏi giỏ hàng của user
     await Cart.updateOne(
       { userId },
@@ -240,7 +241,7 @@ function createVnpayPaymentUrl(order, ipAddr) {
 
   const date = new Date();
   const createDate = formatVnpayDate(date);
-  
+
   // vnp_ExpireDate is 15 minutes after create date
   const expireDateObj = new Date(date.getTime() + 15 * 60 * 1000);
   const expireDate = formatVnpayDate(expireDateObj);
@@ -268,7 +269,7 @@ function createVnpayPaymentUrl(order, ipAddr) {
   const signData = qs.stringify(vnp_Params, { encode: false });
   const hmac = crypto.createHmac('sha512', secretKey);
   const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
-  
+
   console.log('[VNPay URL Builder] Inputs:', {
     orderCode: order.orderCode,
     total: order.total,
@@ -505,7 +506,7 @@ const ALLOWED_TRANSITIONS_CUSTOMER = {
  * @returns {Object} Đơn hàng sau cập nhật
  * @throws {Error} Nếu trạng thái chuyển đổi không hợp lệ
  */
-async function updateOrder(orderId, updateData) {
+async function updateOrder(orderId, updateData, actorId) {
   const order = await Order.findById(orderId);
   if (!order) {
     throw new Error('Không tìm thấy đơn hàng');
@@ -535,6 +536,13 @@ async function updateOrder(orderId, updateData) {
   }
 
   await order.save();
+
+  // Tạo thông báo cho user khi trạng thái đơn hàng thay đổi
+  if (updateData.status && actorId) {
+    createOrderNotification(order, updateData.status, actorId)
+      .catch((err) => console.error('[Order Service] Lỗi tạo thông báo đơn hàng:', err));
+  }
+
   return order;
 }
 
