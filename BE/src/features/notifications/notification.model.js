@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const NOTIFICATION_TYPES = [
   'post_commented',
   'post_reported_under_review',
+  'order_status_updated',
 ];
 
 const notificationSchema = new mongoose.Schema(
@@ -36,6 +37,15 @@ const notificationSchema = new mongoose.Schema(
     reportId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Report',
+      default: null,
+    },
+    orderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Order',
+      default: null,
+    },
+    message: {
+      type: String,
       default: null,
     },
     readAt: {
