@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getNotifications,
   getUnreadNotificationCount,
@@ -6,12 +6,15 @@ import {
   markNotificationAsRead,
 } from "../api";
 
+const POLLING_INTERVAL_MS = 30000; // 30 giây
+
 export function useNotifications(enabled = true) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(Boolean(enabled));
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const pollingRef = useRef(null);
 
   const refetch = useCallback(() => {
     setRefreshKey((currentKey) => currentKey + 1);
@@ -28,8 +31,10 @@ export function useNotifications(enabled = true) {
 
     let cancelled = false;
 
-    async function fetchNotifications() {
-      setLoading(true);
+    async function fetchNotifications(isPolling = false) {
+      if (!isPolling) {
+        setLoading(true);
+      }
       setError(null);
 
       try {
@@ -55,10 +60,21 @@ export function useNotifications(enabled = true) {
       }
     }
 
-    fetchNotifications();
+    fetchNotifications(false);
+
+    // Polling mỗi 30 giây để kiểm tra thông báo mới
+    pollingRef.current = setInterval(() => {
+      if (!cancelled) {
+        fetchNotifications(true);
+      }
+    }, POLLING_INTERVAL_MS);
 
     return () => {
       cancelled = true;
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
     };
   }, [enabled, refreshKey]);
 
@@ -92,3 +108,4 @@ export function useNotifications(enabled = true) {
     readAllNotifications,
   };
 }
+
