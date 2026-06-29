@@ -47,6 +47,7 @@ export function usePlantDiagnosis() {
         setResult({
           label: prediction.label,
           confidence: prediction.confidence,
+          description: prediction.description,
         });
       } else {
         setError('Kết quả không hợp lệ từ server.');

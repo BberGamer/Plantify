@@ -119,6 +119,20 @@ const getMyOrders = async (req, res) => {
 };
 
 /**
+ * Lấy thống kê dashboard cho business manager
+ * GET /api/orders/stats/dashboard
+ */
+const getDashboardStats = async (req, res) => {
+  try {
+    const stats = await orderService.getDashboardStats();
+    return success(res, 'Lấy thống kê dashboard thành công', stats);
+  } catch (err) {
+    console.error('[Orders] Lỗi lấy thống kê dashboard:', err);
+    return error(res, 'Không thể lấy thống kê dashboard', 500);
+  }
+};
+
+/**
  * Lấy danh sách tất cả đơn hàng (cho business manager / admin)
  * GET /api/orders/all
  */
@@ -194,6 +208,7 @@ module.exports = {
   vnpayReturn,
   vnpayIPN,
   getMyOrders,
+  getDashboardStats,
   getAllOrders,
   updateOrder,
   customerAction,

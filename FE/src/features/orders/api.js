@@ -37,6 +37,14 @@ export const getMyOrders = () => {
 };
 
 /**
+ * Lấy thống kê dashboard cho business manager
+ * @returns {Promise}
+ */
+export const getDashboardStats = () => {
+  return api.get('/orders/stats/dashboard');
+};
+
+/**
  * Lấy danh sách tất cả đơn hàng (cho business manager)
  * @returns {Promise}
  */

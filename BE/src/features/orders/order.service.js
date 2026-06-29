@@ -437,6 +437,44 @@ async function getOrdersByUser(userId) {
 }
 
 /**
+ * Lấy thống kê dashboard cho business manager
+ * @returns {Object} { totalRevenue, monthlyRevenue, year }
+ */
+async function getDashboardStats() {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const monthlyRevenue = Array.from({ length: currentMonth + 1 }, (_, index) => ({
+    month: `T${index + 1}`,
+    revenue: 0,
+  }));
+
+  const paidOrders = await Order.find({
+    paymentStatus: 'paid',
+    paidAt: { $ne: null },
+  })
+    .select('total paidAt')
+    .lean();
+
+  const totalRevenue = paidOrders.reduce((sum, order) => {
+    const orderTotal = Number(order.total || 0);
+    const paidDate = new Date(order.paidAt);
+
+    if (paidDate.getFullYear() === currentYear && paidDate.getMonth() <= currentMonth) {
+      monthlyRevenue[paidDate.getMonth()].revenue += orderTotal;
+    }
+
+    return sum + orderTotal;
+  }, 0);
+
+  return {
+    totalRevenue,
+    monthlyRevenue,
+    year: currentYear,
+  };
+}
+
+/**
  * Lấy danh sách tất cả đơn hàng (cho quản lý)
  * @returns {Array} Danh sách đơn hàng
  */
@@ -546,6 +584,7 @@ module.exports = {
   verifyVnpayReturn,
   handleVnpayIPN,
   getOrdersByUser,
+  getDashboardStats,
   getAllOrders,
   updateOrder,
   customerActionOrder,

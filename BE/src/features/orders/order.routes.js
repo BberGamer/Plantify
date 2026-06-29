@@ -22,6 +22,9 @@ router.get('/vnpay/ipn', orderController.vnpayIPN);
 
 // === QUẢN LÝ ĐƠN HÀNG (BUSINESS MANAGER) ===
 
+// Lấy thống kê dashboard cho business manager
+router.get('/stats/dashboard', authenticate, authorizeBusinessManager, orderController.getDashboardStats);
+
 // Lấy danh sách tất cả đơn hàng
 router.get('/all', authenticate, authorizeBusinessManager, orderController.getAllOrders);
 

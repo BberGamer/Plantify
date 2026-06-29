@@ -5,12 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { useAIChat, usePlantDiagnosis } from '@/features/ai';
-import { Upload, Camera, Sparkles, Bug, Leaf, ArrowRight, Loader2, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, Sparkles, Bug, Leaf, ArrowRight, Loader2, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
 function AIDoctor() {
   const fileInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   const diagnosis = usePlantDiagnosis();
@@ -46,10 +45,10 @@ function AIDoctor() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="space-y-6">
+        <div className="grid md:grid-cols-2 gap-8 md:items-stretch">
+          <div className="space-y-6 h-full">
             {/* Image Upload Section */}
-            <Card className="border-2 border-dashed border-primary/30 hover:border-primary/50 transition-colors">
+            <Card className="h-full border-2 border-dashed border-primary/30 hover:border-primary/50 transition-colors">
               <CardContent className="p-8">
                 <div className="text-center space-y-6">
                   {!diagnosis.previewUrl ? (
@@ -77,15 +76,6 @@ function AIDoctor() {
                           <Upload className="w-5 h-5 mr-2" />
                           Chọn từ thiết bị
                         </Button>
-                        <Button
-                          size="lg"
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => cameraInputRef.current?.click()}
-                        >
-                          <Camera className="w-5 h-5 mr-2" />
-                          Chụp ảnh
-                        </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Hỗ trợ: JPG, PNG, WebP • Tối đa 10MB
@@ -94,14 +84,6 @@ function AIDoctor() {
                         ref={fileInputRef}
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
-                        className="hidden"
-                        onChange={(e) => diagnosis.processFile(e.target.files?.[0])}
-                      />
-                      <input
-                        ref={cameraInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        capture="environment"
                         className="hidden"
                         onChange={(e) => diagnosis.processFile(e.target.files?.[0])}
                       />
@@ -166,23 +148,28 @@ function AIDoctor() {
           </div>
 
           {/* Right Column - Diagnosis Result */}
-          <div className="space-y-6">
+          <div className="space-y-6 h-full">
             {/* Diagnosis Result */}
             {diagnosis.result ? (
-              <Card className="border-2 border-primary/50 bg-gradient-to-br from-primary/5 to-green-50/50">
+              <Card className="h-full border-2 border-primary/50 bg-gradient-to-br from-primary/5 to-green-50/50">
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-green-600" />
                     Kết quả chẩn đoán
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="flex h-full flex-col justify-center space-y-4">
                   <div className="text-center py-4">
                     <Leaf className="w-12 h-12 text-primary mx-auto mb-3" />
                     <p className="text-sm text-muted-foreground mb-1">Bệnh</p>
                     <h3 className="text-2xl font-bold text-primary">
                       {diagnosis.result.label?.split('___').map((part) => part.replace(/_/g, ' ')).join(' - ')}
                     </h3>
+                    {diagnosis.result.description ? (
+                      <p className="mt-3 text-sm leading-6 text-muted-foreground max-w-md mx-auto">
+                        {diagnosis.result.description}
+                      </p>
+                    ) : null}
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
@@ -202,8 +189,8 @@ function AIDoctor() {
                 </CardContent>
               </Card>
             ) : (
-              <Card className="border-2 border-dashed border-border">
-                <CardContent className="p-12 text-center">
+              <Card className="h-full border-2 border-dashed border-border">
+                <CardContent className="flex h-full flex-col items-center justify-center p-12 text-center">
                   <Bug className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
                   <p className="text-muted-foreground">
                     Tải ảnh lên để xem kết quả chẩn đoán
@@ -212,37 +199,6 @@ function AIDoctor() {
               </Card>
             )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Mẹo chụp ảnh tốt</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-bold text-primary">1</span>
-                  </div>
-                  <p className="text-sm">Chụp ảnh lá cây rõ nét, có ánh sáng tự nhiên</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-bold text-primary">2</span>
-                  </div>
-                  <p className="text-sm">Đảm bảo vùng bệnh trên lá chiếm ít nhất 50% diện tích ảnh</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-bold text-primary">3</span>
-                  </div>
-                  <p className="text-sm">Tránh nền phức tạp, ưu tiên nền đơn giản</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-bold text-primary">4</span>
-                  </div>
-                  <p className="text-sm">Chụp nhiều góc độ để có kết quả chính xác hơn</p>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
 
