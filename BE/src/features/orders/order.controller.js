@@ -154,8 +154,9 @@ const updateOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
     const { status, paymentStatus } = req.body;
+    const actorId = req.user.id;
 
-    const order = await orderService.updateOrder(orderId, { status, paymentStatus });
+    const order = await orderService.updateOrder(orderId, { status, paymentStatus }, actorId);
     return success(res, 'Cập nhật đơn hàng thành công', { order });
   } catch (err) {
     console.error('[Orders] Lỗi cập nhật đơn hàng:', err);
