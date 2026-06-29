@@ -9,6 +9,15 @@ function ensureObjectId(id, message = 'ID khong hop le') {
   }
 }
 
+const ORDER_STATUS_LABELS = {
+  pending: 'Chờ xử lý',
+  packing: 'Đang đóng hàng',
+  sented: 'Đã gửi hàng',
+  succeeded: 'Đã nhận hàng',
+  returning: 'Đang hoàn trả',
+  cancelled: 'Đã hủy',
+};
+
 async function createNotification(payload) {
   const { recipientId, actorId } = payload;
 
@@ -20,6 +29,29 @@ async function createNotification(payload) {
   }
 
   return Notification.create(payload);
+}
+
+/**
+ * Tạo thông báo khi đơn hàng được cập nhật trạng thái
+ * @param {Object} order - Đơn hàng (phải có _id, userId, orderCode)
+ * @param {string} newStatus - Trạng thái mới
+ * @param {string} actorId - ID người thực hiện thay đổi (BM)
+ */
+async function createOrderNotification(order, newStatus, actorId) {
+  if (!order || !order.userId || !actorId) {
+    return null;
+  }
+
+  const statusLabel = ORDER_STATUS_LABELS[newStatus] || newStatus;
+  const message = `Đơn hàng ${order.orderCode} đã chuyển sang trạng thái: ${statusLabel}`;
+
+  return createNotification({
+    recipientId: order.userId,
+    actorId,
+    type: 'order_status_updated',
+    orderId: order._id,
+    message,
+  });
 }
 
 async function getNotificationsByRecipient(recipientId, filters = {}) {
@@ -39,6 +71,7 @@ async function getNotificationsByRecipient(recipientId, filters = {}) {
   const notifications = await Notification.find(query)
     .populate('actorId', 'fullName avatarUrl email')
     .populate('postId', 'title')
+    .populate('orderId', 'orderCode status total')
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
@@ -69,6 +102,7 @@ async function markNotificationAsRead(notificationId, recipientId) {
   )
     .populate('actorId', 'fullName avatarUrl email')
     .populate('postId', 'title')
+    .populate('orderId', 'orderCode status total')
     .lean();
 }
 
@@ -85,8 +119,10 @@ async function markAllNotificationsAsRead(recipientId) {
 
 module.exports = {
   createNotification,
+  createOrderNotification,
   getNotificationsByRecipient,
   getUnreadCount,
   markNotificationAsRead,
   markAllNotificationsAsRead,
 };
+
