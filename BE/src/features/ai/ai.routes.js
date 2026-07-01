@@ -5,10 +5,10 @@ const { uploadDiagnosisImage } = require('../../middlewares/aiDiagnosis.upload')
 
 const router = express.Router();
 
-// POST /api/ai/chat - Gọi Gemini AI để trả lời câu hỏi.
+// POST /api/ai/chat - Gọi AI chat để trả lời câu hỏi (Gemini hoặc Groq tùy cấu hình)
 router.post('/chat', aiController.generateText);
 
-// POST /api/ai/diagnose - Chẩn đoán bệnh cây từ ảnh.
+// POST /api/ai/diagnose - Chẩn đoán bệnh cây từ ảnh
 router.post('/diagnose', uploadDiagnosisImage, aiController.diagnosePlantDisease);
 
 module.exports = router;

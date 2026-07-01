@@ -2,9 +2,11 @@
 
 const { AIProvider } = require('./aiProvider.interface');
 const { GeminiProvider } = require('./providers/gemini.provider');
+const { GroqProvider } = require('./providers/groq.provider');
 
 const PROVIDERS = {
   gemini: GeminiProvider,
+  groq: GroqProvider,
 };
 
 function createHttpError(message, statusCode) {
