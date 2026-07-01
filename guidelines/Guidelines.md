@@ -44,7 +44,22 @@ src/
 │   └── constants.js
 │
 └── server.js            # Entry point
+
+### Backend AI Providers (`BE/src/lib/ai/`)
+
+```bash
+lib/
+├── ai/
+│   ├── aiProvider.interface.js   # Base interface/contract cho AI providers
+│   ├── aiFactory.js              # Factory chọn provider theo AI_PROVIDER env
+│   └── providers/
+│       ├── gemini.provider.js    # Gemini implementation
+│       └── groq.provider.js      # Groq implementation
 ```
+
+- Chuyển đổi provider bằng `AI_PROVIDER=gemini` hoặc `AI_PROVIDER=groq` trong `.env`
+- Mỗi provider implement interface `generateText(prompt)` và `validateConfig()`
+- Không hardcode provider trong service → dùng factory pattern
 
 ### Frontend (`FE/src/`)
 
