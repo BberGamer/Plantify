@@ -2,7 +2,7 @@
 
 /**
  * Interface/base class cho AI Provider
- * Implement các provider cụ thể như Gemini, Groq kế thừa class này
+ * Implement provider cụ thể như Groq kế thừa class này
  */
 class AIProvider {
   /**

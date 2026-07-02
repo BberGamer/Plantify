@@ -1,9 +1,9 @@
-// useAIChat.js - Hook để gọi Gemini AI chat
+// useAIChat.js - Hook để gọi AI chat
 import { useState } from 'react';
-import { askGemini } from '../api';
+import { askAI } from '../api';
 
 /**
- * Hook để chat với Gemini AI.
+ * Hook để chat với AI.
  */
 export function useAIChat() {
   const [question, setQuestion] = useState('');
@@ -14,7 +14,7 @@ export function useAIChat() {
   const ask = async () => {
     const trimmedQuestion = question.trim();
     if (!trimmedQuestion) {
-      setError('Vui lòng nhập câu hỏi cho Gemini');
+      setError('Vui lòng nhập câu hỏi cho AI');
       return;
     }
 
@@ -22,11 +22,11 @@ export function useAIChat() {
     setError('');
 
     try {
-      const response = await askGemini(trimmedQuestion);
-      setAnswer(response || 'Gemini chưa trả về nội dung.');
+      const response = await askAI(trimmedQuestion);
+      setAnswer(response || 'AI chưa trả về nội dung.');
     } catch (apiError) {
       setAnswer('');
-      setError(apiError.response?.data?.message || 'Không thể gọi Gemini lúc này');
+      setError(apiError.response?.data?.message || 'Không thể gọi AI lúc này');
     } finally {
       setIsLoading(false);
     }

@@ -52,7 +52,7 @@ export function AIDoctorSection() {
             </div>
             <h3 className="font-semibold mb-2 text-lg">Tư vấn AI</h3>
             <p className="text-muted-foreground text-sm">
-              Trao đổi thêm với Gemini để hiểu rõ nguyên nhân và cách xử lý
+              Trao đổi thêm với AI để hiểu rõ nguyên nhân và cách xử lý
             </p>
           </CardContent>
         </Card>
