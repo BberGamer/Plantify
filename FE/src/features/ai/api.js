@@ -23,11 +23,11 @@ export async function diagnosePlantDisease(file) {
 }
 
 /**
- * Gửi câu hỏi cho Gemini AI.
+ * Gửi câu hỏi cho AI.
  * @param {string} prompt - Câu hỏi từ user
- * @returns {Promise<string>} - Phản hồi từ Gemini
+ * @returns {Promise<string>} - Phản hồi từ AI
  */
-export async function askGemini(prompt) {
+export async function askAI(prompt) {
   const response = await api.post(`${AI_API}/chat`, { prompt });
   return response.data?.data?.text;
 }

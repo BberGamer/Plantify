@@ -16,14 +16,14 @@ function AIDoctor() {
   const chat = useAIChat();
 
   useEffect(() => {
-    const handleToggleGeminiChat = () => {
+    const handleToggleAIChat = () => {
       setIsChatOpen((value) => !value);
     };
 
-    window.addEventListener("plantify:toggle-gemini-chat", handleToggleGeminiChat);
+    window.addEventListener("plantify:toggle-ai-chat", handleToggleAIChat);
 
     return () => {
-      window.removeEventListener("plantify:toggle-gemini-chat", handleToggleGeminiChat);
+      window.removeEventListener("plantify:toggle-ai-chat", handleToggleAIChat);
     };
   }, []);
 
@@ -251,7 +251,7 @@ function AIDoctor() {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b bg-white/95 px-4 py-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Sparkles className="h-4 w-4 text-primary" />
-                Chat Gemini AI
+                Chat AI
               </CardTitle>
               <Button
                 type="button"
@@ -273,7 +273,7 @@ function AIDoctor() {
               />
               <Button className="w-full" onClick={chat.ask} disabled={chat.isLoading}>
                 {chat.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Gửi cho Gemini
+                Gửi cho AI
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               {chat.error && (
@@ -283,7 +283,7 @@ function AIDoctor() {
               )}
               {chat.answer && (
                 <div className="max-h-56 overflow-y-auto rounded-xl border border-primary/20 bg-primary/5 px-4 py-4">
-                  <p className="mb-2 text-sm font-medium text-primary">Phản hồi từ Gemini</p>
+                  <p className="mb-2 text-sm font-medium text-primary">Phản hồi từ AI</p>
                   <p className="whitespace-pre-wrap text-sm text-foreground">{chat.answer}</p>
                 </div>
               )}

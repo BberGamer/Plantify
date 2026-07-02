@@ -15,7 +15,7 @@ function PublicLayout() {
 
   const handleFloatingAIButtonClick = () => {
     if (location.pathname === ROUTES.aiDoctor) {
-      window.dispatchEvent(new Event("plantify:toggle-gemini-chat"));
+      window.dispatchEvent(new Event("plantify:toggle-ai-chat"));
       return;
     }
 

@@ -5,7 +5,7 @@ const { uploadDiagnosisImage } = require('../../middlewares/aiDiagnosis.upload')
 
 const router = express.Router();
 
-// POST /api/ai/chat - Gọi AI chat để trả lời câu hỏi (Gemini hoặc Groq tùy cấu hình)
+// POST /api/ai/chat - Gọi Groq AI chat để trả lời câu hỏi
 router.post('/chat', aiController.generateText);
 
 // POST /api/ai/diagnose - Chẩn đoán bệnh cây từ ảnh

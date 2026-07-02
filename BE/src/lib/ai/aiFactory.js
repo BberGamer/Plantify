@@ -1,11 +1,9 @@
-// aiFactory.js - Factory để chọn AI Provider dựa trên config
+// aiFactory.js - Factory tạo Groq AI Provider
 
 const { AIProvider } = require('./aiProvider.interface');
-const { GeminiProvider } = require('./providers/gemini.provider');
 const { GroqProvider } = require('./providers/groq.provider');
 
 const PROVIDERS = {
-  gemini: GeminiProvider,
   groq: GroqProvider,
 };
 
@@ -20,7 +18,7 @@ function createHttpError(message, statusCode) {
  * @returns {AIProvider}
  */
 function createAIProvider() {
-  const providerName = process.env.AI_PROVIDER || 'gemini';
+  const providerName = process.env.AI_PROVIDER || 'groq';
   const ProviderClass = PROVIDERS[providerName];
 
   if (!ProviderClass) {

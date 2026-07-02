@@ -3,16 +3,16 @@ const axios = require('axios');
 const FormData = require('form-data');
 const { createAIProvider } = require('../../lib/ai/aiFactory');
 
-// === AI Chat (provider động) ===
+// === AI Chat (Groq provider) ===
 
 /**
- * Gọi AI generate text với provider được cấu hình trong AI_PROVIDER
+ * Gọi Groq AI generate text với provider được cấu hình trong AI_PROVIDER
  * @param {string} prompt - Prompt cần xử lý
  * @param {object} options - Options optional (systemPrompt, temperature)
  * @returns {Promise<{text: string, model: string, provider: string}>}
  */
 async function generateText(prompt, options = {}) {
-  const providerName = process.env.AI_PROVIDER || 'gemini';
+  const providerName = process.env.AI_PROVIDER || 'groq';
   const provider = createAIProvider();
 
   console.log(`[AI Service] Provider: ${providerName} | Model: ${provider.modelName}`);
