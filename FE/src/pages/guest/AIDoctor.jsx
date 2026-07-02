@@ -184,7 +184,7 @@ function AIDoctor() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground text-center">
-                    Kết quả dựa trên mô hình AI EfficientNet đã được huấn luyện
+                    Kết quả được phân tích bằng OpenAI vision
                   </p>
                 </CardContent>
               </Card>

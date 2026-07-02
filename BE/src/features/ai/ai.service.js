@@ -1,6 +1,5 @@
 // ai.service.js - Xử lý business logic liên quan đến AI (chat, chẩn đoán bệnh cây)
-const axios = require('axios');
-const FormData = require('form-data');
+const OpenAI = require('openai');
 const { createAIProvider } = require('../../lib/ai/aiFactory');
 
 // === AI Chat (Groq provider) ===
@@ -25,64 +24,121 @@ async function generateText(prompt, options = {}) {
   };
 }
 
-// === AI Diagnosis (chẩn đoán bệnh cây) ===
+// === AI Diagnosis (OpenAI vision) ===
 
-const FASTAPI_URL = process.env.AI_SERVICE_URL || 'http://127.0.0.1:8000';
-const PREDICT_ENDPOINT = `${FASTAPI_URL}/predict`;
-const TIMEOUT = 60000; // 60 seconds for model inference
-const DISEASE_DESCRIPTIONS = {
-  Aloe_Anthracnose: 'Bệnh thán thư trên nha đam gây các đốm sẫm màu, làm mô lá khô dần và có thể lan rộng nếu độ ẩm cao.',
-  Aloe_Healthy: 'Lá nha đam không ghi nhận dấu hiệu bệnh rõ rệt, bề mặt lá nhìn chung vẫn ổn định và khỏe mạnh.',
-  Aloe_LeafSpot: 'Đốm lá trên nha đam thường tạo các vết tròn hoặc bất định trên bề mặt lá, làm giảm thẩm mỹ và sức sống của cây.',
-  Aloe_Rust: 'Bệnh gỉ sắt trên nha đam thường xuất hiện dưới dạng đốm nâu cam, có thể lan nhanh khi lá ẩm kéo dài.',
-  Aloe_Sunburn: 'Cháy nắng trên nha đam làm lá bị bạc màu, khô hoặc cháy xém do tiếp xúc ánh nắng gắt quá lâu.',
-  Cactus_Dactylopius_Opuntia: 'Xương rồng có dấu hiệu rệp sáp Dactylopius Opuntia, thường thấy các mảng trắng bám trên thân làm cây suy yếu dần.',
-  Cactus_Healthy: 'Xương rồng không ghi nhận dấu hiệu bệnh nổi bật, bề mặt thân nhìn chung vẫn khỏe và ổn định.',
-  Money_Plant_Bacterial_wilt_disease: 'Trầu bà có dấu hiệu héo rũ do vi khuẩn, cây có thể vàng lá, mềm thân và suy kiệt nhanh nếu không xử lý sớm.',
-  Money_Plant_Healthy: 'Trầu bà không ghi nhận dấu hiệu bệnh rõ rệt, lá và thân hiện ở trạng thái tương đối khỏe mạnh.',
-  Money_Plant_Manganese_Toxicity: 'Trầu bà có biểu hiện ngộ độc mangan, thường gây đổi màu lá và làm mô lá suy yếu khi môi trường trồng mất cân bằng.',
-  Snake_Plant_Anthracnose: 'Lưỡi hổ có dấu hiệu thán thư với các vết bệnh sẫm màu, dễ lan rộng khi môi trường ẩm và thông gió kém.',
-  Snake_Plant_Healthy: 'Lưỡi hổ không ghi nhận dấu hiệu bệnh rõ rệt, lá nhìn chung còn khỏe và ổn định.',
-  Snake_Plant_Leaf_Withering: 'Lưỡi hổ có hiện tượng héo lá, đầu hoặc mép lá khô yếu dần do stress, thiếu chăm sóc phù hợp hoặc tác nhân bệnh.',
-  Spider_Plant_Fungal_leaf_spot: 'Lan chi có dấu hiệu đốm lá do nấm, thường xuất hiện các vết nhỏ sẫm màu rồi lan rộng trên lá.',
-  Spider_Plant_Healthy: 'Lan chi không ghi nhận dấu hiệu bệnh rõ rệt, lá hiện ở trạng thái tương đối khỏe mạnh.',
-  Spider_Plant_Leaf_Tip_Necrosis: 'Lan chi bị hoại tử đầu lá, phần chóp lá khô nâu dần, thường liên quan đến stress môi trường hoặc mất cân bằng dinh dưỡng.',
-};
+const OPENAI_DIAGNOSIS_MODEL = process.env.OPENAI_DIAGNOSIS_MODEL || 'gpt-5-mini';
+const DIAGNOSIS_PROMPT = `Bạn là chuyên gia bệnh cây cảnh. Hãy phân tích ảnh lá/cây được gửi kèm và trả lời CHỈ bằng JSON hợp lệ, không markdown.
+Schema:
+{
+  "label": "Tên bệnh hoặc tình trạng chính bằng tiếng Việt",
+  "confidence": 0.82,
+  "description": "Mô tả ngắn gọn dấu hiệu nhìn thấy và nguyên nhân có thể",
+  "treatment": ["Việc nên làm 1", "Việc nên làm 2", "Việc nên làm 3"]
+}
+Quy tắc:
+- confidence là số từ 0 đến 1, thể hiện mức tự tin ước lượng từ ảnh.
+- Nếu ảnh không rõ hoặc không phải cây, label phải là "Không đủ dữ liệu", confidence thấp, description giải thích lý do.
+- Không khẳng định tuyệt đối; ưu tiên lời khuyên chăm sóc an toàn cho cây cảnh.`;
+
+function createOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    const error = new Error('Chua cau hinh OPENAI_API_KEY');
+    error.statusCode = 500;
+    throw error;
+  }
+
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
+
+function extractJsonObject(text) {
+  const normalizedText = text?.trim();
+
+  if (!normalizedText) {
+    throw new Error('OpenAI khong tra ve noi dung chan doan.');
+  }
+
+  const jsonMatch = normalizedText.match(/\{[\s\S]*\}/);
+  const jsonText = jsonMatch ? jsonMatch[0] : normalizedText;
+
+  return JSON.parse(jsonText);
+}
+
+function normalizeConfidence(confidence) {
+  const numberValue = Number(confidence);
+
+  if (!Number.isFinite(numberValue)) {
+    return 0;
+  }
+
+  if (numberValue > 1) {
+    return Math.max(0, Math.min(numberValue / 100, 1));
+  }
+
+  return Math.max(0, Math.min(numberValue, 1));
+}
 
 /**
- * Chẩn đoán bệnh cây bằng AI từ ảnh.
+ * Chẩn đoán bệnh cây bằng OpenAI vision từ ảnh.
  * @param {Buffer} imageBuffer - Buffer của ảnh upload
  * @param {string} filename - Tên file ảnh
  * @param {string} mimeType - MIME type của ảnh
- * @returns {Promise<{classId: number, label: string, confidence: number}>}
+ * @returns {Promise<{classId: null, label: string, confidence: number, description: string, treatment: string[], model: string}>}
  */
 async function diagnoseFromImage(imageBuffer, filename, mimeType) {
-  const formData = new FormData();
-  formData.append('file', imageBuffer, {
-    filename: filename || 'image.jpg',
-    contentType: mimeType || 'image/jpeg',
-  });
+  const client = createOpenAIClient();
+  const contentType = mimeType || 'image/jpeg';
+  const base64Image = imageBuffer.toString('base64');
+  const imageUrl = `data:${contentType};base64,${base64Image}`;
 
   try {
-    const response = await axios.post(PREDICT_ENDPOINT, formData, {
-      headers: {
-        ...formData.getHeaders(),
-      },
-      timeout: TIMEOUT,
+    console.log('=================================');
+    console.log('[OpenAI Diagnosis] Calling API...');
+    console.log('Model:', OPENAI_DIAGNOSIS_MODEL);
+    console.log('File:', filename || 'image.jpg');
+
+    const result = await client.responses.create({
+      model: OPENAI_DIAGNOSIS_MODEL,
+      input: [
+        {
+          role: 'user',
+          content: [
+            { type: 'input_text', text: DIAGNOSIS_PROMPT },
+            { type: 'input_image', image_url: imageUrl },
+          ],
+        },
+      ],
+      max_output_tokens: 700,
     });
 
-    const { class_id, label, confidence } = response.data;
+    const parsedResult = extractJsonObject(result.output_text);
+
+    console.log('[OpenAI Diagnosis] Success');
+    console.log('=================================');
 
     return {
-      classId: class_id,
-      label,
-      confidence: confidence,
-      description: DISEASE_DESCRIPTIONS[label] || null,
+      classId: null,
+      label: parsedResult.label || 'Không đủ dữ liệu',
+      confidence: normalizeConfidence(parsedResult.confidence),
+      description: parsedResult.description || '',
+      treatment: Array.isArray(parsedResult.treatment) ? parsedResult.treatment : [],
+      model: OPENAI_DIAGNOSIS_MODEL,
     };
   } catch (error) {
-    if (error.code === 'ECONNREFUSED') {
-      const err = new Error('AI service không khả dụng. Vui lòng khởi động AI Service.');
-      err.statusCode = 503;
+    console.error('=================================');
+    console.error('[OpenAI Diagnosis] Error:', error?.response?.data || error.message);
+    console.error('=================================');
+
+    if (error.status === 401) {
+      const err = new Error('OPENAI_API_KEY không hợp lệ.');
+      err.statusCode = 401;
+      throw err;
+    }
+
+    if (error.status === 429) {
+      const err = new Error('Đã vượt quá giới hạn OpenAI. Vui lòng thử lại sau.');
+      err.statusCode = 429;
       throw err;
     }
 
@@ -92,13 +148,19 @@ async function diagnoseFromImage(imageBuffer, filename, mimeType) {
       throw err;
     }
 
-    if (error.response?.status === 400) {
-      const err = new Error(error.response.data?.detail || 'File ảnh không hợp lệ.');
+    if (error instanceof SyntaxError) {
+      const err = new Error('OpenAI trả về kết quả không đúng định dạng JSON.');
+      err.statusCode = 502;
+      throw err;
+    }
+
+    if (error.status === 400) {
+      const err = new Error('File ảnh không hợp lệ hoặc OpenAI không thể xử lý ảnh này.');
       err.statusCode = 400;
       throw err;
     }
 
-    const err = new Error(error.response?.data?.detail || 'Chẩn đoán thất bại.');
+    const err = new Error('Chẩn đoán bằng OpenAI thất bại.');
     err.statusCode = 500;
     throw err;
   }
