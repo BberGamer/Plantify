@@ -183,8 +183,83 @@ function AIDoctor() {
                       className="h-3"
                     />
                   </div>
+
+                  {/* Treatment Steps */}
+                  {diagnosis.result.treatment?.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-sm font-semibold text-foreground">Hướng dẫn xử lý</p>
+                      <ul className="space-y-1.5">
+                        {diagnosis.result.treatment.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <span className="bg-primary/10 text-primary rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-xs font-medium mt-0.5">
+                              {idx + 1}
+                            </span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Solution Proposal */}
+                  {diagnosis.result.solutionProposal && (
+                    <div className="mt-4 p-4 bg-white/60 rounded-xl border border-primary/20 space-y-3">
+                      <p className="text-sm font-semibold text-primary">Đề xuất giải pháp chi tiết</p>
+
+                      {diagnosis.result.solutionProposal.steps?.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-foreground mb-1.5">Các bước thực hiện</p>
+                          <ul className="space-y-1">
+                            {diagnosis.result.solutionProposal.steps.map((step, idx) => (
+                              <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
+                                <span className="bg-green-100 text-green-700 rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 text-[10px] font-medium mt-0.5">
+                                  {idx + 1}
+                                </span>
+                                {step}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {diagnosis.result.solutionProposal.notes?.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-foreground mb-1.5">Lưu ý</p>
+                          <ul className="space-y-1">
+                            {diagnosis.result.solutionProposal.notes.map((note, idx) => (
+                              <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
+                                <span className="bg-amber-100 text-amber-700 rounded px-1.5 py-0.5 flex-shrink-0">
+                                  !
+                                </span>
+                                {note}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {diagnosis.result.solutionProposal.timeline && (
+                        <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <span className="bg-blue-100 text-blue-700 rounded px-1.5 py-0.5 flex-shrink-0">
+                            ⏱
+                          </span>
+                          <span><strong>Thời gian:</strong> {diagnosis.result.solutionProposal.timeline}</span>
+                        </div>
+                      )}
+
+                      {diagnosis.result.solutionProposal.prevention && (
+                        <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <span className="bg-purple-100 text-purple-700 rounded px-1.5 py-0.5 flex-shrink-0">
+                            🛡
+                          </span>
+                          <span><strong>Phòng ngừa:</strong> {diagnosis.result.solutionProposal.prevention}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <p className="text-xs text-muted-foreground text-center">
-                    Kết quả được phân tích bằng OpenAI vision
+                    Kết quả được phân tích bằng Groq Llama-4 Scout vision
                   </p>
                 </CardContent>
               </Card>
