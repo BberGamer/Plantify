@@ -48,6 +48,8 @@ export function usePlantDiagnosis() {
           label: prediction.label,
           confidence: prediction.confidence,
           description: prediction.description,
+          treatment: prediction.treatment || [],
+          solutionProposal: prediction.solutionProposal || null,
         });
       } else {
         setError('Kết quả không hợp lệ từ server.');
