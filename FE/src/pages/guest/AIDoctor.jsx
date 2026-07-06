@@ -184,23 +184,6 @@ function AIDoctor() {
                     />
                   </div>
 
-                  {/* Treatment Steps */}
-                  {diagnosis.result.treatment?.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      <p className="text-sm font-semibold text-foreground">Hướng dẫn xử lý</p>
-                      <ul className="space-y-1.5">
-                        {diagnosis.result.treatment.map((item, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                            <span className="bg-primary/10 text-primary rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-xs font-medium mt-0.5">
-                              {idx + 1}
-                            </span>
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
                   {/* Solution Proposal */}
                   {diagnosis.result.solutionProposal && (
                     <div className="mt-4 p-4 bg-white/60 rounded-xl border border-primary/20 space-y-3">
