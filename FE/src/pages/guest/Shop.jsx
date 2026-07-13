@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle2, FileText, Search, ShieldCheck, ShoppingCart, Star, Store } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, FileText, Search, ShieldCheck, ShoppingCart, Star, Store } from "lucide-react";
 import { motion } from "motion/react";
 import { useProducts } from "@/features/products/hooks";
 import { getCategories } from "@/features/products/api";
@@ -34,12 +34,21 @@ const MARKETPLACE_TERMS = [
 
 function Shop() {
   const { isAuthenticated } = useAuth();
-  const [termsOpen, setTermsOpen] = useState(true);
+  const [termsOpen, setTermsOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return !window.localStorage.getItem("plantify:marketplace-terms-accepted");
+  });
+  const acceptTerms = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("plantify:marketplace-terms-accepted", "1");
+    }
+    setTermsOpen(false);
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParam, setSearchParam] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [sortBy, setSortBy] = useState("popular");
-  
+
   // Price states
   const [minPriceInput, setMinPriceInput] = useState("");
   const [maxPriceInput, setMaxPriceInput] = useState("");
@@ -65,6 +74,15 @@ function Shop() {
       })
       .catch((err) => console.error("Lỗi lấy danh mục:", err));
   }, []);
+
+  // Live search: debounce searchQuery -> searchParam (350ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchParam(searchQuery);
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Fetch products using custom hook
   const { products, total, pages, currentPage, loading, error } = useProducts({
@@ -183,18 +201,18 @@ function Shop() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white">
       <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
-        <DialogContent className="overflow-hidden border-0 p-0 shadow-2xl sm:max-w-2xl">
-          <div className="bg-gradient-to-r from-primary via-green-600 to-emerald-500 px-6 py-6 text-white">
-            <DialogHeader className="gap-4 text-left">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white/20 shadow-inner">
-                  <ShieldCheck className="h-6 w-6" />
+        <DialogContent className="overflow-hidden border-0 p-0 shadow-2xl sm:max-w-xl">
+          <div className="bg-gradient-to-r from-primary via-green-600 to-emerald-500 px-5 py-4 text-white">
+            <DialogHeader className="gap-2 text-left">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/20 shadow-inner">
+                  <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div>
-                  <DialogTitle className="text-2xl font-bold leading-tight">
+                  <DialogTitle className="text-lg font-bold leading-tight">
                     Điều khoản mua sắm
                   </DialogTitle>
-                  <DialogDescription className="mt-2 text-sm leading-6 text-white/90">
+                  <DialogDescription className="mt-1 text-xs leading-5 text-white/90">
                     Vui lòng đọc các điều khoản trước khi tiếp tục mua sắm tại Plantify.
                   </DialogDescription>
                 </div>
@@ -202,21 +220,21 @@ function Shop() {
             </DialogHeader>
           </div>
 
-          <div className="space-y-5 px-6 py-5">
-            <div className="flex gap-3 rounded-lg border border-green-100 bg-green-50/80 p-4 text-sm text-green-900">
-              <FileText className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
+          <div className="space-y-3 px-5 py-4 max-h-[55vh] overflow-y-auto">
+            <div className="flex gap-2.5 rounded-lg border border-green-100 bg-green-50/80 p-3 text-xs leading-5 text-green-900">
+              <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
               <p>
                 Các điều khoản này giúp Plantify xử lý đơn hàng rõ ràng, minh bạch và đúng thông tin khách hàng cung cấp.
               </p>
             </div>
 
-            <ol className="grid gap-3">
+            <ol className="grid gap-2">
               {MARKETPLACE_TERMS.map((term, index) => (
                 <li
                   key={term}
-                  className="flex gap-3 rounded-lg border border-border bg-white p-3 text-sm leading-6 shadow-sm"
+                  className="flex gap-2.5 rounded-lg border border-border bg-white p-2.5 text-xs leading-5 shadow-sm"
                 >
-                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
                     {index + 1}
                   </span>
                   <span className="text-foreground">{term}</span>
@@ -225,13 +243,13 @@ function Shop() {
             </ol>
           </div>
 
-          <DialogFooter className="border-t bg-muted/40 px-6 py-4 sm:items-center sm:justify-between">
-            <p className="text-xs text-muted-foreground">
+          <DialogFooter className="border-t bg-muted/40 px-5 py-3 sm:items-center sm:justify-between">
+            <p className="text-[11px] text-muted-foreground">
               Bạn có thể đóng thông báo này bằng nút X để tiếp tục mua sắm.
             </p>
             <DialogClose asChild>
-              <Button className="gap-2 bg-gradient-to-r from-primary to-green-600 text-white">
-                <CheckCircle2 className="h-4 w-4" />
+              <Button size="sm" className="gap-1.5 bg-gradient-to-r from-primary to-green-600 text-white" onClick={acceptTerms}>
+                <CheckCircle2 className="h-3.5 w-3.5" />
                 Tôi đã hiểu
               </Button>
             </DialogClose>
@@ -487,23 +505,38 @@ function Shop() {
             )}
 
             {pages > 1 && (
-              <div className="flex justify-center gap-2 mt-12">
-                {Array.from({ length: pages }).map((_, i) => {
-                  const p = i + 1;
-                  return (
+              <div className="flex justify-center items-center gap-2 mt-12">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="flex gap-1">
+                  {Array.from({ length: pages }, (_, i) => i + 1).map((pageNum) => (
                     <Button
-                      key={p}
-                      variant={p === page ? "default" : "outline"}
-                      size="sm"
+                      key={pageNum}
+                      variant={pageNum === page ? "default" : "outline"}
+                      size="icon"
                       className={
-                        p === page ? "bg-gradient-to-r from-primary to-green-600 text-white" : ""
+                        pageNum === page ? "bg-gradient-to-r from-primary to-green-600 text-white" : ""
                       }
-                      onClick={() => setPage(p)}
+                      onClick={() => setPage(pageNum)}
                     >
-                      {p}
+                      {pageNum}
                     </Button>
-                  );
-                })}
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={page >= pages}
+                  onClick={() => setPage((p) => Math.min(pages, p + 1))}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             )}
           </div>
