@@ -1,5 +1,5 @@
-// Team.jsx - Trang giao diện quản lý đơn hàng cho business manager
-import { useState, useEffect, useCallback } from "react";
+// ManageOrder.jsx - Trang giao diện quản lý đơn hàng cho business manager
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Navigate } from "react-router";
 import { DashboardCard } from "@/components/common/DashboardCard";
 import { Badge } from "@/components/ui/badge";
@@ -32,11 +32,16 @@ import {
   Package,
   Truck,
   RotateCcw,
-  Eye
+  Eye,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { getAllOrders, updateOrder } from "@/features/orders/api";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
+
+/** Số đơn hàng hiển thị trên mỗi trang */
+const ORDER_PAGE_SIZE = 8;
 
 // === LABEL & STYLE CONFIG ===
 
@@ -125,7 +130,7 @@ function getPaymentMethodLabel(method) {
 
 // === MAIN COMPONENT ===
 
-function Team() {
+function ManageOrder() {
   // === HOOKS - phải khai báo TẤT CẢ hook trước mọi conditional return (React Rules of Hooks) ===
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
@@ -134,6 +139,7 @@ function Team() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderPage, setOrderPage] = useState(1);
 
   // === FETCH DATA ===
 
@@ -263,7 +269,7 @@ function Team() {
 
   // === FILTER ===
 
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = useMemo(() => orders.filter(order => {
     const matchesSearch =
       order.orderCode?.toLowerCase().includes(search.toLowerCase()) ||
       order.shippingInfo?.fullName?.toLowerCase().includes(search.toLowerCase());
@@ -272,7 +278,24 @@ function Team() {
     const matchesPayment = paymentFilter === "all" || order.paymentStatus === paymentFilter;
 
     return matchesSearch && matchesStatus && matchesPayment;
-  });
+  }), [orders, search, statusFilter, paymentFilter]);
+
+  // === PAGINATION ===
+
+  const totalOrderPages = Math.max(1, Math.ceil(filteredOrders.length / ORDER_PAGE_SIZE));
+  const safeOrderPage = Math.min(orderPage, totalOrderPages);
+  const paginatedOrders = useMemo(
+    () => filteredOrders.slice(
+      (safeOrderPage - 1) * ORDER_PAGE_SIZE,
+      safeOrderPage * ORDER_PAGE_SIZE
+    ),
+    [filteredOrders, safeOrderPage]
+  );
+
+  // Mỗi lần filter/search thay đổi → quay về trang 1
+  useEffect(() => {
+    setOrderPage(1);
+  }, [search, statusFilter, paymentFilter]);
 
   // === RENDER ===
 
@@ -537,7 +560,7 @@ function Team() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredOrders.map((order) => (
+                paginatedOrders.map((order) => (
                   <TableRow key={order._id || order.id} className="border-green-100/80 hover:bg-green-50/30">
                     {/* Mã đơn */}
                     <TableCell className="px-4 py-4 font-semibold text-slate-800">
@@ -657,9 +680,39 @@ function Team() {
             </TableBody>
           </Table>
         </CardContent>
+
+        {totalOrderPages > 1 && (
+          <div className="flex flex-col gap-2 border-t border-green-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-xs text-muted-foreground">
+              Trang {safeOrderPage} / {totalOrderPages} · Hiển thị {paginatedOrders.length} / {filteredOrders.length} đơn
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setOrderPage((page) => Math.max(1, page - 1))}
+                disabled={safeOrderPage <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Trước
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setOrderPage((page) => Math.min(totalOrderPages, page + 1))}
+                disabled={safeOrderPage >= totalOrderPages}
+              >
+                Sau
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );
 }
 
-export { Team };
+export { ManageOrder };

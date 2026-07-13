@@ -6,7 +6,7 @@ import { usePlants, usePlantTags } from "@/features/plants/hooks";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Loader2 } from "lucide-react";
+import { Search, Filter, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 
 function Browse() {
   // === URL params ===
@@ -22,6 +22,23 @@ function Browse() {
     setLocalSearch(searchQuery);
   }, [searchQuery]);
 
+  // Live search: debounce localSearch -> URL param q (400ms)
+  useEffect(() => {
+    if (localSearch === searchQuery) return;
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+      if (localSearch.trim()) {
+        params.set("q", localSearch.trim());
+      } else {
+        params.delete("q");
+      }
+      params.set("page", "1");
+      setSearchParams(params);
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localSearch]);
+
   const { plants, loading, error, total, pages, currentPage } = usePlants({
     search: searchQuery,
     tag: tag,
@@ -30,6 +47,13 @@ function Browse() {
   });
 
   const { tags: availableTags } = usePlantTags();
+
+  const TAG_VISIBLE_LIMIT = 15;
+  const [showAllTags, setShowAllTags] = useState(false);
+  const visibleTags = showAllTags
+    ? availableTags
+    : availableTags.slice(0, TAG_VISIBLE_LIMIT);
+  const remainingTagsCount = Math.max(availableTags.length - TAG_VISIBLE_LIMIT, 0);
 
   const difficultyLabel = { low: "Dễ", medium: "Trung bình", high: "Khó" };
   const levelLabel = { low: "Ít", medium: "Trung bình", high: "Nhiều" };
@@ -110,23 +134,20 @@ function Browse() {
         </div>
         <div className="mb-10 space-y-6">
           {/* === Search Form: đồng bộ với URL === */}
-          <form onSubmit={handleSearchSubmit} className="flex gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                placeholder="Tìm theo tên cây hoặc bệnh cây..."
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-                className="pl-12 h-12 text-lg"
-              />
-            </div>
-            <Button type="submit" size="lg" variant="outline" className="gap-2">
-              <Search className="w-5 h-5" />
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center gap-2 bg-white rounded-2xl shadow-lg border border-border p-2">
+            <Search className="absolute left-5 w-5 h-5 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Tìm theo tên cây hoặc bệnh cây..."
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              className="border-0 focus-visible:ring-0 text-lg pl-12 text-foreground h-12"
+            />
+            <Button type="submit" size="lg" className="rounded-xl bg-gradient-to-r from-primary to-green-600 text-white">
               Tìm kiếm
             </Button>
           </form>
           {/* === Tag navigation (dynamic từ API) === */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <Badge
               key="all"
               variant={!tag ? "default" : "secondary"}
@@ -135,16 +156,37 @@ function Browse() {
             >
               Tất cả
             </Badge>
-            {availableTags.map((t) => (
+            {visibleTags.map((t) => (
               <Badge
                 key={t}
                 variant={tag === t ? "default" : "secondary"}
-                className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors"
+                className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors animate-in fade-in slide-in-from-top-1 duration-200"
                 onClick={() => handleTagClick(t)}
               >
                 {tagLabel[t] || t}
               </Badge>
             ))}
+            {availableTags.length > TAG_VISIBLE_LIMIT && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAllTags((prev) => !prev)}
+                className="px-3 py-2 h-auto gap-1 text-sm font-medium text-primary hover:text-primary"
+              >
+                {showAllTags ? (
+                  <>
+                    <ChevronUp className="w-4 h-4" />
+                    Thu gọn
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4" />
+                    Xem thêm ({remainingTagsCount})
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
         {/* === Results header === */}

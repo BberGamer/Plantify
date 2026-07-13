@@ -737,7 +737,7 @@ function Profile() {
                       })}
                   </div>
                   {/* === Pagination === */}
-                  {favTotalPages > 1 && (
+                  {!favLoading && favTotalPages > 1 && (
                     <div className="mt-12 flex items-center justify-center gap-2">
                       <Button
                         variant="outline"

@@ -6,7 +6,6 @@ import {
   Home,
   LayoutDashboard,
   MapPin,
-  Settings,
   ShoppingCart,
   Sparkles,
   Store,
@@ -67,12 +66,6 @@ const ROLE_SIDEBAR_NAV = {
       label: "Giỏ hàng",
       icon: ShoppingCart,
       roles: ["customer"]
-    },
-    {
-      path: "/settings",
-      label: "Cài đặt",
-      icon: Settings,
-      roles: ["customer"]
     }
   ],
   business_manager: [
@@ -83,8 +76,8 @@ const ROLE_SIDEBAR_NAV = {
       roles: ["business_manager"]
     },
     {
-      path: "/business/team",
-      label: "Đội ngũ",
+      path: "/business/orders",
+      label: "Đơn hàng",
       icon: Users,
       roles: ["business_manager"]
     }

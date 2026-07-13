@@ -9,7 +9,7 @@ function Footer() {
           <span className="text-xl font-bold">Plantify</span>
         </div>
         <p className="text-sm text-muted-foreground">
-          Nền tảng tri thức cây cảnh thông minh — AI & Neo4j
+          Nền tảng tri thức cây cảnh thông minh
         </p>
       </div>
     </footer>

@@ -67,10 +67,6 @@ export function HeroSection() {
           transition={{ duration: 0.8 }}
           className="text-center max-w-4xl mx-auto"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-primary/20 text-primary mb-6 shadow-lg">
-            <Sparkles className="w-4 h-4" />
-            <span className="text-sm font-medium">Powered by AI & Neo4j Knowledge Graph</span>
-          </div>
 
           <h1 className="text-5xl font-bold mb-6 gradient-text lg:text-7xl">
             Plantify - Nền tảng tri thức cây cảnh

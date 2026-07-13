@@ -4,20 +4,14 @@ import { DashboardCard } from "@/components/common/DashboardCard";
 import { getDashboardStats } from "@/features/orders/api";
 import { useCategories, useProducts } from "@/features/products/hooks";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
-import {
-  Wallet,
-  Package,
-  Tags,
-  TrendingUp,
-  Boxes,
-  FolderTree
-} from "lucide-react";
+import { Wallet, Package, Tags, TrendingUp, Boxes, FolderTree, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -34,6 +28,8 @@ const EMPTY_DASHBOARD_STATS = {
   totalRevenue: 0,
   monthlyRevenue: []
 };
+
+const PRODUCT_PAGE_SIZE = 3;
 
 function formatRevenueValue(value) {
   const amount = Number(value || 0);
@@ -76,6 +72,7 @@ function Dashboard() {
   const [dashboardStats, setDashboardStats] = useState(EMPTY_DASHBOARD_STATS);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(null);
+  const [productPage, setProductPage] = useState(1);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,7 +112,15 @@ function Dashboard() {
     };
   }, []);
 
-  const productItems = useMemo(() => products.slice(0, 3), [products]);
+  const totalProductPages = useMemo(
+    () => Math.max(1, Math.ceil(products.length / PRODUCT_PAGE_SIZE)),
+    [products.length]
+  );
+  const safeProductPage = Math.min(productPage, totalProductPages);
+  const productItems = useMemo(
+    () => products.slice((safeProductPage - 1) * PRODUCT_PAGE_SIZE, safeProductPage * PRODUCT_PAGE_SIZE),
+    [products, safeProductPage]
+  );
 
   const productCategoryData = useMemo(() => {
     const productCountMap = products.reduce((accumulator, product) => {
@@ -309,6 +314,8 @@ function Dashboard() {
             <div className="text-sm text-muted-foreground">Đang tải danh sách sản phẩm...</div>
           ) : productsError ? (
             <div className="text-sm text-destructive">{productsError}</div>
+          ) : products.length === 0 ? (
+            <div className="text-sm text-muted-foreground">Chưa có sản phẩm nào.</div>
           ) : (
             <div className="space-y-4">
               {productItems.map((item) => {
@@ -329,6 +336,35 @@ function Dashboard() {
                   </div>
                 );
               })}
+              {totalProductPages > 1 && (
+                <div className="flex items-center justify-between gap-2 pt-2">
+                  <span className="text-xs text-muted-foreground">
+                    Trang {safeProductPage} / {totalProductPages}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setProductPage((page) => Math.max(1, page - 1))}
+                      disabled={safeProductPage <= 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Trước
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setProductPage((page) => Math.min(totalProductPages, page + 1))}
+                      disabled={safeProductPage >= totalProductPages}
+                    >
+                      Sau
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

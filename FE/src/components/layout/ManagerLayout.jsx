@@ -2,13 +2,12 @@
 // Layout quản lý Plantify: sidebar trái, drawer mobile và tùy chọn tài khoản ở cuối sidebar.
 
 import { useState } from "react";
-import { Link, Navigate, Outlet, useLocation } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import {
   Bell,
   LayoutDashboard,
   BookOpen,
   Leaf,
-  Loader2,
   LogOut,
   Menu,
   ShoppingBag,
@@ -26,6 +25,7 @@ import {
   SheetTitle,
   SheetTrigger
 } from "@/components/ui/sheet";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/features/auth/hooks";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +38,7 @@ const managerMenuConfig = {
     },
     {
       label: "Quản lý đơn hàng",
-      path: "/business/team",
+      path: "/business/orders",
       icon: ShoppingBag
     },
     {
@@ -100,29 +100,10 @@ const getManagerRole = (role) => {
   return null;
 };
 
-function ManagerLayout({ children }) {
-  const { user, logout, loading, isAuthenticated } = useAuth();
+function ManagerLayoutInner({ children, menuItems, roleLabel }) {
+  const { logout } = useAuth();
   const location = useLocation();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const managerRole = getManagerRole(user?.role);
-  const menuItems = managerMenuConfig[managerRole];
-  const roleLabel = managerRoleLabels[managerRole];
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!managerMenuConfig[managerRole]) {
-    return <Navigate to="/unauthorized" replace />;
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -231,7 +212,7 @@ function ManagerSidebar({
 
       <nav className="flex-1 space-y-1 px-3 py-4">
         {menuItems.map((item) => (
-          <ManagerSidebarLink
+          <ManagerLayoutLink
             key={item.path}
             item={item}
             isActive={pathname === item.path}
@@ -250,17 +231,6 @@ function SidebarAccountOptions({ isCollapsed = false, onLogout }) {
     <div className="space-y-1 border-t border-border p-3">
       <Button
         variant="ghost"
-        type="button"
-        className={cn(
-          "w-full gap-3",
-          isCollapsed ? "justify-center px-0" : "justify-start px-3"
-        )}
-      >
-        <Bell className="h-4 w-4" />
-        <span className={cn(isCollapsed && "sr-only")}>Thông báo</span>
-      </Button>
-      <Button
-        variant="ghost"
         className={cn(
           "w-full gap-3 text-destructive hover:text-destructive",
           isCollapsed ? "justify-center px-0" : "justify-start px-3"
@@ -274,7 +244,7 @@ function SidebarAccountOptions({ isCollapsed = false, onLogout }) {
   );
 }
 
-function ManagerSidebarLink({ item, isActive, isCollapsed = false }) {
+function ManagerLayoutLink({ item, isActive, isCollapsed = false }) {
   const Icon = item.icon;
 
   return (
@@ -293,4 +263,52 @@ function ManagerSidebarLink({ item, isActive, isCollapsed = false }) {
   );
 }
 
+function ManagerLayout({ children }) {
+  return (
+    <ProtectedRoute allowedRoles={["business_manager", "content_manager"]}>
+      <ManagerLayoutRouter>{children}</ManagerLayoutRouter>
+    </ProtectedRoute>
+  );
+}
+
+function ManagerLayoutRouter({ children }) {
+  const { user } = useAuth();
+  const managerRole = getManagerRole(user?.role);
+  const menuItems = managerMenuConfig[managerRole] || [];
+  const roleLabel = managerRoleLabels[managerRole];
+
+  return (
+    <ManagerLayoutInner menuItems={menuItems} roleLabel={roleLabel}>
+      {children}
+    </ManagerLayoutInner>
+  );
+}
+
+function BusinessManagerLayout({ children }) {
+  return (
+    <ProtectedRoute allowedRoles={["business_manager"]}>
+      <ManagerLayoutInner
+        menuItems={managerMenuConfig["business manager"]}
+        roleLabel={managerRoleLabels["business manager"]}
+      >
+        {children}
+      </ManagerLayoutInner>
+    </ProtectedRoute>
+  );
+}
+
+function ContentManagerLayout({ children }) {
+  return (
+    <ProtectedRoute allowedRoles={["content_manager"]}>
+      <ManagerLayoutInner
+        menuItems={managerMenuConfig["content manager"]}
+        roleLabel={managerRoleLabels["content manager"]}
+      >
+        {children}
+      </ManagerLayoutInner>
+    </ProtectedRoute>
+  );
+}
+
 export default ManagerLayout;
+export { BusinessManagerLayout, ContentManagerLayout };

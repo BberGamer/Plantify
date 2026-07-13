@@ -7,7 +7,6 @@ import {
   Loader2,
   Menu,
   User,
-  Settings,
   LogOut,
   MapPin,
   Store,
@@ -387,21 +386,11 @@ function Header() {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem asChild>
-                    <Link to={ROUTES.cart} className="cursor-pointer">
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      Giỏ hàng
-                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to={ROUTES.myPosts} className="cursor-pointer">
                       <PenSquare className="mr-2 h-4 w-4" />
                       Bài viết của tôi
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to={ROUTES.settings} className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Cài đặt
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

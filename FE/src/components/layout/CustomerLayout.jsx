@@ -1,3 +1,4 @@
+// CustomerLayout.jsx - Layout cho các trang của customer (đã đăng nhập)
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -10,7 +11,7 @@ const NATURE_BG =
 const NATURE_BG_DARK =
   "linear-gradient(rgba(15,23,20,0.92), rgba(15,23,20,0.92)), url('https://images.unsplash.com/photo-1656874370240-c67aeb8bd048?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080')";
 
-function PublicLayout() {
+function CustomerLayoutContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,23 +25,29 @@ function PublicLayout() {
   };
 
   return (
+    <div
+      className="min-h-screen bg-cover bg-center bg-fixed dark:[background-image:var(--bg-dark)] [background-image:var(--bg-light)]"
+      style={{
+        "--bg-light": NATURE_BG,
+        "--bg-dark": NATURE_BG_DARK
+      }}
+    >
+      <Header />
+      <main className="min-h-[calc(100vh-4rem)]">
+        <Outlet />
+      </main>
+      <Footer />
+      <FloatingAIButton onClick={handleFloatingAIButtonClick} />
+    </div>
+  );
+}
+
+function CustomerLayout() {
+  return (
     <RolePublicGuard>
-      <div
-        className="min-h-screen bg-cover bg-center bg-fixed dark:[background-image:var(--bg-dark)] [background-image:var(--bg-light)]"
-        style={{
-          "--bg-light": NATURE_BG,
-          "--bg-dark": NATURE_BG_DARK
-        }}
-      >
-        <Header />
-        <main className="min-h-[calc(100vh-4rem)]">
-          <Outlet />
-        </main>
-        <Footer />
-        <FloatingAIButton onClick={handleFloatingAIButtonClick} />
-      </div>
+      <CustomerLayoutContent />
     </RolePublicGuard>
   );
 }
 
-export { PublicLayout };
+export { CustomerLayout };

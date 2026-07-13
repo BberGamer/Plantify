@@ -1,12 +1,11 @@
 // AdminLayout.jsx
 // Layout quản trị Plantify: sidebar trái, drawer mobile và tùy chọn tài khoản ở cuối sidebar.
 
-import { Link, Navigate, Outlet, useLocation } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import {
   Bell,
   LayoutDashboard,
   Leaf,
-  Loader2,
   LogOut,
   Menu,
   Users
@@ -19,6 +18,7 @@ import {
   SheetTitle,
   SheetTrigger
 } from "@/components/ui/sheet";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/features/auth/hooks";
 import { cn } from "@/lib/utils";
 
@@ -35,25 +35,9 @@ const adminMenuItems = [
   }
 ];
 
-function AdminLayout({ children }) {
-  const { user, logout, loading, isAuthenticated } = useAuth();
+function AdminLayoutInner({ children }) {
+  const { user, logout } = useAuth();
   const location = useLocation();
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (user.role !== "admin") {
-    return <Navigate to="/unauthorized" replace />;
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,10 +110,6 @@ function AdminSidebar({ pathname, onLogout }) {
 function SidebarAccountOptions({ onLogout }) {
   return (
     <div className="space-y-1 border-t border-border p-3">
-      <Button variant="ghost" className="w-full justify-start gap-3 px-3" type="button">
-        <Bell className="h-4 w-4" />
-        <span>Thông báo</span>
-      </Button>
       <Button
         variant="ghost"
         className="w-full justify-start gap-3 px-3 text-destructive hover:text-destructive"
@@ -156,6 +136,14 @@ function AdminSidebarLink({ item, isActive }) {
       <Icon className="h-4 w-4" />
       <span>{item.label}</span>
     </Link>
+  );
+}
+
+function AdminLayout({ children }) {
+  return (
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminLayoutInner>{children}</AdminLayoutInner>
+    </ProtectedRoute>
   );
 }
 
