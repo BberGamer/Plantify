@@ -1,6 +1,6 @@
 // ManageProducts.jsx - Trang quản lý sản phẩm cho business manager
 import { useState } from "react";
-import { Loader2, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -149,26 +149,33 @@ function ManageProducts() {
         )}
       </section>
 
-      {pages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+      {!loading && pages > 1 && (
+        <div className="mt-12 flex items-center justify-center gap-2">
           <Button
             variant="outline"
-            size="sm"
+            disabled={page <= 1}
             onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
-            disabled={page === 1}
           >
-            Trước
+            <ChevronLeft className="mr-1 h-4 w-4" /> Trước
           </Button>
-          <span className="text-sm text-muted-foreground">
-            Trang {page} / {pages}
-          </span>
+          <div className="flex gap-1">
+            {Array.from({ length: pages }, (_, i) => i + 1).map((pageNum) => (
+              <Button
+                key={pageNum}
+                variant={pageNum === page ? "default" : "outline"}
+                size="icon"
+                onClick={() => setPage(pageNum)}
+              >
+                {pageNum}
+              </Button>
+            ))}
+          </div>
           <Button
             variant="outline"
-            size="sm"
+            disabled={page >= pages}
             onClick={() => setPage((currentPage) => Math.min(pages, currentPage + 1))}
-            disabled={page === pages}
           >
-            Sau
+            Sau <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
       )}
