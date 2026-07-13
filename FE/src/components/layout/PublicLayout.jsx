@@ -2,6 +2,7 @@ import { Outlet, useLocation, useNavigate } from "react-router";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingAIButton } from "@/components/common/FloatingAIButton";
+import { RolePublicGuard } from "@/components/auth/RolePublicGuard";
 import { ROUTES } from "@/lib/constants";
 
 const NATURE_BG =
@@ -23,20 +24,22 @@ function PublicLayout() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center bg-fixed dark:[background-image:var(--bg-dark)] [background-image:var(--bg-light)]"
-      style={{
-        "--bg-light": NATURE_BG,
-        "--bg-dark": NATURE_BG_DARK
-      }}
-    >
-      <Header />
-      <main className="min-h-[calc(100vh-4rem)]">
-        <Outlet />
-      </main>
-      <Footer />
-      <FloatingAIButton onClick={handleFloatingAIButtonClick} />
-    </div>
+    <RolePublicGuard>
+      <div
+        className="min-h-screen bg-cover bg-center bg-fixed dark:[background-image:var(--bg-dark)] [background-image:var(--bg-light)]"
+        style={{
+          "--bg-light": NATURE_BG,
+          "--bg-dark": NATURE_BG_DARK
+        }}
+      >
+        <Header />
+        <main className="min-h-[calc(100vh-4rem)]">
+          <Outlet />
+        </main>
+        <Footer />
+        <FloatingAIButton onClick={handleFloatingAIButtonClick} />
+      </div>
+    </RolePublicGuard>
   );
 }
 

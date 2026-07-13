@@ -26,7 +26,7 @@ async function generateText(prompt, options = {}) {
 
 // === AI Diagnosis (Groq Llama-4 Scout vision) ===
 
-const GROQ_DIAGNOSIS_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+const GROQ_DIAGNOSIS_MODEL = 'qwen/qwen3.6-27b';
 const GROQ_DIAGNOSIS_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const DIAGNOSIS_PROMPT = `Bạn là chuyên gia bệnh cây cảnh. Hãy phân tích ảnh lá/cây được gửi kèm và trả lời CHỈ bằng JSON hợp lệ, không markdown.
 Schema:
