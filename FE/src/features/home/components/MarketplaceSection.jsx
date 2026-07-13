@@ -29,7 +29,7 @@ export function MarketplaceSection() {
             </div>
             <h3 className="font-semibold mb-2 text-lg">Đa dạng sản phẩm</h3>
             <p className="text-muted-foreground text-sm">
-              Hàng nghìn sản phẩm chăm sóc, hỗ trợ cho cây cảnh
+              Hàng trăm sản phẩm chăm sóc, hỗ trợ cho cây cảnh
             </p>
           </CardContent>
         </Card>
@@ -40,8 +40,8 @@ export function MarketplaceSection() {
             <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
               <Store className="w-8 h-8 text-green-600" />
             </div>
-            <h3 className="font-semibold mb-2 text-lg">Mở gian hàng miễn phí</h3>
-            <p className="text-muted-foreground text-sm">Bán sản phẩm của bạn dễ dàng</p>
+            <h3 className="font-semibold mb-2 text-lg">Chất lượng đảm bảo</h3>
+            <p className="text-muted-foreground text-sm">Sản phẩm được kiểm định trước khi đến tay khách hàng</p>
           </CardContent>
         </Card>
 
