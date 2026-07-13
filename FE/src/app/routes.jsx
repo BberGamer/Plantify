@@ -1,15 +1,19 @@
 /**
  * routes.jsx - Định nghĩa cấu trúc routing cho ứng dụng Plantify
- * 3 layout chính: Public (khách), Auth (đăng nhập), App (người dùng đã login)
+ * 4 layout chính: Public (khách), Customer (khách hàng đã login), Manager, Admin, Auth
  */
 
 // ============================================================
 // Layout Components
 // ============================================================
 import { PublicLayout } from "@/components/layout/PublicLayout";
+import { CustomerLayout } from "@/components/layout/CustomerLayout";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import AdminLayout from "@/components/layout/AdminLayout";
-import ManagerLayout from "@/components/layout/ManagerLayout";
+import {
+  BusinessManagerLayout,
+  ContentManagerLayout,
+} from "@/components/layout/ManagerLayout";
 
 // ============================================================
 // Constants
@@ -38,10 +42,10 @@ import { Unauthorized } from "@/pages/guest/Unauthorized";
 // ============================================================
 import { Profile } from "@/pages/customer/Profile";
 import { AddressBook } from "@/pages/customer/AddressBook";
-import { Settings } from "@/pages/customer/Settings";
 import { Cart } from "@/pages/customer/Cart";
 import { Checkout } from "@/pages/customer/Checkout";
 import { MyPosts } from "@/pages/customer/MyPosts";
+
 
 
 
@@ -51,7 +55,7 @@ import { MyPosts } from "@/pages/customer/MyPosts";
 // Manager Pages (Người dùng đã đăng nhập - vai trò Manager)
 // ============================================================
 import { Dashboard } from "@/pages/BusinessManager/Dashboard";
-import { Team } from "@/pages/BusinessManager/Team";
+import { ManageOrder } from "@/pages/BusinessManager/ManageOrder";
 import { ManageCategories as ManageProductCategories } from "@/pages/BusinessManager/ManageCategories";
 import { ManageProducts } from "@/pages/BusinessManager/ManageProducts";
 import { ProductDetail as BusinessProductDetail } from "@/pages/BusinessManager/ProductDetail";
@@ -84,13 +88,19 @@ const publicChildRoutes = [
   { path: "marketplace", element: <Shop /> },
   { path: "product/:id", element: <ProductDetail /> },
   { path: "ai-doctor", element: <AIDoctor /> },
+  { path: "unauthorized", element: <Unauthorized /> },
+];
+
+/**
+ * Customer Routes - Yêu cầu role customer
+ * Layout: CustomerLayout (đã bọc ProtectedRoute)
+ */
+const customerChildRoutes = [
   { path: "profile", element: <Profile /> },
   { path: "address-book", element: <AddressBook /> },
-  { path: "my-posts", element: <MyPosts /> },
-  { path: "settings", element: <Settings /> },
   { path: "cart", element: <Cart /> },
   { path: "checkout", element: <Checkout /> },
-  { path: "unauthorized", element: <Unauthorized /> },
+  { path: "my-posts", element: <MyPosts /> },
 ];
 
 /**
@@ -101,12 +111,15 @@ const publicChildRoutes = [
 const appChildRoutes = [
 ];
 
-const managerChildRoutes = [
+const businessManagerChildRoutes = [
   { path: "business", element: <Dashboard /> },
-  { path: "business/team", element: <Team /> },
+  { path: "business/orders", element: <ManageOrder /> },
   { path: "business/products", element: <ManageProducts /> },
   { path: "business/products/:id", element: <BusinessProductDetail /> },
   { path: "business/categories", element: <ManageProductCategories /> },
+];
+
+const contentManagerChildRoutes = [
   { path: "content/plants", element: <ManagePlants /> },
   { path: "content/plants/:id", element: <PlantDetailManager /> },
   { path: "content/care-guides", element: <ManageCareGuides /> },
@@ -143,8 +156,17 @@ const routeTree = [
     children: publicChildRoutes,
   },
   {
-    element: <ManagerLayout />,
-    children: managerChildRoutes,
+    path: ROUTES.home,
+    element: <CustomerLayout />,
+    children: customerChildRoutes,
+  },
+  {
+    element: <BusinessManagerLayout />,
+    children: businessManagerChildRoutes,
+  },
+  {
+    element: <ContentManagerLayout />,
+    children: contentManagerChildRoutes,
   },
   {
     element: <AdminLayout />,
@@ -160,7 +182,9 @@ export {
   adminChildRoutes,
   appChildRoutes,
   authChildRoutes,
-  managerChildRoutes,
+  businessManagerChildRoutes,
+  contentManagerChildRoutes,
+  customerChildRoutes,
   publicChildRoutes,
   routeTree
 };
