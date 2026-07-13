@@ -1,4 +1,4 @@
-import { Outlet, useLocation, Navigate } from "react-router";
+import { Outlet } from "react-router";
 import {
   SidebarProvider,
   SidebarInset,
@@ -8,41 +8,11 @@ import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ROLE_SIDEBAR_NAV } from "@/lib/constants";
 import { useAuth } from "@/features/auth/hooks";
-import { hasMinimumRole, mapBackendRoleToFeRole } from "@/lib/roles";
-import { Loader2 } from "lucide-react";
+import { mapBackendRoleToFeRole } from "@/lib/roles";
 
 function AppLayout() {
-  const { pathname } = useLocation();
-  const { user, isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  const sidebarRole = mapBackendRoleToFeRole(user.role);
-
-  // Kiểm tra quyền truy cập (Route Guarding)
-  let requiredRole = "customer";
-  if (pathname.startsWith("/admin")) {
-    requiredRole = "admin";
-  } else if (pathname.startsWith("/business")) {
-    requiredRole = "business_manager";
-  } else if (pathname.startsWith("/content")) {
-    requiredRole = "content_manager";
-  }
-
-  if (!hasMinimumRole(sidebarRole, requiredRole)) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
+  const { user } = useAuth();
+  const sidebarRole = mapBackendRoleToFeRole(user?.role);
   const sidebarItems = ROLE_SIDEBAR_NAV[sidebarRole] ?? ROLE_SIDEBAR_NAV.customer;
 
   return (
