@@ -111,22 +111,22 @@ function ManageCategories() {
                   <div className="flex flex-wrap items-center gap-2 lg:justify-end">
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       onClick={() => setEditingCategory(category)}
                       disabled={updating || deleting}
+                      aria-label="Sửa danh mục"
                     >
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Sửa
+                      <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       className="text-rose-600"
                       onClick={() => handleDelete(category)}
                       disabled={updating || deleting}
+                      aria-label="Xóa danh mục"
                     >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Xóa
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
