@@ -1,6 +1,6 @@
 // ManagePlants.jsx - Trang danh sách Plants cho Content Manager
 import { useState } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -106,11 +106,26 @@ function ManagePlants() {
       )}
 
       {/* Pagination */}
-      {pages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>Trước</Button>
-          <span className="text-sm text-muted-foreground">Trang {page} / {pages}</span>
-          <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page === pages}>Sau</Button>
+      {!loading && pages > 1 && (
+        <div className="mt-12 flex items-center justify-center gap-2">
+          <Button variant="outline" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+            <ChevronLeft className="mr-1 h-4 w-4" /> Trước
+          </Button>
+          <div className="flex gap-1">
+            {Array.from({ length: pages }, (_, i) => i + 1).map((pageNum) => (
+              <Button
+                key={pageNum}
+                variant={pageNum === page ? "default" : "outline"}
+                size="icon"
+                onClick={() => setPage(pageNum)}
+              >
+                {pageNum}
+              </Button>
+            ))}
+          </div>
+          <Button variant="outline" disabled={page >= pages} onClick={() => setPage((p) => Math.min(pages, p + 1))}>
+            Sau <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
         </div>
       )}
     </div>

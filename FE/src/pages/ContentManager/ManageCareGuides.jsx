@@ -230,13 +230,24 @@ function ManageCareGuides() {
         )}
       </Card>
 
-      {pageCount > 1 && (
-        <div className="flex items-center justify-end gap-2">
-          <Button variant="outline" size="sm" disabled={safePage === 1} onClick={() => setPage((current) => Math.max(current - 1, 1))}>
+      {!loading && pageCount > 1 && (
+        <div className="mt-12 flex items-center justify-center gap-2">
+          <Button variant="outline" disabled={safePage <= 1} onClick={() => setPage((current) => Math.max(current - 1, 1))}>
             <ChevronLeft className="mr-1 h-4 w-4" /> Trước
           </Button>
-          <span className="px-2 text-sm text-muted-foreground">Trang {safePage} / {pageCount}</span>
-          <Button variant="outline" size="sm" disabled={safePage === pageCount} onClick={() => setPage((current) => Math.min(current + 1, pageCount))}>
+          <div className="flex gap-1">
+            {Array.from({ length: pageCount }, (_, i) => i + 1).map((pageNum) => (
+              <Button
+                key={pageNum}
+                variant={pageNum === safePage ? "default" : "outline"}
+                size="icon"
+                onClick={() => setPage(pageNum)}
+              >
+                {pageNum}
+              </Button>
+            ))}
+          </div>
+          <Button variant="outline" disabled={safePage >= pageCount} onClick={() => setPage((current) => Math.min(current + 1, pageCount))}>
             Sau <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
