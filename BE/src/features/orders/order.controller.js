@@ -71,7 +71,7 @@ const createVnpayPayment = async (req, res) => {
 const vnpayReturn = async (req, res) => {
   try {
     const vnpParams = { ...req.query };
-    const result = await orderService.verifyVnpayReturn(vnpParams);
+    const result = await orderService.verifyVnpayReturn(vnpParams, req.user.id);
 
     if (!result.isValid) {
       return error(res, 'Xác thực thanh toán thất bại', 400);
@@ -153,10 +153,10 @@ const getAllOrders = async (req, res) => {
 const updateOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
-    const { status, paymentStatus } = req.body;
+    const { status } = req.body;
     const actorId = req.user.id;
 
-    const order = await orderService.updateOrder(orderId, { status, paymentStatus }, actorId);
+    const order = await orderService.updateOrder(orderId, { status }, actorId);
     return success(res, 'Cập nhật đơn hàng thành công', { order });
   } catch (err) {
     console.error('[Orders] Lỗi cập nhật đơn hàng:', err);
@@ -167,7 +167,7 @@ const updateOrder = async (req, res) => {
     if (err.message.startsWith('Không thể chuyển')) {
       return error(res, err.message, 400);
     }
-    return error(res, 'Không thể cập nhật đơn hàng', 500);
+    return error(res, err.message, err.statusCode || 500);
   }
 };
 
@@ -199,7 +199,7 @@ const customerAction = async (req, res) => {
     if (err.message.startsWith('Không thể thực hiện')) {
       return error(res, err.message, 400);
     }
-    return error(res, 'Không thể cập nhật đơn hàng', 500);
+    return error(res, err.message, err.statusCode || 500);
   }
 };
 
