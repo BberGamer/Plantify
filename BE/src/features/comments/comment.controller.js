@@ -22,7 +22,7 @@ async function getCommentsByPostId(req, res, next) {
 
 async function createComment(req, res, next) {
   try {
-    const comment = await commentService.createComment(req.body);
+    const comment = await commentService.createComment(req.body, req.user);
     return apiResponse.success(res, 'Tao binh luan thanh cong', comment, 201);
   } catch (error) {
     return next(error);
@@ -40,7 +40,7 @@ async function getCommentsByProductId(req, res, next) {
 
 async function createProductComment(req, res, next) {
   try {
-    const comment = await commentService.createProductComment(req.body);
+    const comment = await commentService.createProductComment(req.body, req.user);
     return apiResponse.success(res, 'Tao danh gia san pham thanh cong', comment, 201);
   } catch (error) {
     return next(error);
