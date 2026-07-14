@@ -1,5 +1,6 @@
 // plant.service.js - Business logic cho Plants
 // Cung cấp các hàm CRUD: lấy danh sách, chi tiết, tạo, cập nhật, xóa cây
+const mongoose = require('mongoose');
 const Plant = require('./plant.model');
 const PlantCategory = require('./plantCategory.model');
 const PlantDisease = require('../plant-diseases/plantDisease.model');
@@ -13,6 +14,41 @@ const toSlug = (str) =>
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .trim();
+
+function createHttpError(message, statusCode) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
+function ensureObjectId(id, message) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw createHttpError(message, 400);
+  }
+}
+
+function parsePositiveInteger(value, fieldName, fallback, maxValue) {
+  if (value === undefined) return fallback;
+
+  const parsedValue = Number(value);
+  if (!Number.isInteger(parsedValue) || parsedValue < 1) {
+    throw createHttpError(`${fieldName} phai la so nguyen duong`, 400);
+  }
+
+  return Math.min(parsedValue, maxValue);
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+async function ensureCategoryExists(categoryId) {
+  ensureObjectId(categoryId, 'Category ID khong hop le');
+  const category = await PlantCategory.findById(categoryId).select('_id').lean();
+  if (!category) {
+    throw createHttpError('Khong tim thay danh muc', 404);
+  }
+}
 
 /**
  * Lấy danh sách cây, có hỗ trợ lọc và phân trang.
@@ -52,11 +88,11 @@ async function getAllPlants(filters = {}) {
   if (keyword) {
     const diseaseMatches = await PlantDisease.find({
       $or: [
-        { name: { $regex: keyword, $options: 'i' } },
-        { symptoms: { $regex: keyword, $options: 'i' } },
-        { causes: { $regex: keyword, $options: 'i' } },
-        { treatment: { $regex: keyword, $options: 'i' } },
-        { prevention: { $regex: keyword, $options: 'i' } },
+        { name: { $regex: escapeRegex(keyword), $options: 'i' } },
+        { symptoms: { $regex: escapeRegex(keyword), $options: 'i' } },
+        { causes: { $regex: escapeRegex(keyword), $options: 'i' } },
+        { treatment: { $regex: escapeRegex(keyword), $options: 'i' } },
+        { prevention: { $regex: escapeRegex(keyword), $options: 'i' } },
       ],
     }).select('plantId').lean();
 
@@ -67,9 +103,9 @@ async function getAllPlants(filters = {}) {
     )];
 
     query.$or = [
-      { name: { $regex: keyword, $options: 'i' } },
-      { scientificName: { $regex: keyword, $options: 'i' } },
-      { commonNames: { $regex: keyword, $options: 'i' } },
+      { name: { $regex: escapeRegex(keyword), $options: 'i' } },
+      { scientificName: { $regex: escapeRegex(keyword), $options: 'i' } },
+      { commonNames: { $regex: escapeRegex(keyword), $options: 'i' } },
     ];
 
     if (diseasePlantIds.length > 0) {
@@ -77,8 +113,8 @@ async function getAllPlants(filters = {}) {
     }
   }
 
-  const safePage = Math.max(Number(page) || 1, 1);
-  const safeLimit = Math.max(Number(limit) || 9, 9);
+  const safePage = parsePositiveInteger(page, 'page', 1, Number.MAX_SAFE_INTEGER);
+  const safeLimit = parsePositiveInteger(limit, 'limit', 9, 100);
   const total = await Plant.countDocuments(query);
   const pages = Math.max(Math.ceil(total / safeLimit), 1);
 
@@ -118,9 +154,7 @@ async function getAllTags() {
  * @returns {Promise<object|null>} Plant document hoặc null
  */
 async function getPlantById(id, populateCategory = false) {
-  if (!id) {
-    throw new Error('Plant ID is required');
-  }
+  ensureObjectId(id, 'Plant ID khong hop le');
 
   let query = Plant.findOne({ _id: id });
   if (populateCategory) {
@@ -134,13 +168,15 @@ async function getPlantById(id, populateCategory = false) {
  * @param {Object} data - Dữ liệu cây mới
  * @returns {Promise<object>} Plant document đã tạo
  */
-async function createPlant(data) {
+async function createPlant(data = {}) {
   if (!data.name || !data.name.trim()) {
-    throw new Error('Plant name is required');
+    throw createHttpError('Plant name is required', 400);
   }
   if (!data.categoryId || !data.categoryId.trim()) {
-    throw new Error('Category ID is required');
+    throw createHttpError('Category ID is required', 400);
   }
+
+  await ensureCategoryExists(data.categoryId);
 
   const plant = new Plant(data);
   return plant.save();
@@ -152,16 +188,20 @@ async function createPlant(data) {
  * @param {Object} data - Dữ liệu cập nhật
  * @returns {Promise<object|null>} Plant document đã cập nhật hoặc null
  */
-async function updatePlant(id, data) {
-  if (!id) {
-    throw new Error('Plant ID is required');
-  }
+async function updatePlant(id, data = {}) {
+  ensureObjectId(id, 'Plant ID khong hop le');
 
   if (data.name !== undefined && !data.name.trim()) {
-    throw new Error('Plant name cannot be empty');
+    throw createHttpError('Plant name cannot be empty', 400);
   }
   if (data.categoryId !== undefined && !data.categoryId.trim()) {
-    throw new Error('Category ID cannot be empty');
+    throw createHttpError('Category ID cannot be empty', 400);
+  }
+  if (data.categoryId !== undefined) {
+    await ensureCategoryExists(data.categoryId);
+  }
+  if (!Object.keys(data).length) {
+    throw createHttpError('Khong co du lieu cap nhat hop le', 400);
   }
 
   return Plant.findByIdAndUpdate(id, data, { new: true, runValidators: true }).lean();
@@ -173,9 +213,7 @@ async function updatePlant(id, data) {
  * @returns {Promise<object|null>} Plant document đã xóa hoặc null
  */
 async function deletePlant(id) {
-  if (!id) {
-    throw new Error('Plant ID is required');
-  }
+  ensureObjectId(id, 'Plant ID khong hop le');
 
   return Plant.findByIdAndDelete(id);
 }
@@ -193,9 +231,9 @@ async function getAllCategories() {
  * @param {Object} data - Dữ liệu danh mục mới
  * @returns {Promise<object>} PlantCategory document đã tạo
  */
-async function createCategory(data) {
+async function createCategory(data = {}) {
   if (!data.name || !data.name.trim()) {
-    throw new Error('Category name is required');
+    throw createHttpError('Category name is required', 400);
   }
   const category = new PlantCategory({
     name: data.name.trim(),
@@ -210,10 +248,8 @@ async function createCategory(data) {
  * @returns {Promise<object|null>} PlantCategory document đã xóa hoặc null
  */
 async function deleteCategory(id) {
-  if (!id) {
-    throw new Error('Category ID is required');
-  }
-  return PlantCategory.findOneAndDelete({ id });
+  ensureObjectId(id, 'Category ID khong hop le');
+  return PlantCategory.findByIdAndDelete(id);
 }
 
 /**
@@ -222,17 +258,18 @@ async function deleteCategory(id) {
  * @param {Object} data - Dữ liệu cập nhật
  * @returns {Promise<object|null>} PlantCategory document đã cập nhật hoặc null
  */
-async function updateCategory(id, data) {
-  if (!id) {
-    throw new Error('Category ID is required');
-  }
+async function updateCategory(id, data = {}) {
+  ensureObjectId(id, 'Category ID khong hop le');
   if (data.name !== undefined && !data.name.trim()) {
-    throw new Error('Category name cannot be empty');
+    throw createHttpError('Category name cannot be empty', 400);
   }
   const updateData = {};
   if (data.name) {
     updateData.name = data.name.trim();
     updateData.slug = toSlug(data.name.trim());
+  }
+  if (!Object.keys(updateData).length) {
+    throw createHttpError('Khong co du lieu cap nhat hop le', 400);
   }
   return PlantCategory.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).lean();
 }

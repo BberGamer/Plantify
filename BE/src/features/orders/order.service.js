@@ -1,6 +1,7 @@
 // order.service.js - Business logic cho Orders (đặt hàng + thanh toán VNPay)
 const crypto = require('crypto');
 const qs = require('qs');
+const mongoose = require('mongoose');
 const Order = require('./order.model');
 const Cart = require('../cart/cart.model');
 const Product = require('../products/product.model');
@@ -69,10 +70,12 @@ function sortObject(obj) {
 
 function normalizeOrderQuantity(quantity) {
   const normalized = Number(quantity);
-  if (!Number.isFinite(normalized) || normalized < 1) {
-    return 1;
+  if (!Number.isInteger(normalized) || normalized < 1) {
+    const error = new Error('Số lượng sản phẩm phải là số nguyên dương');
+    error.statusCode = 400;
+    throw error;
   }
-  return Math.floor(normalized);
+  return normalized;
 }
 
 async function buildOrderItemsFromProducts(items = []) {
@@ -86,8 +89,10 @@ async function buildOrderItemsFromProducts(items = []) {
   }));
   const productIds = requestedItems.map((item) => item.productId).filter(Boolean);
 
-  if (productIds.length !== requestedItems.length) {
-    throw new Error('Sản phẩm trong đơn hàng không hợp lệ');
+  if (productIds.length !== requestedItems.length || productIds.some((id) => !mongoose.Types.ObjectId.isValid(id))) {
+    const error = new Error('Sản phẩm trong đơn hàng không hợp lệ');
+    error.statusCode = 400;
+    throw error;
   }
 
   const products = await Product.find({ _id: { $in: productIds } }).lean();
@@ -118,31 +123,58 @@ async function buildOrderItemsFromProducts(items = []) {
 }
 
 async function applyOrderInventory(order) {
-  if (!order || order.inventoryApplied) {
-    return;
-  }
+  const claimedOrder = await Order.findOneAndUpdate(
+    { _id: order._id, inventoryApplied: false },
+    { $set: { inventoryApplied: true } },
+    { new: true }
+  );
 
-  for (const item of order.items) {
-    const updatedProduct = await Product.findOneAndUpdate(
-      {
-        _id: item.productId,
-        stock: { $gte: item.quantity },
-      },
-      {
-        $inc: {
-          stock: -item.quantity,
-          soldCount: item.quantity,
-        },
-      },
-      { new: true }
-    );
+  if (!claimedOrder) return false;
 
-    if (!updatedProduct) {
-      throw new Error(`Sản phẩm "${item.name}" không đủ tồn kho để hoàn tất đơn hàng`);
+  const appliedItems = [];
+  try {
+    for (const item of claimedOrder.items) {
+      const updatedProduct = await Product.findOneAndUpdate(
+        { _id: item.productId, stock: { $gte: item.quantity } },
+        { $inc: { stock: -item.quantity, soldCount: item.quantity } },
+        { new: true }
+      );
+
+      if (!updatedProduct) {
+        const error = new Error(`Sản phẩm "${item.name}" không đủ tồn kho để hoàn tất đơn hàng`);
+        error.statusCode = 409;
+        throw error;
+      }
+
+      appliedItems.push(item);
     }
-  }
 
-  order.inventoryApplied = true;
+    return true;
+  } catch (error) {
+    await Promise.all(appliedItems.map((item) => Product.updateOne(
+      { _id: item.productId },
+      { $inc: { stock: item.quantity, soldCount: -item.quantity } }
+    )));
+    await Order.updateOne({ _id: order._id, inventoryApplied: true }, { $set: { inventoryApplied: false } });
+    throw error;
+  }
+}
+
+async function restoreOrderInventory(order) {
+  const claimedOrder = await Order.findOneAndUpdate(
+    { _id: order._id, inventoryApplied: true },
+    { $set: { inventoryApplied: false } },
+    { new: true }
+  );
+
+  if (!claimedOrder) return false;
+
+  await Promise.all(claimedOrder.items.map((item) => Product.updateOne(
+    { _id: item.productId },
+    { $inc: { stock: item.quantity, soldCount: -item.quantity } }
+  )));
+
+  return true;
 }
 
 // ========== SERVICE FUNCTIONS ==========
@@ -213,8 +245,18 @@ async function createOrderFromProducts(userId, orderData) {
 
   if (orderData.paymentMethod === 'COD') {
     order.status = 'pending';
-    await order.validate();
-    await applyOrderInventory(order);
+  }
+
+  await order.validate();
+  await order.save();
+
+  if (orderData.paymentMethod === 'COD') {
+    try {
+      await applyOrderInventory(order);
+    } catch (error) {
+      await Order.deleteOne({ _id: order._id });
+      throw error;
+    }
 
     await Cart.updateOne(
       { userId },
@@ -222,8 +264,7 @@ async function createOrderFromProducts(userId, orderData) {
     ).catch((err) => console.error('[Order Service] Loi khi xoa san pham gio hang COD:', err));
   }
 
-  await order.save();
-  return order;
+  return Order.findById(order._id);
 }
 
 /**
@@ -288,13 +329,40 @@ function createVnpayPaymentUrl(order, ipAddr) {
   return paymentUrl;
 }
 
+async function markVnpayOrderPaid(order, params) {
+  const paidOrder = await Order.findOneAndUpdate(
+    { _id: order._id, paymentStatus: 'pending' },
+    {
+      $set: {
+        paymentStatus: 'paid',
+        status: 'pending',
+        vnpayTransactionNo: params['vnp_TransactionNo'] || null,
+        paidAt: new Date(),
+      },
+    },
+    { new: true }
+  );
+
+  if (!paidOrder) {
+    return Order.findById(order._id);
+  }
+
+  await applyOrderInventory(paidOrder);
+  await Cart.updateOne(
+    { userId: paidOrder.userId },
+    { $pull: { items: { selected: true } } }
+  ).catch((err) => console.error('[Order Service] Loi khi xoa san pham gio hang sau thanh toan:', err));
+
+  return Order.findById(order._id);
+}
+
 /**
  * Xác thực kết quả thanh toán VNPay (khi user được redirect về FE)
  * Quy trình: verify checksum → tìm order → cập nhật trạng thái
  * @param {Object} vnpParams - Toàn bộ query params VNPay trả về
  * @returns {Object} { isValid, responseCode, order }
  */
-async function verifyVnpayReturn(vnpParams) {
+async function verifyVnpayReturn(vnpParams, userId) {
   const secureHash = vnpParams['vnp_SecureHash'];
   const secretKey = process.env.VNPAY_HASH_SECRET;
 
@@ -319,13 +387,19 @@ async function verifyVnpayReturn(vnpParams) {
   // 4. Tìm đơn hàng theo mã TxnRef (chính là orderCode)
   const orderCode = params['vnp_TxnRef'];
   const responseCode = params['vnp_ResponseCode'];
-  const order = await Order.findOne({ orderCode });
+  let order = await Order.findOne({ orderCode });
 
   if (!order) {
     if (responseCode !== '00') {
       return { isValid: true, responseCode, order: null };
     }
     return { isValid: false, responseCode: '01', order: null };
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(userId) || String(order.userId) !== String(userId)) {
+    const error = new Error('Ban khong co quyen xem don hang nay');
+    error.statusCode = 403;
+    throw error;
   }
 
   // 5. Nếu đơn đã thanh toán rồi thì trả về luôn (tránh xử lý trùng)
@@ -336,11 +410,7 @@ async function verifyVnpayReturn(vnpParams) {
   // 6. Cập nhật trạng thái đơn hàng theo kết quả từ VNPay
   if (responseCode === '00') {
     // Thanh toán thành công
-    order.paymentStatus = 'paid';
-    order.status = 'pending';
-    order.vnpayTransactionNo = params['vnp_TransactionNo'] || null;
-    order.paidAt = new Date();
-    await applyOrderInventory(order);
+    order = await markVnpayOrderPaid(order, params);
 
     // Tự động xóa sản phẩm đã mua khỏi giỏ hàng
     await Cart.updateOne(
@@ -351,7 +421,10 @@ async function verifyVnpayReturn(vnpParams) {
     await order.save();
   } else {
     // Thanh toán thất bại hoặc bị hủy -> Xóa đơn hàng khỏi DB để không lưu vết
-    await Order.deleteOne({ orderCode });
+    await Order.updateOne(
+      { _id: order._id, paymentStatus: 'pending' },
+      { $set: { paymentStatus: 'failed', status: 'cancelled', cancelledAt: new Date() } }
+    );
     return { isValid: true, responseCode, order: null };
   }
 
@@ -389,7 +462,7 @@ async function handleVnpayIPN(vnpParams) {
   }
 
   // 3. Tìm đơn hàng
-  const order = await Order.findOne({ orderCode: orderId });
+  let order = await Order.findOne({ orderCode: orderId });
   if (!order) {
     return { rspCode: '01', message: 'Order not found' };
   }
@@ -407,11 +480,7 @@ async function handleVnpayIPN(vnpParams) {
 
   // 6. Cập nhật trạng thái
   if (rspCode === '00') {
-    order.paymentStatus = 'paid';
-    order.status = 'pending';
-    order.vnpayTransactionNo = vnpParams['vnp_TransactionNo'] || null;
-    order.paidAt = new Date();
-    await applyOrderInventory(order);
+    order = await markVnpayOrderPaid(order, params);
 
     // Tự động xóa sản phẩm đã mua khỏi giỏ hàng
     await Cart.updateOne(
@@ -422,7 +491,10 @@ async function handleVnpayIPN(vnpParams) {
     await order.save();
   } else {
     // Thanh toán thất bại hoặc bị hủy -> Xóa đơn hàng khỏi DB
-    await Order.deleteOne({ orderCode: orderId });
+    await Order.updateOne(
+      { _id: order._id, paymentStatus: 'pending' },
+      { $set: { paymentStatus: 'failed', status: 'cancelled', cancelledAt: new Date() } }
+    );
   }
 
   return { rspCode: '00', message: 'Success' };
@@ -507,6 +579,12 @@ const ALLOWED_TRANSITIONS_CUSTOMER = {
  * @throws {Error} Nếu trạng thái chuyển đổi không hợp lệ
  */
 async function updateOrder(orderId, updateData, actorId) {
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    const error = new Error('ID don hang khong hop le');
+    error.statusCode = 400;
+    throw error;
+  }
+
   const order = await Order.findById(orderId);
   if (!order) {
     throw new Error('Không tìm thấy đơn hàng');
@@ -528,22 +606,21 @@ async function updateOrder(orderId, updateData, actorId) {
     }
   }
 
-  if (updateData.paymentStatus) {
-    order.paymentStatus = updateData.paymentStatus;
-    if (updateData.paymentStatus === 'paid' && !order.paidAt) {
-      order.paidAt = new Date();
-    }
+  await order.save();
+
+  if (updateData.status === 'cancelled') {
+    await restoreOrderInventory(order);
   }
 
-  await order.save();
+  const updatedOrder = await Order.findById(order._id);
 
   // Tạo thông báo cho user khi trạng thái đơn hàng thay đổi
   if (updateData.status && actorId) {
-    createOrderNotification(order, updateData.status, actorId)
+    createOrderNotification(updatedOrder, updateData.status, actorId)
       .catch((err) => console.error('[Order Service] Lỗi tạo thông báo đơn hàng:', err));
   }
 
-  return order;
+  return updatedOrder;
 }
 
 /**
@@ -557,6 +634,17 @@ async function updateOrder(orderId, updateData, actorId) {
  * @throws {Error} Nếu hành động không hợp lệ hoặc không đúng chủ đơn
  */
 async function customerActionOrder(orderId, userId, action) {
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    const error = new Error('ID don hang khong hop le');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    const error = new Error('Nguoi dung chua duoc xac thuc hop le');
+    error.statusCode = 401;
+    throw error;
+  }
+
   const order = await Order.findById(orderId);
   if (!order) {
     throw new Error('Không tìm thấy đơn hàng');

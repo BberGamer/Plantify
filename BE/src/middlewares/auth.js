@@ -40,7 +40,7 @@ const authorizeAdmin = (req, res, next) => {
  * @param {Function} next - Next middleware function
  */
 const authorizeContentManager = (req, res, next) => {
-  if (!['content_manager', 'content manager'].includes(req.user?.role)) {
+  if (req.user?.role !== 'content manager') {
     return error(res, 'Không có quyền truy cập', 403);
   }
 

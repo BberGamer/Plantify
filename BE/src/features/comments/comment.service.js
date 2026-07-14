@@ -13,6 +13,43 @@ function ensureObjectId(id, message = 'ID khong hop le') {
   }
 }
 
+function getCurrentUserId(currentUser = {}) {
+  return currentUser.id || currentUser._id || currentUser.userId;
+}
+
+function ensureCurrentUserId(currentUser) {
+  const userId = getCurrentUserId(currentUser);
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    const error = new Error('Nguoi dung chua duoc xac thuc hop le');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  return userId;
+}
+
+function validateCommentPayload(payload = {}) {
+  const content = typeof payload.content === 'string' ? payload.content.trim() : '';
+  if (!content) {
+    const error = new Error('Noi dung binh luan la bat buoc');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (payload.rating === undefined || payload.rating === null || payload.rating === '') {
+    return { content, rating: undefined };
+  }
+
+  const rating = Number(payload.rating);
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    const error = new Error('Danh gia phai la so nguyen tu 1 den 5');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return { content, rating };
+}
+
 async function syncPostRating(postId) {
   const stats = await Comment.aggregate([
     { $match: { postId: new mongoose.Types.ObjectId(postId), rating: { $gte: 1, $lte: 5 } } },
@@ -55,9 +92,10 @@ async function getCommentsByPostId(postId) {
     .lean();
 }
 
-async function createComment(payload) {
-  ensureObjectId(payload.userId, 'User ID khong hop le');
+async function createComment(payload = {}, currentUser = {}) {
+  const userId = ensureCurrentUserId(currentUser);
   ensureObjectId(payload.postId, 'Post ID khong hop le');
+  const { content, rating } = validateCommentPayload(payload);
 
   const post = await Post.findById(payload.postId);
   if (!post) {
@@ -67,17 +105,17 @@ async function createComment(payload) {
   }
 
   const comment = await Comment.create({
-    userId: payload.userId,
+    userId,
     postId: payload.postId,
-    content: payload.content,
-    rating: payload.rating,
+    content,
+    rating,
   });
 
   await syncPostRating(post._id);
 
   await createNotification({
     recipientId: post.userId,
-    actorId: payload.userId,
+    actorId: userId,
     type: 'post_commented',
     postId: post._id,
     commentId: comment._id,
@@ -116,9 +154,10 @@ async function syncProductRating(productId) {
   });
 }
 
-async function createProductComment(payload) {
-  ensureObjectId(payload.userId, 'User ID khong hop le');
+async function createProductComment(payload = {}, currentUser = {}) {
+  const userId = ensureCurrentUserId(currentUser);
   ensureObjectId(payload.productId, 'Product ID khong hop le');
+  const { content, rating } = validateCommentPayload(payload);
 
   const product = await Product.findById(payload.productId);
   if (!product) {
@@ -128,10 +167,10 @@ async function createProductComment(payload) {
   }
 
   const comment = await Comment.create({
-    userId: payload.userId,
+    userId,
     productId: payload.productId,
-    content: payload.content,
-    rating: payload.rating,
+    content,
+    rating,
   });
 
   await syncProductRating(product._id);

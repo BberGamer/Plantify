@@ -1,7 +1,7 @@
 // plant.routes.js - Định nghĩa các route cho Plants
 const express = require('express');
 const plantController = require('./plant.controller');
-const { authenticate } = require('../../middlewares/auth');
+const { authenticate, authorizeContentManager } = require('../../middlewares/auth');
 
 const router = express.Router();
 
@@ -9,13 +9,13 @@ const router = express.Router();
 router.get('/categories', plantController.getAllCategories);
 
 // POST /api/plants/categories - Tạo danh mục cây mới.
-router.post('/categories', authenticate, plantController.createCategory);
+router.post('/categories', authenticate, authorizeContentManager, plantController.createCategory);
 
 // DELETE /api/plants/categories/:id - Xóa danh mục cây.
-router.delete('/categories/:id', authenticate, plantController.deleteCategory);
+router.delete('/categories/:id', authenticate, authorizeContentManager, plantController.deleteCategory);
 
 // PUT /api/plants/categories/:id - Cập nhật danh mục cây.
-router.put('/categories/:id', authenticate, plantController.updateCategory);
+router.put('/categories/:id', authenticate, authorizeContentManager, plantController.updateCategory);
 
 // GET /api/plants/tags - Lấy danh sách tags độc nhất.
 router.get('/tags', plantController.getAllTags);
@@ -27,12 +27,12 @@ router.get('/', plantController.getAllPlants);
 router.get('/:id', plantController.getPlantById);
 
 // POST /api/plants - Tạo mới một cây.
-router.post('/', authenticate, plantController.createPlant);
+router.post('/', authenticate, authorizeContentManager, plantController.createPlant);
 
 // PUT /api/plants/:id - Cập nhật một cây.
-router.put('/:id', authenticate, plantController.updatePlant);
+router.put('/:id', authenticate, authorizeContentManager, plantController.updatePlant);
 
 // DELETE /api/plants/:id - Xóa một cây.
-router.delete('/:id', authenticate, plantController.deletePlant);
+router.delete('/:id', authenticate, authorizeContentManager, plantController.deletePlant);
 
 module.exports = router;
