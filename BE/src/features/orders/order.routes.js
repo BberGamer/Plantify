@@ -7,15 +7,15 @@ const { authenticate, authorizeBusinessManager, authorizeCustomer } = require('.
 // === ĐẶT HÀNG ===
 
 // Tạo đơn hàng COD (yêu cầu đăng nhập)
-router.post('/', authenticate, orderController.createOrder);
+router.post('/', authenticate, authorizeCustomer, orderController.createOrder);
 
 // Tạo đơn hàng VNPay + lấy URL thanh toán (yêu cầu đăng nhập)
-router.post('/vnpay/create-payment', authenticate, orderController.createVnpayPayment);
+router.post('/vnpay/create-payment', authenticate, authorizeCustomer, orderController.createVnpayPayment);
 
 // === VNPAY CALLBACK ===
 
 // Xác thực kết quả thanh toán (FE gọi sau khi VNPay redirect về)
-router.get('/vnpay/return', authenticate, orderController.vnpayReturn);
+router.get('/vnpay/return', authenticate, authorizeCustomer, orderController.vnpayReturn);
 
 // IPN callback - VNPay gọi trực tiếp server-to-server (KHÔNG cần auth)
 router.get('/vnpay/ipn', orderController.vnpayIPN);
@@ -34,7 +34,7 @@ router.put('/:id', authenticate, authorizeBusinessManager, orderController.updat
 // === ĐƠN HÀNG CỦA TÔI (CUSTOMER) ===
 
 // Lấy danh sách đơn hàng của user hiện tại
-router.get('/', authenticate, orderController.getMyOrders);
+router.get('/', authenticate, authorizeCustomer, orderController.getMyOrders);
 
 // Khách hàng xác nhận nhận hàng hoặc yêu cầu hoàn trả (chỉ khi status = 'sented')
 router.put('/:id/customer-action', authenticate, authorizeCustomer, orderController.customerAction);

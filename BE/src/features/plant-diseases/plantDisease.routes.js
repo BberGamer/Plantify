@@ -1,6 +1,7 @@
 // plantDisease.routes.js - Định nghĩa các route cho PlantDiseases
 const express = require('express');
 const plantDiseaseController = require('./plantDisease.controller');
+const { authenticate, authorizeContentManager } = require('../../middlewares/auth');
 
 const router = express.Router();
 
@@ -11,12 +12,12 @@ router.get('/', plantDiseaseController.getAllPlantDiseases);
 router.get('/:id', plantDiseaseController.getPlantDiseaseById);
 
 // POST /api/plant-diseases - Tạo mới bệnh cây
-router.post('/', plantDiseaseController.createPlantDisease);
+router.post('/', authenticate, authorizeContentManager, plantDiseaseController.createPlantDisease);
 
 // PUT /api/plant-diseases/:id - Cập nhật bệnh cây
-router.put('/:id', plantDiseaseController.updatePlantDisease);
+router.put('/:id', authenticate, authorizeContentManager, plantDiseaseController.updatePlantDisease);
 
 // DELETE /api/plant-diseases/:id - Xóa bệnh cây
-router.delete('/:id', plantDiseaseController.deletePlantDisease);
+router.delete('/:id', authenticate, authorizeContentManager, plantDiseaseController.deletePlantDisease);
 
 module.exports = router;
