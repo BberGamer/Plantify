@@ -3,47 +3,38 @@ node_modules/
 
 # Build
 dist/
-FE/dist/
-
-# Vite
+build/
 .vite/
-FE/.vite/
 
-# Env
+# Environment
 .env
-.env.local
-BE/.env
+.env.*
+!.env.example
+
+# Coverage
+coverage/
 
 # Logs
 *.log
 npm-debug.log*
 
-# OS / editor
-.DS_Store
-Thumbs.db
-*.local
-
-# ==================== Cursor Settings ====================
-# Personal Cursor settings (không commit)
-.cursor/settings.json
-.cursor/keybindings.json
-.cursor/tasks.json
-
-# Cache / temporary của Cursor
-.cursor/cache/
-.cursor/tmp/
-
-# Chỉ giữ lại thư mục rules
+# IDE
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+.cursor/
 !.cursor/rules/
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
+# OS
+.DS_Store
+Thumbs.db
 
-# AI Service
-AI-Service/__pycache__/
+# Cache
+.cache/
+.eslintcache
 
-# Python cache
-__pycache__/
-*.py[cod]
+# Temporary
+*.tmp
+*.swp
+*.swo
