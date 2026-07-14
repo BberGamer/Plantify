@@ -1,5 +1,7 @@
 // Business logic cho Care Guides.
+const mongoose = require('mongoose');
 const CareGuide = require('./careGuide.model');
+const Plant = require('../plants/plant.model');
 
 const CARE_GUIDE_FIELDS = ['plantId', 'pruning', 'propagation', 'watering', 'repotting'];
 
@@ -10,21 +12,59 @@ function pickCareGuideFields(data = {}) {
   }, {});
 }
 
+function createHttpError(message, statusCode) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
+function ensureObjectId(id, message) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw createHttpError(message, 400);
+  }
+}
+
+function parsePositiveInteger(value, fieldName, fallback, maxValue) {
+  if (value === undefined) return fallback;
+
+  const parsedValue = Number(value);
+  if (!Number.isInteger(parsedValue) || parsedValue < 1) {
+    throw createHttpError(`${fieldName} phai la so nguyen duong`, 400);
+  }
+
+  return Math.min(parsedValue, maxValue);
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+async function ensurePlantExists(plantId) {
+  ensureObjectId(plantId, 'Plant ID khong hop le');
+  const plant = await Plant.findById(plantId).select('_id').lean();
+  if (!plant) {
+    throw createHttpError('Khong tim thay cay', 404);
+  }
+}
+
 async function getAllCareGuides(filters = {}) {
   const { plantId, search, sort, page = 1, limit = 10 } = filters;
   const query = {};
 
-  if (plantId) query.plantId = plantId;
+  if (plantId) {
+    ensureObjectId(plantId, 'Plant ID khong hop le');
+    query.plantId = plantId;
+  }
 
   const keyword = String(search || '').trim();
   if (keyword) {
     query.$or = ['pruning', 'propagation', 'watering', 'repotting'].map((field) => ({
-      [field]: { $regex: keyword, $options: 'i' },
+      [field]: { $regex: escapeRegex(keyword), $options: 'i' },
     }));
   }
 
-  const safePage = Math.max(Number(page) || 1, 1);
-  const safeLimit = Math.min(Math.max(Number(limit) || 10, 1), 200);
+  const safePage = parsePositiveInteger(page, 'page', 1, Number.MAX_SAFE_INTEGER);
+  const safeLimit = parsePositiveInteger(limit, 'limit', 10, 100);
   const total = await CareGuide.countDocuments(query);
   const pages = Math.max(Math.ceil(total / safeLimit), 1);
   const sortOption = sort === 'oldest' ? { createdAt: 1 } : { createdAt: -1 };
@@ -39,25 +79,33 @@ async function getAllCareGuides(filters = {}) {
 }
 
 async function getCareGuideById(id) {
-  if (!id) throw new Error('CareGuide ID is required');
+  ensureObjectId(id, 'CareGuide ID khong hop le');
   return CareGuide.findById(id).lean();
 }
 
-async function createCareGuide(data) {
+async function createCareGuide(data = {}) {
   if (!data.plantId) {
-    throw new Error('Plant ID is required');
+    throw createHttpError('Plant ID is required', 400);
   }
+
+  await ensurePlantExists(data.plantId);
 
   const careGuide = new CareGuide(pickCareGuideFields(data));
   return careGuide.save();
 }
 
-async function updateCareGuide(id, data) {
-  if (!id) throw new Error('CareGuide ID is required');
+async function updateCareGuide(id, data = {}) {
+  ensureObjectId(id, 'CareGuide ID khong hop le');
 
   const updateData = pickCareGuideFields(data);
   if (updateData.plantId !== undefined && !updateData.plantId) {
-    throw new Error('Plant ID cannot be empty');
+    throw createHttpError('Plant ID cannot be empty', 400);
+  }
+  if (updateData.plantId !== undefined) {
+    await ensurePlantExists(updateData.plantId);
+  }
+  if (!Object.keys(updateData).length) {
+    throw createHttpError('Khong co du lieu cap nhat hop le', 400);
   }
 
   return CareGuide.findByIdAndUpdate(id, updateData, {
@@ -67,7 +115,7 @@ async function updateCareGuide(id, data) {
 }
 
 async function deleteCareGuide(id) {
-  if (!id) throw new Error('CareGuide ID is required');
+  ensureObjectId(id, 'CareGuide ID khong hop le');
   return CareGuide.findByIdAndDelete(id);
 }
 
