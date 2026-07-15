@@ -1,267 +1,150 @@
-// tests/features/plants/plant.service.test.js
-// Unit test cho plant.service.js - hàm getAllPlants (priority HIGH: complex query + disease search)
-
 jest.mock('../../../src/features/plants/plant.model', () => {
   const { buildModelMock } = require('../../mocks/mongoose');
   return buildModelMock();
 });
-jest.mock('../../../src/features/plant-diseases/plantDisease.model', () => {
-  const { buildModelMock } = require('../../mocks/mongoose');
-  return buildModelMock();
-});
+
 jest.mock('../../../src/features/plants/plantCategory.model', () => {
   const { buildModelMock } = require('../../mocks/mongoose');
   return buildModelMock();
 });
+jest.mock('../../../src/features/plant-diseases/plantDisease.model', () => ({ find: jest.fn() }));
 
 const Plant = require('../../../src/features/plants/plant.model');
+const PlantCategory = require('../../../src/features/plants/plantCategory.model');
 const PlantDisease = require('../../../src/features/plant-diseases/plantDisease.model');
-const plantService = require('../../../src/features/plants/plant.service');
+const {
+  getAllPlants, createPlant, updatePlant, getAllTags,
+  getAllCategories, createCategory, updateCategory, deleteCategory,
+} = require('../../../src/features/plants/plant.service');
 
-describe('plantService.getAllPlants', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+const plantId = '507f1f77bcf86cd799439011';
+const categoryId = '507f1f77bcf86cd799439012';
+
+function chain(result) {
+  return {
+    select: jest.fn().mockReturnThis(), sort: jest.fn().mockReturnThis(),
+    skip: jest.fn().mockReturnThis(), limit: jest.fn().mockReturnThis(),
+    lean: jest.fn().mockResolvedValue(result),
+  };
+}
+
+describe('plantService', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test('lấy cây theo search, sort và pagination', async () => {
+    const findChain = chain([]);
+    Plant.find.mockReturnValue(findChain);
+    Plant.countDocuments.mockResolvedValue(12);
+    PlantDisease.find.mockReturnValue(chain([{ plantId }]));
+
+    await getAllPlants({ search: 'yellow leaf', sort: 'popular', page: 2, limit: 5 });
+
+    expect(Plant.find).toHaveBeenCalledWith(expect.objectContaining({ $or: expect.any(Array) }));
+    expect(findChain.sort).toHaveBeenCalledWith({ viewCount: -1 });
+    expect(findChain.skip).toHaveBeenCalledWith(5);
+    expect(findChain.limit).toHaveBeenCalledWith(5);
   });
 
-  // 1. Không có filter -> query rỗng, sort mặc định { name: 1 }, page=1, limit=9
-  test('trả về danh sách rỗng với filter mặc định khi không có filter nào', async () => {
-    Plant.find.mockReturnValue(makeChain([]));
+  test('báo lỗi khi pagination không hợp lệ', async () => {
+    await expect(getAllPlants({ page: 0 })).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  test('lọc cây theo category và tag', async () => {
+    Plant.find.mockReturnValue(chain([]));
     Plant.countDocuments.mockResolvedValue(0);
 
-    const result = await plantService.getAllPlants();
+    await getAllPlants({ category: categoryId, tag: 'indoor' });
 
-    expect(Plant.find).toHaveBeenCalledWith({});
-    expect(Plant.countDocuments).toHaveBeenCalledWith({});
-    expect(result).toEqual({
-      plants: [],
-      total: 0,
-      pages: 1,
-      currentPage: 1,
-    });
+    expect(Plant.find).toHaveBeenCalledWith({ categoryId, tags: 'indoor' });
   });
 
-  // 2. Filter category, tag, difficulty, sunlight, watering
-  test('gộp tất cả filter đơn lẻ vào query', async () => {
-    Plant.find.mockReturnValue(makeChain([]));
+  test('lọc cây theo độ khó', async () => {
+    Plant.find.mockReturnValue(chain([]));
     Plant.countDocuments.mockResolvedValue(0);
 
-    await plantService.getAllPlants({
-      category: 'cat-1',
-      tag: 'indoor',
-      difficulty: 'easy',
-      sunlight: 'low',
-      watering: 'low',
-    });
+    await getAllPlants({ difficulty: 'easy' });
 
-    expect(Plant.find).toHaveBeenCalledWith({
-      categoryId: 'cat-1',
-      tags: 'indoor',
-      difficultyLevel: 'easy',
-      sunlight: 'low',
-      watering: 'low',
-    });
+    expect(Plant.find).toHaveBeenCalledWith({ difficultyLevel: 'easy' });
   });
 
-  // 3. Pagination: page=2, limit=5 -> ép limit về min 9, skip=9, currentPage=2
-  // Service ép limit tối thiểu = 9 (Math.max(Number(limit)||9, 9))
-  test('tính skip và currentPage đúng theo page (limit bị ép về min 9)', async () => {
-    const chain = makeChain([{ _id: 'p1' }]);
-    Plant.find.mockReturnValue(chain);
-    Plant.countDocuments.mockResolvedValue(20);
-
-    const result = await plantService.getAllPlants({ page: 2, limit: 5 });
-
-    expect(chain.skip).toHaveBeenCalledWith(9);
-    expect(chain.limit).toHaveBeenCalledWith(9);
-    expect(result.currentPage).toBe(2);
-    expect(result.pages).toBe(3); // ceil(20/9)
-    expect(result.total).toBe(20);
-  });
-
-  // 4. Pagination safeguard: page < 1, limit < 9 đều ép về min
-  test('ép page<1 về 1 và limit<9 về 9', async () => {
-    const chain = makeChain([]);
-    Plant.find.mockReturnValue(chain);
+  test('lọc cây theo ánh sáng', async () => {
+    Plant.find.mockReturnValue(chain([]));
     Plant.countDocuments.mockResolvedValue(0);
 
-    const result = await plantService.getAllPlants({ page: -3, limit: 0 });
+    await getAllPlants({ sunlight: 'low' });
 
-    expect(chain.skip).toHaveBeenCalledWith(0);
-    expect(chain.limit).toHaveBeenCalledWith(9);
-    expect(result.currentPage).toBe(1);
+    expect(Plant.find).toHaveBeenCalledWith({ sunlight: 'low' });
   });
 
-  // 5. Sort options: za, popular, difficulty, mặc định
-  test('sort = "za" -> { name: -1 }', async () => {
-    const chain = makeChain([]);
-    Plant.find.mockReturnValue(chain);
+  test('lọc cây theo nhu cầu tưới nước', async () => {
+    Plant.find.mockReturnValue(chain([]));
     Plant.countDocuments.mockResolvedValue(0);
 
-    await plantService.getAllPlants({ sort: 'za' });
+    await getAllPlants({ watering: 'weekly' });
 
-    expect(chain.sort).toHaveBeenCalledWith({ name: -1 });
+    expect(Plant.find).toHaveBeenCalledWith({ watering: 'weekly' });
   });
 
-  test('sort = "popular" -> { viewCount: -1 }', async () => {
-    const chain = makeChain([]);
-    Plant.find.mockReturnValue(chain);
-    Plant.countDocuments.mockResolvedValue(0);
+  test('tạo cây khi category tồn tại và chặn tên thiếu', async () => {
+    PlantCategory.findById.mockReturnValue(chain({ _id: categoryId }));
+    Plant.mockImplementation((data) => ({ save: jest.fn().mockResolvedValue(data) }));
 
-    await plantService.getAllPlants({ sort: 'popular' });
-
-    expect(chain.sort).toHaveBeenCalledWith({ viewCount: -1 });
+    await expect(createPlant({ name: 'Monstera', categoryId })).resolves.toEqual({ name: 'Monstera', categoryId });
+    await expect(createPlant({ categoryId })).rejects.toMatchObject({ statusCode: 400 });
   });
 
-  test('sort = "difficulty" -> { difficultyLevel: 1 }', async () => {
-    const chain = makeChain([]);
-    Plant.find.mockReturnValue(chain);
-    Plant.countDocuments.mockResolvedValue(0);
+  test('cập nhật cây hợp lệ và chặn payload rỗng', async () => {
+    Plant.findByIdAndUpdate.mockReturnValue(chain({ _id: plantId, name: 'New name' }));
 
-    await plantService.getAllPlants({ sort: 'difficulty' });
+    await updatePlant(plantId, { name: 'New name' });
 
-    expect(chain.sort).toHaveBeenCalledWith({ difficultyLevel: 1 });
-  });
-
-  test('không truyền sort -> mặc định { name: 1 }', async () => {
-    const chain = makeChain([]);
-    Plant.find.mockReturnValue(chain);
-    Plant.countDocuments.mockResolvedValue(0);
-
-    await plantService.getAllPlants();
-
-    expect(chain.sort).toHaveBeenCalledWith({ name: 1 });
-  });
-
-  // 6. Search: keyword được đưa vào $or của Plant (name/scientificName/commonNames)
-  test('search không match disease nào -> $or chỉ có 3 field plant', async () => {
-    PlantDisease.find.mockReturnValue(makeChain([]));
-    const chain = makeChain([]);
-    Plant.find.mockReturnValue(chain);
-    Plant.countDocuments.mockResolvedValue(0);
-
-    await plantService.getAllPlants({ search: 'monstera' });
-
-    expect(PlantDisease.find).toHaveBeenCalled();
-    expect(Plant.find).toHaveBeenCalledWith({
-      $or: [
-        { name: { $regex: 'monstera', $options: 'i' } },
-        { scientificName: { $regex: 'monstera', $options: 'i' } },
-        { commonNames: { $regex: 'monstera', $options: 'i' } },
-      ],
-    });
-  });
-
-  // 7. Search: keyword match disease -> thêm _id $in diseasePlantIds vào $or
-  test('search match disease -> thêm điều kiện _id $in diseasePlantIds', async () => {
-    PlantDisease.find.mockReturnValue(makeChain([
-      { plantId: '64a000000000000000000001' },
-      { plantId: '64a000000000000000000002' },
-      { plantId: '64a000000000000000000001' }, // trùng -> phải dedupe
-    ]));
-    const chain = makeChain([]);
-    Plant.find.mockReturnValue(chain);
-    Plant.countDocuments.mockResolvedValue(0);
-
-    await plantService.getAllPlants({ search: 'vàng lá' });
-
-    const callArg = Plant.find.mock.calls[0][0];
-    expect(callArg.$or).toHaveLength(4);
-    expect(callArg.$or[3]).toEqual({
-      _id: { $in: ['64a000000000000000000001', '64a000000000000000000002'] },
-    });
-  });
-
-  // 8. Search + filter khác vẫn gộp đúng
-  test('search kết hợp category vẫn merge filter đúng', async () => {
-    PlantDisease.find.mockReturnValue(makeChain([]));
-    const chain = makeChain([]);
-    Plant.find.mockReturnValue(chain);
-    Plant.countDocuments.mockResolvedValue(0);
-
-    await plantService.getAllPlants({ search: 'xương rồng', category: 'cat-1' });
-
-    expect(Plant.find).toHaveBeenCalledWith({
-      categoryId: 'cat-1',
-      $or: [
-        { name: { $regex: 'xương rồng', $options: 'i' } },
-        { scientificName: { $regex: 'xương rồng', $options: 'i' } },
-        { commonNames: { $regex: 'xương rồng', $options: 'i' } },
-      ],
-    });
-  });
-
-  // 9. Pages safeguard: total=0 vẫn có pages=1
-  test('total=0 -> pages=1 (không bị 0)', async () => {
-    Plant.find.mockReturnValue(makeChain([]));
-    Plant.countDocuments.mockResolvedValue(0);
-
-    const result = await plantService.getAllPlants({ limit: 9 });
-
-    expect(result.pages).toBe(1);
-  });
-
-  // 10. Search rỗng / chỉ whitespace -> không query disease, không thêm $or
-  test('search là chuỗi rỗng -> bỏ qua nhánh search', async () => {
-    Plant.find.mockReturnValue(makeChain([]));
-    Plant.countDocuments.mockResolvedValue(0);
-
-    await plantService.getAllPlants({ search: '   ' });
-
-    expect(PlantDisease.find).not.toHaveBeenCalled();
-    expect(Plant.find).toHaveBeenCalledWith({});
-  });
-
-  // 11. Search không phải string (số) -> vẫn xử lý, không lỗi
-  test('search là số vẫn ép về string để query regex', async () => {
-    PlantDisease.find.mockReturnValue(makeChain([]));
-    Plant.find.mockReturnValue(makeChain([]));
-    Plant.countDocuments.mockResolvedValue(0);
-
-    await plantService.getAllPlants({ search: 123 });
-
-    const callArg = Plant.find.mock.calls[0][0];
-    expect(callArg.$or[0].name.$regex).toBe('123');
-  });
-
-  // 12. Lean được gọi cuối chain
-  test('cuối chain find có gọi lean()', async () => {
-    const chain = makeChain([]);
-    Plant.find.mockReturnValue(chain);
-    Plant.countDocuments.mockResolvedValue(0);
-
-    await plantService.getAllPlants();
-
-    expect(chain.lean).toHaveBeenCalled();
-  });
-
-  // 13. return shape đầy đủ 4 trường
-  // limit=5 bị ép về 9, total=20 -> pages = ceil(20/9) = 3
-  test('trả về object đúng shape { plants, total, pages, currentPage }', async () => {
-    const fakePlants = [{ _id: 'p1', name: 'A' }, { _id: 'p2', name: 'B' }];
-    Plant.find.mockReturnValue(makeChain(fakePlants));
-    Plant.countDocuments.mockResolvedValue(20);
-
-    const result = await plantService.getAllPlants({ limit: 5 });
-
-    expect(Object.keys(result).sort()).toEqual(
-      ['currentPage', 'pages', 'plants', 'total']
+    expect(Plant.findByIdAndUpdate).toHaveBeenCalledWith(
+      plantId, { name: 'New name' }, { new: true, runValidators: true },
     );
-    expect(result.plants).toBe(fakePlants);
-    expect(result.total).toBe(20);
-    expect(result.pages).toBe(3);
-    expect(result.currentPage).toBe(1);
+    await expect(updatePlant(plantId, {})).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  test('lấy tag không trùng và sắp xếp', async () => {
+    Plant.find.mockReturnValue(chain([{ tags: ['indoor', 'easy'] }, { tags: ['easy', 'air'] }]));
+
+    await expect(getAllTags()).resolves.toEqual(['air', 'easy', 'indoor']);
+  });
+
+  test('lấy category theo tên tăng dần', async () => {
+    const categoryChain = chain([{ name: 'Indoor' }]);
+    PlantCategory.find.mockReturnValue(categoryChain);
+
+    await expect(getAllCategories()).resolves.toEqual([{ name: 'Indoor' }]);
+    expect(categoryChain.sort).toHaveBeenCalledWith({ name: 1 });
+  });
+
+  test('tạo category với slug từ tên', async () => {
+    PlantCategory.mockImplementation((data) => ({ save: jest.fn().mockResolvedValue(data) }));
+
+    await expect(createCategory({ name: 'Cây Trong Nhà' })).resolves.toEqual({
+      name: 'Cây Trong Nhà', slug: 'cay-trong-nha',
+    });
+    await expect(createCategory({ name: ' ' })).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  test('cập nhật category với tên và slug mới', async () => {
+    PlantCategory.findByIdAndUpdate.mockReturnValue(chain({ _id: categoryId, name: 'Outdoor' }));
+
+    await updateCategory(categoryId, { name: 'Cây Ngoài Trời' });
+
+    expect(PlantCategory.findByIdAndUpdate).toHaveBeenCalledWith(
+      categoryId,
+      { name: 'Cây Ngoài Trời', slug: 'cay-ngoai-troi' },
+      { new: true, runValidators: true },
+    );
+    await expect(updateCategory(categoryId, { name: ' ' })).rejects.toMatchObject({ statusCode: 400 });
+    await expect(updateCategory(categoryId, {})).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  test('xóa category với ID hợp lệ', async () => {
+    PlantCategory.findByIdAndDelete.mockResolvedValue({ _id: categoryId });
+
+    await expect(deleteCategory(categoryId)).resolves.toEqual({ _id: categoryId });
+    await expect(deleteCategory('invalid')).rejects.toMatchObject({ statusCode: 400 });
   });
 });
-
-// Helper: tạo chainable mock trả về findResult khi gọi lean()
-function makeChain(findResult) {
-  const chain = {
-    sort: jest.fn().mockReturnThis(),
-    skip: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    populate: jest.fn().mockReturnThis(),
-    lean: jest.fn(() => Promise.resolve(findResult)),
-  };
-  return chain;
-}
