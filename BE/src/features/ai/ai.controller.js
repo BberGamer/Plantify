@@ -8,7 +8,7 @@ const apiResponse = require('../../utils/apiResponse');
 async function generateText(req, res, next) {
   try {
     const result = await aiService.generateText(req.body.prompt, req.body.options);
-    return apiResponse.success(res, 'Goi AI thanh cong', result);
+    return apiResponse.success(res, 'Gọi AI thành công', result);
   } catch (error) {
     return next(error);
   }
@@ -20,13 +20,13 @@ async function generateText(req, res, next) {
 async function diagnosePlantDisease(req, res, next) {
   try {
     if (!req.file) {
-      return apiResponse.error(res, 'Vui long upload anh la cay de chan doan.', 400);
+      return apiResponse.error(res, 'Vui lòng tải lên ảnh cây để chẩn đoán.', 400);
     }
 
     const { buffer, originalname, mimetype } = req.file;
     const prediction = await aiService.diagnoseFromImage(buffer, originalname, mimetype);
 
-    return apiResponse.success(res, 'Chan doan thanh cong', { prediction });
+    return apiResponse.success(res, 'Chẩn đoán thành công', { prediction });
   } catch (error) {
     return next(error);
   }

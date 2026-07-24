@@ -32,7 +32,7 @@ function parsePositiveInteger(value, fieldName, fallback, maxValue) {
 
   const parsedValue = Number(value);
   if (!Number.isInteger(parsedValue) || parsedValue < 1) {
-    throw createHttpError(`${fieldName} phai la so nguyen duong`, 400);
+    throw createHttpError(`${fieldName} phải là số nguyên dương`, 400);
   }
 
   return Math.min(parsedValue, maxValue);
@@ -43,10 +43,10 @@ function escapeRegex(value) {
 }
 
 async function ensureCategoryExists(categoryId) {
-  ensureObjectId(categoryId, 'Category ID khong hop le');
+  ensureObjectId(categoryId, 'Category ID không hợp lệ');
   const category = await PlantCategory.findById(categoryId).select('_id').lean();
   if (!category) {
-    throw createHttpError('Khong tim thay danh muc', 404);
+    throw createHttpError('Không tìm thấy danh mục', 404);
   }
 }
 
@@ -154,7 +154,7 @@ async function getAllTags() {
  * @returns {Promise<object|null>} Plant document hoặc null
  */
 async function getPlantById(id, populateCategory = false) {
-  ensureObjectId(id, 'Plant ID khong hop le');
+  ensureObjectId(id, 'Plant ID không hợp lệ');
 
   let query = Plant.findOne({ _id: id });
   if (populateCategory) {
@@ -170,10 +170,10 @@ async function getPlantById(id, populateCategory = false) {
  */
 async function createPlant(data = {}) {
   if (!data.name || !data.name.trim()) {
-    throw createHttpError('Plant name is required', 400);
+    throw createHttpError('Tên cây là bắt buộc', 400);
   }
   if (!data.categoryId || !data.categoryId.trim()) {
-    throw createHttpError('Category ID is required', 400);
+    throw createHttpError('ID danh mục là bắt buộc', 400);
   }
 
   await ensureCategoryExists(data.categoryId);
@@ -189,19 +189,19 @@ async function createPlant(data = {}) {
  * @returns {Promise<object|null>} Plant document đã cập nhật hoặc null
  */
 async function updatePlant(id, data = {}) {
-  ensureObjectId(id, 'Plant ID khong hop le');
+  ensureObjectId(id, 'Plant ID không hợp lệ');
 
   if (data.name !== undefined && !data.name.trim()) {
-    throw createHttpError('Plant name cannot be empty', 400);
+    throw createHttpError('Tên cây không được để trống', 400);
   }
   if (data.categoryId !== undefined && !data.categoryId.trim()) {
-    throw createHttpError('Category ID cannot be empty', 400);
+    throw createHttpError('ID danh mục không được để trống', 400);
   }
   if (data.categoryId !== undefined) {
     await ensureCategoryExists(data.categoryId);
   }
   if (!Object.keys(data).length) {
-    throw createHttpError('Khong co du lieu cap nhat hop le', 400);
+    throw createHttpError('Không có dữ liệu cập nhật hợp lệ', 400);
   }
 
   return Plant.findByIdAndUpdate(id, data, { new: true, runValidators: true }).lean();
@@ -213,7 +213,7 @@ async function updatePlant(id, data = {}) {
  * @returns {Promise<object|null>} Plant document đã xóa hoặc null
  */
 async function deletePlant(id) {
-  ensureObjectId(id, 'Plant ID khong hop le');
+  ensureObjectId(id, 'Plant ID không hợp lệ');
 
   return Plant.findByIdAndDelete(id);
 }
@@ -233,7 +233,7 @@ async function getAllCategories() {
  */
 async function createCategory(data = {}) {
   if (!data.name || !data.name.trim()) {
-    throw createHttpError('Category name is required', 400);
+    throw createHttpError('Tên danh mục là bắt buộc', 400);
   }
   const category = new PlantCategory({
     name: data.name.trim(),
@@ -248,7 +248,7 @@ async function createCategory(data = {}) {
  * @returns {Promise<object|null>} PlantCategory document đã xóa hoặc null
  */
 async function deleteCategory(id) {
-  ensureObjectId(id, 'Category ID khong hop le');
+  ensureObjectId(id, 'Category ID không hợp lệ');
   return PlantCategory.findByIdAndDelete(id);
 }
 
@@ -259,9 +259,9 @@ async function deleteCategory(id) {
  * @returns {Promise<object|null>} PlantCategory document đã cập nhật hoặc null
  */
 async function updateCategory(id, data = {}) {
-  ensureObjectId(id, 'Category ID khong hop le');
+  ensureObjectId(id, 'Category ID không hợp lệ');
   if (data.name !== undefined && !data.name.trim()) {
-    throw createHttpError('Category name cannot be empty', 400);
+    throw createHttpError('Tên danh mục không được để trống', 400);
   }
   const updateData = {};
   if (data.name) {
@@ -269,7 +269,7 @@ async function updateCategory(id, data = {}) {
     updateData.slug = toSlug(data.name.trim());
   }
   if (!Object.keys(updateData).length) {
-    throw createHttpError('Khong co du lieu cap nhat hop le', 400);
+    throw createHttpError('Không có dữ liệu cập nhật hợp lệ', 400);
   }
   return PlantCategory.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).lean();
 }

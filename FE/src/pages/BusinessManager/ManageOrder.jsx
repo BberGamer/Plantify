@@ -58,6 +58,16 @@ const STATUS_LABELS = {
   cancelled: "Đã hủy",
 };
 
+const CANCELLATION_REASON_LABELS = {
+  out_of_stock: "Hết hàng",
+  defective_product: "Hàng lỗi",
+  weather_incident: "Sự cố thời tiết",
+  no_carrier: "Không có người vận chuyển",
+  customer_return: "Khách hàng hoàn trả",
+  customer_cancelled: "Khách hàng chủ động hủy",
+  payment_failed: "Thanh toán không thành công",
+};
+
 const PAYMENT_STATUS_CONFIG = {
   pending: {
     label: "Chưa thanh toán",
@@ -70,6 +80,10 @@ const PAYMENT_STATUS_CONFIG = {
   failed: {
     label: "Thanh toán lỗi",
     className: "border-red-200 bg-red-50 text-red-700 hover:bg-red-50",
+  },
+  refunded: {
+    label: "Đã hoàn vào ví",
+    className: "border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-50",
   },
 };
 
@@ -139,6 +153,9 @@ function ManageOrder() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [cancelOrderTarget, setCancelOrderTarget] = useState(null);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
   const [orderPage, setOrderPage] = useState(1);
 
   // === FETCH DATA ===
@@ -164,9 +181,10 @@ function ManageOrder() {
   }, [fetchOrders]);
 
   // Kiểm tra quyền truy cập SAU khi đã khai báo đủ hooks
-  if (user?.role?.toLowerCase() !== "business manager") {
+  if (!["business manager", "content manager"].includes(user?.role?.toLowerCase())) {
     return <Navigate to="/unauthorized" replace />;
   }
+  const isBusinessManager = user?.role?.toLowerCase() === "business manager";
 
 
 
@@ -194,30 +212,38 @@ function ManageOrder() {
    * - Nếu chưa thanh toán: hủy ngay
    * @param {Object} order - Đối tượng đơn hàng
    */
-  const handleCancelPendingOrder = async (order) => {
-    const orderId = order._id || order.id;
+  const handleCancelPendingOrder = (order) => {
+    setCancelOrderTarget(order);
+    setCancellationReason("");
+  };
 
-    if (order.paymentStatus === "paid") {
-      // Đơn đã thanh toán → cần xác nhận hoàn tiền trước khi hủy
-      const confirmed = window.confirm(
-        `Đơn hàng "${order.orderCode}" đã được thanh toán.\n\nBạn đã xác nhận hoàn tiền cho khách hàng chưa?\n\nNhấn OK để xác nhận hủy đơn và hoàn tiền.`
-      );
-      if (!confirmed) return;
-    } else {
-      // Đơn chưa thanh toán → hủy ngay không cần hoàn tiền
-      const confirmed = window.confirm(
-        `Bạn có chắc chắn muốn hủy đơn hàng "${order.orderCode}" không?`
-      );
-      if (!confirmed) return;
+  const handleConfirmCancellation = async () => {
+    if (!cancelOrderTarget || !cancellationReason) {
+      toast.error("Vui lòng chọn lý do hủy đơn hàng.");
+      return;
     }
 
+    const orderId = cancelOrderTarget._id || cancelOrderTarget.id;
     try {
-      await updateOrder(orderId, { status: "cancelled" });
-      toast.success("Đã hủy đơn hàng thành công!");
-      fetchOrders();
+      setIsCancelling(true);
+      const response = await updateOrder(orderId, {
+        status: "cancelled",
+        cancellationReason,
+      });
+      const refundedAmount = Number(response.data?.data?.order?.refundedAmount || 0);
+      toast.success(
+        refundedAmount > 0
+          ? `Đã hủy đơn và hoàn ${formatVND(refundedAmount)} vào ví khách hàng.`
+          : "Đã hủy đơn hàng thành công!"
+      );
+      setCancelOrderTarget(null);
+      setCancellationReason("");
+      await fetchOrders();
     } catch (err) {
       console.error("Lỗi hủy đơn hàng:", err);
       toast.error(err.response?.data?.message || err.message || "Hủy đơn hàng thất bại.");
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -234,7 +260,10 @@ function ManageOrder() {
     if (!confirmed) return;
 
     try {
-      await updateOrder(orderId, { status: "cancelled" });
+      await updateOrder(orderId, {
+        status: "cancelled",
+        cancellationReason: "customer_return",
+      });
       toast.success("Đã xác nhận hoàn trả và hủy đơn hàng!");
       fetchOrders();
     } catch (err) {
@@ -301,6 +330,66 @@ function ManageOrder() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
+      <Dialog
+        open={Boolean(cancelOrderTarget)}
+        onOpenChange={(open) => {
+          if (!open && !isCancelling) {
+            setCancelOrderTarget(null);
+            setCancellationReason("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Chọn lý do hủy đơn</DialogTitle>
+            <DialogDescription>
+              Đơn hàng {cancelOrderTarget?.orderCode}. Lý do này sẽ được hiển thị
+              cho khách hàng.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <label className="text-sm font-medium">Lý do hủy đơn</label>
+            <Select value={cancellationReason} onValueChange={setCancellationReason}>
+              <SelectTrigger>
+                <SelectValue placeholder="Chọn một lý do" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="out_of_stock">Hết hàng</SelectItem>
+                <SelectItem value="defective_product">Hàng lỗi</SelectItem>
+                <SelectItem value="weather_incident">Sự cố thời tiết</SelectItem>
+                <SelectItem value="no_carrier">Không có người vận chuyển</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {cancelOrderTarget?.paymentMethod === "BANK" &&
+              cancelOrderTarget?.paymentStatus === "paid" && (
+                <p className="rounded-lg bg-violet-50 p-3 text-sm text-violet-700">
+                  Đơn đã thanh toán qua VNPay. Toàn bộ tiền sẽ tự động được hoàn
+                  vào ví của khách hàng.
+                </p>
+              )}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              disabled={isCancelling}
+              onClick={() => setCancelOrderTarget(null)}
+            >
+              Đóng
+            </Button>
+            <Button
+              className="bg-rose-600 text-white hover:bg-rose-700"
+              disabled={!cancellationReason || isCancelling}
+              onClick={handleConfirmCancellation}
+            >
+              {isCancelling ? "Đang hủy..." : "Xác nhận hủy đơn"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={Boolean(selectedOrder)} onOpenChange={(open) => !open && setSelectedOrder(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
           {selectedOrder && (
@@ -382,6 +471,15 @@ function ManageOrder() {
                       <span className="font-semibold">Tổng thanh toán</span>
                       <span className="text-xl font-bold text-primary">{formatVND(selectedOrder.total || 0)}</span>
                     </div>
+                    {selectedOrder.cancellationReason && (
+                      <div className="rounded-lg border border-rose-100 bg-rose-50 p-3">
+                        <span className="text-muted-foreground">Lý do hủy: </span>
+                        <span className="font-semibold text-rose-700">
+                          {CANCELLATION_REASON_LABELS[selectedOrder.cancellationReason] ||
+                            selectedOrder.cancellationReason}
+                        </span>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -621,14 +719,16 @@ function ManageOrder() {
                         {/* pending → Đóng hàng hoặc Hủy */}
                         {order.status === "pending" && (
                           <>
-                            <Button
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all duration-200"
-                              onClick={() => handleUpdateStatus(order._id || order.id, "packing")}
-                            >
-                              <Package className="mr-1.5 h-3.5 w-3.5" />
-                              Đóng hàng
-                            </Button>
+                            {isBusinessManager && (
+                              <Button
+                                size="sm"
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all duration-200"
+                                onClick={() => handleUpdateStatus(order._id || order.id, "packing")}
+                              >
+                                <Package className="mr-1.5 h-3.5 w-3.5" />
+                                Đóng hàng
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               variant="outline"
@@ -642,7 +742,7 @@ function ManageOrder() {
                         )}
 
                         {/* packing → Gửi hàng */}
-                        {order.status === "packing" && (
+                        {isBusinessManager && order.status === "packing" && (
                           <Button
                             size="sm"
                             className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm transition-all duration-200"
@@ -654,7 +754,7 @@ function ManageOrder() {
                         )}
 
                         {/* returning → Xác nhận hoàn trả */}
-                        {order.status === "returning" && (
+                        {isBusinessManager && order.status === "returning" && (
                           <Button
                             size="sm"
                             variant="outline"

@@ -29,7 +29,7 @@ function buildPostPayload(req) {
 async function createPost(req, res, next) {
   try {
     const post = await postService.createPost(buildPostPayload(req), req.user);
-    return apiResponse.success(res, 'Tao bai viet thanh cong, dang cho duyet', post, 201);
+    return apiResponse.success(res, 'Tạo bài viết thành công, đang chờ duyệt', post, 201);
   } catch (error) {
     return next(error);
   }
@@ -44,7 +44,7 @@ async function createPost(req, res, next) {
 async function updatePost(req, res, next) {
   try {
     const post = await postService.updatePost(req.params.id, buildPostPayload(req), req.user);
-    return apiResponse.success(res, 'Cap nhat bai viet thanh cong, dang cho duyet', post);
+    return apiResponse.success(res, 'Cập nhật bài viết thành công, đang chờ duyệt', post);
   } catch (error) {
     return next(error);
   }
@@ -59,7 +59,7 @@ async function updatePost(req, res, next) {
 async function deletePost(req, res, next) {
   try {
     const post = await postService.deletePost(req.params.id, req.user);
-    return apiResponse.success(res, 'Xoa bai viet thanh cong', post);
+    return apiResponse.success(res, 'Xóa bài viết thành công', post);
   } catch (error) {
     return next(error);
   }
@@ -68,7 +68,7 @@ async function deletePost(req, res, next) {
 async function restorePost(req, res, next) {
   try {
     const post = await reportService.restorePost(req.params.id);
-    return apiResponse.success(res, 'Khoi phuc bai viet thanh cong', post);
+    return apiResponse.success(res, 'Khôi phục bài viết thành công', post);
   } catch (error) {
     return next(error);
   }
@@ -83,7 +83,7 @@ async function restorePost(req, res, next) {
 async function getMyPosts(req, res, next) {
   try {
     const posts = await postService.getMyPosts(req.user, req.query);
-    return apiResponse.success(res, 'Lay danh sach bai viet cua toi thanh cong', posts);
+    return apiResponse.success(res, 'Lấy danh sách bài viết của tôi thành công', posts);
   } catch (error) {
     return next(error);
   }
@@ -98,7 +98,7 @@ async function getMyPosts(req, res, next) {
 async function getAllPosts(req, res, next) {
   try {
     const posts = await postService.getAllPosts(req.query);
-    return apiResponse.success(res, 'Lay danh sach bai viet thanh cong', posts);
+    return apiResponse.success(res, 'Lấy danh sách bài viết thành công', posts);
   } catch (error) {
     return next(error);
   }
@@ -113,7 +113,7 @@ async function getAllPosts(req, res, next) {
 async function getFeaturedPosts(req, res, next) {
   try {
     const posts = await postService.getFeaturedPosts(req.query);
-    return apiResponse.success(res, 'Lay danh sach bai viet noi bat thanh cong', posts);
+    return apiResponse.success(res, 'Lấy danh sách bài viết nổi bật thành công', posts);
   } catch (error) {
     return next(error);
   }
@@ -128,7 +128,7 @@ async function getFeaturedPosts(req, res, next) {
 async function getPostById(req, res, next) {
   try {
     const post = await postService.getPostById(req.params.id);
-    return apiResponse.success(res, 'Lay chi tiet bai viet thanh cong', post);
+    return apiResponse.success(res, 'Lấy chi tiết bài viết thành công', post);
   } catch (error) {
     return next(error);
   }

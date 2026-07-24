@@ -51,7 +51,7 @@ function getCommentAuthor(comment) {
     author.name ||
     comment.fullName ||
     comment.name ||
-    "Nguoi dung Plantify";
+    "Người dùng Plantify";
   return {
     name,
     avatarUrl: author.avatarUrl || comment.avatarUrl || "",
@@ -139,7 +139,7 @@ function ProductReviews({ productId, ratingAverage = 0, ratingCount = 0, onRatin
 
     const trimmedContent = content.trim();
     if (!trimmedContent) {
-      setSubmitError("Vui long nhap noi dung danh gia");
+      setSubmitError("Vui lòng nhập nội dung đánh giá");
       return;
     }
     if (!user || !productId) return;
@@ -159,7 +159,7 @@ function ProductReviews({ productId, ratingAverage = 0, ratingCount = 0, onRatin
       onRatingUpdate?.();
     } catch (error) {
       setSubmitError(
-        error.response?.data?.message || error.message || "Khong the gui danh gia"
+        error.response?.data?.message || error.message || "Không thể gửi đánh giá"
       );
     } finally {
       setSubmitting(false);

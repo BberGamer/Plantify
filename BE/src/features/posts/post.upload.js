@@ -5,7 +5,7 @@ const storage = multer.memoryStorage();
 
 function imageFileFilter(req, file, cb) {
   if (!file.mimetype?.startsWith('image/')) {
-    const error = new Error('Chi ho tro upload file anh');
+    const error = new Error('Chỉ hỗ trợ tải lên tệp ảnh');
     error.statusCode = 400;
     cb(error);
     return;

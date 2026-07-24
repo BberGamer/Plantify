@@ -104,7 +104,7 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'failed'],
+      enum: ['pending', 'paid', 'failed', 'refunded'],
       default: 'pending',
     },
     status: {
@@ -129,6 +129,25 @@ const orderSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    walletAmount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    externalAmount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    refundedAmount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    refundedAt: {
+      type: Date,
+      default: null,
+    },
     // Lưu vết cổng thanh toán VNPay
     vnpayTransactionNo: {
       type: String,
@@ -145,6 +164,19 @@ const orderSchema = new mongoose.Schema(
     },
     cancelledAt: {
       type: Date,
+      default: null,
+    },
+    cancellationReason: {
+      type: String,
+      enum: [
+        'out_of_stock',
+        'defective_product',
+        'weather_incident',
+        'no_carrier',
+        'customer_return',
+        'customer_cancelled',
+        'payment_failed',
+      ],
       default: null,
     },
   },
