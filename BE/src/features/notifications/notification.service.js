@@ -46,8 +46,9 @@ async function createNotification(payload) {
  * @param {Object} order - Đơn hàng (phải có _id, userId, orderCode)
  * @param {string} newStatus - Trạng thái mới
  * @param {string} actorId - ID người thực hiện thay đổi (BM)
+ * @param {number} [refundedAmount=0] - Số tiền được hoàn vào ví (nếu có)
  */
-async function createOrderNotification(order, newStatus, actorId) {
+async function createOrderNotification(order, newStatus, actorId, refundedAmount = 0) {
   if (!order || !order.userId || !actorId) {
     return null;
   }
@@ -56,9 +57,20 @@ async function createOrderNotification(order, newStatus, actorId) {
   const reason = newStatus === 'cancelled'
     ? CANCELLATION_REASON_LABELS[order.cancellationReason]
     : null;
-  const message = reason
-    ? `Đơn hàng ${order.orderCode} đã bị hủy. Lý do: ${reason}`
-    : `Đơn hàng ${order.orderCode} đã chuyển sang trạng thái: ${statusLabel}`;
+
+  let message;
+  if (reason) {
+    message = `Đơn hàng ${order.orderCode} đã bị hủy. Lý do: ${reason}`;
+    if (refundedAmount > 0) {
+      const formattedAmount = new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+      }).format(refundedAmount);
+      message += `. Đã hoàn ${formattedAmount} vào ví của bạn.`;
+    }
+  } else {
+    message = `Đơn hàng ${order.orderCode} đã chuyển sang trạng thái: ${statusLabel}`;
+  }
 
   return createNotification({
     recipientId: order.userId,

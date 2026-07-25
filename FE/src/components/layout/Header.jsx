@@ -16,6 +16,7 @@ import {
   MessageCircle,
   AlertTriangle,
   CheckCheck,
+  Wallet,
 } from "lucide-react";
 import {
   NavigationMenu,
@@ -60,7 +61,19 @@ function formatRelativeTime(dateString) {
   return date.toLocaleDateString("vi-VN");
 }
 
-function getNotificationIcon(type) {
+function isRefundNotification(notification) {
+  return (
+    notification.type === "order_status_updated" &&
+    typeof notification.message === "string" &&
+    notification.message.includes("Hoàn") ||
+    (typeof notification.message === "string" && notification.message.includes("hoàn"))
+  );
+}
+
+function getNotificationIcon(type, notification) {
+  if (type === "order_status_updated" && isRefundNotification(notification)) {
+    return <Wallet className="h-4 w-4 text-violet-500" />;
+  }
   switch (type) {
     case "order_status_updated":
       return <Package className="h-4 w-4 text-blue-500" />;
@@ -75,7 +88,9 @@ function getNotificationIcon(type) {
 
 function formatNotificationMessage(notification) {
   if (notification.type === "order_status_updated") {
-    return notification.message || "Đơn hàng của bạn đã được cập nhật trạng thái";
+    const msg = notification.message || "Đơn hàng của bạn đã được cập nhật trạng thái";
+    // Highlight số tiền hoàn trong message (dạng: XXX.XXX ₫ hoặc tương tự)
+    return msg;
   }
 
   if (notification.type === "post_commented") {
@@ -302,12 +317,16 @@ function Header() {
                             key={notification._id}
                             className={cn(
                               "flex cursor-pointer items-start gap-3 border-b border-border/50 px-4 py-3 transition-colors hover:bg-accent/50 last:border-b-0",
-                              !notification.readAt && "bg-primary/[0.03]"
+                              !notification.readAt && "bg-primary/[0.03]",
+                              isRefundNotification(notification) && !notification.readAt && "bg-violet-50/60"
                             )}
                             onClick={() => handleOpenNotification(notification)}
                           >
-                            <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted/80">
-                              {getNotificationIcon(notification.type)}
+                            <div className={cn(
+                              "mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full",
+                              isRefundNotification(notification) ? "bg-violet-100" : "bg-muted/80"
+                            )}>
+                              {getNotificationIcon(notification.type, notification)}
                             </div>
                             <div className="min-w-0 flex-1 space-y-0.5">
                               <p className={cn(
@@ -316,6 +335,12 @@ function Header() {
                               )}>
                                 {formatNotificationMessage(notification)}
                               </p>
+                              {isRefundNotification(notification) && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
+                                  <Wallet className="h-2.5 w-2.5" />
+                                  Tiền đã hoàn vào ví
+                                </span>
+                              )}
                               <div className="flex items-center gap-2">
                                 <p className="line-clamp-1 text-xs text-muted-foreground">
                                   {getNotificationSubtext(notification)}
@@ -327,7 +352,10 @@ function Header() {
                               </div>
                             </div>
                             {!notification.readAt && (
-                              <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
+                              <div className={cn(
+                                "mt-2 h-2 w-2 flex-shrink-0 rounded-full",
+                                isRefundNotification(notification) ? "bg-violet-500" : "bg-primary"
+                              )} />
                             )}
                           </div>
                         ))
