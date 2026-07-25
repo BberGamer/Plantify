@@ -5,7 +5,7 @@ const Post = require('../posts/post.model');
 const Product = require('../products/product.model');
 const { createNotification } = require('../notifications/notification.service');
 
-function ensureObjectId(id, message = 'ID khong hop le') {
+function ensureObjectId(id, message = 'ID không hợp lệ') {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const error = new Error(message);
     error.statusCode = 400;
@@ -20,7 +20,7 @@ function getCurrentUserId(currentUser = {}) {
 function ensureCurrentUserId(currentUser) {
   const userId = getCurrentUserId(currentUser);
   if (!mongoose.Types.ObjectId.isValid(userId)) {
-    const error = new Error('Nguoi dung chua duoc xac thuc hop le');
+    const error = new Error('Người dùng chưa được xác thực hợp lệ');
     error.statusCode = 401;
     throw error;
   }
@@ -31,7 +31,7 @@ function ensureCurrentUserId(currentUser) {
 function validateCommentPayload(payload = {}) {
   const content = typeof payload.content === 'string' ? payload.content.trim() : '';
   if (!content) {
-    const error = new Error('Noi dung binh luan la bat buoc');
+    const error = new Error('Nội dung bình luận là bắt buộc');
     error.statusCode = 400;
     throw error;
   }
@@ -42,7 +42,7 @@ function validateCommentPayload(payload = {}) {
 
   const rating = Number(payload.rating);
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    const error = new Error('Danh gia phai la so nguyen tu 1 den 5');
+    const error = new Error('Đánh giá phải là số nguyên từ 1 đến 5');
     error.statusCode = 400;
     throw error;
   }
@@ -73,7 +73,7 @@ async function getAllComments(filters = {}) {
   const query = {};
 
   if (filters.postId) {
-    ensureObjectId(filters.postId, 'Post ID khong hop le');
+    ensureObjectId(filters.postId, 'Post ID không hợp lệ');
     query.postId = filters.postId;
   }
 
@@ -84,7 +84,7 @@ async function getAllComments(filters = {}) {
 }
 
 async function getCommentsByPostId(postId) {
-  ensureObjectId(postId, 'Post ID khong hop le');
+  ensureObjectId(postId, 'Post ID không hợp lệ');
 
   return Comment.find({ postId })
     .populate('userId', 'fullName email')
@@ -94,12 +94,12 @@ async function getCommentsByPostId(postId) {
 
 async function createComment(payload = {}, currentUser = {}) {
   const userId = ensureCurrentUserId(currentUser);
-  ensureObjectId(payload.postId, 'Post ID khong hop le');
+  ensureObjectId(payload.postId, 'Post ID không hợp lệ');
   const { content, rating } = validateCommentPayload(payload);
 
   const post = await Post.findById(payload.postId);
   if (!post) {
-    const error = new Error('Khong tim thay bai viet');
+    const error = new Error('Không tìm thấy bài viết');
     error.statusCode = 404;
     throw error;
   }
@@ -127,7 +127,7 @@ async function createComment(payload = {}, currentUser = {}) {
 }
 
 async function getCommentsByProductId(productId) {
-  ensureObjectId(productId, 'Product ID khong hop le');
+  ensureObjectId(productId, 'Product ID không hợp lệ');
 
   return Comment.find({ productId })
     .populate('userId', 'fullName email')
@@ -156,12 +156,12 @@ async function syncProductRating(productId) {
 
 async function createProductComment(payload = {}, currentUser = {}) {
   const userId = ensureCurrentUserId(currentUser);
-  ensureObjectId(payload.productId, 'Product ID khong hop le');
+  ensureObjectId(payload.productId, 'Product ID không hợp lệ');
   const { content, rating } = validateCommentPayload(payload);
 
   const product = await Product.findById(payload.productId);
   if (!product) {
-    const error = new Error('Khong tim thay san pham');
+    const error = new Error('Không tìm thấy sản phẩm');
     error.statusCode = 404;
     throw error;
   }

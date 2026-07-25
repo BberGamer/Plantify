@@ -24,7 +24,7 @@ function parsePositiveInteger(value, fieldName, fallback, maxValue) {
   if (value === undefined) return fallback;
   const parsedValue = Number(value);
   if (!Number.isInteger(parsedValue) || parsedValue < 1) {
-    throw createHttpError(`${fieldName} phai la so nguyen duong`, 400);
+    throw createHttpError(`${fieldName} phải là số nguyên dương`, 400);
   }
   return Math.min(parsedValue, maxValue);
 }
@@ -32,16 +32,16 @@ function parsePositiveInteger(value, fieldName, fallback, maxValue) {
 function parseNonNegativeNumber(value, fieldName, maxValue = Number.MAX_SAFE_INTEGER) {
   const parsedValue = Number(value);
   if (!Number.isFinite(parsedValue) || parsedValue < 0 || parsedValue > maxValue) {
-    throw createHttpError(`${fieldName} khong hop le`, 400);
+    throw createHttpError(`${fieldName} không hợp lệ`, 400);
   }
   return parsedValue;
 }
 
 async function ensureCategoryExists(categoryId) {
-  ensureObjectId(categoryId, 'Category ID khong hop le');
+  ensureObjectId(categoryId, 'Category ID không hợp lệ');
   const category = await ProductCategory.findById(categoryId).select('_id').lean();
   if (!category) {
-    throw createHttpError('Khong tim thay danh muc', 404);
+    throw createHttpError('Không tìm thấy danh mục', 404);
   }
 }
 
@@ -104,10 +104,10 @@ async function attachSoldCounts(products) {
  * @returns {Promise<Object>} Product object
  */
 async function getProductById(id) {
-  ensureObjectId(id, 'Product ID khong hop le');
+  ensureObjectId(id, 'Product ID không hợp lệ');
   const product = await Product.findById(id).populate('categoryId').lean();
   if (!product) {
-    throw createHttpError('Product not found', 404);
+    throw createHttpError('Không tìm thấy sản phẩm', 404);
   }
   return attachSoldCounts(product);
 }
@@ -162,7 +162,7 @@ async function getAllProducts({ search, category, minPrice, maxPrice, minRating,
     if (minPrice !== undefined) query.price.$gte = parseNonNegativeNumber(minPrice, 'minPrice');
     if (maxPrice !== undefined) query.price.$lte = parseNonNegativeNumber(maxPrice, 'maxPrice');
     if (query.price.$gte !== undefined && query.price.$lte !== undefined && query.price.$gte > query.price.$lte) {
-      throw createHttpError('Khoang gia khong hop le', 400);
+      throw createHttpError('Khoảng giá không hợp lệ', 400);
     }
   }
 
@@ -218,7 +218,7 @@ async function getAllCategories() {
  */
 async function createCategory(data) {
   if (!data.name || !data.name.trim()) {
-    throw new Error('Category name is required');
+    throw new Error('Tên danh mục là bắt buộc');
   }
 
   const trimmedName = data.name.trim();
@@ -235,11 +235,11 @@ async function createCategory(data) {
  */
 async function updateCategory(id, data) {
   if (!id) {
-    throw new Error('Category ID is required');
+    throw new Error('ID danh mục là bắt buộc');
   }
 
   if (data.name !== undefined && !data.name.trim()) {
-    throw new Error('Category name cannot be empty');
+    throw new Error('Tên danh mục không được để trống');
   }
 
   const updateData = {};
@@ -256,7 +256,7 @@ async function updateCategory(id, data) {
  */
 async function deleteCategory(id) {
   if (!id) {
-    throw new Error('Category ID is required');
+    throw new Error('ID danh mục là bắt buộc');
   }
 
   return ProductCategory.findByIdAndDelete(id);
@@ -267,15 +267,15 @@ async function deleteCategory(id) {
  */
 async function createProduct(data = {}) {
   if (!data.name || !data.name.trim()) {
-    throw new Error('Product name is required');
+    throw new Error('Tên sản phẩm là bắt buộc');
   }
 
   if (!data.categoryId || !String(data.categoryId).trim()) {
-    throw new Error('Category ID is required');
+    throw new Error('ID danh mục là bắt buộc');
   }
 
   if (data.price === undefined || Number.isNaN(Number(data.price))) {
-    throw new Error('Product price is required');
+    throw new Error('Giá sản phẩm là bắt buộc');
   }
 
   await ensureCategoryExists(String(data.categoryId).trim());
@@ -301,14 +301,14 @@ async function createProduct(data = {}) {
  * Cập nhật sản phẩm
  */
 async function updateProduct(id, data = {}) {
-  ensureObjectId(id, 'Product ID khong hop le');
+  ensureObjectId(id, 'Product ID không hợp lệ');
 
   if (data.name !== undefined && !data.name.trim()) {
-    throw new Error('Product name cannot be empty');
+    throw new Error('Tên sản phẩm không được để trống');
   }
 
   if (data.categoryId !== undefined && !String(data.categoryId).trim()) {
-    throw new Error('Category ID cannot be empty');
+    throw new Error('ID danh mục không được để trống');
   }
   if (data.categoryId !== undefined) {
     await ensureCategoryExists(String(data.categoryId).trim());
@@ -336,7 +336,7 @@ async function updateProduct(id, data = {}) {
  * Xóa sản phẩm
  */
 async function deleteProduct(id) {
-  ensureObjectId(id, 'Product ID khong hop le');
+  ensureObjectId(id, 'Product ID không hợp lệ');
 
   return Product.findByIdAndDelete(id);
 }

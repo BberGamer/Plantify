@@ -22,7 +22,7 @@ class GroqProvider extends AIProvider {
 
   validateConfig() {
     if (!this.apiKey) {
-      const error = new Error('Chua cau hinh GROQ_API_KEY');
+      const error = new Error('Chưa cấu hình GROQ_API_KEY');
       error.statusCode = 500;
       throw error;
     }
@@ -37,7 +37,7 @@ class GroqProvider extends AIProvider {
     const normalizedPrompt = prompt?.trim();
 
     if (!normalizedPrompt) {
-      const error = new Error('Vui long nhap prompt');
+      const error = new Error('Vui lòng nhập nội dung yêu cầu');
       error.statusCode = 400;
       throw error;
     }
@@ -88,18 +88,18 @@ class GroqProvider extends AIProvider {
       }
 
       if (error?.response?.status === 429) {
-        const err = new Error('Da vuot qua gioi han request Groq. Vui long thu lai sau.');
+        const err = new Error('Đã vượt quá giới hạn yêu cầu Groq. Vui lòng thử lại sau.');
         err.statusCode = 429;
         throw err;
       }
 
       if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
-        const err = new Error('Groq request bi timeout. Vui long thu lai.');
+        const err = new Error('Yêu cầu Groq đã hết thời gian chờ. Vui lòng thử lại.');
         err.statusCode = 504;
         throw err;
       }
 
-      const err = new Error('AI service tam thoi khong kha dung.');
+      const err = new Error('Dịch vụ AI tạm thời không khả dụng.');
       err.statusCode = 500;
       throw err;
     }

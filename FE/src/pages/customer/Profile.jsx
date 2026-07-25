@@ -6,6 +6,7 @@ import { useMyFavorites } from "@/features/favorites/hooks";
 import { useMyOrders } from "@/features/orders/hooks";
 import { removeFavorite } from "@/features/favorites/api";
 import { customerUpdateOrder } from "@/features/orders/api";
+import { getMyWallet } from "@/features/wallet/api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
+  Wallet,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useState, useEffect } from "react";
@@ -102,6 +104,20 @@ const PAYMENT_STATUS_CONFIG = {
     label: "Thanh toán lỗi",
     className: "bg-red-50 text-red-700 border-red-200",
   },
+  refunded: {
+    label: "Đã hoàn vào ví",
+    className: "bg-violet-50 text-violet-700 border-violet-200",
+  },
+};
+
+const CANCELLATION_REASON_LABELS = {
+  out_of_stock: "Hết hàng",
+  defective_product: "Hàng lỗi",
+  weather_incident: "Sự cố thời tiết",
+  no_carrier: "Không có người vận chuyển",
+  customer_return: "Khách hàng hoàn trả",
+  customer_cancelled: "Khách hàng chủ động hủy",
+  payment_failed: "Thanh toán không thành công",
 };
 
 /** Format giá tiền sang VND */
@@ -110,6 +126,13 @@ function formatVND(amount) {
     style: "currency",
     currency: "VND",
   }).format(amount);
+}
+
+function getRemainingPayment(order) {
+  return Math.max(
+    0,
+    Number(order?.total || 0) - Number(order?.walletAmount || 0)
+  );
 }
 
 /** Format ngày đặt hàng đầy đủ */
@@ -192,6 +215,7 @@ function Profile() {
   const [activeTab, setActiveTab] = useState(requestedTab === "orders" ? "orders" : "profile");
   const { favorites, loading: favLoading, refetch: refetchFavorites } = useMyFavorites();
   const { orders, loading: ordersLoading, refetch: refetchOrders } = useMyOrders();
+  const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
 
   // === Pagination cho cây yêu thích ===
   const [favPage, setFavPage] = useState(1);
@@ -237,10 +261,16 @@ function Profile() {
    * @param {'succeeded'|'returning'} action - Hành động
    */
   const handleCustomerAction = async (orderId, action) => {
-    const actionLabel = action === 'succeeded' ? 'Đã nhận hàng' : 'Yêu cầu hoàn trả';
+    const actionLabel = action === 'succeeded'
+      ? 'Đã nhận hàng'
+      : action === 'cancelled'
+        ? 'Hủy đơn hàng'
+        : 'Yêu cầu hoàn trả';
     const confirmMsg = action === 'succeeded'
       ? 'Bạn xác nhận đã nhận được hàng?'
-      : 'Bạn có muốn yêu cầu hoàn trả đơn hàng này không?';
+      : action === 'cancelled'
+        ? 'Bạn có chắc muốn hủy đơn hàng này? Tiền đã thanh toán sẽ được hoàn vào ví.'
+        : 'Bạn có muốn yêu cầu hoàn trả đơn hàng này không?';
 
     if (!window.confirm(confirmMsg)) return;
 
@@ -248,6 +278,8 @@ function Profile() {
       await customerUpdateOrder(orderId, action);
       toast.success(`${actionLabel} thành công!`);
       refetchOrders();
+      const { data } = await getMyWallet();
+      setWallet(data?.data || { balance: 0, transactions: [] });
     } catch (err) {
       console.error('Lỗi customer action:', err);
       toast.error(err.response?.data?.message || err.message || 'Thao tác thất bại.');
@@ -272,6 +304,13 @@ function Profile() {
     handleSavePassword,
   } = useProfile();
 
+  useEffect(() => {
+    if (user?.role !== "customer") return;
+    getMyWallet()
+      .then(({ data }) => setWallet(data?.data || { balance: 0, transactions: [] }))
+      .catch(() => setWallet({ balance: 0, transactions: [] }));
+  }, [user?.role]);
+
   // Class input tùy trạng thái chỉnh sửa
   const inputClass = (editing) =>
     editing
@@ -286,6 +325,21 @@ function Profile() {
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="profile-title">Tài khoản của tôi</h1>
         </motion.div>
+
+        {user?.role === "customer" && (
+          <Card className="mb-6 border-emerald-200 bg-gradient-to-r from-emerald-600 to-green-500 text-white shadow-lg">
+            <CardContent className="flex items-center justify-between p-6">
+              <div>
+                <p className="text-sm font-medium text-emerald-50">Số dư ví Plantify</p>
+                <p className="mt-1 text-3xl font-bold">{formatVND(wallet.balance)}</p>
+                <p className="mt-1 text-xs text-emerald-50">
+                  Tiền hoàn từ đơn hủy có thể dùng cho lần mua tiếp theo
+                </p>
+              </div>
+              <Wallet className="h-12 w-12 text-white/80" />
+            </CardContent>
+          </Card>
+        )}
 
         {/* === Profile Header Card === */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -632,11 +686,38 @@ function Profile() {
                                     </span>
                                   </div>
                                 )}
+                                {order.walletAmount > 0 && (
+                                  <div className="profile-order-fee-row text-emerald-700">
+                                    <span>Đã dùng từ ví:</span>
+                                    <span className="profile-order-fee-val">
+                                      {formatVND(order.walletAmount)}
+                                    </span>
+                                  </div>
+                                )}
+                                {order.refundedAmount > 0 && (
+                                  <div className="profile-order-fee-row text-violet-700">
+                                    <span>Đã hoàn vào ví:</span>
+                                    <span className="profile-order-fee-val">
+                                      {formatVND(order.refundedAmount)}
+                                    </span>
+                                  </div>
+                                )}
+                                {order.cancellationReason && (
+                                  <div className="profile-order-fee-row text-rose-700">
+                                    <span>Lý do hủy:</span>
+                                    <span className="profile-order-fee-val">
+                                      {CANCELLATION_REASON_LABELS[order.cancellationReason] ||
+                                        order.cancellationReason}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                               <div className="profile-order-grand-total-row">
-                                <span className="profile-order-total-label">Thành tiền:</span>
+                                <span className="profile-order-total-label">
+                                  Thành tiền phải thanh toán:
+                                </span>
                                 <span className="profile-order-total-amount">
-                                  {formatVND(order.total)}
+                                  {formatVND(getRemainingPayment(order))}
                                 </span>
                               </div>
                             </div>
@@ -659,6 +740,18 @@ function Profile() {
                                 onClick={() => handleCustomerAction(order._id || order.id, 'returning')}
                               >
                                 ↩ Yêu cầu hoàn trả
+                              </Button>
+                            </div>
+                          )}
+                          {order.status === 'pending' && (
+                            <div className="profile-order-actions">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                                onClick={() => handleCustomerAction(order._id || order.id, 'cancelled')}
+                              >
+                                Hủy đơn hàng
                               </Button>
                             </div>
                           )}

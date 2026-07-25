@@ -19,7 +19,7 @@ const createOrder = async (req, res) => {
     return created(res, 'Đặt hàng thành công', { order });
   } catch (err) {
     console.error('[Orders] Lỗi tạo đơn hàng COD:', err);
-    return error(res, 'Không thể tạo đơn hàng. Vui lòng thử lại.', 500);
+    return error(res, err.message || 'Không thể tạo đơn hàng. Vui lòng thử lại.', err.statusCode || 500);
   }
 };
 
@@ -30,6 +30,7 @@ const createOrder = async (req, res) => {
  * @returns {Object} { paymentUrl, orderCode }
  */
 const createVnpayPayment = async (req, res) => {
+  let order = null;
   try {
     const userId = req.user.id;
     const orderData = {
@@ -38,7 +39,16 @@ const createVnpayPayment = async (req, res) => {
     };
 
     // 1. Tạo đơn hàng trong DB (trạng thái: chờ thanh toán)
-    const order = await orderService.createOrder(userId, orderData);
+    order = await orderService.createOrder(userId, orderData);
+
+    if (order.externalAmount === 0) {
+      return success(res, 'Thanh toán đơn hàng bằng ví thành công', {
+        paymentUrl: null,
+        orderCode: order.orderCode,
+        order,
+        paidWithWallet: true,
+      });
+    }
 
     // 2. Lấy IP client (hỗ trợ cả proxy)
     let ipAddr =
@@ -57,10 +67,17 @@ const createVnpayPayment = async (req, res) => {
     return success(res, 'Tạo URL thanh toán VNPay thành công', {
       paymentUrl,
       orderCode: order.orderCode,
+      order,
+      paidWithWallet: false,
     });
   } catch (err) {
     console.error('[Orders] Lỗi tạo thanh toán VNPay:', err);
-    return error(res, 'Không thể tạo thanh toán VNPay. Vui lòng thử lại.', 500);
+    if (order) {
+      await orderService.cancelCreatedPayment(order).catch((refundError) => {
+        console.error('[Orders] Lỗi hoàn ví sau khi không tạo được URL VNPay:', refundError);
+      });
+    }
+    return error(res, err.message || 'Không thể tạo thanh toán VNPay. Vui lòng thử lại.', err.statusCode || 500);
   }
 };
 
@@ -153,10 +170,14 @@ const getAllOrders = async (req, res) => {
 const updateOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
-    const { status } = req.body;
+    const { status, cancellationReason } = req.body;
     const actorId = req.user.id;
 
-    const order = await orderService.updateOrder(orderId, { status }, actorId);
+    const order = await orderService.updateOrder(
+      orderId,
+      { status, cancellationReason },
+      actorId
+    );
     return success(res, 'Cập nhật đơn hàng thành công', { order });
   } catch (err) {
     console.error('[Orders] Lỗi cập nhật đơn hàng:', err);
@@ -182,8 +203,8 @@ const customerAction = async (req, res) => {
     const userId = req.user.id;
     const { action } = req.body;
 
-    if (!['succeeded', 'returning'].includes(action)) {
-      return error(res, 'Hành động không hợp lệ. Chỉ chấp nhận: succeeded, returning', 400);
+    if (!['succeeded', 'returning', 'cancelled'].includes(action)) {
+      return error(res, 'Hành động không hợp lệ. Chỉ chấp nhận: succeeded, returning, cancelled', 400);
     }
 
     const order = await orderService.customerActionOrder(orderId, userId, action);

@@ -75,5 +75,11 @@ const authorizeBusinessManager = (req, res, next) => {
   next();
 };
 
-module.exports = { authenticate, authorizeAdmin, authorizeContentManager, authorizeCustomer, authorizeBusinessManager };
+module.exports = {
+  authenticate,
+  authorizeAdmin,
+  authorizeContentManager,
+  authorizeCustomer,
+  authorizeBusinessManager,
+};
 

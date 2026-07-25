@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const Order = require('./order.model');
 const Cart = require('../cart/cart.model');
 const Product = require('../products/product.model');
+const walletService = require('../wallet/wallet.service');
 const { createOrderNotification } = require('../notifications/notification.service');
 
 // ========== HELPER FUNCTIONS ==========
@@ -231,6 +232,7 @@ async function createOrderFromProducts(userId, orderData) {
   const mappedItems = await buildOrderItemsFromProducts(orderData.items);
   const subtotal = mappedItems.reduce((total, item) => total + item.lineTotal, 0);
   const shippingFee = Number(orderData.shippingFee ?? 30000);
+  const total = subtotal + shippingFee;
 
   const order = new Order({
     userId,
@@ -240,7 +242,8 @@ async function createOrderFromProducts(userId, orderData) {
     paymentMethod: orderData.paymentMethod,
     subtotal,
     shippingFee,
-    total: subtotal + shippingFee,
+    total,
+    externalAmount: total,
   });
 
   if (orderData.paymentMethod === 'COD') {
@@ -250,21 +253,72 @@ async function createOrderFromProducts(userId, orderData) {
   await order.validate();
   await order.save();
 
-  if (orderData.paymentMethod === 'COD') {
-    try {
-      await applyOrderInventory(order);
-    } catch (error) {
-      await Order.deleteOne({ _id: order._id });
-      throw error;
+  try {
+    if (orderData.useWallet === true) {
+      order.walletAmount = await walletService.debitUpTo(userId, total, order);
+      order.externalAmount = total - order.walletAmount;
     }
 
-    await Cart.updateOne(
-      { userId },
-      { $pull: { items: { selected: true } } }
-    ).catch((err) => console.error('[Order Service] Loi khi xoa san pham gio hang COD:', err));
+    if (order.externalAmount === 0) {
+      order.paymentStatus = 'paid';
+      order.paidAt = new Date();
+    }
+
+    await order.save();
+
+    if (orderData.paymentMethod === 'COD' || order.externalAmount === 0) {
+      await applyOrderInventory(order);
+
+      await Cart.updateOne(
+        { userId },
+        { $pull: { items: { selected: true } } }
+      ).catch((err) => console.error('[Order Service] Lỗi khi xóa sản phẩm giỏ hàng:', err));
+    }
+  } catch (error) {
+    if (order.walletAmount > 0) {
+      await walletService.creditRefund(userId, order.walletAmount, order);
+    }
+    await Order.deleteOne({ _id: order._id });
+    throw error;
   }
 
   return Order.findById(order._id);
+}
+
+async function refundOrderToWallet(order) {
+  if (order.refundedAt) return order;
+
+  const refundAmount = order.paymentStatus === 'paid'
+    ? Number(order.total)
+    : Number(order.walletAmount || 0);
+
+  if (refundAmount > 0) {
+    await walletService.creditRefund(order.userId, refundAmount, order);
+  }
+
+  order.refundedAmount = refundAmount;
+  order.refundedAt = new Date();
+  if (order.paymentStatus === 'paid') order.paymentStatus = 'refunded';
+  await order.save();
+  return order;
+}
+
+async function cancelOrder(order, { paymentFailed = false } = {}) {
+  order.status = 'cancelled';
+  order.cancelledAt = new Date();
+  if (paymentFailed) order.cancellationReason = 'payment_failed';
+  await refundOrderToWallet(order);
+  if (paymentFailed && order.paymentStatus === 'pending') {
+    order.paymentStatus = 'failed';
+  }
+  await order.save();
+  await restoreOrderInventory(order);
+  return Order.findById(order._id);
+}
+
+async function cancelCreatedPayment(order) {
+  if (!order || order.status === 'cancelled') return order;
+  return cancelOrder(order, { paymentFailed: true });
 }
 
 /**
@@ -295,9 +349,9 @@ function createVnpayPaymentUrl(order, ipAddr) {
   vnp_Params['vnp_Locale'] = 'vn';
   vnp_Params['vnp_CurrCode'] = 'VND';
   vnp_Params['vnp_TxnRef'] = order.orderCode;
-  vnp_Params['vnp_OrderInfo'] = 'Thanh toan don hang ' + order.orderCode;
+  vnp_Params['vnp_OrderInfo'] = 'Thanh toán đơn hàng ' + order.orderCode;
   vnp_Params['vnp_OrderType'] = 'other';
-  vnp_Params['vnp_Amount'] = order.total * 100; // VNPay yêu cầu nhân 100
+  vnp_Params['vnp_Amount'] = order.externalAmount * 100;
   vnp_Params['vnp_ReturnUrl'] = returnUrl;
   vnp_Params['vnp_IpAddr'] = ipAddr;
   vnp_Params['vnp_CreateDate'] = createDate;
@@ -314,6 +368,7 @@ function createVnpayPaymentUrl(order, ipAddr) {
   console.log('[VNPay URL Builder] Inputs:', {
     orderCode: order.orderCode,
     total: order.total,
+    externalAmount: order.externalAmount,
     ipAddr
   });
   console.log('[VNPay URL Builder] signData:', signData);
@@ -351,7 +406,7 @@ async function markVnpayOrderPaid(order, params) {
   await Cart.updateOne(
     { userId: paidOrder.userId },
     { $pull: { items: { selected: true } } }
-  ).catch((err) => console.error('[Order Service] Loi khi xoa san pham gio hang sau thanh toan:', err));
+  ).catch((err) => console.error('[Order Service] Lỗi khi xóa sản phẩm giỏ hàng sau thanh toán:', err));
 
   return Order.findById(order._id);
 }
@@ -397,9 +452,18 @@ async function verifyVnpayReturn(vnpParams, userId) {
   }
 
   if (!mongoose.Types.ObjectId.isValid(userId) || String(order.userId) !== String(userId)) {
-    const error = new Error('Ban khong co quyen xem don hang nay');
+    const error = new Error('Bạn không có quyền xem đơn hàng này');
     error.statusCode = 403;
     throw error;
+  }
+
+  const returnedAmount = Number(params['vnp_Amount']) / 100;
+  const expectedAmount = Math.max(
+    0,
+    Number(order.total || 0) - Number(order.walletAmount || 0)
+  );
+  if (!Number.isFinite(returnedAmount) || returnedAmount !== expectedAmount) {
+    return { isValid: false, responseCode: '04', order: null };
   }
 
   // 5. Nếu đơn đã thanh toán rồi thì trả về luôn (tránh xử lý trùng)
@@ -421,10 +485,7 @@ async function verifyVnpayReturn(vnpParams, userId) {
     await order.save();
   } else {
     // Thanh toán thất bại hoặc bị hủy -> Xóa đơn hàng khỏi DB để không lưu vết
-    await Order.updateOne(
-      { _id: order._id, paymentStatus: 'pending' },
-      { $set: { paymentStatus: 'failed', status: 'cancelled', cancelledAt: new Date() } }
-    );
+    await cancelOrder(order, { paymentFailed: true });
     return { isValid: true, responseCode, order: null };
   }
 
@@ -469,7 +530,11 @@ async function handleVnpayIPN(vnpParams) {
 
   // 4. Kiểm tra số tiền có khớp không
   const vnpAmount = parseInt(vnpParams['vnp_Amount']) / 100;
-  if (vnpAmount !== order.total) {
+  const expectedExternalAmount = Math.max(
+    0,
+    Number(order.total || 0) - Number(order.walletAmount || 0)
+  );
+  if (vnpAmount !== expectedExternalAmount) {
     return { rspCode: '04', message: 'Amount invalid' };
   }
 
@@ -491,10 +556,7 @@ async function handleVnpayIPN(vnpParams) {
     await order.save();
   } else {
     // Thanh toán thất bại hoặc bị hủy -> Xóa đơn hàng khỏi DB
-    await Order.updateOne(
-      { _id: order._id, paymentStatus: 'pending' },
-      { $set: { paymentStatus: 'failed', status: 'cancelled', cancelledAt: new Date() } }
-    );
+    await cancelOrder(order, { paymentFailed: true });
   }
 
   return { rspCode: '00', message: 'Success' };
@@ -567,8 +629,16 @@ const ALLOWED_TRANSITIONS_BM = {
 };
 
 const ALLOWED_TRANSITIONS_CUSTOMER = {
+  pending: ['cancelled'],
   sented: ['succeeded', 'returning'],
 };
+
+const MANAGER_CANCELLATION_REASONS = [
+  'out_of_stock',
+  'defective_product',
+  'weather_incident',
+  'no_carrier',
+];
 
 /**
  * Cập nhật trạng thái đơn hàng bởi Business Manager
@@ -580,7 +650,7 @@ const ALLOWED_TRANSITIONS_CUSTOMER = {
  */
 async function updateOrder(orderId, updateData, actorId) {
   if (!mongoose.Types.ObjectId.isValid(orderId)) {
-    const error = new Error('ID don hang khong hop le');
+    const error = new Error('ID đơn hàng không hợp lệ');
     error.statusCode = 400;
     throw error;
   }
@@ -591,6 +661,7 @@ async function updateOrder(orderId, updateData, actorId) {
   }
 
   if (updateData.status) {
+    const previousStatus = order.status;
     const allowedNext = ALLOWED_TRANSITIONS_BM[order.status] || [];
     if (!allowedNext.includes(updateData.status)) {
       throw new Error(
@@ -602,14 +673,30 @@ async function updateOrder(orderId, updateData, actorId) {
 
     // Khi hủy đơn: ghi lại thời điểm hủy
     if (updateData.status === 'cancelled') {
+      if (
+        previousStatus === 'pending' &&
+        !MANAGER_CANCELLATION_REASONS.includes(updateData.cancellationReason)
+      ) {
+        const error = new Error(
+          'Vui lòng chọn lý do hủy đơn hợp lệ: hết hàng, hàng lỗi, sự cố thời tiết hoặc không có người vận chuyển'
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+
       order.cancelledAt = new Date();
+      order.cancellationReason =
+        previousStatus === 'returning'
+          ? 'customer_return'
+          : updateData.cancellationReason;
     }
   }
 
-  await order.save();
-
   if (updateData.status === 'cancelled') {
+    await refundOrderToWallet(order);
     await restoreOrderInventory(order);
+  } else {
+    await order.save();
   }
 
   const updatedOrder = await Order.findById(order._id);
@@ -635,12 +722,12 @@ async function updateOrder(orderId, updateData, actorId) {
  */
 async function customerActionOrder(orderId, userId, action) {
   if (!mongoose.Types.ObjectId.isValid(orderId)) {
-    const error = new Error('ID don hang khong hop le');
+    const error = new Error('ID đơn hàng không hợp lệ');
     error.statusCode = 400;
     throw error;
   }
   if (!mongoose.Types.ObjectId.isValid(userId)) {
-    const error = new Error('Nguoi dung chua duoc xac thuc hop le');
+    const error = new Error('Người dùng chưa được xác thực hợp lệ');
     error.statusCode = 401;
     throw error;
   }
@@ -664,6 +751,14 @@ async function customerActionOrder(orderId, userId, action) {
 
   order.status = action;
 
+  if (action === 'cancelled') {
+    order.cancelledAt = new Date();
+    order.cancellationReason = 'customer_cancelled';
+    await refundOrderToWallet(order);
+    await restoreOrderInventory(order);
+    return Order.findById(order._id);
+  }
+
   // Nếu nhận hàng thành công và thanh toán COD → đánh dấu đã thanh toán
   if (action === 'succeeded' && order.paymentStatus !== 'paid') {
     order.paymentStatus = 'paid';
@@ -684,5 +779,6 @@ module.exports = {
   getAllOrders,
   updateOrder,
   customerActionOrder,
+  cancelCreatedPayment,
 };
 

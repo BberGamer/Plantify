@@ -5,7 +5,7 @@ const apiResponse = require('../../utils/apiResponse');
 async function getWeather(req, res, next) {
   try {
     const weather = await weatherService.getWeatherByCity(req.query.city);
-    return apiResponse.success(res, 'Lay thong tin thoi tiet thanh cong', weather);
+    return apiResponse.success(res, 'Lấy thông tin thời tiết thành công', weather);
   } catch (error) {
     return next(error);
   }

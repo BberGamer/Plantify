@@ -2,7 +2,11 @@
 const express = require('express');
 const router = express.Router();
 const orderController = require('./order.controller');
-const { authenticate, authorizeBusinessManager, authorizeCustomer } = require('../../middlewares/auth');
+const {
+  authenticate,
+  authorizeBusinessManager,
+  authorizeCustomer,
+} = require('../../middlewares/auth');
 
 // === ĐẶT HÀNG ===
 

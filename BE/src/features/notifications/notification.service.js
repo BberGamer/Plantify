@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { Notification } = require('./notification.model');
 
-function ensureObjectId(id, message = 'ID khong hop le') {
+function ensureObjectId(id, message = 'ID không hợp lệ') {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const error = new Error(message);
     error.statusCode = 400;
@@ -18,11 +18,21 @@ const ORDER_STATUS_LABELS = {
   cancelled: 'Đã hủy',
 };
 
+const CANCELLATION_REASON_LABELS = {
+  out_of_stock: 'Hết hàng',
+  defective_product: 'Hàng lỗi',
+  weather_incident: 'Sự cố thời tiết',
+  no_carrier: 'Không có người vận chuyển',
+  customer_return: 'Khách hàng hoàn trả',
+  customer_cancelled: 'Khách hàng chủ động hủy',
+  payment_failed: 'Thanh toán không thành công',
+};
+
 async function createNotification(payload) {
   const { recipientId, actorId } = payload;
 
-  ensureObjectId(recipientId, 'Recipient ID khong hop le');
-  ensureObjectId(actorId, 'Actor ID khong hop le');
+  ensureObjectId(recipientId, 'Recipient ID không hợp lệ');
+  ensureObjectId(actorId, 'Actor ID không hợp lệ');
 
   if (String(recipientId) === String(actorId)) {
     return null;
@@ -43,7 +53,12 @@ async function createOrderNotification(order, newStatus, actorId) {
   }
 
   const statusLabel = ORDER_STATUS_LABELS[newStatus] || newStatus;
-  const message = `Đơn hàng ${order.orderCode} đã chuyển sang trạng thái: ${statusLabel}`;
+  const reason = newStatus === 'cancelled'
+    ? CANCELLATION_REASON_LABELS[order.cancellationReason]
+    : null;
+  const message = reason
+    ? `Đơn hàng ${order.orderCode} đã bị hủy. Lý do: ${reason}`
+    : `Đơn hàng ${order.orderCode} đã chuyển sang trạng thái: ${statusLabel}`;
 
   return createNotification({
     recipientId: order.userId,
@@ -55,7 +70,7 @@ async function createOrderNotification(order, newStatus, actorId) {
 }
 
 async function getNotificationsByRecipient(recipientId, filters = {}) {
-  ensureObjectId(recipientId, 'Recipient ID khong hop le');
+  ensureObjectId(recipientId, 'Recipient ID không hợp lệ');
 
   const page = Math.max(Number(filters.page) || 1, 1);
   const limit = Math.min(Math.max(Number(filters.limit) || 10, 1), 50);
@@ -86,14 +101,14 @@ async function getNotificationsByRecipient(recipientId, filters = {}) {
 }
 
 async function getUnreadCount(recipientId) {
-  ensureObjectId(recipientId, 'Recipient ID khong hop le');
+  ensureObjectId(recipientId, 'Recipient ID không hợp lệ');
   const unreadCount = await Notification.countDocuments({ recipientId, readAt: null });
   return { unreadCount };
 }
 
 async function markNotificationAsRead(notificationId, recipientId) {
-  ensureObjectId(notificationId, 'Notification ID khong hop le');
-  ensureObjectId(recipientId, 'Recipient ID khong hop le');
+  ensureObjectId(notificationId, 'Notification ID không hợp lệ');
+  ensureObjectId(recipientId, 'Recipient ID không hợp lệ');
 
   return Notification.findOneAndUpdate(
     { _id: notificationId, recipientId },
@@ -107,7 +122,7 @@ async function markNotificationAsRead(notificationId, recipientId) {
 }
 
 async function markAllNotificationsAsRead(recipientId) {
-  ensureObjectId(recipientId, 'Recipient ID khong hop le');
+  ensureObjectId(recipientId, 'Recipient ID không hợp lệ');
 
   await Notification.updateMany(
     { recipientId, readAt: null },

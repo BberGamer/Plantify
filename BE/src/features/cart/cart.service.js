@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Cart = require('./cart.model');
 const Product = require('../products/product.model');
 
-function ensureObjectId(id, message = 'ID khong hop le') {
+function ensureObjectId(id, message = 'ID không hợp lệ') {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const error = new Error(message);
     error.statusCode = 400;
@@ -18,7 +18,7 @@ function normalizeQuantity(quantity) {
 }
 
 async function getOrCreateCart(userId) {
-  ensureObjectId(userId, 'User ID khong hop le');
+  ensureObjectId(userId, 'User ID không hợp lệ');
 
   let cart = await Cart.findOne({ userId });
   if (!cart) {
@@ -35,7 +35,7 @@ function toClientItem(item) {
   return {
     id: String(productId),
     productId: String(productId),
-    name: product?.name || 'San pham',
+    name: product?.name || 'Sản phẩm',
     price: product?.price || 0,
     quantity: item.quantity,
     stock: product?.stock || 0,
@@ -64,17 +64,17 @@ async function getCart(userId) {
 }
 
 async function addItem(userId, productId, quantity = 1, selected = true) {
-  ensureObjectId(productId, 'Product ID khong hop le');
+  ensureObjectId(productId, 'Product ID không hợp lệ');
 
   const product = await Product.findById(productId);
   if (!product || product.isActive === false) {
-    const error = new Error('Khong tim thay san pham');
+    const error = new Error('Không tìm thấy sản phẩm');
     error.statusCode = 404;
     throw error;
   }
 
   if ((product.stock || 0) < 1) {
-    const error = new Error('San pham da het hang');
+    const error = new Error('Sản phẩm đã hết hàng');
     error.statusCode = 400;
     throw error;
   }
@@ -100,7 +100,7 @@ async function addItem(userId, productId, quantity = 1, selected = true) {
 
 async function mergeItems(userId, items = []) {
   if (!Array.isArray(items)) {
-    const error = new Error('Danh sach gio hang khong hop le');
+    const error = new Error('Danh sách giỏ hàng không hợp lệ');
     error.statusCode = 400;
     throw error;
   }
@@ -115,12 +115,12 @@ async function mergeItems(userId, items = []) {
 }
 
 async function updateItem(userId, productId, data = {}) {
-  ensureObjectId(productId, 'Product ID khong hop le');
+  ensureObjectId(productId, 'Product ID không hợp lệ');
 
   const cart = await getOrCreateCart(userId);
   const item = cart.items.find((cartItem) => String(cartItem.productId) === String(productId));
   if (!item) {
-    const error = new Error('Khong tim thay san pham trong gio hang');
+    const error = new Error('Không tìm thấy sản phẩm trong giỏ hàng');
     error.statusCode = 404;
     throw error;
   }
@@ -140,7 +140,7 @@ async function updateItem(userId, productId, data = {}) {
 }
 
 async function removeItem(userId, productId) {
-  ensureObjectId(productId, 'Product ID khong hop le');
+  ensureObjectId(productId, 'Product ID không hợp lệ');
 
   const cart = await getOrCreateCart(userId);
   cart.items = cart.items.filter((item) => String(item.productId) !== String(productId));
