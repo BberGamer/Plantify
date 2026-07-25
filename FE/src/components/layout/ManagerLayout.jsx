@@ -83,7 +83,7 @@ const managerMenuConfig = {
 
 const managerRoleLabels = {
   "business manager": "Business Manager",
-  "content manager": "Quản lý nội dung"
+  "content manager": "Content Manager"
 };
 
 const getManagerRole = (role) => {

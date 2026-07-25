@@ -139,7 +139,16 @@ function formatDateTime(dateStr) {
 }
 
 function getPaymentMethodLabel(method) {
-  return method === "COD" ? "Thanh toán khi nhận hàng" : "Chuyển khoản Internet Banking";
+  return method === "COD" ? "Thanh toán khi nhận hàng (COD)" : "Chuyển khoản Internet Banking (VNPay)";
+}
+
+/**
+ * Kiểm tra đơn hàng có dùng kết hợp ví + phương thức bên ngoài hay không
+ * @param {Object} order - Đơn hàng
+ * @returns {boolean}
+ */
+function isHybridPayment(order) {
+  return Number(order.walletAmount || 0) > 0 && Number(order.externalAmount || 0) > 0;
 }
 
 // === MAIN COMPONENT ===
@@ -456,7 +465,11 @@ function ManageOrder() {
                     </div>
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-muted-foreground">Phương thức</span>
-                      <span className="font-semibold text-right">{getPaymentMethodLabel(selectedOrder.paymentMethod)}</span>
+                      <span className="font-semibold text-right">
+                        {isHybridPayment(selectedOrder)
+                          ? `Ví + ${selectedOrder.paymentMethod === "COD" ? "COD" : "VNPay"}`
+                          : getPaymentMethodLabel(selectedOrder.paymentMethod)}
+                      </span>
                     </div>
                     <Separator />
                     <div className="flex items-center justify-between">
@@ -471,6 +484,43 @@ function ManageOrder() {
                       <span className="font-semibold">Tổng thanh toán</span>
                       <span className="text-xl font-bold text-primary">{formatVND(selectedOrder.total || 0)}</span>
                     </div>
+
+                    {/* Breakdown thanh toán kết hợp ví + VNPay/COD */}
+                    {isHybridPayment(selectedOrder) && (
+                      <div className="rounded-lg border border-violet-100 bg-violet-50/60 p-3 space-y-2">
+                        <p className="text-xs font-semibold text-violet-700 uppercase tracking-wide">Chi tiết nguồn thanh toán</p>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="flex items-center gap-1.5 text-violet-700">
+                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-violet-200 text-violet-800 text-[10px] font-bold">Ví</span>
+                            Thanh toán từ ví
+                          </span>
+                          <span className="font-semibold text-violet-800">{formatVND(selectedOrder.walletAmount || 0)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="flex items-center gap-1.5 text-slate-700">
+                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-800 text-[10px] font-bold">
+                              {selectedOrder.paymentMethod === "COD" ? "C" : "V"}
+                            </span>
+                            {selectedOrder.paymentMethod === "COD" ? "Thanh toán khi nhận hàng (COD)" : "Chuyển khoản VNPay"}
+                          </span>
+                          <span className="font-semibold text-slate-800">{formatVND(selectedOrder.externalAmount || 0)}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Hiển thị khi chỉ dùng ví hoàn toàn */}
+                    {Number(selectedOrder.walletAmount || 0) > 0 && !isHybridPayment(selectedOrder) && (
+                      <div className="rounded-lg border border-violet-100 bg-violet-50/60 p-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="flex items-center gap-1.5 text-violet-700">
+                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-violet-200 text-violet-800 text-[10px] font-bold">Ví</span>
+                            Thanh toán 100% từ ví
+                          </span>
+                          <span className="font-semibold text-violet-800">{formatVND(selectedOrder.walletAmount || 0)}</span>
+                        </div>
+                      </div>
+                    )}
+
                     {selectedOrder.cancellationReason && (
                       <div className="rounded-lg border border-rose-100 bg-rose-50 p-3">
                         <span className="text-muted-foreground">Lý do hủy: </span>
@@ -679,8 +729,15 @@ function ManageOrder() {
                     <TableCell className="px-4 py-4">
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-semibold text-slate-700">
-                          {order.paymentMethod === "COD" ? "COD" : "VNPay"}
+                          {isHybridPayment(order)
+                            ? `Ví + ${order.paymentMethod === "COD" ? "COD" : "VNPay"}`
+                            : order.paymentMethod === "COD" ? "COD" : "VNPay"}
                         </span>
+                        {isHybridPayment(order) && (
+                          <span className="text-[10px] text-violet-600 font-medium">
+                            Ví: {formatVND(order.walletAmount || 0)}
+                          </span>
+                        )}
                         {(() => {
                           const payConfig = PAYMENT_STATUS_CONFIG[order.paymentStatus] || PAYMENT_STATUS_CONFIG.pending;
                           return (

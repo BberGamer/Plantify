@@ -703,7 +703,10 @@ async function updateOrder(orderId, updateData, actorId) {
 
   // Tạo thông báo cho user khi trạng thái đơn hàng thay đổi
   if (updateData.status && actorId) {
-    createOrderNotification(updatedOrder, updateData.status, actorId)
+    const refundedAmount = updateData.status === 'cancelled'
+      ? Number(updatedOrder?.refundedAmount || 0)
+      : 0;
+    createOrderNotification(updatedOrder, updateData.status, actorId, refundedAmount)
       .catch((err) => console.error('[Order Service] Lỗi tạo thông báo đơn hàng:', err));
   }
 
