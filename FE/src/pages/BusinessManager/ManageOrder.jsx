@@ -171,9 +171,17 @@ function ManageOrder() {
   const handleOrderUpdated = useCallback((updatedOrder) => {
     const updatedId = updatedOrder._id || updatedOrder.id;
 
-    setOrders((currentOrders) => currentOrders.map((order) =>
-      (order._id || order.id) === updatedId ? updatedOrder : order
-    ));
+    setOrders((currentOrders) => {
+      const orderExists = currentOrders.some(
+        (order) => (order._id || order.id) === updatedId
+      );
+
+      if (!orderExists) return [updatedOrder, ...currentOrders];
+
+      return currentOrders.map((order) =>
+        (order._id || order.id) === updatedId ? updatedOrder : order
+      );
+    });
     setSelectedOrder((currentOrder) =>
       currentOrder && (currentOrder._id || currentOrder.id) === updatedId
         ? updatedOrder

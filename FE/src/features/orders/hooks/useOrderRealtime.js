@@ -46,7 +46,7 @@ export function useOrderRealtime(onOrderUpdated, enabled = true) {
           for (const message of messages) {
             const eventName = message.match(/^event:\s*(.+)$/m)?.[1];
             const eventData = message.match(/^data:\s*(.+)$/m)?.[1];
-            if (eventName !== "order.updated" || !eventData) continue;
+            if (!["order.created", "order.updated"].includes(eventName) || !eventData) continue;
 
             const payload = JSON.parse(eventData);
             onOrderUpdated(payload.order);
