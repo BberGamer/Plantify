@@ -16,6 +16,7 @@ import {
   ShoppingBag,
   Loader2,
   XCircle,
+  Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -23,6 +24,7 @@ import { useAuth } from "@/features/auth/hooks";
 import { getMyAddressesApi } from "@/features/auth/api";
 import { getCart } from "@/features/cart/api";
 import { extractCartPayload, notifyCartUpdated } from "@/features/cart/cartStorage";
+import { getMyWallet } from "@/features/wallet/api";
 import {
   createOrder,
   createVnpayPayment,
@@ -54,6 +56,9 @@ function Checkout() {
 
   // Phương thức thanh toán: 'COD' hoặc 'BANK'
   const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [walletBalance, setWalletBalance] = useState(0);
+  // Không tự ý trừ ví khi khách chọn COD/VNPay. Khách phải chủ động bật tùy chọn này.
+  const [useWallet, setUseWallet] = useState(false);
 
   // Trạng thái giao diện
   const [isSuccess, setIsSuccess] = useState(false);
@@ -62,7 +67,7 @@ function Checkout() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingCart, setIsLoadingCart] = useState(!new URLSearchParams(window.location.search).has("vnp_ResponseCode"));
   const [orderCode, setOrderCode] = useState("");
-  const [orderTotal, setOrderTotal] = useState(0);
+  const [orderTotal, setOrderTotal] = useState(null);
 
   // === KHỞI TẠO ===
   useEffect(() => {
@@ -155,6 +160,14 @@ function Checkout() {
     loadSelectedItems();
   }, [authLoading, isAuthenticated, isVnpayCallback, navigate]);
 
+  useEffect(() => {
+    if (isVnpayCallback || authLoading || !isAuthenticated) return;
+
+    getMyWallet()
+      .then(({ data }) => setWalletBalance(Number(data?.data?.balance || 0)))
+      .catch(() => setWalletBalance(0));
+  }, [authLoading, isAuthenticated, isVnpayCallback]);
+
   // === HELPER FUNCTIONS ===
 
   /**
@@ -183,7 +196,9 @@ function Checkout() {
           notes: order.shippingInfo.notes || "",
         });
         setSubtotal(order.subtotal);
-        setOrderTotal(order.total ?? (order.subtotal + (order.shippingFee ?? shippingFee)));
+        setOrderTotal(
+          Math.max(0, Number(order.total || 0) - Number(order.walletAmount || 0))
+        );
         setPaymentMethod("BANK");
         setIsSuccess(true);
 
@@ -295,6 +310,7 @@ function Checkout() {
       shippingFee,
       total: subtotal + shippingFee,
       totalAmount: subtotal + shippingFee,
+      useWallet,
     };
 
     try {
@@ -305,7 +321,9 @@ function Checkout() {
           const order = data.data.order;
           setOrderCode(order.orderCode);
           setSubtotal(order.subtotal ?? subtotal);
-          setOrderTotal(order.total ?? ((order.subtotal ?? subtotal) + (order.shippingFee ?? shippingFee)));
+          setOrderTotal(
+            Math.max(0, Number(order.total || 0) - Number(order.walletAmount || 0))
+          );
           setIsSuccess(true);
           notifyCartUpdated(); // Thông báo giỏ hàng đã thay đổi
           toast.success("Đặt hàng thành công!");
@@ -319,8 +337,20 @@ function Checkout() {
         // === LUỒNG VNPAY ===
         const { data } = await createVnpayPayment(orderData);
         if (data.success) {
-          // Redirect sang cổng thanh toán VNPay
-          window.location.href = data.data.paymentUrl;
+          if (data.data.paidWithWallet || !data.data.paymentUrl) {
+            const order = data.data.order;
+            setOrderCode(order.orderCode);
+            setSubtotal(order.subtotal ?? subtotal);
+            setOrderTotal(
+              Math.max(0, Number(order.total || 0) - Number(order.walletAmount || 0))
+            );
+            setIsSuccess(true);
+            notifyCartUpdated();
+            toast.success("Thanh toán bằng ví thành công!");
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+          } else {
+            window.location.href = data.data.paymentUrl;
+          }
         }
       }
     } catch (err) {
@@ -332,6 +362,10 @@ function Checkout() {
       setIsSubmitting(false);
     }
   };
+
+  const checkoutTotal = subtotal + shippingFee;
+  const walletApplied = useWallet ? Math.min(walletBalance, checkoutTotal) : 0;
+  const remainingAmount = checkoutTotal - walletApplied;
 
   // ========================================
   // RENDER
@@ -446,8 +480,8 @@ function Checkout() {
                   : "Chuyển khoản Internet Banking"}
               </p>
               <p>
-                <strong>Tổng thanh toán:</strong>{" "}
-                {(orderTotal || subtotal + shippingFee).toLocaleString("vi-VN")}đ
+                <strong>Thành tiền phải thanh toán:</strong>{" "}
+                {(orderTotal ?? remainingAmount).toLocaleString("vi-VN")}đ
               </p>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -649,6 +683,30 @@ function Checkout() {
                   </div>
 
                   <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                          <Wallet className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-foreground">Ví Plantify</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Số dư: {walletBalance.toLocaleString("vi-VN")}đ
+                          </p>
+                        </div>
+                      </div>
+                      <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                        <input
+                          type="checkbox"
+                          checked={useWallet}
+                          disabled={walletBalance <= 0}
+                          onChange={(event) => setUseWallet(event.target.checked)}
+                          className="h-4 w-4 accent-emerald-600"
+                        />
+                        Sử dụng ví
+                      </label>
+                    </div>
+
                     {/* Option 1: COD */}
                     <div
                       onClick={() => setPaymentMethod("COD")}
@@ -780,17 +838,35 @@ function Checkout() {
                         {shippingFee.toLocaleString("vi-VN")}đ
                       </span>
                     </div>
+                    {walletApplied > 0 && (
+                      <>
+                        <div className="flex justify-between text-emerald-700">
+                          <span>Thanh toán từ ví</span>
+                          <span className="font-semibold">
+                            -{walletApplied.toLocaleString("vi-VN")}đ
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>
+                            Còn lại ({paymentMethod === "COD" ? "COD" : "VNPay"})
+                          </span>
+                          <span className="font-medium text-foreground">
+                            {remainingAmount.toLocaleString("vi-VN")}đ
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <Separator />
 
-                  {/* Tổng cộng */}
+                  {/* Số tiền còn phải thanh toán sau khi trừ ví */}
                   <div className="flex justify-between items-baseline">
                     <span className="font-bold text-base text-foreground">
-                      Tổng cộng
+                      Thành tiền phải thanh toán
                     </span>
                     <span className="text-2xl font-bold text-primary">
-                      {(orderTotal || subtotal + shippingFee).toLocaleString("vi-VN")}đ
+                      {remainingAmount.toLocaleString("vi-VN")}đ
                     </span>
                   </div>
 

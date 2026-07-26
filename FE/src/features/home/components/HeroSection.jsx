@@ -98,7 +98,7 @@ export function HeroSection() {
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => setSearchQuery("")}
                       className="mr-3 inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-green-50 hover:text-foreground"
-                      aria-label="Xoa tim kiem"
+                      aria-label="Xóa tìm kiếm"
                     >
                       <X className="h-4 w-4" />
                     </button>

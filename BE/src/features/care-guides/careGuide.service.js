@@ -29,7 +29,7 @@ function parsePositiveInteger(value, fieldName, fallback, maxValue) {
 
   const parsedValue = Number(value);
   if (!Number.isInteger(parsedValue) || parsedValue < 1) {
-    throw createHttpError(`${fieldName} phai la so nguyen duong`, 400);
+    throw createHttpError(`${fieldName} phải là số nguyên dương`, 400);
   }
 
   return Math.min(parsedValue, maxValue);
@@ -40,10 +40,10 @@ function escapeRegex(value) {
 }
 
 async function ensurePlantExists(plantId) {
-  ensureObjectId(plantId, 'Plant ID khong hop le');
+  ensureObjectId(plantId, 'Plant ID không hợp lệ');
   const plant = await Plant.findById(plantId).select('_id').lean();
   if (!plant) {
-    throw createHttpError('Khong tim thay cay', 404);
+    throw createHttpError('Không tìm thấy cây', 404);
   }
 }
 
@@ -52,7 +52,7 @@ async function getAllCareGuides(filters = {}) {
   const query = {};
 
   if (plantId) {
-    ensureObjectId(plantId, 'Plant ID khong hop le');
+    ensureObjectId(plantId, 'Plant ID không hợp lệ');
     query.plantId = plantId;
   }
 
@@ -79,13 +79,13 @@ async function getAllCareGuides(filters = {}) {
 }
 
 async function getCareGuideById(id) {
-  ensureObjectId(id, 'CareGuide ID khong hop le');
+  ensureObjectId(id, 'CareGuide ID không hợp lệ');
   return CareGuide.findById(id).lean();
 }
 
 async function createCareGuide(data = {}) {
   if (!data.plantId) {
-    throw createHttpError('Plant ID is required', 400);
+    throw createHttpError('ID cây là bắt buộc', 400);
   }
 
   await ensurePlantExists(data.plantId);
@@ -95,17 +95,17 @@ async function createCareGuide(data = {}) {
 }
 
 async function updateCareGuide(id, data = {}) {
-  ensureObjectId(id, 'CareGuide ID khong hop le');
+  ensureObjectId(id, 'CareGuide ID không hợp lệ');
 
   const updateData = pickCareGuideFields(data);
   if (updateData.plantId !== undefined && !updateData.plantId) {
-    throw createHttpError('Plant ID cannot be empty', 400);
+    throw createHttpError('ID cây không được để trống', 400);
   }
   if (updateData.plantId !== undefined) {
     await ensurePlantExists(updateData.plantId);
   }
   if (!Object.keys(updateData).length) {
-    throw createHttpError('Khong co du lieu cap nhat hop le', 400);
+    throw createHttpError('Không có dữ liệu cập nhật hợp lệ', 400);
   }
 
   return CareGuide.findByIdAndUpdate(id, updateData, {
@@ -115,7 +115,7 @@ async function updateCareGuide(id, data = {}) {
 }
 
 async function deleteCareGuide(id) {
-  ensureObjectId(id, 'CareGuide ID khong hop le');
+  ensureObjectId(id, 'CareGuide ID không hợp lệ');
   return CareGuide.findByIdAndDelete(id);
 }
 

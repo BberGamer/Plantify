@@ -11,7 +11,7 @@ async function createReport(req, res, next) {
     const { postId, reason } = req.body;
     const report = await reportService.createReport(postId, getCurrentUserId(req), reason);
 
-    return apiResponse.success(res, 'Tao bao cao bai viet thanh cong', report, 201);
+    return apiResponse.success(res, 'Tạo báo cáo bài viết thành công', report, 201);
   } catch (error) {
     return next(error);
   }
@@ -20,7 +20,7 @@ async function createReport(req, res, next) {
 async function getAllReports(req, res, next) {
   try {
     const reports = await reportService.getAllReports(req.query);
-    return apiResponse.success(res, 'Lay danh sach bao cao thanh cong', reports);
+    return apiResponse.success(res, 'Lấy danh sách báo cáo thành công', reports);
   } catch (error) {
     return next(error);
   }
@@ -31,7 +31,7 @@ async function processReport(req, res, next) {
     const { action } = req.body;
     const report = await reportService.processReport(req.params.id, getCurrentUserId(req), action);
 
-    return apiResponse.success(res, 'Xu ly bao cao thanh cong', report);
+    return apiResponse.success(res, 'Xử lý báo cáo thành công', report);
   } catch (error) {
     return next(error);
   }
@@ -40,7 +40,7 @@ async function processReport(req, res, next) {
 async function restorePost(req, res, next) {
   try {
     const post = await reportService.restorePost(req.params.postId);
-    return apiResponse.success(res, 'Khoi phuc bai viet thanh cong', post);
+    return apiResponse.success(res, 'Khôi phục bài viết thành công', post);
   } catch (error) {
     return next(error);
   }

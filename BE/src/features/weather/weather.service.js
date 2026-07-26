@@ -13,12 +13,12 @@ async function getWeatherByCity(city) {
   const normalizedCity = city?.trim();
 
   if (!normalizedCity) {
-    throw createHttpError('Vui long nhap ten thanh pho', 400);
+    throw createHttpError('Vui lòng nhập tên thành phố', 400);
   }
 
   const apiKey = process.env.OPENWEATHER_API_KEY;
   if (!apiKey) {
-    throw createHttpError('Chua cau hinh OPENWEATHER_API_KEY', 500);
+    throw createHttpError('Chưa cấu hình OPENWEATHER_API_KEY', 500);
   }
 
   const params = new URLSearchParams({
@@ -33,15 +33,15 @@ async function getWeatherByCity(city) {
   const data = await response.json();
 
   if (data.cod === '404' || data.cod === 404) {
-    throw createHttpError('Khong tim thay thong tin thoi tiet cho thanh pho nay', 404);
+    throw createHttpError('Không tìm thấy thông tin thời tiết cho thành phố này', 404);
   }
 
   if (response.status === 401) {
-    throw createHttpError('OPENWEATHER_API_KEY khong hop le hoac da het han', 502);
+    throw createHttpError('OPENWEATHER_API_KEY không hợp lệ hoặc đã hết hạn', 502);
   }
 
   if (!response.ok) {
-    throw createHttpError(data.message || 'Khong the lay thong tin thoi tiet', response.status);
+    throw createHttpError(data.message || 'Không thể lấy thông tin thời tiết', response.status);
   }
 
   const main = data.main || {};

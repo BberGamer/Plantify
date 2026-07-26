@@ -8,7 +8,7 @@ const RESTORE_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
 const REPORT_POST_SELECT =
   'title content thumbnail images author category status isApproved avgRating commentsCount deletedAt processedAt createdAt userId';
 
-function ensureObjectId(id, message = 'ID khong hop le') {
+function ensureObjectId(id, message = 'ID không hợp lệ') {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const error = new Error(message);
     error.statusCode = 400;
@@ -18,7 +18,7 @@ function ensureObjectId(id, message = 'ID khong hop le') {
 
 function validateReason(reason) {
   if (!Report.REPORT_REASONS.includes(reason)) {
-    const error = new Error('Ly do bao cao khong hop le');
+    const error = new Error('Lý do báo cáo không hợp lệ');
     error.statusCode = 400;
     throw error;
   }
@@ -26,7 +26,7 @@ function validateReason(reason) {
 
 function validateAction(action) {
   if (!Report.REPORT_ACTIONS.includes(action)) {
-    const error = new Error('Hanh dong xu ly bao cao khong hop le');
+    const error = new Error('Hành động xử lý báo cáo không hợp lệ');
     error.statusCode = 400;
     throw error;
   }
@@ -34,7 +34,7 @@ function validateAction(action) {
 
 function validateStatus(status) {
   if (!Report.REPORT_STATUSES.includes(status)) {
-    const error = new Error('Trang thai bao cao khong hop le');
+    const error = new Error('Trạng thái báo cáo không hợp lệ');
     error.statusCode = 400;
     throw error;
   }
@@ -54,7 +54,7 @@ async function ensurePostExists(postId) {
   const post = await Post.findById(postId).select('_id userId').lean();
 
   if (!post) {
-    const error = new Error('Khong tim thay bai viet');
+    const error = new Error('Không tìm thấy bài viết');
     error.statusCode = 404;
     throw error;
   }
@@ -63,13 +63,13 @@ async function ensurePostExists(postId) {
 }
 
 async function createReport(postId, userId, reason) {
-  ensureObjectId(postId, 'Post ID khong hop le');
-  ensureObjectId(userId, 'User ID khong hop le');
+  ensureObjectId(postId, 'Post ID không hợp lệ');
+  ensureObjectId(userId, 'User ID không hợp lệ');
   validateReason(reason);
   const post = await ensurePostExists(postId);
 
   if (post.userId?.toString() === userId.toString()) {
-    const error = new Error('Ban khong the bao cao bai viet cua chinh minh');
+    const error = new Error('Bạn không thể báo cáo bài viết của chính mình');
     error.statusCode = 403;
     throw error;
   }
@@ -77,7 +77,7 @@ async function createReport(postId, userId, reason) {
   const existingReport = await Report.findOne({ postId, userId }).lean();
 
   if (existingReport) {
-    const error = new Error('Ban da bao cao bai viet nay');
+    const error = new Error('Bạn đã báo cáo bài viết này');
     error.statusCode = 409;
     throw error;
   }
@@ -115,7 +115,7 @@ async function getAllReports(filters = {}) {
   }
 
   if (filters.postId) {
-    ensureObjectId(filters.postId, 'Post ID khong hop le');
+    ensureObjectId(filters.postId, 'Post ID không hợp lệ');
     query.postId = filters.postId;
   }
 
@@ -132,14 +132,14 @@ async function getAllReports(filters = {}) {
 }
 
 async function processReport(reportId, managerId, action) {
-  ensureObjectId(reportId, 'Report ID khong hop le');
-  ensureObjectId(managerId, 'Manager ID khong hop le');
+  ensureObjectId(reportId, 'Report ID không hợp lệ');
+  ensureObjectId(managerId, 'Manager ID không hợp lệ');
   validateAction(action);
 
   const report = await Report.findById(reportId);
 
   if (!report) {
-    const error = new Error('Khong tim thay bao cao');
+    const error = new Error('Không tìm thấy báo cáo');
     error.statusCode = 404;
     throw error;
   }
@@ -147,7 +147,7 @@ async function processReport(reportId, managerId, action) {
   const post = await Post.findById(report.postId);
 
   if (!post) {
-    const error = new Error('Khong tim thay bai viet');
+    const error = new Error('Không tìm thấy bài viết');
     error.statusCode = 404;
     throw error;
   }
@@ -187,18 +187,18 @@ async function processReport(reportId, managerId, action) {
 }
 
 async function restorePost(postId) {
-  ensureObjectId(postId, 'Post ID khong hop le');
+  ensureObjectId(postId, 'Post ID không hợp lệ');
 
   const post = await Post.findById(postId);
 
   if (!post) {
-    const error = new Error('Khong tim thay bai viet');
+    const error = new Error('Không tìm thấy bài viết');
     error.statusCode = 404;
     throw error;
   }
 
   if (!post.deletedAt) {
-    const error = new Error('Bai viet chua bi xoa');
+    const error = new Error('Bài viết chưa bị xóa');
     error.statusCode = 400;
     throw error;
   }
@@ -207,7 +207,7 @@ async function restorePost(postId) {
   const isRestorable = Date.now() - deletedAt <= RESTORE_WINDOW_MS;
 
   if (!isRestorable) {
-    const error = new Error('Chi co the khoi phuc bai viet trong 2 ngay');
+    const error = new Error('Chỉ có thể khôi phục bài viết trong 2 ngày');
     error.statusCode = 400;
     throw error;
   }
@@ -221,7 +221,7 @@ async function restorePost(postId) {
 }
 
 async function getReportsByPost(postId) {
-  ensureObjectId(postId, 'Post ID khong hop le');
+  ensureObjectId(postId, 'Post ID không hợp lệ');
   await ensurePostExists(postId);
 
   return Report.find({ postId })

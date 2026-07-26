@@ -37,7 +37,7 @@ function parsePositiveInteger(value, fieldName, fallback, maxValue) {
 
   const parsedValue = Number(value);
   if (!Number.isInteger(parsedValue) || parsedValue < 1) {
-    throw createHttpError(`${fieldName} phai la so nguyen duong`, 400);
+    throw createHttpError(`${fieldName} phải là số nguyên dương`, 400);
   }
 
   return Math.min(parsedValue, maxValue);
@@ -48,10 +48,10 @@ function escapeRegex(value) {
 }
 
 async function ensurePlantExists(plantId) {
-  ensureObjectId(plantId, 'Plant ID khong hop le');
+  ensureObjectId(plantId, 'Plant ID không hợp lệ');
   const plant = await Plant.findById(plantId).select('_id').lean();
   if (!plant) {
-    throw createHttpError('Khong tim thay cay', 404);
+    throw createHttpError('Không tìm thấy cây', 404);
   }
 }
 
@@ -60,7 +60,7 @@ async function getAllPlantDiseases(filters = {}) {
   const query = {};
 
   if (plantId) {
-    ensureObjectId(plantId, 'Plant ID khong hop le');
+    ensureObjectId(plantId, 'Plant ID không hợp lệ');
     query.plantId = plantId;
   }
 
@@ -104,14 +104,14 @@ async function getAllPlantDiseases(filters = {}) {
 }
 
 async function getPlantDiseaseById(id) {
-  ensureObjectId(id, 'PlantDisease ID khong hop le');
+  ensureObjectId(id, 'PlantDisease ID không hợp lệ');
   return PlantDisease.findById(id).lean();
 }
 
 async function createPlantDisease(data = {}) {
-  if (!data.plantId) throw createHttpError('Plant ID is required', 400);
+  if (!data.plantId) throw createHttpError('ID cây là bắt buộc', 400);
   if (typeof data.name !== 'string' || !data.name.trim()) {
-    throw createHttpError('Disease name is required', 400);
+    throw createHttpError('Tên bệnh là bắt buộc', 400);
   }
 
   await ensurePlantExists(data.plantId);
@@ -120,11 +120,11 @@ async function createPlantDisease(data = {}) {
 }
 
 async function updatePlantDisease(id, data = {}) {
-  ensureObjectId(id, 'PlantDisease ID khong hop le');
+  ensureObjectId(id, 'PlantDisease ID không hợp lệ');
 
   const updateData = pickPlantDiseaseFields(data);
   if (updateData.plantId !== undefined && !updateData.plantId) {
-    throw createHttpError('Plant ID cannot be empty', 400);
+    throw createHttpError('ID cây không được để trống', 400);
   }
   if (updateData.plantId !== undefined) {
     await ensurePlantExists(updateData.plantId);
@@ -132,10 +132,10 @@ async function updatePlantDisease(id, data = {}) {
   if (updateData.name !== undefined && (
     typeof updateData.name !== 'string' || !updateData.name.trim()
   )) {
-    throw createHttpError('Disease name cannot be empty', 400);
+    throw createHttpError('Tên bệnh không được để trống', 400);
   }
   if (!Object.keys(updateData).length) {
-    throw createHttpError('Khong co du lieu cap nhat hop le', 400);
+    throw createHttpError('Không có dữ liệu cập nhật hợp lệ', 400);
   }
 
   return PlantDisease.findByIdAndUpdate(id, updateData, {
@@ -145,7 +145,7 @@ async function updatePlantDisease(id, data = {}) {
 }
 
 async function deletePlantDisease(id) {
-  ensureObjectId(id, 'PlantDisease ID khong hop le');
+  ensureObjectId(id, 'PlantDisease ID không hợp lệ');
   return PlantDisease.findByIdAndDelete(id);
 }
 

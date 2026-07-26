@@ -171,9 +171,9 @@ describe('productService.createProduct', () => {
   });
 
   test('validate tên, category và giá trước khi truy vấn DB', async () => {
-    await expect(createProduct({ categoryId, price: 10 })).rejects.toThrow('Product name is required');
-    await expect(createProduct({ name: 'Product', price: 10 })).rejects.toThrow('Category ID is required');
-    await expect(createProduct({ name: 'Product', categoryId })).rejects.toThrow('Product price is required');
+    await expect(createProduct({ categoryId, price: 10 })).rejects.toThrow('Tên sản phẩm là bắt buộc');
+    await expect(createProduct({ name: 'Product', price: 10 })).rejects.toThrow('ID danh mục là bắt buộc');
+    await expect(createProduct({ name: 'Product', categoryId })).rejects.toThrow('Giá sản phẩm là bắt buộc');
     expect(ProductCategory.findById).not.toHaveBeenCalled();
   });
 
@@ -222,8 +222,8 @@ describe('productService.updateProduct', () => {
   });
 
   test('từ chối tên hoặc category rỗng', async () => {
-    await expect(updateProduct(productId, { name: '   ' })).rejects.toThrow('Product name cannot be empty');
-    await expect(updateProduct(productId, { categoryId: '   ' })).rejects.toThrow('Category ID cannot be empty');
+    await expect(updateProduct(productId, { name: '   ' })).rejects.toThrow('Tên sản phẩm không được để trống');
+    await expect(updateProduct(productId, { categoryId: '   ' })).rejects.toThrow('ID danh mục không được để trống');
     expect(Product.findByIdAndUpdate).not.toHaveBeenCalled();
   });
 

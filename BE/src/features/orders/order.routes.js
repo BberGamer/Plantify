@@ -2,7 +2,11 @@
 const express = require('express');
 const router = express.Router();
 const orderController = require('./order.controller');
-const { authenticate, authorizeBusinessManager, authorizeCustomer } = require('../../middlewares/auth');
+const {
+  authenticate,
+  authorizeBusinessManager,
+  authorizeCustomer,
+} = require('../../middlewares/auth');
 
 // Kênh cập nhật trạng thái đơn hàng theo thời gian thực
 router.get('/events', authenticate, orderController.streamOrderEvents);

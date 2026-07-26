@@ -11,7 +11,7 @@ function ImageCarousel({
   imageClassName,
   showCounter = true,
   onRemove,
-  removeLabel = "Xoa anh hien tai",
+  removeLabel = "Xóa ảnh hiện tại",
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const safeImages = images.filter(Boolean);

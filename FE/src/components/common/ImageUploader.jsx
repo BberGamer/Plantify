@@ -35,7 +35,7 @@ export function ImageUploader({ images = [], onChange }) {
           alt="Anh"
           className="aspect-video"
           onRemove={removeImage}
-          removeLabel="Xoa anh hien tai"
+          removeLabel="Xóa ảnh hiện tại"
         />
       )}
 
