@@ -23,6 +23,8 @@ npm-debug.log*
 !.vscode/settings.json
 !.vscode/extensions.json
 .idea/
+.cursor/
+!.cursor/rules/
 
 # OS
 .DS_Store
