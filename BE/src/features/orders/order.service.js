@@ -9,6 +9,54 @@ const { createOrderNotification } = require('../notifications/notification.servi
 
 // ========== HELPER FUNCTIONS ==========
 
+const orderEventClients = new Set();
+
+/**
+ * Mở kết nối SSE để gửi thay đổi đơn hàng theo thời gian thực.
+ */
+function subscribeOrderEvents(req, res) {
+  const client = {
+    res,
+    userId: String(req.user.id),
+    role: req.user.role,
+  };
+
+  res.status(200);
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.flushHeaders?.();
+  res.write('event: connected\ndata: {}\n\n');
+
+  orderEventClients.add(client);
+  const heartbeat = setInterval(() => res.write(': keep-alive\n\n'), 25000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    orderEventClients.delete(client);
+  });
+}
+
+/**
+ * Gửi đơn hàng mới nhất cho chủ đơn và Business Manager đang kết nối.
+ */
+function publishOrderUpdated(order) {
+  const ownerId = String(order.userId?._id || order.userId);
+  const data = JSON.stringify({
+    type: 'order.updated',
+    order: typeof order.toObject === 'function' ? order.toObject() : order,
+  });
+
+  for (const client of orderEventClients) {
+    if (client.role === 'business manager' || client.userId === ownerId) {
+      client.res.write(`event: order.updated\ndata: ${data}\n\n`);
+    }
+  }
+}
+
 /**
  * Tạo mã đơn hàng duy nhất
  * Format: PL + YYYYMMDDHHmmss + 3 ký tự random
@@ -567,6 +615,7 @@ const ALLOWED_TRANSITIONS_BM = {
 };
 
 const ALLOWED_TRANSITIONS_CUSTOMER = {
+  pending: ['cancelled'],
   sented: ['succeeded', 'returning'],
 };
 
@@ -620,6 +669,7 @@ async function updateOrder(orderId, updateData, actorId) {
       .catch((err) => console.error('[Order Service] Lỗi tạo thông báo đơn hàng:', err));
   }
 
+  publishOrderUpdated(updatedOrder);
   return updatedOrder;
 }
 
@@ -629,7 +679,7 @@ async function updateOrder(orderId, updateData, actorId) {
  * - returning: khách yêu cầu hoàn trả hàng
  * @param {string} orderId - ID đơn hàng
  * @param {string} userId - ID khách hàng (kiểm tra chủ đơn)
- * @param {string} action - 'succeeded' | 'returning'
+ * @param {string} action - 'succeeded' | 'returning' | 'cancelled'
  * @returns {Object} Đơn hàng sau cập nhật
  * @throws {Error} Nếu hành động không hợp lệ hoặc không đúng chủ đơn
  */
@@ -664,6 +714,14 @@ async function customerActionOrder(orderId, userId, action) {
 
   order.status = action;
 
+  if (action === 'cancelled') {
+    order.cancelledAt = new Date();
+    await order.save();
+    await restoreOrderInventory(order);
+    publishOrderUpdated(order);
+    return order;
+  }
+
   // Nếu nhận hàng thành công và thanh toán COD → đánh dấu đã thanh toán
   if (action === 'succeeded' && order.paymentStatus !== 'paid') {
     order.paymentStatus = 'paid';
@@ -671,6 +729,7 @@ async function customerActionOrder(orderId, userId, action) {
   }
 
   await order.save();
+  publishOrderUpdated(order);
   return order;
 }
 
@@ -684,5 +743,6 @@ module.exports = {
   getAllOrders,
   updateOrder,
   customerActionOrder,
+  subscribeOrderEvents,
 };
 

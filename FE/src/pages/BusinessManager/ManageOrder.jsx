@@ -37,6 +37,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { getAllOrders, updateOrder } from "@/features/orders/api";
+import { useOrderRealtime } from "@/features/orders/hooks/useOrderRealtime";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
 
@@ -140,6 +141,23 @@ function ManageOrder() {
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderPage, setOrderPage] = useState(1);
+
+  const handleOrderUpdated = useCallback((updatedOrder) => {
+    const updatedId = updatedOrder._id || updatedOrder.id;
+    setOrders((currentOrders) => currentOrders.map((order) =>
+      (order._id || order.id) === updatedId ? updatedOrder : order
+    ));
+    setSelectedOrder((currentOrder) =>
+      currentOrder && (currentOrder._id || currentOrder.id) === updatedId
+        ? updatedOrder
+        : currentOrder
+    );
+  }, []);
+
+  useOrderRealtime(
+    handleOrderUpdated,
+    user?.role?.toLowerCase() === "business manager"
+  );
 
   // === FETCH DATA ===
 

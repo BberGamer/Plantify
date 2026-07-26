@@ -237,10 +237,16 @@ function Profile() {
    * @param {'succeeded'|'returning'} action - Hành động
    */
   const handleCustomerAction = async (orderId, action) => {
-    const actionLabel = action === 'succeeded' ? 'Đã nhận hàng' : 'Yêu cầu hoàn trả';
+    const actionLabel = action === 'succeeded'
+      ? 'Đã nhận hàng'
+      : action === 'cancelled'
+        ? 'Hủy đơn hàng'
+        : 'Yêu cầu hoàn trả';
     const confirmMsg = action === 'succeeded'
       ? 'Bạn xác nhận đã nhận được hàng?'
-      : 'Bạn có muốn yêu cầu hoàn trả đơn hàng này không?';
+      : action === 'cancelled'
+        ? 'Bạn có chắc muốn hủy đơn hàng này không?'
+        : 'Bạn có muốn yêu cầu hoàn trả đơn hàng này không?';
 
     if (!window.confirm(confirmMsg)) return;
 
@@ -641,6 +647,19 @@ function Profile() {
                               </div>
                             </div>
                           </div>
+
+                          {order.status === 'pending' && (
+                            <div className="profile-order-actions">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 font-medium"
+                                onClick={() => handleCustomerAction(order._id || order.id, 'cancelled')}
+                              >
+                                Hủy đơn hàng
+                              </Button>
+                            </div>
+                          )}
 
                           {/* Hành động của khách - chỉ hiện khi status = sented */}
                           {order.status === 'sented' && (

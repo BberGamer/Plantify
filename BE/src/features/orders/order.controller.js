@@ -147,6 +147,13 @@ const getAllOrders = async (req, res) => {
 };
 
 /**
+ * Giữ kết nối SSE để nhận trạng thái đơn hàng theo thời gian thực.
+ */
+const streamOrderEvents = (req, res) => {
+  orderService.subscribeOrderEvents(req, res);
+};
+
+/**
  * Cập nhật đơn hàng (cho business manager)
  * PUT /api/orders/:id
  */
@@ -174,7 +181,7 @@ const updateOrder = async (req, res) => {
 /**
  * Xử lý hành động của khách hàng trên đơn hàng (Nhận hàng / Yêu cầu hoàn trả)
  * PUT /api/orders/:id/customer-action
- * @param {string} req.body.action - 'succeeded' | 'returning'
+ * @param {string} req.body.action - 'succeeded' | 'returning' | 'cancelled'
  */
 const customerAction = async (req, res) => {
   try {
@@ -182,8 +189,8 @@ const customerAction = async (req, res) => {
     const userId = req.user.id;
     const { action } = req.body;
 
-    if (!['succeeded', 'returning'].includes(action)) {
-      return error(res, 'Hành động không hợp lệ. Chỉ chấp nhận: succeeded, returning', 400);
+    if (!['succeeded', 'returning', 'cancelled'].includes(action)) {
+      return error(res, 'Hành động không hợp lệ. Chỉ chấp nhận: succeeded, returning, cancelled', 400);
     }
 
     const order = await orderService.customerActionOrder(orderId, userId, action);
@@ -211,6 +218,7 @@ module.exports = {
   getMyOrders,
   getDashboardStats,
   getAllOrders,
+  streamOrderEvents,
   updateOrder,
   customerAction,
 };
