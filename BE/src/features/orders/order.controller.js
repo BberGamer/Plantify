@@ -164,6 +164,13 @@ const getAllOrders = async (req, res) => {
 };
 
 /**
+ * Giữ kết nối SSE để nhận thay đổi trạng thái đơn hàng.
+ */
+const streamOrderEvents = (req, res) => {
+  orderService.subscribeOrderEvents(req, res);
+};
+
+/**
  * Cập nhật đơn hàng (cho business manager)
  * PUT /api/orders/:id
  */
@@ -232,6 +239,7 @@ module.exports = {
   getMyOrders,
   getDashboardStats,
   getAllOrders,
+  streamOrderEvents,
   updateOrder,
   customerAction,
 };

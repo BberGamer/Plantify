@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+// hooks/index.js - Lấy và đồng bộ danh sách đơn hàng của khách hàng
+import { useState, useEffect, useCallback } from "react";
 import { getMyOrders } from "../api";
 import { useAuth } from "@/features/auth/hooks";
+import { useOrderRealtime } from "./useOrderRealtime";
 
 /**
  * Hook lấy toàn bộ danh sách đơn hàng của user hiện tại.
@@ -12,6 +14,30 @@ export function useMyOrders() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleOrderUpdated = useCallback((updatedOrder) => {
+    const updatedId = updatedOrder._id || updatedOrder.id;
+    setOrders((currentOrders) => {
+      const orderExists = currentOrders.some(
+        (order) => (order._id || order.id) === updatedId
+      );
+
+      if (!orderExists) return [updatedOrder, ...currentOrders];
+
+      return currentOrders.map((order) =>
+        (order._id || order.id) === updatedId ? updatedOrder : order
+      );
+    });
+
+    if (
+      Number(updatedOrder.walletAmount || 0) > 0 ||
+      Number(updatedOrder.refundedAmount || 0) > 0
+    ) {
+      window.dispatchEvent(new Event("wallet-updated"));
+    }
+  }, []);
+
+  useOrderRealtime(handleOrderUpdated, isAuthenticated);
 
   useEffect(() => {
     if (!isAuthenticated) {

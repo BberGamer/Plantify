@@ -1,5 +1,82 @@
+// notification.service.js - Xử lý và phát thông báo theo thời gian thực
 const mongoose = require('mongoose');
 const { Notification } = require('./notification.model');
+
+const notificationEventClients = new Set();
+let notificationChangeStream = null;
+
+async function populateNotification(notificationId) {
+  return Notification.findById(notificationId)
+    .populate('actorId', 'fullName avatarUrl email')
+    .populate('postId', 'title')
+    .populate('orderId', 'orderCode status total')
+    .lean();
+}
+
+function publishNotificationCreated(notification) {
+  if (!notification) return;
+
+  const recipientId = String(notification.recipientId?._id || notification.recipientId);
+  const data = JSON.stringify({ notification });
+
+  for (const client of notificationEventClients) {
+    if (client.userId === recipientId) {
+      client.res.write(`event: notification.created\ndata: ${data}\n\n`);
+    }
+  }
+}
+
+function startNotificationChangeStream() {
+  if (notificationChangeStream) return;
+
+  notificationChangeStream = Notification.watch([
+    { $match: { operationType: 'insert' } },
+  ]);
+
+  notificationChangeStream.on('change', async (change) => {
+    const notification = await populateNotification(change.documentKey._id);
+    publishNotificationCreated(notification);
+  });
+
+  notificationChangeStream.on('error', (error) => {
+    console.error('[Notification Realtime] MongoDB change stream error:', error);
+    notificationChangeStream = null;
+  });
+
+  notificationChangeStream.on('close', () => {
+    notificationChangeStream = null;
+  });
+}
+
+/**
+ * Mở kết nối SSE để nhận thông báo theo thời gian thực.
+ */
+function subscribeNotificationEvents(req, res) {
+  startNotificationChangeStream();
+
+  const client = {
+    res,
+    userId: String(req.user.id),
+  };
+
+  res.status(200);
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.flushHeaders?.();
+  res.write('event: connected\ndata: {}\n\n');
+
+  notificationEventClients.add(client);
+  const heartbeat = setInterval(() => res.write(': keep-alive\n\n'), 25000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    notificationEventClients.delete(client);
+  });
+}
 
 function ensureObjectId(id, message = 'ID không hợp lệ') {
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -38,7 +115,10 @@ async function createNotification(payload) {
     return null;
   }
 
-  return Notification.create(payload);
+  const createdNotification = await Notification.create(payload);
+  const notification = await populateNotification(createdNotification._id);
+  publishNotificationCreated(notification);
+  return notification;
 }
 
 /**
@@ -151,5 +231,6 @@ module.exports = {
   getUnreadCount,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  subscribeNotificationEvents,
 };
 

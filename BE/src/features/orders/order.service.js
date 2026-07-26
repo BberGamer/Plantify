@@ -10,6 +10,109 @@ const { createOrderNotification } = require('../notifications/notification.servi
 
 // ========== HELPER FUNCTIONS ==========
 
+const orderEventClients = new Set();
+let orderChangeStream = null;
+
+/**
+ * Theo dõi thay đổi từ MongoDB để realtime hoạt động giữa nhiều tiến trình backend.
+ */
+function startOrderChangeStream() {
+  if (orderChangeStream) return;
+
+  orderChangeStream = Order.watch([], { fullDocument: 'updateLookup' });
+
+  orderChangeStream.on('change', (change) => {
+    const order = change.fullDocument;
+    if (!order) return;
+
+    const isUnpaidBankOrder =
+      order.paymentMethod === 'BANK' &&
+      !['paid', 'refunded'].includes(order.paymentStatus);
+    if (isUnpaidBankOrder) return;
+
+    if (change.operationType === 'insert') {
+      publishOrderCreated(order);
+      return;
+    }
+
+    publishOrderUpdated(order);
+  });
+
+  orderChangeStream.on('error', (error) => {
+    console.error('[Order Realtime] MongoDB change stream error:', error);
+    orderChangeStream = null;
+  });
+
+  orderChangeStream.on('close', () => {
+    orderChangeStream = null;
+  });
+}
+
+/**
+ * Mở kết nối SSE để đồng bộ trạng thái đơn hàng theo thời gian thực.
+ */
+function subscribeOrderEvents(req, res) {
+  startOrderChangeStream();
+
+  const client = {
+    res,
+    userId: String(req.user.id),
+    role: req.user.role,
+  };
+
+  res.status(200);
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.flushHeaders?.();
+  res.write('event: connected\ndata: {}\n\n');
+
+  orderEventClients.add(client);
+  const heartbeat = setInterval(() => res.write(': keep-alive\n\n'), 25000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    orderEventClients.delete(client);
+  });
+}
+
+/**
+ * Gửi đơn hàng mới nhất cho chủ đơn và Business Manager.
+ */
+function publishOrderUpdated(order) {
+  const ownerId = String(order.userId?._id || order.userId);
+  const data = JSON.stringify({
+    type: 'order.updated',
+    order: typeof order.toObject === 'function' ? order.toObject() : order,
+  });
+
+  for (const client of orderEventClients) {
+    if (client.role === 'business manager' || client.userId === ownerId) {
+      client.res.write(`event: order.updated\ndata: ${data}\n\n`);
+    }
+  }
+}
+
+/**
+ * Gửi đơn hàng vừa tạo cho chủ đơn và các Business Manager đang kết nối.
+ */
+function publishOrderCreated(order) {
+  const ownerId = String(order.userId?._id || order.userId);
+  const data = JSON.stringify({
+    type: 'order.created',
+    order: typeof order.toObject === 'function' ? order.toObject() : order,
+  });
+
+  for (const client of orderEventClients) {
+    if (client.role === 'business manager' || client.userId === ownerId) {
+      client.res.write(`event: order.created\ndata: ${data}\n\n`);
+    }
+  }
+}
+
 /**
  * Tạo mã đơn hàng duy nhất
  * Format: PL + YYYYMMDDHHmmss + 3 ký tự random
@@ -282,7 +385,11 @@ async function createOrderFromProducts(userId, orderData) {
     throw error;
   }
 
-  return Order.findById(order._id);
+  const createdOrder = await Order.findById(order._id);
+  if (createdOrder.paymentMethod === 'COD' || createdOrder.paymentStatus === 'paid') {
+    publishOrderCreated(createdOrder);
+  }
+  return createdOrder;
 }
 
 async function refundOrderToWallet(order) {
@@ -408,7 +515,9 @@ async function markVnpayOrderPaid(order, params) {
     { $pull: { items: { selected: true } } }
   ).catch((err) => console.error('[Order Service] Lỗi khi xóa sản phẩm giỏ hàng sau thanh toán:', err));
 
-  return Order.findById(order._id);
+  const updatedOrder = await Order.findById(order._id);
+  publishOrderCreated(updatedOrder);
+  return updatedOrder;
 }
 
 /**
@@ -468,6 +577,7 @@ async function verifyVnpayReturn(vnpParams, userId) {
 
   // 5. Nếu đơn đã thanh toán rồi thì trả về luôn (tránh xử lý trùng)
   if (order.paymentStatus === 'paid') {
+    publishOrderCreated(order);
     return { isValid: true, responseCode: '00', order };
   }
 
@@ -614,7 +724,12 @@ async function getDashboardStats() {
  * @returns {Array} Danh sách đơn hàng
  */
 async function getAllOrders() {
-  return Order.find({}).sort({ createdAt: -1 });
+  return Order.find({
+    $or: [
+      { paymentMethod: { $ne: 'BANK' } },
+      { paymentStatus: { $in: ['paid', 'refunded'] } },
+    ],
+  }).sort({ createdAt: -1 });
 }
 
 /**
@@ -710,6 +825,7 @@ async function updateOrder(orderId, updateData, actorId) {
       .catch((err) => console.error('[Order Service] Lỗi tạo thông báo đơn hàng:', err));
   }
 
+  publishOrderUpdated(updatedOrder);
   return updatedOrder;
 }
 
@@ -759,7 +875,9 @@ async function customerActionOrder(orderId, userId, action) {
     order.cancellationReason = 'customer_cancelled';
     await refundOrderToWallet(order);
     await restoreOrderInventory(order);
-    return Order.findById(order._id);
+    const updatedOrder = await Order.findById(order._id);
+    publishOrderUpdated(updatedOrder);
+    return updatedOrder;
   }
 
   // Nếu nhận hàng thành công và thanh toán COD → đánh dấu đã thanh toán
@@ -769,6 +887,7 @@ async function customerActionOrder(orderId, userId, action) {
   }
 
   await order.save();
+  publishOrderUpdated(order);
   return order;
 }
 
@@ -783,5 +902,6 @@ module.exports = {
   updateOrder,
   customerActionOrder,
   cancelCreatedPayment,
+  subscribeOrderEvents,
 };
 

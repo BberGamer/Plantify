@@ -65,8 +65,7 @@ function isRefundNotification(notification) {
   return (
     notification.type === "order_status_updated" &&
     typeof notification.message === "string" &&
-    notification.message.includes("Hoàn") ||
-    (typeof notification.message === "string" && notification.message.includes("hoàn"))
+    notification.message.toLocaleLowerCase("vi-VN").includes("vào ví")
   );
 }
 

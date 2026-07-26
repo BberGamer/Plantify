@@ -37,6 +37,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { getAllOrders, updateOrder } from "@/features/orders/api";
+import { useOrderRealtime } from "@/features/orders/hooks/useOrderRealtime";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
 
@@ -166,6 +167,37 @@ function ManageOrder() {
   const [cancellationReason, setCancellationReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
   const [orderPage, setOrderPage] = useState(1);
+
+  const handleOrderUpdated = useCallback((updatedOrder) => {
+    const updatedId = updatedOrder._id || updatedOrder.id;
+
+    setOrders((currentOrders) => {
+      const orderExists = currentOrders.some(
+        (order) => (order._id || order.id) === updatedId
+      );
+
+      if (!orderExists) return [updatedOrder, ...currentOrders];
+
+      return currentOrders.map((order) =>
+        (order._id || order.id) === updatedId ? updatedOrder : order
+      );
+    });
+    setSelectedOrder((currentOrder) =>
+      currentOrder && (currentOrder._id || currentOrder.id) === updatedId
+        ? updatedOrder
+        : currentOrder
+    );
+    setCancelOrderTarget((currentOrder) =>
+      currentOrder && (currentOrder._id || currentOrder.id) === updatedId
+        ? null
+        : currentOrder
+    );
+  }, []);
+
+  useOrderRealtime(
+    handleOrderUpdated,
+    user?.role?.toLowerCase() === "business manager"
+  );
 
   // === FETCH DATA ===
 
