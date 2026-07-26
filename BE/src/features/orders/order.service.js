@@ -10,6 +10,54 @@ const { createOrderNotification } = require('../notifications/notification.servi
 
 // ========== HELPER FUNCTIONS ==========
 
+const orderEventClients = new Set();
+
+/**
+ * Mở kết nối SSE để đồng bộ trạng thái đơn hàng theo thời gian thực.
+ */
+function subscribeOrderEvents(req, res) {
+  const client = {
+    res,
+    userId: String(req.user.id),
+    role: req.user.role,
+  };
+
+  res.status(200);
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.flushHeaders?.();
+  res.write('event: connected\ndata: {}\n\n');
+
+  orderEventClients.add(client);
+  const heartbeat = setInterval(() => res.write(': keep-alive\n\n'), 25000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    orderEventClients.delete(client);
+  });
+}
+
+/**
+ * Gửi đơn hàng mới nhất cho chủ đơn và Business Manager.
+ */
+function publishOrderUpdated(order) {
+  const ownerId = String(order.userId?._id || order.userId);
+  const data = JSON.stringify({
+    type: 'order.updated',
+    order: typeof order.toObject === 'function' ? order.toObject() : order,
+  });
+
+  for (const client of orderEventClients) {
+    if (client.role === 'business manager' || client.userId === ownerId) {
+      client.res.write(`event: order.updated\ndata: ${data}\n\n`);
+    }
+  }
+}
+
 /**
  * Tạo mã đơn hàng duy nhất
  * Format: PL + YYYYMMDDHHmmss + 3 ký tự random
@@ -710,6 +758,7 @@ async function updateOrder(orderId, updateData, actorId) {
       .catch((err) => console.error('[Order Service] Lỗi tạo thông báo đơn hàng:', err));
   }
 
+  publishOrderUpdated(updatedOrder);
   return updatedOrder;
 }
 
@@ -759,7 +808,9 @@ async function customerActionOrder(orderId, userId, action) {
     order.cancellationReason = 'customer_cancelled';
     await refundOrderToWallet(order);
     await restoreOrderInventory(order);
-    return Order.findById(order._id);
+    const updatedOrder = await Order.findById(order._id);
+    publishOrderUpdated(updatedOrder);
+    return updatedOrder;
   }
 
   // Nếu nhận hàng thành công và thanh toán COD → đánh dấu đã thanh toán
@@ -769,6 +820,7 @@ async function customerActionOrder(orderId, userId, action) {
   }
 
   await order.save();
+  publishOrderUpdated(order);
   return order;
 }
 
@@ -783,5 +835,6 @@ module.exports = {
   updateOrder,
   customerActionOrder,
   cancelCreatedPayment,
+  subscribeOrderEvents,
 };
 

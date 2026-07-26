@@ -8,6 +8,9 @@ const {
   authorizeCustomer,
 } = require('../../middlewares/auth');
 
+// Kênh realtime dùng chung cho khách hàng và Business Manager
+router.get('/events', authenticate, orderController.streamOrderEvents);
+
 // === ĐẶT HÀNG ===
 
 // Tạo đơn hàng COD (yêu cầu đăng nhập)
