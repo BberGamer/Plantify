@@ -258,9 +258,13 @@ function Profile() {
    * Khách hàng xác nhận đã nhận hàng (succeeded) hoặc yêu cầu hoàn trả (returning)
    * Chỉ khả dụng khi đơn hàng ở trạng thái 'sented'
    * @param {string} orderId - ID đơn hàng
-   * @param {'succeeded'|'returning'} action - Hành động
+   * @param {'succeeded'|'returning'|'cancelled'} action - Hành động
    */
   const handleCustomerAction = async (orderId, action) => {
+    const targetOrder = orders.find(
+      (order) => (order._id || order.id) === orderId
+    );
+    const hasWalletPayment = Number(targetOrder?.walletAmount || 0) > 0;
     const actionLabel = action === 'succeeded'
       ? 'Đã nhận hàng'
       : action === 'cancelled'
@@ -269,14 +273,23 @@ function Profile() {
     const confirmMsg = action === 'succeeded'
       ? 'Bạn xác nhận đã nhận được hàng?'
       : action === 'cancelled'
-        ? 'Bạn có chắc muốn hủy đơn hàng này? Tiền đã thanh toán sẽ được hoàn vào ví.'
+        ? hasWalletPayment
+          ? 'Bạn có chắc muốn hủy đơn hàng này? Phần tiền đã thanh toán bằng ví sẽ được hoàn lại vào ví.'
+          : 'Bạn có chắc muốn hủy đơn hàng này?'
         : 'Bạn có muốn yêu cầu hoàn trả đơn hàng này không?';
 
     if (!window.confirm(confirmMsg)) return;
 
     try {
-      await customerUpdateOrder(orderId, action);
-      toast.success(`${actionLabel} thành công!`);
+      const response = await customerUpdateOrder(orderId, action);
+      const refundedAmount = Number(
+        response.data?.data?.order?.refundedAmount || 0
+      );
+      toast.success(
+        action === 'cancelled' && refundedAmount > 0
+          ? `Hủy đơn hàng thành công! Đã hoàn ${formatVND(refundedAmount)} vào ví.`
+          : `${actionLabel} thành công!`
+      );
       refetchOrders();
       const { data } = await getMyWallet();
       setWallet(data?.data || { balance: 0, transactions: [] });
