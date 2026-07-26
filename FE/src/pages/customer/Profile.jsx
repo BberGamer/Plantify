@@ -319,9 +319,17 @@ function Profile() {
 
   useEffect(() => {
     if (user?.role !== "customer") return;
-    getMyWallet()
-      .then(({ data }) => setWallet(data?.data || { balance: 0, transactions: [] }))
-      .catch(() => setWallet({ balance: 0, transactions: [] }));
+
+    const refreshWallet = () => {
+      getMyWallet()
+        .then(({ data }) => setWallet(data?.data || { balance: 0, transactions: [] }))
+        .catch(() => setWallet({ balance: 0, transactions: [] }));
+    };
+
+    refreshWallet();
+    window.addEventListener("wallet-updated", refreshWallet);
+
+    return () => window.removeEventListener("wallet-updated", refreshWallet);
   }, [user?.role]);
 
   // Class input tùy trạng thái chỉnh sửa

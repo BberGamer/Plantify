@@ -49,7 +49,7 @@ export function useOrderRealtime(onOrderUpdated, enabled = true) {
             if (!["order.created", "order.updated"].includes(eventName) || !eventData) continue;
 
             const payload = JSON.parse(eventData);
-            onOrderUpdated(payload.order);
+            onOrderUpdated(payload.order, eventName);
           }
         }
       } catch (error) {

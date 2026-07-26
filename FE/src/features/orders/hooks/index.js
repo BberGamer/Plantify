@@ -16,11 +16,25 @@ export function useMyOrders() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleOrderUpdated = useCallback((updatedOrder) => {
-    setOrders((currentOrders) => currentOrders.map((order) =>
-      (order._id || order.id) === (updatedOrder._id || updatedOrder.id)
-        ? updatedOrder
-        : order
-    ));
+    const updatedId = updatedOrder._id || updatedOrder.id;
+    setOrders((currentOrders) => {
+      const orderExists = currentOrders.some(
+        (order) => (order._id || order.id) === updatedId
+      );
+
+      if (!orderExists) return [updatedOrder, ...currentOrders];
+
+      return currentOrders.map((order) =>
+        (order._id || order.id) === updatedId ? updatedOrder : order
+      );
+    });
+
+    if (
+      Number(updatedOrder.walletAmount || 0) > 0 ||
+      Number(updatedOrder.refundedAmount || 0) > 0
+    ) {
+      window.dispatchEvent(new Event("wallet-updated"));
+    }
   }, []);
 
   useOrderRealtime(handleOrderUpdated, isAuthenticated);

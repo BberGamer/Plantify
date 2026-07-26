@@ -97,16 +97,17 @@ function publishOrderUpdated(order) {
 }
 
 /**
- * Gửi đơn hàng vừa tạo cho các Business Manager đang kết nối.
+ * Gửi đơn hàng vừa tạo cho chủ đơn và các Business Manager đang kết nối.
  */
 function publishOrderCreated(order) {
+  const ownerId = String(order.userId?._id || order.userId);
   const data = JSON.stringify({
     type: 'order.created',
     order: typeof order.toObject === 'function' ? order.toObject() : order,
   });
 
   for (const client of orderEventClients) {
-    if (client.role === 'business manager') {
+    if (client.role === 'business manager' || client.userId === ownerId) {
       client.res.write(`event: order.created\ndata: ${data}\n\n`);
     }
   }

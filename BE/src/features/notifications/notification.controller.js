@@ -1,3 +1,4 @@
+// notification.controller.js - Xử lý request thông báo và kết nối SSE
 const apiResponse = require('../../utils/apiResponse');
 const notificationService = require('./notification.service');
 
@@ -21,6 +22,10 @@ async function getUnreadNotificationCount(req, res, next) {
   } catch (error) {
     return next(error);
   }
+}
+
+function streamNotificationEvents(req, res) {
+  notificationService.subscribeNotificationEvents(req, res);
 }
 
 async function markNotificationAsRead(req, res, next) {
@@ -49,6 +54,7 @@ async function markAllNotificationsAsRead(req, res, next) {
 module.exports = {
   getNotifications,
   getUnreadNotificationCount,
+  streamNotificationEvents,
   markNotificationAsRead,
   markAllNotificationsAsRead,
 };
