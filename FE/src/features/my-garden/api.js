@@ -44,3 +44,8 @@ export async function deleteUserPlantImage(userPlantId, imageId) {
   const response = await api.delete(`${MY_GARDEN_API}/${userPlantId}/images/${imageId}`);
   return response.data;
 }
+
+export async function getCareEvents(userPlantId) { const response = await api.get(`${MY_GARDEN_API}/${userPlantId}/care-events`); return response.data; }
+export async function createCareEvent(userPlantId, payload) { const response = await api.post(`${MY_GARDEN_API}/${userPlantId}/care-events`, payload); return response.data; }
+export async function updateCareEvent(userPlantId, eventId, payload) { const response = await api.patch(`${MY_GARDEN_API}/${userPlantId}/care-events/${eventId}`, payload); return response.data; }
+export async function deleteCareEvent(userPlantId, eventId) { const response = await api.delete(`${MY_GARDEN_API}/${userPlantId}/care-events/${eventId}`); return response.data; }

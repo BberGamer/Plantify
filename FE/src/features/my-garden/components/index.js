@@ -4,3 +4,4 @@ export { UserPlantCard } from "./UserPlantCard";
 export { UserPlantDetailDialog } from "./UserPlantDetailDialog";
 export { UserPlantFormDialog } from "./UserPlantFormDialog";
 export { UserPlantAlbum } from "./UserPlantAlbum";
+export { UserPlantCareEvents } from "./UserPlantCareEvents";
