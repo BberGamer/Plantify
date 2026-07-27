@@ -1,11 +1,13 @@
 // myGarden.utils.test.js - Kiểm tra thứ tự ưu tiên ảnh của UserPlant
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
 import {
   buildUserPlantPayload,
   createUserPlantThenUpload,
   DEFAULT_IMAGE,
   getAlbumCapabilities,
+  getCareEventCapabilities,
   getImageFallbackSource,
   getUserPlantImage,
   removePendingPreview,
@@ -25,6 +27,35 @@ test("ưu tiên coverImageUrl trước ảnh catalogue", () => {
   });
 
   assert.equal(image, "cover.jpg");
+});
+
+test("timezone Asia/Ho_Chi_Minh chuyển datetime-local không lệch 7 giờ", () => {
+  const previousTimezone = process.env.TZ;
+  process.env.TZ = "Asia/Ho_Chi_Minh";
+  try {
+    const utcDate = new Date("2026-07-27T05:30:00.000Z");
+    assert.equal(toLocalDateTimeInput(utcDate), "2026-07-27T12:30");
+    assert.equal(localDateTimeToIso("2026-07-27T12:30"), "2026-07-27T05:30:00.000Z");
+  } finally { if (previousTimezone === undefined) delete process.env.TZ; else process.env.TZ = previousTimezone; }
+});
+
+test("CareEvent editable/read-only exposes đúng thao tác", () => {
+  assert.deepEqual(getCareEventCapabilities(false), { canCreate: true, canEdit: true, canDelete: true });
+  assert.deepEqual(getCareEventCapabilities(true), { canCreate: false, canEdit: false, canDelete: false });
+});
+
+test("Album và CareEvent nằm ngoài form UserPlant, CareEvent không tạo nested form", () => {
+  const formSource = fs.readFileSync(new URL("../../../src/features/my-garden/components/UserPlantFormDialog.jsx", import.meta.url), "utf8");
+  const careSource = fs.readFileSync(new URL("../../../src/features/my-garden/components/UserPlantCareEvents.jsx", import.meta.url), "utf8");
+  const formStart = formSource.indexOf('<form data-testid="user-plant-form"');
+  const formEnd = formSource.indexOf("</form>", formStart);
+  assert.ok(formStart >= 0 && formEnd > formStart);
+  assert.ok(formSource.indexOf("<UserPlantAlbum", formEnd) > formEnd);
+  assert.ok(formSource.indexOf("<UserPlantCareEvents", formEnd) > formEnd);
+  assert.ok(formSource.indexOf('data-testid="user-plant-create-images"', formEnd) > formEnd);
+  assert.equal(careSource.includes("<form"), false);
+  assert.equal(careSource.includes('type="submit"'), false);
+  assert.ok(careSource.includes('type="button"'));
 });
 
 test("datetime-local giữ đúng thời điểm khi chuyển local sang ISO", () => {

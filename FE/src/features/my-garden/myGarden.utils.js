@@ -6,6 +6,7 @@ export const ALBUM_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export function toLocalDateTimeInput(value = new Date()) { const date = value instanceof Date ? value : new Date(value); const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0, 16); }
 export function localDateTimeToIso(value) { return new Date(value).toISOString(); }
 export function sortCareEvents(events) { return [...events].sort((a, b) => new Date(b.performedAt) - new Date(a.performedAt)); }
+export function getCareEventCapabilities(readOnly) { return { canCreate: !readOnly, canEdit: !readOnly, canDelete: !readOnly }; }
 
 export function isValidAlbumFile(file) {
   return Boolean(file && ALBUM_IMAGE_TYPES.includes(file.type) && file.size <= MAX_ALBUM_IMAGE_SIZE);
