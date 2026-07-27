@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+/** Hiển thị xác nhận xóa cây khỏi My Garden. @param {Object} props - Component props. @returns {JSX.Element} Dialog xác nhận xóa. */
 export function DeleteUserPlantDialog({
   userPlant,
   open,

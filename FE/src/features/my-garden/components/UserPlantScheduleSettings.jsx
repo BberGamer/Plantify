@@ -38,6 +38,11 @@ function ScheduleFields({
   );
 }
 
+/**
+ * Quản lý hai lịch tưới nước và bón phân của một cây người dùng.
+ * @param {Object} props - Component props.
+ * @returns {JSX.Element} Khối cài đặt lịch chăm sóc.
+ */
 export function UserPlantScheduleSettings({
   userPlant,
   readOnly = false,
@@ -71,6 +76,7 @@ export function UserPlantScheduleSettings({
     userPlant?.fertilizingSchedule,
   ]);
 
+  /** Validate cả hai lịch rồi lưu vào cây người dùng. @returns {Promise<void>} */
   const save = async () => {
     const now = new Date();
     const wateringResult = validateUserPlantSchedule(
@@ -109,6 +115,7 @@ export function UserPlantScheduleSettings({
   };
 
   const bounds = getScheduleDateBounds();
+  /** Đánh dấu một loại lịch đã hoàn thành và tải lại dữ liệu cây. @param {string} scheduleType - Loại lịch cần hoàn thành. @returns {Promise<void>} */
   const complete = async (scheduleType) => {
     if (completingRef.current[scheduleType]) return;
     completingRef.current[scheduleType] = true;

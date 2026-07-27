@@ -22,11 +22,13 @@ import { ManageDiseasesHeader } from "@/features/plant-diseases/components/manag
 import { ManageDiseasesPagination } from "@/features/plant-diseases/components/manage-diseases/ManageDiseasesPagination";
 import { ManageDiseasesTable } from "@/features/plant-diseases/components/manage-diseases/ManageDiseasesTable";
 
+/** Suy ra thời điểm tạo từ ObjectId MongoDB. @param {string} hexId - ObjectId dạng hex. @returns {Date|null} Ngày tạo hoặc `null`. */
 const getTimestampFromId = (hexId) => {
   if (!hexId || hexId.length !== 24) return null;
   return new Date(parseInt(hexId.substring(0, 8), 16) * 1000);
 };
 
+/** Định dạng ngày bệnh cây, fallback sang timestamp trong ObjectId. @param {string|Date} dateStr - Ngày từ API. @param {string} id - ObjectId fallback. @returns {string} Ngày hiển thị. */
 const formatDate = (dateStr, id) => {
   const dateObj = dateStr ? new Date(dateStr) : getTimestampFromId(id);
   if (!dateObj || isNaN(dateObj.getTime())) return "-";
@@ -35,6 +37,7 @@ const formatDate = (dateStr, id) => {
   ).padStart(2, "0")}/${dateObj.getFullYear()}`;
 };
 
+/** Điều phối tìm kiếm, CRUD và dialog quản lý bệnh cây. @returns {JSX.Element} Trang quản lý bệnh cây. */
 export function ManageDiseases() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -74,6 +77,7 @@ export function ManageDiseases() {
     setIsDialogOpen(true);
   };
 
+  /** Tạo hoặc cập nhật bệnh cây rồi tải lại danh sách. @param {Object} payload - Dữ liệu bệnh cây. @returns {Promise<void>} */
   const handleSubmit = async (payload) => {
     try {
       if (editingDisease) {
@@ -90,6 +94,7 @@ export function ManageDiseases() {
     }
   };
 
+  /** Xác nhận và xóa bệnh cây được chọn. @param {Object} disease - Bệnh cây cần xóa. @returns {Promise<void>} */
   const handleDelete = async (disease) => {
     if (!confirm(`Xóa bệnh cây "${disease.name}"?`)) return;
     try {

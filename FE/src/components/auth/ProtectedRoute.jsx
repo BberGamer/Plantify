@@ -3,6 +3,7 @@ import { Navigate } from "react-router";
 import { useAuth } from "@/features/auth/hooks";
 import { isRoleAllowed } from "@/lib/roleMapping";
 
+/** Bảo vệ route theo trạng thái đăng nhập và danh sách role cho phép. @param {Object} props - Component props. @param {React.ReactNode} props.children - Nội dung route. @param {string[]} [props.allowedRoles] - Các role được phép. @returns {JSX.Element} Nội dung hoặc điều hướng phù hợp. */
 export const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 

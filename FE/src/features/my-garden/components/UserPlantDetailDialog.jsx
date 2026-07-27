@@ -18,6 +18,7 @@ import { UserPlantDiagnosisHistory } from "./UserPlantDiagnosisHistory";
 import { createCareEvent, getUserPlantById } from "../api";
 import { requestNotificationsRefresh } from "@/features/notifications/notification.utils";
 
+/** Hiển thị chi tiết cây cùng album, lịch chăm sóc và lịch sử chẩn đoán. @param {Object} props - Component props. @returns {JSX.Element|null} Dialog chi tiết cây. */
 export function UserPlantDetailDialog({
   open,
   onOpenChange,

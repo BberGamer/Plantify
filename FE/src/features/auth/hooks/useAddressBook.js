@@ -10,10 +10,12 @@ import {
   updateMyAddressApi,
 } from "@/features/auth/api";
 
+/** Lấy payload địa chỉ từ response API. @param {Object} response - Response cần mở gói. @returns {Array|Object} Payload bên trong hoặc mảng rỗng. */
 function unwrapData(response) {
   return response?.data || response || [];
 }
 
+/** Chuẩn hóa API tỉnh/thành v1 và v2 về danh sách tỉnh có wards. @param {Array} data - Dữ liệu tỉnh thành. @returns {Object[]} Danh sách tỉnh và phường/xã chuẩn hóa. */
 function normalizeProvinceData(data) {
   return (Array.isArray(data) ? data : []).map((province) => ({
     code: String(province.code),
@@ -42,6 +44,12 @@ const EMPTY_FORM = {
   isDefault: false,
 };
 
+/**
+ * Quản lý tải dữ liệu tỉnh thành, CRUD địa chỉ và state form sổ địa chỉ.
+ * @param {boolean} enabled - Có cho phép tải sổ địa chỉ hay không.
+ * @param {Object} user - Người dùng hiện tại dùng làm giá trị form mặc định.
+ * @returns {Object} State địa chỉ, form, lựa chọn tỉnh và các handler CRUD.
+ */
 export function useAddressBook(enabled, user) {
   const [addresses, setAddresses] = useState([]);
   const [provinces, setProvinces] = useState([]);

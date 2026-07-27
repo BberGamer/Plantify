@@ -4,6 +4,10 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { usePasswordResetMutations } from "@/features/auth/hooks/useAuthMutations";
 
+/**
+ * Điều phối form đặt mật khẩu mới, kiểm tra độ mạnh và gửi request reset.
+ * @returns {Object} State mật khẩu, lỗi validation và handler submit.
+ */
 export function useResetPasswordFlow() {
   const navigate = useNavigate();
   const [credentials, setCredentials] = useState({ email: "", otpCode: "" });

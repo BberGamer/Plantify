@@ -23,6 +23,7 @@ export const ROLE_RANK = {
   admin: 4
 };
 
+/** So sánh cấp quyền của hai role. @param {string} userRole - Role người dùng. @param {string} requiredRole - Role tối thiểu. @returns {boolean} `true` nếu người dùng đủ cấp quyền. */
 export function hasMinimumRole(userRole, requiredRole) {
   return ROLE_RANK[userRole] >= ROLE_RANK[requiredRole];
 }
@@ -33,6 +34,7 @@ export const BACKEND_ROLE_MAP = {
   "content manager": "content_manager",
 };
 
+/** Chuẩn hóa role có khoảng trắng từ backend sang role dùng dấu gạch dưới ở frontend. @param {string} backendRole - Role backend. @returns {string} Role frontend tương ứng. */
 export function mapBackendRoleToFeRole(backendRole) {
   return BACKEND_ROLE_MAP[backendRole] || backendRole || "customer";
 }

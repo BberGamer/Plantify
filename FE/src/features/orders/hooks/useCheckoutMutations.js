@@ -9,6 +9,7 @@ import {
 } from "@/features/orders/api";
 import { getMyWallet } from "@/features/wallet/api";
 
+/** Quản lý mutation tạo đơn, thanh toán VNPay và xác minh giao dịch. @returns {Object} Các action checkout và trạng thái request. */
 export function useCheckoutMutations() {
   const [pending, setPending] = useState({});
   const [errors, setErrors] = useState({});

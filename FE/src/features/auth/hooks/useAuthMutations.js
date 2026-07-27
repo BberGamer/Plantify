@@ -9,6 +9,10 @@ import {
 } from "@/features/auth/api";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 
+/**
+ * Theo dõi loading và lỗi độc lập cho nhiều mutation theo key.
+ * @returns {Object} Map pending, map lỗi và hàm execute truyền tiếp lỗi request.
+ */
 function useMutationMap() {
   const [pending, setPending] = useState({});
   const [errors, setErrors] = useState({});
@@ -29,6 +33,7 @@ function useMutationMap() {
   return { pending, errors, execute };
 }
 
+/** Tập hợp mutation gửi, xác minh và gửi lại OTP đăng ký. @returns {Object} Các action và trạng thái đăng ký. */
 export function useRegistrationMutations() {
   const { pending, errors, execute } = useMutationMap();
 
@@ -56,6 +61,7 @@ export function useRegistrationMutations() {
   };
 }
 
+/** Bọc thao tác đăng nhập với trạng thái loading và lỗi. @returns {Object} Action loginUser và trạng thái request. */
 export function useLoginMutation() {
   const { login } = useAuth();
   const { pending, errors, execute } = useMutationMap();
@@ -72,6 +78,7 @@ export function useLoginMutation() {
   };
 }
 
+/** Tập hợp mutation gửi OTP, xác minh OTP và đặt lại mật khẩu. @returns {Object} Các action và trạng thái khôi phục mật khẩu. */
 export function usePasswordResetMutations() {
   const { pending, errors, execute } = useMutationMap();
 

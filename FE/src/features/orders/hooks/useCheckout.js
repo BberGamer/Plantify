@@ -19,6 +19,10 @@ const EMPTY_FORM = {
   notes: "",
 };
 
+/**
+ * Điều phối dữ liệu checkout, địa chỉ, ví, phương thức thanh toán và đặt đơn.
+ * @returns {Object} State checkout, giá trị tính toán và các handler đặt hàng.
+ */
 export function useCheckout() {
   const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();

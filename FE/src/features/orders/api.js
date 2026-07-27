@@ -1,6 +1,7 @@
 // api.js - Gọi API đặt hàng, thanh toán và quản lý đơn hàng
 import { api } from '@/lib/api';
 
+/** Mở Server-Sent Events để nhận cập nhật đơn hàng thời gian thực. @param {Object} options - Tùy chọn kết nối. @param {string} options.token - Access token. @param {AbortSignal} options.signal - Signal đóng kết nối. @returns {Promise<Response>} Response chứa event stream. */
 export const openOrderEventStream = ({ token, signal }) => {
   const apiBaseUrl = import.meta.env.VITE_API_URL ?? '/api';
   const eventsUrl = `${apiBaseUrl.replace(/\/$/, '')}/orders/events`;

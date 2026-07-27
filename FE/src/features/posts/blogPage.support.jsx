@@ -28,6 +28,7 @@ const vietnameseTextReplacements = [
   [/\bKy thuat\b/gi, "Kỹ thuật"]
 ];
 
+/** Thay các chuỗi không dấu đã biết bằng phiên bản tiếng Việt dùng trong UI. @param {*} value - Giá trị cần xử lý. @returns {*} Chuỗi đã thay thế hoặc nguyên giá trị không phải chuỗi. */
 function formatVietnameseDisplayText(value) {
   if (typeof value !== "string") {
     return value;
@@ -56,6 +57,7 @@ function formatPostDate(date) {
   }).format(new Date(date));
 }
 
+/** Tạo đoạn xem trước từ HTML bài viết. @param {string} [content=""] - Nội dung HTML. @param {number} [maxLength=140] - Độ dài tối đa. @returns {string} Văn bản preview đã loại HTML. */
 function getPostPreview(content = "", maxLength = 140) {
   const plainText = content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
@@ -66,10 +68,12 @@ function getPostPreview(content = "", maxLength = 140) {
   return `${plainText.slice(0, maxLength).trim()}...`;
 }
 
+/** Lấy ID ổn định từ hai shape bài viết phổ biến. @param {Object} post - Bài viết. @returns {string|undefined} ID bài viết. */
 function getPostIdentity(post) {
   return post?._id || post?.id;
 }
 
+/** Sắp xếp bài nổi bật theo số bình luận rồi ngày tạo. @param {Object} postA - Bài viết thứ nhất. @param {Object} postB - Bài viết thứ hai. @returns {number} Giá trị comparator. */
 function compareFeaturedPosts(postA, postB) {
   const commentsDelta = (Number(postB.commentsCount) || 0) - (Number(postA.commentsCount) || 0);
 
@@ -80,6 +84,7 @@ function compareFeaturedPosts(postA, postB) {
   return new Date(postB.createdAt || 0).getTime() - new Date(postA.createdAt || 0).getTime();
 }
 
+/** Hiển thị điểm đánh giá đã giới hạn trong khoảng 0–5. @param {Object} props - Component props. @param {number} props.value - Điểm đánh giá. @returns {JSX.Element} Cụm điểm và biểu tượng sao. */
 function RatingSummary({ value }) {
   const safeValue = Math.max(0, Math.min(Number(value) || 0, 5));
 

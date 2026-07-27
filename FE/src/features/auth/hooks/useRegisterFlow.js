@@ -13,6 +13,10 @@ const EMPTY_FORM = {
   confirmPassword: "",
 };
 
+/**
+ * Điều phối form đăng ký, validation và chuyển sang bước xác minh OTP.
+ * @returns {Object} Dữ liệu form, lỗi, trạng thái hiển thị và handler đăng ký.
+ */
 export function useRegisterFlow() {
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});

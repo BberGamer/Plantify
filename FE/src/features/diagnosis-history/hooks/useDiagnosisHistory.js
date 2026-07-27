@@ -6,10 +6,20 @@ import {
 } from "../api";
 import { mapHistoryToDiagnosisResult } from "../diagnosisHistory.utils";
 
+/** Lấy thông báo lỗi từ response hoặc dùng fallback. @param {Object} error - Lỗi request. @param {string} fallback - Thông báo dự phòng. @returns {string} Thông báo lỗi. */
 function getErrorMessage(error, fallback) {
   return error.response?.data?.message || error.message || fallback;
 }
 
+/**
+ * Tải lịch sử chẩn đoán theo user, cây liên kết và phân trang.
+ * @param {Object} options - Bộ lọc lịch sử.
+ * @param {boolean} options.enabled - Có cho phép tải dữ liệu không.
+ * @param {string} [options.historyId] - ID lịch sử cần mở.
+ * @param {string} [options.userPlantId=""] - ID cây cần lọc.
+ * @param {number} [options.limit=8] - Số lịch sử mỗi lần tải.
+ * @returns {Object} Danh sách, phân trang và trạng thái request.
+ */
 export function useDiagnosisHistory({
   enabled,
   historyId,

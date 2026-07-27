@@ -25,6 +25,10 @@ import {
 } from "@/features/my-garden";
 import { usePlants } from "@/features/plants/hooks";
 
+/**
+ * Điều phối danh sách, chi tiết, form tạo/sửa và xóa cây trong My Garden.
+ * @returns {JSX.Element} Trang My Garden.
+ */
 function MyGarden() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedUserPlantId = searchParams.get("userPlantId") || "";
@@ -101,6 +105,13 @@ function MyGarden() {
     if (!nextOpen) setEditingPlant(null);
   };
 
+  /**
+   * Tạo hoặc cập nhật cây; khi tạo mới sẽ tải tuần tự các ảnh đang chờ.
+   * @param {Object} payload - Dữ liệu cây từ form.
+   * @param {File[]} [pendingFiles=[]] - Ảnh cần tải sau khi tạo cây.
+   * @param {Function} [onUploadProgress] - Callback tiến độ upload.
+   * @returns {Promise<void>}
+   */
   const handleSave = async (payload, pendingFiles = [], onUploadProgress) => {
     if (editingPlant?._id) {
       const updatedPlant = await update(editingPlant._id, payload);
@@ -133,6 +144,7 @@ function MyGarden() {
     }
   };
 
+  /** Xác nhận xóa cây đang chọn và đồng bộ lại danh sách/chi tiết. @returns {Promise<void>} */
   const handleConfirmDelete = async () => {
     if (!deleteTarget?._id) return;
 
@@ -160,6 +172,7 @@ function MyGarden() {
     openEditDialog(userPlant);
   };
 
+  /** Đồng bộ cây vừa thay đổi vào list, detail và form đang mở. @param {Object} userPlant - Cây sau cập nhật. @returns {void} */
   const handleUserPlantChanged = (userPlant) => {
     replaceUserPlant(userPlant);
     setDashboardRefreshKey((current) => current + 1);

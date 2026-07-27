@@ -32,6 +32,7 @@ function formatDiagnosisTime(value) {
   }).format(date);
 }
 
+/** Hiển thị lịch sử chẩn đoán và cho phép chọn lại một kết quả. @param {Object} props - Component props. @returns {JSX.Element} Danh sách lịch sử chẩn đoán. */
 export function DiagnosisHistoryList({
   enabled,
   authLoading,

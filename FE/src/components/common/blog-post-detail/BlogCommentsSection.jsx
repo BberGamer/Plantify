@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Star } from "lucide-react";
 
+/** Định dạng ngày giờ bình luận theo locale Việt Nam. @param {string|Date} date - Ngày bình luận. @returns {string} Chuỗi ngày giờ. */
 function formatDate(date) {
   if (!date) return "";
   return new Intl.DateTimeFormat("vi-VN", {
@@ -17,6 +18,7 @@ function formatDate(date) {
   }).format(new Date(date));
 }
 
+/** Tạo tối đa hai chữ cái đầu cho avatar fallback. @param {string} [name=""] - Tên tác giả. @returns {string} Chữ viết tắt. */
 function getInitials(name = "") {
   return name
     .split(" ")
@@ -27,6 +29,7 @@ function getInitials(name = "") {
     .toUpperCase() || "U";
 }
 
+/** Chuẩn hóa tên và avatar tác giả từ các response shape comment. @param {Object} comment - Bình luận. @returns {{name: string, avatarUrl: string}} Thông tin tác giả. */
 function getCommentAuthor(comment) {
   const author = comment?.userId || comment?.author || {};
   return {
@@ -35,6 +38,7 @@ function getCommentAuthor(comment) {
   };
 }
 
+/** Hiển thị hoặc cho phép chọn điểm đánh giá bằng sao. @param {Object} props - Component props. @param {number} props.rating - Điểm hiện tại. @param {Function} [props.onChange] - Callback chọn điểm. @returns {JSX.Element|null} Cụm sao hoặc `null`. */
 function RatingStars({ rating, onChange }) {
   return (
     <div className="flex items-center gap-1">
@@ -59,6 +63,11 @@ function RatingStars({ rating, onChange }) {
   );
 }
 
+/**
+ * Hiển thị form đánh giá và danh sách bình luận của bài viết.
+ * @param {Object} props - Component props.
+ * @returns {JSX.Element} Khu vực bình luận.
+ */
 function BlogCommentsSection({
   commentCount,
   commentsError,

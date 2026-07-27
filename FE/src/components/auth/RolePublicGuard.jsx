@@ -10,6 +10,7 @@ const STAFF_ROLES = new Set(["business manager", "content manager", "admin"]);
 const isStaffRole = (role) =>
   !!role && STAFF_ROLES.has(role.toLowerCase().replace(/_/g, " "));
 
+/** Ngăn role quản lý truy cập các trang public không phù hợp. @param {Object} props - Component props. @param {React.ReactNode} props.children - Nội dung public. @returns {JSX.Element} Nội dung hoặc điều hướng dashboard. */
 export const RolePublicGuard = ({ children }) => {
   const { user, loading } = useAuth();
 

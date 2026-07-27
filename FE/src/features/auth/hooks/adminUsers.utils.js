@@ -28,6 +28,7 @@ const initialCreateUserForm = {
   role: ""
 };
 
+/** Ánh xạ role backend sang nhãn quản trị. @param {string} role - Role backend. @returns {string} Nhãn role. */
 const mapRoleLabel = (role) => {
   switch (role) {
     case "admin":
@@ -41,12 +42,14 @@ const mapRoleLabel = (role) => {
   }
 };
 
+/** Ánh xạ trạng thái boolean sang nhãn hoạt động. @param {boolean} status - Trạng thái tài khoản. @returns {string} Nhãn trạng thái. */
 const mapStatusLabel = (status) => {
   return status
     ? "Hoạt động"
     : "Tạm khóa";
 };
 
+/** Định dạng ngày cho bảng người dùng. @param {string|Date} dateValue - Ngày cần định dạng. @returns {string} Ngày hiển thị hoặc `--`. */
 const formatDate = (dateValue) => {
   if (!dateValue) {
     return "--";
@@ -55,6 +58,7 @@ const formatDate = (dateValue) => {
   return new Date(dateValue).toLocaleDateString("vi-VN");
 };
 
+/** Tạo tối đa hai chữ cái đầu từ họ tên. @param {string} fullName - Họ tên người dùng. @returns {string} Chữ viết tắt viết hoa. */
 const getInitials = (fullName) => {
   return (fullName || "ND")
     .split(" ")

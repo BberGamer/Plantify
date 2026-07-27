@@ -15,8 +15,14 @@ import { buildUserPlantPayload, getApiErrorMessage, isValidAlbumFile, removePend
 
 const NO_CATALOG_VALUE = "none";
 const EMPTY_FORM = { name: "", catalogPlantId: "", notes: "" };
+/** Lấy ID từ reference dạng object hoặc giữ nguyên primitive. @param {*} value - Reference cần đọc. @returns {*} ID, primitive ban đầu hoặc chuỗi rỗng. */
 const getReferenceId = (value) => !value ? "" : typeof value === "object" ? value._id || value.id || "" : value;
 
+/**
+ * Hiển thị form tạo/sửa cây và các phần album, lịch chăm sóc liên quan.
+ * @param {Object} props - Component props.
+ * @returns {JSX.Element} Dialog form cây người dùng.
+ */
 export function UserPlantFormDialog({ open, onOpenChange, userPlant, catalogPlants, catalogLoading, catalogError, saving, onSubmit, onUserPlantChanged }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [pendingFiles, setPendingFiles] = useState([]);
@@ -46,6 +52,7 @@ export function UserPlantFormDialog({ open, onOpenChange, userPlant, catalogPlan
   }, [open, userPlant]);
   useEffect(() => () => revokePendingPreviews(pendingFilesRef.current), []);
 
+  /** Validate form, tạo payload và chuyển các ảnh đang chờ cho page xử lý. @param {Event} event - Sự kiện submit. @returns {Promise<void>} */
   const handleUserPlantSubmit = async (event) => {
     event.preventDefault();
     if (!form.name.trim() || userPlantSaving) { if (!form.name.trim()) setFormError("Tên cây là bắt buộc."); return; }
@@ -57,6 +64,7 @@ export function UserPlantFormDialog({ open, onOpenChange, userPlant, catalogPlan
       setFormError(getApiErrorMessage(error, editing ? "Không thể cập nhật cây." : "Không thể tạo cây."));
     } finally { setSubmitting(false); setUploadProgress(0); }
   };
+  /** Validate ảnh được chọn và tạo Object URL preview. @param {Event} event - Sự kiện input file. @returns {void} */
   const selectFiles = (event) => {
     const files = Array.from(event.target.files || []); event.target.value = "";
     const valid = files.filter(isValidAlbumFile).map((file) => ({ file, preview: URL.createObjectURL(file) }));
@@ -64,6 +72,7 @@ export function UserPlantFormDialog({ open, onOpenChange, userPlant, catalogPlan
     setPendingFiles((current) => [...current, ...valid]);
   };
   const handleUserPlantChanged = (plant) => { setWorkingPlant(plant); onUserPlantChanged?.(plant); };
+  /** Tải lại chi tiết cây sau khi ghi nhận chăm sóc. @returns {Promise<void>} */
   const handleCareRecorded = async () => {
     try {
       const response = await getUserPlantById(workingPlant._id);

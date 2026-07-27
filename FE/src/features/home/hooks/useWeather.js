@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getWeatherByCity } from "../api";
 
+/** Tải thời tiết theo thành phố và quản lý trạng thái widget trang chủ. @returns {Object} Dữ liệu thời tiết và action tra cứu. */
 export function useWeather() {
   const [weatherCity, setWeatherCity] = useState("Hà Nội");
   const [weather, setWeather] = useState(null);

@@ -29,6 +29,7 @@ const ADVICE_STYLE = {
   },
 };
 
+/** Ánh xạ mã gợi ý thời tiết sang component icon phù hợp. @param {string} code - Mã gợi ý. @returns {React.ElementType} Component icon. */
 function getAdviceIcon(code) {
   if (code === "heavy_rain") return CloudRain;
   if (code === "hot_and_dry" || code === "high_humidity") return Droplets;
@@ -49,12 +50,14 @@ function WeatherMetric({ icon: Icon, label, value, iconClassName }) {
   );
 }
 
+/** Tải và hiển thị gợi ý chăm sóc dựa trên thời tiết theo thành phố. @returns {JSX.Element} Card thời tiết My Garden. */
 export function MyGardenWeatherAdvice() {
   const [city, setCity] = useState("Hà Nội");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  /** Gửi thành phố hiện tại để tải dự báo và khuyến nghị chăm sóc. @param {Event} [event] - Sự kiện submit tùy chọn. @returns {Promise<void>} */
   const loadAdvice = async (event) => {
     event?.preventDefault();
     const normalizedCity = city.trim();

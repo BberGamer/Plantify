@@ -2,6 +2,7 @@
 import { useState, useCallback } from "react";
 import { updatePlant, deletePlant } from "../api";
 
+/** Quản lý mutation tạo, sửa, xóa cây và gọi callback sau thành công. @param {Function} [onSuccess] - Callback sau mutation thành công. @returns {Object} Các action và trạng thái request. */
 export const usePlantActions = (onSuccess) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

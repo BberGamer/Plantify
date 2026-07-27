@@ -6,6 +6,7 @@ function getErrorMessage(error) {
   return error.response?.data?.message || error.message;
 }
 
+/** Quản lý request gửi báo cáo bài viết. @returns {Object} Action createReport và trạng thái request. */
 export function useCreateReport() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

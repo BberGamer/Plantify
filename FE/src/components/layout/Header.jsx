@@ -23,6 +23,10 @@ import { NotificationDropdown } from "@/components/layout/header/NotificationDro
 import { HeaderUserMenu } from "@/components/layout/header/HeaderUserMenu";
 import { getPlantCareNotificationTarget } from "@/features/notifications/notification.utils";
 
+/**
+ * Điều phối navigation, số lượng giỏ hàng, thông báo và menu tài khoản.
+ * @returns {JSX.Element} Header dùng chung của frontend.
+ */
 function Header() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -72,6 +76,11 @@ function Header() {
     navigate("/login");
   };
 
+  /**
+   * Đánh dấu thông báo đã đọc rồi điều hướng theo loại entity liên quan.
+   * @param {Object} notification - Thông báo được chọn.
+   * @returns {Promise<void>}
+   */
   const handleOpenNotification = async (notification) => {
     try {
       if (!notification.readAt) {
@@ -104,6 +113,7 @@ function Header() {
     }
   };
 
+  /** Đánh dấu toàn bộ thông báo là đã đọc và phản hồi bằng toast. @returns {Promise<void>} */
   const handleReadAllNotifications = async () => {
     try {
       await readAllNotifications();

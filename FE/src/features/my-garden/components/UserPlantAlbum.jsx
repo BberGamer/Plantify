@@ -8,6 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { deleteUserPlantImage, updateUserPlantImage, uploadUserPlantImage } from "../api";
 import { getAlbumCapabilities, getApiErrorMessage, handleUserPlantImageError, isValidAlbumFile } from "../myGarden.utils";
 
+/** Quản lý hiển thị, upload, sửa và xóa ảnh album của cây. @param {Object} props - Component props. @param {Object} props.userPlant - Cây sở hữu album. @param {Function} props.onChanged - Callback khi cây thay đổi. @param {boolean} [props.readOnly=false] - Chế độ chỉ đọc. @returns {JSX.Element} Album cây. */
 export function UserPlantAlbum({ userPlant, onChanged, readOnly = false }) {
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);

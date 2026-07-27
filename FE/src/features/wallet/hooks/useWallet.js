@@ -4,6 +4,7 @@ import { getMyWallet } from "@/features/wallet/api";
 
 const EMPTY_WALLET = { balance: 0, transactions: [] };
 
+/** Tải số dư ví khi chức năng được bật. @param {boolean} [enabled=true] - Có cho phép tải ví hay không. @returns {Object} Dữ liệu ví, trạng thái và refetch. */
 export function useWallet(enabled = true) {
   const [wallet, setWallet] = useState(EMPTY_WALLET);
   const [loading, setLoading] = useState(false);

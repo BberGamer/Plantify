@@ -20,6 +20,7 @@ function mapSuggestion(plant) {
   };
 }
 
+/** Điều phối tìm kiếm trang chủ và điều hướng tới kết quả theo loại dữ liệu. @returns {Object} State, gợi ý và handler tìm kiếm. */
 export function useHomeSearch() {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);

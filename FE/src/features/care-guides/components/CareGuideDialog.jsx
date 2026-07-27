@@ -28,6 +28,7 @@ const EMPTY_FORM = {
   repotting: "",
 };
 
+/** Hiển thị form tạo hoặc sửa hướng dẫn chăm sóc. @param {Object} props - Component props. @returns {JSX.Element} Dialog hướng dẫn chăm sóc. */
 export function CareGuideDialog({ open, onOpenChange, careGuide, plants, loading, onSubmit }) {
   const [form, setForm] = useState(EMPTY_FORM);
 

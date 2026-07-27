@@ -9,6 +9,10 @@ import {
 } from "../api";
 import { getApiErrorMessage } from "../myGarden.utils";
 
+/**
+ * Quản lý danh sách My Garden cùng thao tác tạo, cập nhật, xóa và upload ảnh.
+ * @returns {Object} State danh sách, trạng thái request và các action My Garden.
+ */
 export function useMyGarden() {
   const [userPlants, setUserPlants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,6 +118,12 @@ export function useMyGarden() {
   };
 }
 
+/**
+ * Tải chi tiết một cây khi có ID và hook được bật.
+ * @param {string} userPlantId - ID cây người dùng.
+ * @param {boolean} enabled - Có cho phép thực hiện request hay không.
+ * @returns {Object} Chi tiết cây, trạng thái tải, lỗi và hàm refetch.
+ */
 export function useUserPlantDetail(userPlantId, enabled) {
   const [userPlant, setUserPlant] = useState(null);
   const [loading, setLoading] = useState(false);

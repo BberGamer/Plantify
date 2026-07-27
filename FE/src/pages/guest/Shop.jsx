@@ -23,6 +23,10 @@ const MARKETPLACE_TERMS = [
   "Trường hợp hoàn tiền vui lòng liên hệ riêng với chúng tôi cung cấp thông tin để được hoàn tiền.",
 ];
 
+/**
+ * Điều phối bộ lọc, phân trang, điều khoản và thao tác thêm giỏ tại Shop.
+ * @returns {JSX.Element} Trang cửa hàng.
+ */
 function Shop() {
   const { isAuthenticated } = useAuth();
   const [termsOpen, setTermsOpen] = useState(() => {
@@ -76,6 +80,7 @@ function Shop() {
     submitSearch(e);
   };
 
+  /** Chuẩn hóa giá nhập thành chuỗi phân tách hàng nghìn và giới hạn một tỷ. @param {string|number} value - Giá trị input. @returns {string} Giá hiển thị. */
   const formatPrice = (value) => {
     // Chỉ giữ lại số
     const clean = value.replace(/\D/g, "");
@@ -94,6 +99,7 @@ function Shop() {
     setMaxPriceInput(formatPrice(e.target.value));
   };
 
+  /** Áp dụng khoảng giá, tự đảo min/max nếu người dùng nhập ngược. @returns {void} */
   const handleApplyPrice = () => {
     let rawMin = minPriceInput ? parseInt(minPriceInput.replace(/\./g, ""), 10) : "";
     let rawMax = maxPriceInput ? parseInt(maxPriceInput.replace(/\./g, ""), 10) : "";
@@ -119,6 +125,7 @@ function Shop() {
     setPage(1);
   };
 
+  /** Thêm một sản phẩm vào giỏ và hiển thị kết quả giới hạn tồn kho. @param {Event} event - Sự kiện click. @param {Object} product - Sản phẩm cần thêm. @returns {Promise<void>} */
   const handleAddToCart = async (event, product) => {
     event.preventDefault();
     event.stopPropagation();

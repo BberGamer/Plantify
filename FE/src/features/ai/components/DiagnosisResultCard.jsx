@@ -68,6 +68,11 @@ function KnowledgeList({ title, items }) {
   );
 }
 
+/**
+ * Chuẩn hóa và hiển thị kết quả chẩn đoán cùng sản phẩm gợi ý.
+ * @param {Object} props - Component props.
+ * @returns {JSX.Element} Card kết quả chẩn đoán.
+ */
 export function DiagnosisResultCard({
   result,
   imageUrl,

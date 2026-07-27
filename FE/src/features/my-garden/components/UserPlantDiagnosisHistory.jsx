@@ -8,6 +8,7 @@ import {
 } from "@/features/diagnosis-history";
 import { buildPlantDiagnosisUrl } from "../myGarden.utils";
 
+/** Hiển thị lịch sử chẩn đoán được lọc theo một cây trong My Garden. @param {Object} props - Component props. @param {string} props.userPlantId - ID cây. @returns {JSX.Element} Lịch sử chẩn đoán của cây. */
 export function UserPlantDiagnosisHistory({ userPlantId }) {
   const navigate = useNavigate();
   const {

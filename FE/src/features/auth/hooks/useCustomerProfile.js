@@ -13,6 +13,7 @@ function formatVND(amount) {
   }).format(amount);
 }
 
+/** Quản lý profile, đổi mật khẩu, đơn hàng và cây yêu thích của khách hàng. @returns {Object} State profile và các action liên quan. */
 export function useCustomerProfile() {
   const profile = useProfile();
   const favoritesState = useMyFavorites();

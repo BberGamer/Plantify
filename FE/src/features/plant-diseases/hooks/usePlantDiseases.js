@@ -7,6 +7,16 @@ import {
   deletePlantDisease
 } from "../api";
 
+/**
+ * Tải danh sách bệnh cây theo phân trang, cây liên quan và từ khóa.
+ * @param {Object} [options={}] - Query danh sách bệnh.
+ * @param {number} [options.page=1] - Trang hiện tại.
+ * @param {number} [options.limit=10] - Số phần tử mỗi trang.
+ * @param {string} [options.search] - Từ khóa tìm kiếm.
+ * @param {string} [options.severity] - Mức độ nghiêm trọng.
+ * @param {string} [options.affectedPlantId] - ID cây bị ảnh hưởng.
+ * @returns {Object} Danh sách, phân trang, trạng thái tải và refetch.
+ */
 export function usePlantDiseases({
   page = 1,
   limit = 10,
@@ -45,6 +55,7 @@ export function usePlantDiseases({
   return { diseases: data, loading, total, pages, refetch: fetch };
 }
 
+/** Quản lý thao tác tạo bệnh cây. @returns {Object} Hàm create và trạng thái loading. */
 export function useCreatePlantDisease() {
   const [loading, setLoading] = useState(false);
 
@@ -61,6 +72,7 @@ export function useCreatePlantDisease() {
   return { create, loading };
 }
 
+/** Quản lý thao tác cập nhật bệnh cây. @returns {Object} Hàm update và trạng thái loading. */
 export function useUpdatePlantDisease() {
   const [loading, setLoading] = useState(false);
 
@@ -77,6 +89,7 @@ export function useUpdatePlantDisease() {
   return { update, loading };
 }
 
+/** Quản lý thao tác xóa bệnh cây. @returns {Object} Hàm remove và trạng thái loading. */
 export function useDeletePlantDisease() {
   const [loading, setLoading] = useState(false);
 

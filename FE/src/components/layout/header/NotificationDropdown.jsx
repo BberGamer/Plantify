@@ -23,6 +23,7 @@ import {
   isPlantCareNotification,
 } from "@/features/notifications/notification.utils";
 
+/** Định dạng thời gian tương đối cho notification item. @param {string|Date} dateString - Thời điểm tạo. @returns {string} Chuỗi thời gian tương đối hoặc ngày. */
 function formatRelativeTime(dateString) {
   if (!dateString) return "";
   const now = new Date();
@@ -39,12 +40,14 @@ function formatRelativeTime(dateString) {
   return date.toLocaleDateString("vi-VN");
 }
 
+/** Kiểm tra thông báo cập nhật đơn có nội dung hoàn tiền vào ví. @param {Object} notification - Thông báo. @returns {boolean} Kết quả phân loại. */
 function isRefundNotification(notification) {
   return notification.type === "order_status_updated"
     && typeof notification.message === "string"
     && notification.message.toLocaleLowerCase("vi-VN").includes("vào ví");
 }
 
+/** Chọn icon theo loại thông báo và trường hợp hoàn tiền. @param {Object} notification - Thông báo. @returns {JSX.Element} Icon tương ứng. */
 function getNotificationIcon(notification) {
   if (isRefundNotification(notification)) {
     return <Wallet className="h-4 w-4 text-violet-500" />;
@@ -60,6 +63,7 @@ function getNotificationIcon(notification) {
     || <Bell className="h-4 w-4 text-muted-foreground" />;
 }
 
+/** Tạo nội dung chính của thông báo từ type và entity đã populate. @param {Object} notification - Thông báo. @returns {string} Nội dung hiển thị. */
 function formatNotificationMessage(notification) {
   if (isPlantCareNotification(notification)) {
     return getPlantCareNotificationMessage(notification);
@@ -77,6 +81,7 @@ function formatNotificationMessage(notification) {
   return "Bạn có thông báo mới";
 }
 
+/** Tạo dòng phụ cho thông báo từ cây, đơn hàng hoặc bài viết liên quan. @param {Object} notification - Thông báo. @returns {string} Nội dung phụ. */
 function getNotificationSubtext(notification) {
   if (isPlantCareNotification(notification)) {
     return getPlantCareNotificationSubtext(notification);
@@ -93,6 +98,11 @@ function getNotificationSubtext(notification) {
   return "";
 }
 
+/**
+ * Hiển thị danh sách thông báo, trạng thái đọc và các action tương ứng.
+ * @param {Object} props - Component props.
+ * @returns {JSX.Element} Dropdown thông báo.
+ */
 function NotificationDropdown({
   error,
   loading,

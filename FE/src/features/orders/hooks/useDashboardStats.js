@@ -7,6 +7,7 @@ const EMPTY_DASHBOARD_STATS = {
   monthlyRevenue: [],
 };
 
+/** Tải thống kê doanh thu và đơn hàng cho dashboard kinh doanh. @returns {Object} Dữ liệu thống kê, trạng thái và refetch. */
 export function useDashboardStats() {
   const [dashboardStats, setDashboardStats] = useState(EMPTY_DASHBOARD_STATS);
   const [loading, setLoading] = useState(true);

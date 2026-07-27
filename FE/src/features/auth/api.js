@@ -138,31 +138,37 @@ export const updateProfileApi = async (profileData) => {
   return response.data;
 };
 
+/** Lấy sổ địa chỉ của người dùng hiện tại. @returns {Promise<Object>} Dữ liệu danh sách địa chỉ. */
 export const getMyAddressesApi = async () => {
   const response = await api.get('/auth/me/addresses');
   return response.data;
 };
 
+/** Tạo địa chỉ mới. @param {Object} addressData - Thông tin địa chỉ. @returns {Promise<Object>} Địa chỉ vừa tạo. */
 export const createMyAddressApi = async (addressData) => {
   const response = await api.post('/auth/me/addresses', addressData);
   return response.data;
 };
 
+/** Cập nhật địa chỉ. @param {string} addressId - ID địa chỉ. @param {Object} addressData - Thông tin cập nhật. @returns {Promise<Object>} Địa chỉ sau cập nhật. */
 export const updateMyAddressApi = async (addressId, addressData) => {
   const response = await api.patch(`/auth/me/addresses/${addressId}`, addressData);
   return response.data;
 };
 
+/** Xóa địa chỉ. @param {string} addressId - ID địa chỉ. @returns {Promise<Object>} Kết quả xóa. */
 export const deleteMyAddressApi = async (addressId) => {
   const response = await api.delete(`/auth/me/addresses/${addressId}`);
   return response.data;
 };
 
+/** Đặt một địa chỉ làm mặc định. @param {string} addressId - ID địa chỉ. @returns {Promise<Object>} Địa chỉ mặc định sau cập nhật. */
 export const setDefaultAddressApi = async (addressId) => {
   const response = await api.patch(`/auth/me/addresses/${addressId}/default`);
   return response.data;
 };
 
+/** Lấy dữ liệu tỉnh/thành và đơn vị hành chính Việt Nam. @param {string} [version="v2"] - Phiên bản API tỉnh thành. @returns {Promise<Array>} Danh sách tỉnh/thành từ provinces API. */
 export const getVietnamProvincesApi = async (version = "v2") => {
   const path = version === "v2"
     ? "https://provinces.open-api.vn/api/v2/?depth=2"

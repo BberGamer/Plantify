@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePostDetail } from "@/features/posts/hooks";
 
+/** Quản lý bài viết đang chọn và trạng thái modal chi tiết tại trang chủ. @returns {Object} State và handler chi tiết blog. */
 export function useBlogDetail() {
   const [selectedPostHome, setSelectedPostHome] = useState(null);
   const [showDetailHome, setShowDetailHome] = useState(false);

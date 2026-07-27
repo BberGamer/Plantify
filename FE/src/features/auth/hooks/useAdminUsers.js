@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createAdminUserApi, deleteUserApi, getUsersApi, updateUserStatusApi } from "../api";
 
+/** Quản lý danh sách người dùng quản trị và các thao tác tạo, khóa, xóa. @returns {Object} State danh sách và action quản trị người dùng. */
 export function useAdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);

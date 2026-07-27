@@ -13,6 +13,7 @@ import {
   sortCareEvents,
 } from "../myGarden.utils";
 
+/** Tải, ghi nhận và xóa lịch sử chăm sóc của cây theo quyền hiện tại. @param {Object} props - Component props. @returns {JSX.Element} Khu vực sự kiện chăm sóc. */
 export function UserPlantCareEvents({
   userPlantId,
   onRecorded,

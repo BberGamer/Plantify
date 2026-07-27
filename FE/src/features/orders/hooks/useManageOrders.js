@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getAllOrders, updateOrder } from "@/features/orders/api";
 
+/** Quản lý danh sách đơn, cập nhật trạng thái và hủy đơn cho manager. @returns {Object} Danh sách đơn và các action quản lý. */
 export function useManageOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);

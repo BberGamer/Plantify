@@ -83,7 +83,7 @@ const CANCELLATION_REASON_LABELS = {
   payment_failed: "Thanh toán không thành công",
 };
 
-/** Format giá tiền sang VND */
+/** Định dạng số tiền theo VND. @param {number} amount - Số tiền. @returns {string} Chuỗi tiền VND. */
 function formatVND(amount) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -91,6 +91,7 @@ function formatVND(amount) {
   }).format(amount);
 }
 
+/** Tính phần tiền còn phải thanh toán sau khi trừ ví. @param {Object} order - Đơn hàng. @returns {number} Số tiền còn lại, không nhỏ hơn 0. */
 function getRemainingPayment(order) {
   return Math.max(
     0,
@@ -98,7 +99,7 @@ function getRemainingPayment(order) {
   );
 }
 
-/** Format ngày đặt hàng đầy đủ */
+/** Định dạng ngày giờ đặt hàng theo locale Việt Nam. @param {string|Date} dateStr - Ngày đặt hàng. @returns {string} Ngày giờ hiển thị. */
 function formatOrderDate(dateStr) {
   if (!dateStr) return "";
   const date = new Date(dateStr);
@@ -116,14 +117,14 @@ const FAV_PER_PAGE = 6;
 
 
 
-/** Lấy chữ cái đầu của tên để hiển thị Avatar fallback */
+/** Lấy chữ cái đầu của phần tên cuối để làm avatar fallback. @param {string} name - Họ tên. @returns {string} Một chữ cái viết hoa. */
 function getInitials(name) {
   if (!name) return "U";
   const parts = name.trim().split(" ");
   return parts[parts.length - 1]?.charAt(0).toUpperCase() || "U";
 }
 
-/** Format ngày tham gia từ ISO string */
+/** Định dạng ngày tham gia thành tháng/năm. @param {string|Date} dateStr - Ngày tham gia. @returns {string} Chuỗi MM/YYYY. */
 function formatJoinDate(dateStr) {
   if (!dateStr) return "";
   const date = new Date(dateStr);
@@ -132,7 +133,7 @@ function formatJoinDate(dateStr) {
   return `${month}/${year}`;
 }
 
-// === Component badge hiển thị role ===
+/** Hiển thị badge role theo cấu hình quyền. @param {Object} props - Component props. @param {string} props.role - Role người dùng. @returns {JSX.Element} Badge role. */
 function RoleBadge({ role }) {
   const config = ROLE_CONFIG[role] || ROLE_CONFIG.customer;
   const Icon = config.icon;

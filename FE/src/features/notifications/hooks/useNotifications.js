@@ -13,6 +13,11 @@ const INITIAL_RECONNECT_DELAY_MS = 1000;
 const MAX_RECONNECT_DELAY_MS = 30000;
 const STABLE_CONNECTION_MS = 20000;
 
+/**
+ * Tải thông báo, duy trì kết nối realtime và cung cấp action đánh dấu đã đọc.
+ * @param {boolean} [enabled=true] - Có bật tải và realtime hay không.
+ * @returns {Object} Danh sách, số chưa đọc, trạng thái và action thông báo.
+ */
 export function useNotifications(enabled = true) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);

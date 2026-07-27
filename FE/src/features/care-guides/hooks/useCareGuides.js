@@ -7,6 +7,15 @@ import {
   deleteCareGuide
 } from "../api";
 
+/**
+ * Tải danh sách hướng dẫn chăm sóc theo phân trang và bộ lọc.
+ * @param {Object} [options={}] - Query danh sách.
+ * @param {number} [options.page=1] - Trang hiện tại.
+ * @param {number} [options.limit=10] - Số phần tử mỗi trang.
+ * @param {string} [options.plantId] - ID cây cần lọc.
+ * @param {string} [options.search] - Từ khóa tìm kiếm.
+ * @returns {Object} Danh sách, phân trang, trạng thái tải và refetch.
+ */
 export function useCareGuides({ page = 1, limit = 10, plantId, search } = {}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -38,6 +47,7 @@ export function useCareGuides({ page = 1, limit = 10, plantId, search } = {}) {
   return { careGuides: data, loading, total, pages, refetch: fetch };
 }
 
+/** Quản lý thao tác tạo hướng dẫn chăm sóc. @returns {Object} Hàm create và trạng thái loading. */
 export function useCreateCareGuide() {
   const [loading, setLoading] = useState(false);
 
@@ -54,6 +64,7 @@ export function useCreateCareGuide() {
   return { create, loading };
 }
 
+/** Quản lý thao tác cập nhật hướng dẫn chăm sóc. @returns {Object} Hàm update và trạng thái loading. */
 export function useUpdateCareGuide() {
   const [loading, setLoading] = useState(false);
 
@@ -70,6 +81,7 @@ export function useUpdateCareGuide() {
   return { update, loading };
 }
 
+/** Quản lý thao tác xóa hướng dẫn chăm sóc. @returns {Object} Hàm remove và trạng thái loading. */
 export function useDeleteCareGuide() {
   const [loading, setLoading] = useState(false);
 

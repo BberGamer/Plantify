@@ -32,6 +32,7 @@ const ACTION_LABELS = {
   remove: "Đã gỡ bài",
 };
 
+/** Lấy ID từ entity dạng chuỗi hoặc object. @param {string|Object} entity - Entity cần đọc. @returns {string} ID hoặc chuỗi rỗng. */
 function getEntityId(entity) {
   if (!entity) {
     return "";
@@ -44,6 +45,7 @@ function getEntityId(entity) {
   return entity._id || entity.id || "";
 }
 
+/** Lấy tên hiển thị từ các field người dùng phổ biến. @param {Object} user - Người dùng. @returns {string} Tên hiển thị. */
 function getDisplayName(user) {
   if (!user || typeof user === "string") {
     return "Người dùng";
@@ -52,6 +54,7 @@ function getDisplayName(user) {
   return user.fullName || user.name || user.email || "Người dùng";
 }
 
+/** Định dạng ngày giờ báo cáo theo locale Việt Nam. @param {string|Date} value - Ngày cần định dạng. @returns {string} Ngày giờ hiển thị. */
 function formatDate(value) {
   if (!value) {
     return "-";
@@ -66,6 +69,7 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+/** Lấy tiêu đề bài viết từ entity đã populate hoặc fallback. @param {Object} post - Bài viết. @returns {string} Tiêu đề hiển thị. */
 function getPostTitle(post) {
   if (!post || typeof post === "string") {
     return "Bài viết";
@@ -74,6 +78,7 @@ function getPostTitle(post) {
   return post.title || "Bài viết";
 }
 
+/** Hiển thị badge trạng thái báo cáo. @param {Object} props - Component props. @param {string} props.status - Trạng thái báo cáo. @returns {JSX.Element} Badge trạng thái. */
 function StatusBadge({ status }) {
   if (status === "resolved") {
     return (
@@ -114,6 +119,7 @@ function ReportsEmptyState({ status }) {
   );
 }
 
+/** Điều phối lọc, xử lý, khôi phục và xem chi tiết báo cáo. @returns {JSX.Element} Trang quản lý báo cáo. */
 function ManageReports() {
   const [activeStatus, setActiveStatus] = useState("pending");
   const [selectedPost, setSelectedPost] = useState(null);
@@ -133,6 +139,7 @@ function ManageReports() {
     [reports, activeStatus]
   );
 
+  /** Xử lý báo cáo đang chờ và tải lại danh sách. @param {string} reportId - ID báo cáo. @returns {Promise<void>} */
   async function handleProcessReport(reportId) {
     try {
       await resolveReport(reportId);
@@ -142,6 +149,7 @@ function ManageReports() {
     }
   }
 
+  /** Khôi phục bài viết đã bị gỡ và tải lại danh sách. @param {string} postId - ID bài viết. @returns {Promise<void>} */
   async function handleRestorePost(postId) {
     try {
       await restorePost(postId);

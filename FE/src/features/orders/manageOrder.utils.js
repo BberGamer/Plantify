@@ -39,6 +39,7 @@ const PAYMENT_STATUS_CONFIG = {
   },
 };
 
+/** Lấy class badge tương ứng với trạng thái đơn hàng. @param {string} status - Trạng thái đơn. @returns {string} Chuỗi class hiển thị. */
 function getStatusClassName(status) {
   const classes = {
     pending: "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50",
@@ -51,6 +52,7 @@ function getStatusClassName(status) {
   return classes[status] || "border-border bg-muted text-muted-foreground hover:bg-muted";
 }
 
+/** Định dạng số tiền theo tiền tệ Việt Nam. @param {number} amount - Số tiền. @returns {string} Chuỗi tiền VND. */
 function formatVND(amount) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -58,11 +60,13 @@ function formatVND(amount) {
   }).format(amount);
 }
 
+/** Định dạng ngày ngắn theo locale Việt Nam. @param {string|Date} dateStr - Ngày cần định dạng. @returns {string} Ngày hiển thị hoặc chuỗi rỗng. */
 function formatDate(dateStr) {
   if (!dateStr) return "";
   return new Date(dateStr).toLocaleDateString("vi-VN");
 }
 
+/** Định dạng ngày giờ chi tiết theo locale Việt Nam. @param {string|Date} dateStr - Ngày cần định dạng. @returns {string} Ngày giờ hiển thị hoặc chuỗi rỗng. */
 function formatDateTime(dateStr) {
   if (!dateStr) return "";
   return new Date(dateStr).toLocaleString("vi-VN", {
@@ -74,12 +78,14 @@ function formatDateTime(dateStr) {
   });
 }
 
+/** Chuyển mã phương thức thanh toán thành nhãn UI. @param {string} method - Mã phương thức. @returns {string} Nhãn phương thức thanh toán. */
 function getPaymentMethodLabel(method) {
   return method === "COD"
     ? "Thanh toán khi nhận hàng (COD)"
     : "Chuyển khoản Internet Banking (VNPay)";
 }
 
+/** Kiểm tra đơn hàng có kết hợp ví và thanh toán ngoài hay không. @param {Object} order - Đơn hàng. @returns {boolean} `true` nếu cả hai khoản đều lớn hơn 0. */
 function isHybridPayment(order) {
   return Number(order.walletAmount || 0) > 0
     && Number(order.externalAmount || 0) > 0;

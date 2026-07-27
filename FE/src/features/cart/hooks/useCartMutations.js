@@ -8,6 +8,7 @@ import {
   writeLocalCart,
 } from "@/features/cart/cartStorage";
 
+/** Điều phối thêm/cập nhật/xóa cart item cho cả backend và localStorage. @returns {Object} Các mutation giỏ hàng. */
 export function useCartMutations() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

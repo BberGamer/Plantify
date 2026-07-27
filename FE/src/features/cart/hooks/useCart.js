@@ -15,6 +15,13 @@ import {
   writeLocalCart,
 } from "@/features/cart/cartStorage";
 
+/**
+ * Đồng bộ giỏ hàng backend hoặc localStorage và cung cấp các thao tác cập nhật.
+ * @param {Object} options - Trạng thái xác thực.
+ * @param {boolean} options.authLoading - Auth đang được khởi tạo.
+ * @param {boolean} options.isAuthenticated - Người dùng đã đăng nhập.
+ * @returns {Object} Cart items, trạng thái tải và các action giỏ hàng.
+ */
 export function useCart({ authLoading, isAuthenticated }) {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState(() => readLocalCart());

@@ -28,6 +28,7 @@ import { usePlants } from "@/features/plants/hooks";
 
 const PAGE_SIZE = 8;
 
+/** Định dạng ngày cập nhật hướng dẫn chăm sóc. @param {string|Date} value - Ngày từ API. @returns {string} Ngày hiển thị. */
 function formatDate(value) {
   if (!value) return "—";
   return new Intl.DateTimeFormat("vi-VN", {
@@ -37,6 +38,7 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+/** Điều phối tìm kiếm, CRUD và dialog hướng dẫn chăm sóc. @returns {JSX.Element} Trang quản lý hướng dẫn chăm sóc. */
 function ManageCareGuides() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -81,6 +83,7 @@ function ManageCareGuides() {
     setDialogOpen(true);
   };
 
+  /** Tạo hoặc cập nhật hướng dẫn chăm sóc rồi tải lại danh sách. @param {Object} payload - Dữ liệu hướng dẫn. @returns {Promise<void>} */
   const handleSave = async (payload) => {
     try {
       if (editingGuide) {
@@ -98,6 +101,7 @@ function ManageCareGuides() {
     }
   };
 
+  /** Xóa hướng dẫn đang được chọn sau khi xác nhận. @returns {Promise<void>} */
   const handleDelete = async () => {
     if (!deletingGuide) return;
     try {

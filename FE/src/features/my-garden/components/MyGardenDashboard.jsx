@@ -53,6 +53,7 @@ function ScheduleList({ items, emptyText, onOpenPlant }) {
   );
 }
 
+/** Tải và hiển thị tổng quan My Garden cùng thao tác mở cây. @param {Object} props - Component props. @returns {JSX.Element} Dashboard My Garden. */
 export function MyGardenDashboard({
   refreshKey = 0,
   onOpenPlant,

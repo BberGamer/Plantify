@@ -8,6 +8,10 @@ import { useAuth } from "@/features/auth/hooks";
 import { useCartMutations } from "@/features/cart/hooks";
 import { useDiagnosisHistory } from "@/features/diagnosis-history";
 
+/**
+ * Điều phối upload ảnh, chẩn đoán AI, lịch sử và thao tác thêm sản phẩm vào giỏ.
+ * @returns {Object} State trang AI Doctor và các handler chẩn đoán/lịch sử.
+ */
 export function useAIDoctorPage() {
   const fileInputRef = useRef(null);
   const [isChatOpen, setIsChatOpen] = useState(false);

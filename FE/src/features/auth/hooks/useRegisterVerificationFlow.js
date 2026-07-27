@@ -4,6 +4,10 @@ import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useRegistrationMutations } from "@/features/auth/hooks/useAuthMutations";
 
+/**
+ * Điều phối nhập, xác minh và gửi lại OTP hoàn tất đăng ký.
+ * @returns {Object} State OTP, bộ đếm gửi lại và các handler xác minh.
+ */
 export function useRegisterVerificationFlow() {
   const navigate = useNavigate();
   const location = useLocation();

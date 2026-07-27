@@ -4,6 +4,7 @@ import { loginApi, registerApi, getMeApi } from "./api";
 
 export const AuthContext = createContext(null);
 
+/** Cung cấp user, trạng thái xác thực và action auth cho toàn ứng dụng. @param {Object} props - Component props. @param {React.ReactNode} props.children - Cây component con. @returns {JSX.Element} Auth context provider. */
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);

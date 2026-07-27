@@ -4,6 +4,10 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { usePasswordResetMutations } from "@/features/auth/hooks/useAuthMutations";
 
+/**
+ * Điều phối luồng gửi email, nhập OTP, xác minh và gửi lại OTP quên mật khẩu.
+ * @returns {Object} State từng bước, lỗi validation và các handler của luồng.
+ */
 export function useForgotPasswordFlow() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);

@@ -15,6 +15,7 @@ function normalizeReportsPayload(payload) {
   return [];
 }
 
+/** Tải và xử lý danh sách báo cáo theo trạng thái. @param {string} status - Trạng thái cần lọc. @returns {Object} Danh sách, trạng thái và các action quản lý. */
 export function useManageReports(status) {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);

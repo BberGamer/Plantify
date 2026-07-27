@@ -5,6 +5,13 @@ import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+/**
+ * Chọn nhiều ảnh, tạo preview Object URL và trả danh sách mới cho form cha.
+ * @param {Object} props - Component props.
+ * @param {Array} [props.images=[]] - Danh sách ảnh hiện tại.
+ * @param {Function} props.onChange - Callback cập nhật danh sách ảnh.
+ * @returns {JSX.Element} Bộ chọn và preview ảnh.
+ */
 export function ImageUploader({ images = [], onChange }) {
   const [newUrl, setNewUrl] = useState("");
 

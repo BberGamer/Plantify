@@ -19,6 +19,7 @@ function getRedirectPath(role) {
   }
 }
 
+/** Điều phối form, validation và request đăng nhập. @returns {Object} State form và các handler đăng nhập. */
 export function useLoginFlow() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
