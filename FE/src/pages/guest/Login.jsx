@@ -13,19 +13,19 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Leaf, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "motion/react";
-import { useAuth } from "@/features/auth/hooks";
+import { useLoginMutation } from "@/features/auth/hooks";
 import { toast } from "sonner";
 import { mapBackendRoleToFeRole } from "@/lib/roles";
-import { mergeCart } from "@/features/cart/api";
-import { clearLocalCart, notifyCartUpdated, readLocalCart } from "@/features/cart/cartStorage";
+import { useCartMutations } from "@/features/cart/hooks";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { loggingIn, loginUser } = useLoginMutation();
+  const { loading: cartLoading, mergeLocalCart } = useCartMutations();
+  const submitting = loggingIn || cartLoading;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -56,22 +56,15 @@ function Login() {
       return;
     }
 
-    setSubmitting(true);
     try {
-      const user = await login(email, password);
+      const user = await loginUser(email, password);
       toast.success(`Chào mừng trở lại, ${user.fullName}!`);
 
       if (mapBackendRoleToFeRole(user.role) === "customer") {
-        const localCart = readLocalCart();
-        if (localCart.length > 0) {
-          try {
-            await mergeCart(localCart);
-            clearLocalCart();
-          } catch (error) {
-            toast.error(error.response?.data?.message || "Không thể đồng bộ giỏ hàng.");
-          }
-        } else {
-          notifyCartUpdated();
+        try {
+          await mergeLocalCart();
+        } catch (error) {
+          toast.error(error.response?.data?.message || "Không thể đồng bộ giỏ hàng.");
         }
       }
 
@@ -82,8 +75,6 @@ function Login() {
       console.error(error);
       const errorMsg = error.response?.data?.message || error.message || "Đăng nhập thất bại. Vui lòng thử lại.";
       toast.error(errorMsg);
-    } finally {
-      setSubmitting(false);
     }
   };
 

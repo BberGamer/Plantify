@@ -1,7 +1,7 @@
 // Dashboard.jsx - Trang dashboard giao diện riêng cho business manager
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { DashboardCard } from "@/components/common/DashboardCard";
-import { getDashboardStats } from "@/features/orders/api";
+import { useDashboardStats } from "@/features/orders/hooks";
 import { useCategories, useProducts } from "@/features/products/hooks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,11 +23,6 @@ import {
   Bar,
   LabelList
 } from "recharts";
-
-const EMPTY_DASHBOARD_STATS = {
-  totalRevenue: 0,
-  monthlyRevenue: []
-};
 
 const PRODUCT_PAGE_SIZE = 3;
 
@@ -69,48 +64,12 @@ function Dashboard() {
     loading: categoriesLoading,
     error: categoriesError
   } = useCategories();
-  const [dashboardStats, setDashboardStats] = useState(EMPTY_DASHBOARD_STATS);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState(null);
+  const {
+    dashboardStats,
+    loading: statsLoading,
+    error: statsError,
+  } = useDashboardStats();
   const [productPage, setProductPage] = useState(1);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    setStatsLoading(true);
-    setStatsError(null);
-
-    getDashboardStats()
-      .then((res) => {
-        if (cancelled) {
-          return;
-        }
-
-        const stats = res?.data?.data || EMPTY_DASHBOARD_STATS;
-
-        setDashboardStats({
-          totalRevenue: Number(stats.totalRevenue || 0),
-          monthlyRevenue: Array.isArray(stats.monthlyRevenue)
-            ? stats.monthlyRevenue.map((item) => ({
-                month: item.month,
-                revenue: Number(item.revenue || 0)
-              }))
-            : [],
-          year: stats.year
-        });
-        setStatsLoading(false);
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setStatsError(err.response?.data?.message || err.message);
-          setStatsLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const totalProductPages = useMemo(
     () => Math.max(1, Math.ceil(products.length / PRODUCT_PAGE_SIZE)),

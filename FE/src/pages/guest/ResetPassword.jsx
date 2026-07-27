@@ -23,7 +23,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { resetPasswordApi } from "@/features/auth/api";
+import { usePasswordResetMutations } from "@/features/auth/hooks";
 import { toast } from "sonner";
 
 /**
@@ -83,10 +83,10 @@ function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showRequirements, setShowRequirements] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState({});
   const [countdown, setCountdown] = useState(5);
+  const { resetPassword, resetting: submitting } = usePasswordResetMutations();
 
   const strength = getPasswordStrength(password);
 
@@ -150,9 +150,8 @@ function ResetPassword() {
       return;
     }
     setErrors({});
-    setSubmitting(true);
     try {
-      await resetPasswordApi(email, otpCode, password, confirmPassword);
+      await resetPassword(email, otpCode, password, confirmPassword);
       // Xóa sessionStorage sau khi đổi mật khẩu thành công
       sessionStorage.removeItem("otp_email");
       sessionStorage.removeItem("otp_code");
@@ -168,8 +167,6 @@ function ResetPassword() {
         setTimeout(() => navigate("/forgot-password"), 2000);
       }
       setErrors({ general: msg });
-    } finally {
-      setSubmitting(false);
     }
   };
 

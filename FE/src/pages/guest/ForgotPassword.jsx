@@ -20,7 +20,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { forgotPasswordApi, verifyOtpApi } from "@/features/auth/api";
+import { usePasswordResetMutations } from "@/features/auth/hooks";
 import { toast } from "sonner";
 
 function ForgotPassword() {
@@ -30,12 +30,19 @@ function ForgotPassword() {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
-  const [resending, setResending] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
 
   const otpRefs = useRef([]);
+  const {
+    resendPasswordResetOtp,
+    resending,
+    sendPasswordResetOtp,
+    sending,
+    verifyPasswordResetOtp,
+    verifying,
+  } = usePasswordResetMutations();
+  const submitting = sending || verifying;
 
   // Xử lý đếm ngược gửi lại OTP
   useEffect(() => {
@@ -64,9 +71,8 @@ function ForgotPassword() {
       return;
     }
     setErrors({});
-    setSubmitting(true);
     try {
-      await forgotPasswordApi(email.trim());
+      await sendPasswordResetOtp(email.trim());
       setStep(2);
       setResendCountdown(20); // Bắt đầu đếm ngược 20s
       toast.success("Mã OTP 6 số đã được gửi đến Gmail của bạn!");
@@ -74,16 +80,13 @@ function ForgotPassword() {
       const msg = error.response?.data?.message || error.message || "Đã có lỗi xảy ra.";
       toast.error(msg);
       setErrors({ email: msg });
-    } finally {
-      setSubmitting(false);
     }
   };
 
   const handleResendOtp = async () => {
     if (resendCountdown > 0) return;
-    setResending(true);
     try {
-      await forgotPasswordApi(email.trim());
+      await resendPasswordResetOtp(email.trim());
       setOtp(["", "", "", "", "", ""]);
       setErrors({});
       setResendCountdown(20); // Đếm ngược 20s khi gửi lại
@@ -91,8 +94,6 @@ function ForgotPassword() {
       toast.success("Đã gửi lại mã OTP mới!");
     } catch (error) {
       toast.error("Gửi lại OTP thất bại. Vui lòng thử lại.");
-    } finally {
-      setResending(false);
     }
   };
 
@@ -131,9 +132,8 @@ function ForgotPassword() {
       return;
     }
     setErrors({});
-    setSubmitting(true);
     try {
-      await verifyOtpApi(email.trim(), fullOtp);
+      await verifyPasswordResetOtp(email.trim(), fullOtp);
       // Lưu email + otp vào sessionStorage để trang reset-password dùng
       sessionStorage.setItem("otp_email", email.trim());
       sessionStorage.setItem("otp_code", fullOtp);
@@ -143,8 +143,6 @@ function ForgotPassword() {
       const msg = error.response?.data?.message || error.message || "Xác thực OTP thất bại.";
       toast.error(msg);
       setErrors({ otp: msg });
-    } finally {
-      setSubmitting(false);
     }
   };
 

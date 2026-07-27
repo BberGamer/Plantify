@@ -112,6 +112,11 @@ export function useMyFavorites() {
   }, [isAuthenticated, refreshKey]);
 
   const refetch = () => setRefreshKey((k) => k + 1);
+  const remove = async (plantId) => {
+    const response = await removeFavorite(plantId);
+    refetch();
+    return response;
+  };
 
-  return { favorites, loading, error, refetch };
+  return { favorites, loading, error, refetch, remove };
 }

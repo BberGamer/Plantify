@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Leaf, Mail, Lock, User, Phone, MapPin, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
-import { sendRegisterOtpApi } from "@/features/auth/api";
+import { useRegistrationMutations } from "@/features/auth/hooks";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -20,12 +20,12 @@ function Register() {
     confirmPassword: ""
   });
 
-  const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
   const navigate = useNavigate();
+  const { sendRegistrationOtp, sending: submitting } = useRegistrationMutations();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -70,9 +70,8 @@ function Register() {
       return;
     }
 
-    setSubmitting(true);
     try {
-      await sendRegisterOtpApi({
+      await sendRegistrationOtp({
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
@@ -102,8 +101,6 @@ function Register() {
         // Lỗi SMTP / server -> hiện toast, không điền vào field
         toast.error(msg);
       }
-    } finally {
-      setSubmitting(false);
     }
   };
 

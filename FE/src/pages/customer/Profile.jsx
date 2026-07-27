@@ -4,9 +4,7 @@
 import { useNavigate, Link, useSearchParams } from "react-router";
 import { useMyFavorites } from "@/features/favorites/hooks";
 import { useMyOrders } from "@/features/orders/hooks";
-import { removeFavorite } from "@/features/favorites/api";
-import { customerUpdateOrder } from "@/features/orders/api";
-import { getMyWallet } from "@/features/wallet/api";
+import { useWallet } from "@/features/wallet/hooks";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -213,9 +211,16 @@ function Profile() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(requestedTab === "orders" ? "orders" : "profile");
-  const { favorites, loading: favLoading, refetch: refetchFavorites } = useMyFavorites();
-  const { orders, loading: ordersLoading, refetch: refetchOrders } = useMyOrders();
-  const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
+  const {
+    favorites,
+    loading: favLoading,
+    remove: removeFavorite,
+  } = useMyFavorites();
+  const {
+    orders,
+    loading: ordersLoading,
+    updateOrder: customerUpdateOrder,
+  } = useMyOrders();
 
   // === Pagination cho cây yêu thích ===
   const [favPage, setFavPage] = useState(1);
@@ -248,7 +253,6 @@ function Profile() {
     e.stopPropagation();
     try {
       await removeFavorite(plantId);
-      refetchFavorites();
     } catch {
       // bỏ qua lỗi
     }
@@ -290,9 +294,7 @@ function Profile() {
           ? `Hủy đơn hàng thành công! Đã hoàn ${formatVND(refundedAmount)} vào ví.`
           : `${actionLabel} thành công!`
       );
-      refetchOrders();
-      const { data } = await getMyWallet();
-      setWallet(data?.data || { balance: 0, transactions: [] });
+      await refetchWallet();
     } catch (err) {
       console.error('Lỗi customer action:', err);
       toast.error(err.response?.data?.message || err.message || 'Thao tác thất bại.');
@@ -316,21 +318,7 @@ function Profile() {
     handleCancelEditPassword,
     handleSavePassword,
   } = useProfile();
-
-  useEffect(() => {
-    if (user?.role !== "customer") return;
-
-    const refreshWallet = () => {
-      getMyWallet()
-        .then(({ data }) => setWallet(data?.data || { balance: 0, transactions: [] }))
-        .catch(() => setWallet({ balance: 0, transactions: [] }));
-    };
-
-    refreshWallet();
-    window.addEventListener("wallet-updated", refreshWallet);
-
-    return () => window.removeEventListener("wallet-updated", refreshWallet);
-  }, [user?.role]);
+  const { wallet, refetch: refetchWallet } = useWallet(user?.role === "customer");
 
   // Class input tùy trạng thái chỉnh sửa
   const inputClass = (editing) =>

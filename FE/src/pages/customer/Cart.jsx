@@ -17,8 +17,7 @@ import { ArrowRight, CheckCircle2, FileText, Minus, Plus, ShieldCheck, ShoppingB
 import { motion } from "motion/react";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useAuth } from "@/features/auth/hooks";
-import { getCart, removeCartItem, updateCartItem } from "@/features/cart/api";
-import { extractCartPayload, normalizeCartItems, notifyCartUpdated, readLocalCart, writeLocalCart } from "@/features/cart/cartStorage";
+import { useCart } from "@/features/cart/hooks";
 import { toast } from "sonner";
 
 const CART_TERMS = [
@@ -33,129 +32,56 @@ const CART_TERMS = [
 function Cart() {
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const [cartItems, setCartItems] = useState(() => readLocalCart());
-  const [cartLoading, setCartLoading] = useState(false);
-  const [cartError, setCartError] = useState("");
   const [termsOpen, setTermsOpen] = useState(false);
+  const {
+    cartItems,
+    error: cartRequestError,
+    loading: cartLoading,
+    removeItem: removeCartItem,
+    toggleSelect: toggleCartItem,
+    toggleSelectAll: toggleAllCartItems,
+    updateQuantity: updateCartQuantity,
+  } = useCart({ authLoading, isAuthenticated });
+  const cartError = cartRequestError?.response?.data?.message
+    || (cartRequestError ? "Không thể tải giỏ hàng." : "");
 
   useEffect(() => {
-    if (authLoading) return;
-
-    if (!isAuthenticated) {
-      setCartItems(readLocalCart());
+    if (!cartRequestError) return;
+    if (cartRequestError.response?.status === 401) {
+      toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      navigate("/login", { state: { from: "/cart" }, replace: true });
       return;
     }
-
-    async function loadCart() {
-      setCartLoading(true);
-      setCartError("");
-      try {
-        const response = await getCart();
-        const cart = extractCartPayload(response);
-        setCartItems(cart.items);
-      } catch (error) {
-        if (error.response?.status === 401) {
-          toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-          navigate("/login", { state: { from: "/cart" }, replace: true });
-          return;
-        }
-
-        const message = error.response?.data?.message || "Không thể tải giỏ hàng.";
-        setCartError(message);
-        toast.error(message);
-      } finally {
-        setCartLoading(false);
-      }
-    }
-
-    loadCart();
-  }, [authLoading, isAuthenticated, navigate]);
+    toast.error(cartError);
+  }, [cartError, cartRequestError, navigate]);
 
   const updateQuantity = async (id, delta) => {
-    const nextItems = cartItems.map((item) => (
-      item.id === id
-        ? {
-            ...item,
-            quantity: Math.max(1, Math.min(item.stock, item.quantity + delta))
-          }
-        : item
-    ));
-
-    setCartItems(nextItems);
-
-    if (!isAuthenticated) {
-      writeLocalCart(nextItems);
-      return;
-    }
-
-    const nextItem = nextItems.find((item) => item.id === id);
     try {
-      const response = await updateCartItem(id, { quantity: nextItem.quantity });
-      setCartItems(extractCartPayload(response).items || normalizeCartItems(nextItems));
-      notifyCartUpdated();
+      await updateCartQuantity(id, delta);
     } catch (error) {
       toast.error(error.response?.data?.message || "Không thể cập nhật giỏ hàng.");
     }
   };
 
   const toggleSelect = async (id) => {
-    const nextItems = cartItems.map((item) => (
-      item.id === id ? { ...item, selected: !item.selected } : item
-    ));
-
-    setCartItems(nextItems);
-
-    if (!isAuthenticated) {
-      writeLocalCart(nextItems);
-      return;
-    }
-
-    const nextItem = nextItems.find((item) => item.id === id);
     try {
-      const response = await updateCartItem(id, { selected: nextItem.selected });
-      setCartItems(extractCartPayload(response).items || normalizeCartItems(nextItems));
-      notifyCartUpdated();
+      await toggleCartItem(id);
     } catch (error) {
       toast.error(error.response?.data?.message || "Không thể cập nhật giỏ hàng.");
     }
   };
 
   const toggleSelectAll = async () => {
-    const allSelected = cartItems.every((item) => item.selected);
-    const nextItems = cartItems.map((item) => ({ ...item, selected: !allSelected }));
-
-    setCartItems(nextItems);
-
-    if (!isAuthenticated) {
-      writeLocalCart(nextItems);
-      return;
-    }
-
     try {
-      const responses = await Promise.all(
-        nextItems.map((item) => updateCartItem(item.id, { selected: item.selected }))
-      );
-      const lastResponse = responses[responses.length - 1];
-      setCartItems(extractCartPayload(lastResponse).items || normalizeCartItems(nextItems));
-      notifyCartUpdated();
+      await toggleAllCartItems();
     } catch (error) {
       toast.error(error.response?.data?.message || "Không thể cập nhật giỏ hàng.");
     }
   };
 
   const removeItem = async (id) => {
-    const nextItems = cartItems.filter((item) => item.id !== id);
-    setCartItems(nextItems);
-
-    if (!isAuthenticated) {
-      writeLocalCart(nextItems);
-      return;
-    }
-
     try {
-      const response = await removeCartItem(id);
-      setCartItems(extractCartPayload(response).items || normalizeCartItems(nextItems));
-      notifyCartUpdated();
+      await removeCartItem(id);
     } catch (error) {
       toast.error(error.response?.data?.message || "Không thể xóa sản phẩm.");
     }

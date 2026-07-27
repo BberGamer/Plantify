@@ -16,11 +16,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, ChevronLeft, ChevronRight, FileText, Search, ShieldCheck, ShoppingCart, Star, Store } from "lucide-react";
 import { motion } from "motion/react";
-import { useProducts } from "@/features/products/hooks";
-import { getCategories } from "@/features/products/api";
+import { useCategories, useProducts } from "@/features/products/hooks";
 import { useAuth } from "@/features/auth/hooks";
-import { addCartItem } from "@/features/cart/api";
-import { notifyCartUpdated, readLocalCart, writeLocalCart } from "@/features/cart/cartStorage";
+import { useCartMutations } from "@/features/cart/hooks";
 import { toast } from "sonner";
 
 const MARKETPLACE_TERMS = [
@@ -61,19 +59,9 @@ function Shop() {
   // Pagination state
   const [page, setPage] = useState(1);
 
-  // Dynamic categories
-  const [categories, setCategories] = useState(["Tất cả"]);
-
-  useEffect(() => {
-    getCategories()
-      .then((res) => {
-        if (res.success && res.data) {
-          const names = ["Tất cả", ...res.data.map((c) => c.name)];
-          setCategories(names);
-        }
-      })
-      .catch((err) => console.error("Lỗi lấy danh mục:", err));
-  }, []);
+  const { categories: categoryItems } = useCategories();
+  const categories = ["Tất cả", ...categoryItems.map((category) => category.name)];
+  const { addProduct } = useCartMutations();
 
   // Live search: debounce searchQuery -> searchParam (350ms)
   useEffect(() => {
@@ -152,45 +140,19 @@ function Shop() {
     if (!product) return;
 
     try {
-      if (isAuthenticated) {
-        await addCartItem({
-          productId: product._id,
-          quantity: 1,
-          selected: true,
-        });
-        notifyCartUpdated();
-        toast.success("Đã thêm vào giỏ hàng thành công!");
-        return;
-      }
+      const result = await addProduct({
+        product,
+        quantity: 1,
+        isAuthenticated,
+      });
 
-      let cart = readLocalCart();
-      const existingItemIndex = cart.findIndex((item) => item.id === product._id);
-      const stock = product.stock || 0;
-
-      if (existingItemIndex > -1) {
-        const newQty = cart[existingItemIndex].quantity + 1;
-        if (stock && newQty > stock) {
-          cart[existingItemIndex].quantity = stock;
-          toast.warning(`Chỉ có thể thêm tối đa ${stock} sản phẩm này.`);
-        } else {
-          cart[existingItemIndex].quantity = newQty;
-          toast.success("Đã cập nhật số lượng giỏ hàng!");
-        }
+      if (result.status === "limited") {
+        toast.warning(`Chỉ có thể thêm tối đa ${result.stock} sản phẩm này.`);
+      } else if (result.status === "updated") {
+        toast.success("Đã cập nhật số lượng giỏ hàng!");
       } else {
-        cart.push({
-          id: product._id,
-          name: product.name,
-          price: product.price,
-          quantity: 1,
-          stock,
-          image: product.thumbnail || product.images?.[0] || "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400",
-          shop: product.brand || "Plantify Shop",
-          selected: true,
-        });
         toast.success("Đã thêm vào giỏ hàng thành công!");
       }
-
-      writeLocalCart(cart);
     } catch (err) {
       console.error(err);
       toast.error("Không thể thêm vào giỏ hàng.");

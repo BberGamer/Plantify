@@ -36,8 +36,10 @@ import {
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
-import { getAllOrders, updateOrder } from "@/features/orders/api";
-import { useOrderRealtime } from "@/features/orders/hooks/useOrderRealtime";
+import {
+  useManageOrders,
+  useOrderRealtime,
+} from "@/features/orders/hooks";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
 
@@ -157,8 +159,14 @@ function isHybridPayment(order) {
 function ManageOrder() {
   // === HOOKS - phải khai báo TẤT CẢ hook trước mọi conditional return (React Rules of Hooks) ===
   const { user } = useAuth();
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    error: ordersError,
+    loading,
+    orders,
+    refetch: fetchOrders,
+    setOrders,
+    updateManagedOrder,
+  } = useManageOrders();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
@@ -201,25 +209,15 @@ function ManageOrder() {
 
   // === FETCH DATA ===
 
-  /**
-   * Tải danh sách tất cả đơn hàng từ API
-   */
-  const fetchOrders = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await getAllOrders();
-      setOrders(res.data?.data?.orders || []);
-    } catch (err) {
-      console.error("Lỗi fetch orders:", err);
-      toast.error(err.response?.data?.message || err.message || "Không thể tải danh sách đơn hàng.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    if (!ordersError) return;
+    console.error("Lỗi fetch orders:", ordersError);
+    toast.error(
+      ordersError.response?.data?.message
+      || ordersError.message
+      || "Không thể tải danh sách đơn hàng."
+    );
+  }, [ordersError]);
 
   // Kiểm tra quyền truy cập SAU khi đã khai báo đủ hooks
   if (!["business manager", "content manager"].includes(user?.role?.toLowerCase())) {
@@ -238,7 +236,7 @@ function ManageOrder() {
    */
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      await updateOrder(orderId, { status: newStatus });
+      await updateManagedOrder(orderId, { status: newStatus });
       toast.success(`Đã cập nhật: ${STATUS_LABELS[newStatus]}`);
       fetchOrders();
     } catch (err) {
@@ -267,7 +265,7 @@ function ManageOrder() {
     const orderId = cancelOrderTarget._id || cancelOrderTarget.id;
     try {
       setIsCancelling(true);
-      const response = await updateOrder(orderId, {
+      const response = await updateManagedOrder(orderId, {
         status: "cancelled",
         cancellationReason,
       });
@@ -301,7 +299,7 @@ function ManageOrder() {
     if (!confirmed) return;
 
     try {
-      await updateOrder(orderId, {
+      await updateManagedOrder(orderId, {
         status: "cancelled",
         cancellationReason: "customer_return",
       });

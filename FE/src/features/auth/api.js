@@ -163,6 +163,14 @@ export const setDefaultAddressApi = async (addressId) => {
   return response.data;
 };
 
+export const getVietnamProvincesApi = async (version = "v2") => {
+  const path = version === "v2"
+    ? "https://provinces.open-api.vn/api/v2/?depth=2"
+    : "https://provinces.open-api.vn/api/?depth=3";
+  const response = await fetch(path);
+  return response.json();
+};
+
 /**
  * Đổi mật khẩu của người dùng đang đăng nhập
  * @param {object} passwordData - { currentPassword, newPassword, confirmPassword }

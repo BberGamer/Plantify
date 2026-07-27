@@ -1,5 +1,5 @@
 // ManageReports.jsx - Trang xu ly report cho Content Manager
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CheckCircle2, Flag, Inbox, Loader2, RefreshCcw, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getReports, processReport, restoreReportedPost } from "@/features/reports/api";
+import { useManageReports } from "@/features/reports/hooks";
 
 const REPORT_STATUS_TABS = [
   { value: "pending", label: "Chờ xử lý" },
@@ -37,26 +37,6 @@ const ACTION_LABELS = {
   reject: "Từ chối",
   remove: "Đã gỡ bài",
 };
-
-function normalizeReportsPayload(payload) {
-  if (Array.isArray(payload)) {
-    return payload;
-  }
-
-  if (Array.isArray(payload?.reports)) {
-    return payload.reports;
-  }
-
-  if (Array.isArray(payload?.items)) {
-    return payload.items;
-  }
-
-  if (Array.isArray(payload?.data)) {
-    return payload.data;
-  }
-
-  return [];
-}
 
 function getEntityId(entity) {
   if (!entity) {
@@ -142,31 +122,17 @@ function ReportsEmptyState({ status }) {
 
 function ManageReports() {
   const [activeStatus, setActiveStatus] = useState("pending");
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [processingId, setProcessingId] = useState(null);
-  const [restoringPostId, setRestoringPostId] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
-
-  const fetchReports = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await getReports({ status: activeStatus, limit: 100 });
-      setReports(normalizeReportsPayload(response.data));
-    } catch (err) {
-      setReports([]);
-      setError(err.response?.data?.message || err.message || "Không thể tải danh sách report");
-    } finally {
-      setLoading(false);
-    }
-  }, [activeStatus]);
-
-  useEffect(() => {
-    fetchReports();
-  }, [fetchReports]);
+  const {
+    error,
+    loading,
+    processingId,
+    refetch: fetchReports,
+    reports,
+    resolveReport,
+    restorePost,
+    restoringPostId,
+  } = useManageReports(activeStatus);
 
   const activeReports = useMemo(
     () => reports.filter((report) => report.status === activeStatus),
@@ -174,30 +140,20 @@ function ManageReports() {
   );
 
   async function handleProcessReport(reportId) {
-    setProcessingId(reportId);
-
     try {
-      await processReport(reportId, "remove");
+      await resolveReport(reportId);
       toast.success("Đã đánh dấu report là đã xử lý");
-      await fetchReports();
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || "Không thể xử lý report");
-    } finally {
-      setProcessingId(null);
     }
   }
 
   async function handleRestorePost(postId) {
-    setRestoringPostId(postId);
-
     try {
-      await restoreReportedPost(postId);
+      await restorePost(postId);
       toast.success("Đã khôi phục bài viết");
-      await fetchReports();
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || "Không thể khôi phục bài viết");
-    } finally {
-      setRestoringPostId(null);
     }
   }
 

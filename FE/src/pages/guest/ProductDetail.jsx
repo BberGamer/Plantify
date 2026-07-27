@@ -21,8 +21,7 @@ import { useProduct } from "@/features/products/hooks";
 import { toast } from "sonner";
 import { ProductReviews } from "@/components/common/ProductReviews";
 import { useAuth } from "@/features/auth/hooks";
-import { addCartItem } from "@/features/cart/api";
-import { notifyCartUpdated, readLocalCart, writeLocalCart } from "@/features/cart/cartStorage";
+import { useCartMutations } from "@/features/cart/hooks";
 
 function ProductDetail() {
   const { id } = useParams();
@@ -30,6 +29,7 @@ function ProductDetail() {
   const [productKey, setProductKey] = useState(0);
   const { product, loading, error } = useProduct(id, productKey);
   const { isAuthenticated } = useAuth();
+  const { addProduct } = useCartMutations();
   const [quantity, setQuantity] = useState(1);
 
   // Refetch product sau khi user gui danh gia de cap nhat ratingAverage
@@ -41,45 +41,20 @@ function ProductDetail() {
   const handleAddToCart = async () => {
     if (!product) return false;
     try {
-      if (isAuthenticated) {
-        await addCartItem({
-          productId: product._id,
-          quantity,
-          selected: true,
-        });
-        notifyCartUpdated();
-        toast.success("Đã thêm vào giỏ hàng thành công!");
-        return true;
-      }
+      const result = await addProduct({
+        product,
+        quantity,
+        isAuthenticated,
+        limitWhenStockMissing: true,
+      });
 
-      let cart = readLocalCart();
-      const existingItemIndex = cart.findIndex((item) => item.id === product._id);
-
-      if (existingItemIndex > -1) {
-        const newQty = cart[existingItemIndex].quantity + quantity;
-        if (newQty > (product.stock || 0)) {
-          toast.warning(`Chỉ có thể thêm tối đa ${product.stock} sản phẩm này.`);
-          cart[existingItemIndex].quantity = product.stock || 0;
-        } else {
-          cart[existingItemIndex].quantity = newQty;
-          toast.success("Đã cập nhật số lượng giỏ hàng!");
-        }
+      if (result.status === "limited") {
+        toast.warning(`Chỉ có thể thêm tối đa ${result.stock} sản phẩm này.`);
+      } else if (result.status === "updated") {
+        toast.success("Đã cập nhật số lượng giỏ hàng!");
       } else {
-        const newItem = {
-          id: product._id,
-          name: product.name,
-          price: product.price,
-          quantity: quantity,
-          stock: product.stock || 0,
-          image: product.thumbnail || (product.images && product.images[0]) || "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400",
-          shop: product.brand || "Plantify Shop",
-          selected: true
-        };
-        cart.push(newItem);
         toast.success("Đã thêm vào giỏ hàng thành công!");
       }
-
-      writeLocalCart(cart);
       return true;
     } catch (err) {
       console.error(err);

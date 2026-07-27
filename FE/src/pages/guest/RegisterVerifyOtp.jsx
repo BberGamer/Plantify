@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Leaf, Loader2, ShieldCheck, AlertCircle, ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
-import { sendRegisterOtpApi, verifyRegisterOtpApi } from "@/features/auth/api";
+import { useRegistrationMutations } from "@/features/auth/hooks";
 
 function RegisterVerifyOtp() {
   const navigate = useNavigate();
@@ -17,12 +17,16 @@ function RegisterVerifyOtp() {
   const email = location.state?.email || "";
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [submitting, setSubmitting] = useState(false);
-  const [resending, setResending] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(20);
   const [errors, setErrors] = useState({});
 
   const otpRefs = useRef([]);
+  const {
+    resendRegistrationOtp,
+    resending,
+    verifyRegistrationOtp,
+    verifying: submitting,
+  } = useRegistrationMutations();
 
   // Nếu không có email (truy cập trực tiếp URL) thì redirect về /register
   useEffect(() => {
@@ -75,27 +79,23 @@ function RegisterVerifyOtp() {
       return;
     }
     setErrors({});
-    setSubmitting(true);
     try {
-      await verifyRegisterOtpApi(email, fullOtp);
+      await verifyRegistrationOtp(email, fullOtp);
       toast.success("Đăng ký tài khoản thành công! Hãy đăng nhập.");
       navigate("/login");
     } catch (error) {
       const msg = error.response?.data?.message || error.message || "Xác thực OTP thất bại.";
       toast.error(msg);
       setErrors({ otp: msg });
-    } finally {
-      setSubmitting(false);
     }
   };
 
   // ------- Gửi lại OTP -------
   const handleResendOtp = async () => {
     if (resendCountdown > 0 || !location.state) return;
-    setResending(true);
     try {
       // Gọi lại API send-otp với toàn bộ thông tin từ state
-      await sendRegisterOtpApi(location.state);
+      await resendRegistrationOtp(location.state);
       setOtp(["", "", "", "", "", ""]);
       setErrors({});
       setResendCountdown(20);
@@ -103,8 +103,6 @@ function RegisterVerifyOtp() {
       toast.success("Đã gửi lại mã OTP mới!");
     } catch (error) {
       toast.error("Gửi lại OTP thất bại. Vui lòng thử lại.");
-    } finally {
-      setResending(false);
     }
   };
 

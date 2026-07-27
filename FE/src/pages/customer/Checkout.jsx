@@ -21,19 +21,20 @@ import {
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { useAuth } from "@/features/auth/hooks";
-import { getMyAddressesApi } from "@/features/auth/api";
-import { getCart } from "@/features/cart/api";
 import { extractCartPayload, notifyCartUpdated } from "@/features/cart/cartStorage";
-import { getMyWallet } from "@/features/wallet/api";
-import {
-  createOrder,
-  createVnpayPayment,
-  verifyVnpayPayment,
-} from "@/features/orders/api";
+import { useCheckoutMutations } from "@/features/orders/hooks";
 
 function Checkout() {
   const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const {
+    createPayment,
+    loadAddresses,
+    loadCart,
+    loadWallet,
+    submitOrder,
+    verifyPayment,
+  } = useCheckoutMutations();
 
   // === STATE ===
 
@@ -101,7 +102,7 @@ function Checkout() {
 
     async function fillDefaultAddress() {
       try {
-        const response = await getMyAddressesApi();
+        const response = await loadAddresses();
         const addresses = response?.data || [];
         const defaultAddress = addresses.find((address) => address.isDefault);
 
@@ -133,7 +134,7 @@ function Checkout() {
     async function loadSelectedItems() {
       setIsLoadingCart(true);
       try {
-        const response = await getCart();
+        const response = await loadCart();
         const cart = extractCartPayload(response).items || [];
         const selected = cart.filter((item) => item.selected);
 
@@ -163,10 +164,10 @@ function Checkout() {
   useEffect(() => {
     if (isVnpayCallback || authLoading || !isAuthenticated) return;
 
-    getMyWallet()
+    loadWallet()
       .then(({ data }) => setWalletBalance(Number(data?.data?.balance || 0)))
       .catch(() => setWalletBalance(0));
-  }, [authLoading, isAuthenticated, isVnpayCallback]);
+  }, [authLoading, isAuthenticated, isVnpayCallback, loadWallet]);
 
   // === HELPER FUNCTIONS ===
 
@@ -182,7 +183,7 @@ function Checkout() {
       const vnpParams = Object.fromEntries(searchParams.entries());
 
       // 2. Gửi BE để xác thực checksum và cập nhật đơn hàng
-      const { data } = await verifyVnpayPayment(vnpParams);
+      const { data } = await verifyPayment(vnpParams);
 
       if (data.success && data.data.code === "00") {
         // === THANH TOÁN THÀNH CÔNG ===
@@ -316,7 +317,7 @@ function Checkout() {
     try {
       if (paymentMethod === "COD") {
         // === LUỒNG COD ===
-        const { data } = await createOrder(orderData);
+        const { data } = await submitOrder(orderData);
         if (data.success) {
           const order = data.data.order;
           setOrderCode(order.orderCode);
@@ -335,7 +336,7 @@ function Checkout() {
         }
       } else {
         // === LUỒNG VNPAY ===
-        const { data } = await createVnpayPayment(orderData);
+        const { data } = await createPayment(orderData);
         if (data.success) {
           if (data.data.paidWithWallet || !data.data.paymentUrl) {
             const order = data.data.order;

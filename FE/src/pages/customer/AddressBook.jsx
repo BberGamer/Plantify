@@ -13,14 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  createMyAddressApi,
-  deleteMyAddressApi,
-  getMyAddressesApi,
-  setDefaultAddressApi,
-  updateMyAddressApi,
-} from "@/features/auth/api";
-import { useAuth } from "@/features/auth/hooks";
+import { useAddressBook, useAuth } from "@/features/auth/hooks";
 import { CheckCircle2, Home, Loader2, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,36 +27,21 @@ const emptyForm = {
   isDefault: false,
 };
 
-function unwrapData(response) {
-  return response?.data || response || [];
-}
-
-function normalizeProvinceData(data) {
-  return (Array.isArray(data) ? data : []).map((province) => ({
-    code: String(province.code),
-    name: province.name,
-    wards: province.wards?.length
-      ? province.wards.map((ward) => ({
-          code: String(ward.code),
-          name: ward.name,
-        }))
-      : (province.districts || []).flatMap((district) =>
-          (district.wards || []).map((ward) => ({
-            code: String(ward.code),
-            name: ward.name,
-          }))
-        ),
-  }));
-}
-
 function AddressBook() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const [addresses, setAddresses] = useState([]);
-  const [provinces, setProvinces] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const {
+    addressError,
+    addresses,
+    deleteAddress,
+    loading,
+    provinces,
+    provinceError,
+    saveAddress,
+    saving,
+    setDefaultAddress,
+  } = useAddressBook(!authLoading && isAuthenticated);
 
   const selectedProvince = useMemo(
     () => provinces.find((province) => province.code === form.provinceCode),
@@ -86,44 +64,16 @@ function AddressBook() {
   }, [user]);
 
   useEffect(() => {
-    async function loadProvinces() {
-      try {
-        const response = await fetch("https://provinces.open-api.vn/api/v2/?depth=2");
-        let data = await response.json();
-        let normalized = normalizeProvinceData(data);
-
-        if (!normalized.some((province) => province.wards.length)) {
-          const fallbackResponse = await fetch("https://provinces.open-api.vn/api/?depth=3");
-          data = await fallbackResponse.json();
-          normalized = normalizeProvinceData(data);
-        }
-
-        setProvinces(normalized);
-      } catch {
-        toast.error("Không thể tải danh sách tỉnh/thành, vui lòng thử lại sau.");
-      }
+    if (provinceError) {
+      toast.error("Không thể tải danh sách tỉnh/thành, vui lòng thử lại sau.");
     }
-
-    loadProvinces();
-  }, []);
+  }, [provinceError]);
 
   useEffect(() => {
-    if (authLoading || !isAuthenticated) return;
-
-    async function loadAddresses() {
-      try {
-        setLoading(true);
-        const response = await getMyAddressesApi();
-        setAddresses(unwrapData(response));
-      } catch (error) {
-        toast.error(error.response?.data?.message || "Không thể tải sổ địa chỉ.");
-      } finally {
-        setLoading(false);
-      }
+    if (addressError) {
+      toast.error(addressError.response?.data?.message || "Không thể tải sổ địa chỉ.");
     }
-
-    loadAddresses();
-  }, [authLoading, isAuthenticated]);
+  }, [addressError]);
 
   if (!authLoading && !isAuthenticated) {
     return <Navigate to="/login" state={{ from: "/address-book" }} replace />;
@@ -157,18 +107,11 @@ function AddressBook() {
     };
 
     try {
-      setSaving(true);
-      const response = editingId
-        ? await updateMyAddressApi(editingId, payload)
-        : await createMyAddressApi(payload);
-
-      setAddresses(unwrapData(response));
+      await saveAddress(editingId, payload);
       toast.success(editingId ? "Đã cập nhật địa chỉ." : "Đã thêm địa chỉ.");
       resetForm();
     } catch (error) {
       toast.error(error.response?.data?.message || "Không thể lưu địa chỉ.");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -187,8 +130,7 @@ function AddressBook() {
 
   const handleSetDefault = async (addressId) => {
     try {
-      const response = await setDefaultAddressApi(addressId);
-      setAddresses(unwrapData(response));
+      await setDefaultAddress(addressId);
       toast.success("Đã chọn địa chỉ mặc định.");
     } catch (error) {
       toast.error(error.response?.data?.message || "Không thể đặt địa chỉ mặc định.");
@@ -199,8 +141,7 @@ function AddressBook() {
     if (!window.confirm("Bạn có chắc muốn xóa địa chỉ này?")) return;
 
     try {
-      const response = await deleteMyAddressApi(addressId);
-      setAddresses(unwrapData(response));
+      await deleteAddress(addressId);
       toast.success("Đã xóa địa chỉ.");
       if (editingId === addressId) resetForm();
     } catch (error) {

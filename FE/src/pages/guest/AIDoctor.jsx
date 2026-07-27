@@ -9,8 +9,7 @@ import {
   usePlantDiagnosis,
 } from '@/features/ai';
 import { useAuth } from '@/features/auth/hooks';
-import { addCartItem } from '@/features/cart/api';
-import { notifyCartUpdated } from '@/features/cart/cartStorage';
+import { useCartMutations } from '@/features/cart/hooks';
 import {
   DiagnosisHistoryList,
   useDiagnosisHistory,
@@ -37,6 +36,7 @@ function AIDoctor() {
     limit: 8,
   });
   const chat = useAIChat();
+  const { addItem } = useCartMutations();
   const displayedResult = historyId
     ? diagnosisHistory.selectedResult
     : diagnosis.result;
@@ -83,12 +83,11 @@ function AIDoctor() {
 
   const handleAddToCart = async (product) => {
     try {
-      await addCartItem({
+      await addItem({
         productId: product._id,
         quantity: 1,
         selected: true,
       });
-      notifyCartUpdated();
       toast.success(`Đã thêm ${product.name} vào giỏ hàng.`);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Không thể thêm sản phẩm vào giỏ hàng.');

@@ -1,8 +1,13 @@
 // hooks/index.js - Lấy và đồng bộ danh sách đơn hàng của khách hàng
 import { useState, useEffect, useCallback } from "react";
-import { getMyOrders } from "../api";
+import { customerUpdateOrder, getMyOrders } from "../api";
 import { useAuth } from "@/features/auth/hooks";
 import { useOrderRealtime } from "./useOrderRealtime";
+
+export { useDashboardStats } from "@/features/orders/hooks/useDashboardStats";
+export { useCheckoutMutations } from "@/features/orders/hooks/useCheckoutMutations";
+export { useManageOrders } from "@/features/orders/hooks/useManageOrders";
+export { useOrderRealtime } from "@/features/orders/hooks/useOrderRealtime";
 
 /**
  * Hook lấy toàn bộ danh sách đơn hàng của user hiện tại.
@@ -72,6 +77,11 @@ export function useMyOrders() {
   }, [isAuthenticated, refreshKey]);
 
   const refetch = () => setRefreshKey((k) => k + 1);
+  const updateOrder = async (orderId, action) => {
+    const response = await customerUpdateOrder(orderId, action);
+    refetch();
+    return response;
+  };
 
-  return { orders, loading, error, refetch };
+  return { orders, loading, error, refetch, updateOrder };
 }
