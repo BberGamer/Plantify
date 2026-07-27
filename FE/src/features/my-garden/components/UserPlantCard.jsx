@@ -1,5 +1,6 @@
 // UserPlantCard.jsx - Card tóm tắt một cây trong My Garden
-import { Eye, Pencil, Trash2 } from "lucide-react";
+// UserPlantCard.jsx - Card tóm tắt một cây trong My Garden
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { getUserPlantImage, handleUserPlantImageError } from "../myGarden.utils";

@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Loader2, Droplets, Leaf, AlertCircle, Scissors, Sprout, RefreshCw, Bug } from "lucide-react";
+import { Loader2, Droplets, Leaf, Scissors, Sprout, RefreshCw } from "lucide-react";
 
 function CareGuideListContent({ careGuides, loading }) {
   return (

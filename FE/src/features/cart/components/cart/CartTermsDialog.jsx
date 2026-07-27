@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowRight, CheckCircle2, FileText, Minus, Plus, ShieldCheck, ShoppingBag, Trash2 } from "lucide-react";
+import { CheckCircle2, FileText, ShieldCheck } from "lucide-react";
 
 function CartTermsDialog({ CART_TERMS, setTermsOpen, termsOpen }) {
   return (

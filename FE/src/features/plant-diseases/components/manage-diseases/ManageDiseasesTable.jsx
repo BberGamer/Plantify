@@ -1,16 +1,10 @@
 import {
-  Search,
   Loader2,
-  Plus,
   Pencil,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   Bug,
-  Sprout,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,56 +15,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ManageDiseaseDialog } from "@/features/plant-diseases/components/ManageDiseaseDialog";
 import { DiseaseKnowledgeSummary } from "@/features/plant-diseases/components/DiseaseKnowledgeSummary";
-import {
-  getDiseaseCategoryLabel,
-  getReferenceId,
-} from "@/features/plant-diseases/plantDiseaseForm.utils";
+import { getDiseaseCategoryLabel } from "@/features/plant-diseases/plantDiseaseForm.utils";
+import { AffectedPlantsBadges } from "./AffectedPlantsBadges";
 
-function ManageDiseasesContent({ AffectedPlantsBadges, creating, deleting, diseases, editingDisease, formatDate, handleDelete, handleOpenCreate, handleOpenEdit, handleSubmit, isDialogOpen, loading, page, pages, plants, plantsError, plantsLoading, products, productsError, productsLoading, search, setIsDialogOpen, setPage, setSearch, total, updating }) {
+function ManageDiseasesTable({
+  deleting,
+  diseases,
+  formatDate,
+  onDelete,
+  onEdit,
+  loading,
+  plants,
+}) {
   return (
-<div className="min-w-0 max-w-full space-y-6 overflow-x-hidden">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Quản lý nội dung</span>
-            <span>/</span>
-            <span className="font-medium text-foreground">Bệnh cây</span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">Quản lý Bệnh cây</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Quản lý thông tin bệnh hại và cách phòng trị hiệu quả
-          </p>
-        </div>
-        <Button onClick={handleOpenCreate} className="rounded-full px-5">
-          <Plus className="mr-2 h-4 w-4" /> Thêm bệnh mới
-        </Button>
-      </div>
-
-      {/* Filter bar */}
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
-            placeholder="Tìm tên bệnh, canonical key, alias, triệu chứng hoặc cây..."
-            className="rounded-full bg-card pl-10"
-          />
-        </div>
-      </div>
-
-      {/* List count */}
-      <p className="text-sm text-muted-foreground">
-        Hiển thị <span className="font-medium text-foreground">{total}</span> loại bệnh
-      </p>
-
-      {/* Diseases table */}
       <Card className="min-w-0 max-w-full overflow-hidden border-border/70 shadow-sm transition-all duration-300 hover:shadow-md">
         {loading ? (
           <div className="flex min-h-72 items-center justify-center">
@@ -116,7 +74,13 @@ function ManageDiseasesContent({ AffectedPlantsBadges, creating, deleting, disea
                                 }}
                               />
                               {disease.images.length > 1 && (
-                                <span className="absolute -bottom-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-black/60 px-1 text-[9px] font-bold text-white leading-none">
+                              <span
+                                className="
+                                  absolute -bottom-1 -right-1 flex h-4 min-w-[16px] items-center
+                                  justify-center rounded-full bg-black/60 px-1 text-[9px] font-bold
+                                  leading-none text-white
+                                "
+                              >
                                   +{disease.images.length - 1}
                                 </span>
                               )}
@@ -168,7 +132,7 @@ function ManageDiseasesContent({ AffectedPlantsBadges, creating, deleting, disea
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleOpenEdit(disease)}
+                          onClick={() => onEdit(disease)}
                           title="Chỉnh sửa"
                         >
                           <Pencil className="h-4 w-4" />
@@ -177,7 +141,7 @@ function ManageDiseasesContent({ AffectedPlantsBadges, creating, deleting, disea
                           variant="ghost"
                           size="icon"
                           className="text-muted-foreground hover:text-destructive"
-                          onClick={() => handleDelete(disease)}
+                          onClick={() => onDelete(disease)}
                           title="Xóa"
                           disabled={deleting}
                         >
@@ -192,55 +156,7 @@ function ManageDiseasesContent({ AffectedPlantsBadges, creating, deleting, disea
           </div>
         )}
       </Card>
-
-      {/* Pagination */}
-      {!loading && pages > 1 && (
-        <div className="mt-12 flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            disabled={page <= 1}
-            onClick={() => setPage((current) => Math.max(current - 1, 1))}
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" /> Trước
-          </Button>
-          <div className="flex gap-1">
-            {Array.from({ length: pages }, (_, i) => i + 1).map((pageNum) => (
-              <Button
-                key={pageNum}
-                variant={pageNum === page ? "default" : "outline"}
-                size="icon"
-                onClick={() => setPage(pageNum)}
-              >
-                {pageNum}
-              </Button>
-            ))}
-          </div>
-          <Button
-            variant="outline"
-            disabled={page >= pages}
-            onClick={() => setPage((current) => Math.min(current + 1, pages))}
-          >
-            Sau <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-      {/* Dialog */}
-      <ManageDiseaseDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        disease={editingDisease}
-        plants={plants}
-        plantsLoading={plantsLoading}
-        plantsError={plantsError}
-        products={products}
-        productsLoading={productsLoading}
-        productsError={productsError}
-        onSubmit={handleSubmit}
-        loading={creating || updating}
-      />
-    </div>
   );
 }
 
-export { ManageDiseasesContent };
+export { ManageDiseasesTable };

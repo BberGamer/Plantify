@@ -1,9 +1,18 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Package, Tags, TrendingUp, Boxes, FolderTree, ChevronLeft, ChevronRight } from "lucide-react";
+import { Boxes, ChevronLeft, ChevronRight } from "lucide-react";
 
-function BusinessDashboardInventory({ getStockLabel, productItems, products, productsError, productsLoading, safeProductPage, setProductPage, totalProductPages }) {
+function BusinessDashboardInventory({
+  getStockLabel,
+  productItems,
+  products,
+  productsError,
+  productsLoading,
+  safeProductPage,
+  setProductPage,
+  totalProductPages,
+}) {
   return (
 <Card>
         <CardHeader>

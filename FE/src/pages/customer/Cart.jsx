@@ -1,20 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { ArrowRight, CheckCircle2, FileText, Minus, Plus, ShieldCheck, ShoppingBag, Trash2 } from "lucide-react";
-import { motion } from "motion/react";
+
+
+
+import { ShoppingBag } from "lucide-react";
+
 import { EmptyState } from "@/components/common/EmptyState";
 import { useAuth } from "@/features/auth/hooks";
 import { useCart } from "@/features/cart/hooks";
@@ -132,9 +124,25 @@ function Cart() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white py-12 px-4">
-      <CartTermsDialog CART_TERMS={CART_TERMS} setTermsOpen={setTermsOpen} termsOpen={termsOpen} />
+      <CartTermsDialog
+        CART_TERMS={CART_TERMS}
+        setTermsOpen={setTermsOpen}
+        termsOpen={termsOpen}
+      />
 
-      <CartContent cartItems={cartItems} handleCheckout={handleCheckout} removeItem={removeItem} selectedItems={selectedItems} setTermsOpen={setTermsOpen} shipping={shipping} subtotal={subtotal} toggleSelect={toggleSelect} toggleSelectAll={toggleSelectAll} total={total} updateQuantity={updateQuantity} />
+      <CartContent
+        cartItems={cartItems}
+        handleCheckout={handleCheckout}
+        removeItem={removeItem}
+        selectedItems={selectedItems}
+        setTermsOpen={setTermsOpen}
+        shipping={shipping}
+        subtotal={subtotal}
+        toggleSelect={toggleSelect}
+        toggleSelectAll={toggleSelectAll}
+        total={total}
+        updateQuantity={updateQuantity}
+      />
     </div>
   );
 }

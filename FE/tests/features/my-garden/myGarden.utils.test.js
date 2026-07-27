@@ -389,8 +389,15 @@ test("plant care notification renders message/subtext and targets the correct Us
     new URL("../../../src/components/layout/Header.jsx", import.meta.url),
     "utf8"
   );
-  assert.ok(headerSource.includes('case "plant_watering_due"'));
-  assert.ok(headerSource.includes('case "plant_fertilizing_due"'));
+  const notificationDropdownSource = fs.readFileSync(
+    new URL(
+      "../../../src/components/layout/header/NotificationDropdown.jsx",
+      import.meta.url
+    ),
+    "utf8"
+  );
+  assert.ok(notificationDropdownSource.includes("plant_watering_due:"));
+  assert.ok(notificationDropdownSource.includes("plant_fertilizing_due:"));
   assert.ok(headerSource.includes("getPlantCareNotificationTarget(notification)"));
 });
 

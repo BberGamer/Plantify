@@ -1,26 +1,9 @@
-import { useNavigate, Link, useSearchParams } from "react-router";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { TabsContent } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/common/EmptyState";
-import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Lock,
-  Package,
-  Heart,
-  Calendar,
-  Leaf,
-  Crown,
-  Briefcase,
-  PenLine,
-  Eye,
-  EyeOff,
-  ShieldCheck,
-  Wallet,
-} from "lucide-react";
+import { Heart, Calendar } from "lucide-react";
 import { motion } from "motion/react";
 
 function ProfileFavoritesTab({ FAV_PER_PAGE, favLoading, favPage, favTotalPages, favorites, handleUnfavorite, navigate, setFavPage }) {
@@ -51,7 +34,12 @@ function ProfileFavoritesTab({ FAV_PER_PAGE, favLoading, favPage, favTotalPages,
                           ? new Date(fav.createdAt).toLocaleDateString("vi-VN")
                           : "";
                         return (
-                          <motion.div key={fav._id || plantId} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.1 }}>
+              <motion.div
+                key={fav._id || plantId}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+              >
                             <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
                               <div className="aspect-square overflow-hidden relative">
                                 <img

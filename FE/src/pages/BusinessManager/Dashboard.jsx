@@ -3,26 +3,12 @@ import { useMemo, useState } from "react";
 import { DashboardCard } from "@/components/common/DashboardCard";
 import { useDashboardStats } from "@/features/orders/hooks";
 import { useCategories, useProducts } from "@/features/products/hooks";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent
-} from "@/components/ui/chart";
-import { Wallet, Package, Tags, TrendingUp, Boxes, FolderTree, ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  BarChart,
-  Bar,
-  LabelList
-} from "recharts";
+
+
+
+
+import { Wallet, Package, Tags } from "lucide-react";
+
 import { BusinessDashboardOverview } from "@/features/orders/components/business-dashboard/BusinessDashboardOverview";
 import { BusinessDashboardInventory } from "@/features/orders/components/business-dashboard/BusinessDashboardInventory";
 
@@ -138,9 +124,28 @@ function Dashboard() {
         />
       </section>
 
-      <BusinessDashboardOverview categories={categories} error={error} formatRevenueValue={formatRevenueValue} isLoading={isLoading} productCategoryData={productCategoryData} revenueBadge={revenueBadge} revenueData={revenueData} statsError={statsError} statsLoading={statsLoading} />
+      <BusinessDashboardOverview
+        categories={categories}
+        error={error}
+        formatRevenueValue={formatRevenueValue}
+        isLoading={isLoading}
+        productCategoryData={productCategoryData}
+        revenueBadge={revenueBadge}
+        revenueData={revenueData}
+        statsError={statsError}
+        statsLoading={statsLoading}
+      />
 
-      <BusinessDashboardInventory getStockLabel={getStockLabel} productItems={productItems} products={products} productsError={productsError} productsLoading={productsLoading} safeProductPage={safeProductPage} setProductPage={setProductPage} totalProductPages={totalProductPages} />
+      <BusinessDashboardInventory
+        getStockLabel={getStockLabel}
+        productItems={productItems}
+        products={products}
+        productsError={productsError}
+        productsLoading={productsLoading}
+        safeProductPage={safeProductPage}
+        setProductPage={setProductPage}
+        totalProductPages={totalProductPages}
+      />
     </div>
   );
 }

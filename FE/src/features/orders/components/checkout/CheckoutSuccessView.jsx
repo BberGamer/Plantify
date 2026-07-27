@@ -1,17 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Check,
-  ShieldCheck,
-  Landmark,
-  Banknote,
-  CreditCard,
-  ArrowLeft,
-  ShoppingBag,
-  Loader2,
-  XCircle,
-  Wallet,
-} from "lucide-react";
+import { Check } from "lucide-react";
 
 function CheckoutSuccessView({ form, navigate, orderCode, orderTotal, paymentMethod, remainingAmount }) {
   return (

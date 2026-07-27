@@ -1,17 +1,13 @@
 // PlantForm.jsx - Form tạo/cập nhật Plant
 import { useState } from "react";
-import { Loader2, Plus, X, GripVertical, ImageIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle
-} from "@/components/ui/dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select";
+
+
+
+
+
+
+
+
 
 const EMPTY_FORM = {
   name: "",
@@ -31,7 +27,7 @@ const EMPTY_FORM = {
   toxicity: false,
 };
 
-import { ImageUploader } from "@/components/common/ImageUploader";
+
 import { PlantFormDialog } from "@/features/plants/components/plant-form/PlantFormDialog";
 
 const toCommaArray = (str) =>
@@ -72,6 +68,16 @@ export function PlantForm({ categories, onSubmit, loading }) {
   };
 
   return (
-    <PlantFormDialog categories={categories} formData={formData} handleChange={handleChange} handleClose={handleClose} handleOpen={handleOpen} handleSubmit={handleSubmit} isOpen={isOpen} loading={loading} setIsOpen={setIsOpen} />
+    <PlantFormDialog
+      categories={categories}
+      formData={formData}
+      handleChange={handleChange}
+      handleClose={handleClose}
+      handleOpen={handleOpen}
+      handleSubmit={handleSubmit}
+      isOpen={isOpen}
+      loading={loading}
+      setIsOpen={setIsOpen}
+    />
   );
 }

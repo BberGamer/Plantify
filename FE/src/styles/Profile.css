@@ -514,3 +514,35 @@
   margin-top: 1rem;
   border-top: 1px solid rgb(226 232 240);
 }
+.profile-tab-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-block: 0.625rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 150ms ease;
+}
+
+.profile-tab-trigger[data-state="active"] {
+  background: white;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+}
+
+.profile-password-input {
+  height: 3rem;
+  padding-left: 2.75rem;
+  border-color: rgb(226 232 240);
+  border-radius: 0.5rem;
+  background: rgb(248 250 252);
+  color: rgb(15 23 42);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+}
+
+.profile-password-input:disabled {
+  opacity: 1;
+}

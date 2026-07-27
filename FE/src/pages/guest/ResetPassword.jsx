@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
+
 import {
   Card,
   CardContent,
@@ -11,17 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Leaf,
-  Lock,
-  Eye,
-  EyeOff,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  ShieldCheck,
-  XCircle,
-} from "lucide-react";
+import { Leaf, CheckCircle2, ShieldCheck, XCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useResetPasswordFlow } from "@/features/auth/hooks";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password/ResetPasswordForm";
@@ -114,7 +104,12 @@ function ResetPassword() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link to="/" className="group inline-flex items-center gap-2">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-green-600 shadow-lg transition-transform group-hover:scale-110">
+            <div
+              className="
+                flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br
+                from-primary to-green-600 shadow-lg transition-transform group-hover:scale-110
+              "
+            >
               <Leaf className="h-8 w-8 text-white" />
             </div>
             <span className="bg-gradient-to-br from-primary to-green-700 bg-clip-text text-3xl font-bold text-transparent">
@@ -187,7 +182,23 @@ function ResetPassword() {
                     Tạo mật khẩu mạnh để bảo vệ tài khoản của bạn
                   </CardDescription>
                 </CardHeader>
-                <ResetPasswordForm PasswordRequirements={PasswordRequirements} changeConfirmPassword={changeConfirmPassword} changePassword={changePassword} confirmPassword={confirmPassword} errors={errors} handleSubmit={handleSubmit} password={password} setShowConfirm={setShowConfirm} setShowPassword={setShowPassword} setShowRequirements={setShowRequirements} showConfirm={showConfirm} showPassword={showPassword} showRequirements={showRequirements} strength={strength} submitting={submitting} />
+                <ResetPasswordForm
+                  PasswordRequirements={PasswordRequirements}
+                  changeConfirmPassword={changeConfirmPassword}
+                  changePassword={changePassword}
+                  confirmPassword={confirmPassword}
+                  errors={errors}
+                  handleSubmit={handleSubmit}
+                  password={password}
+                  setShowConfirm={setShowConfirm}
+                  setShowPassword={setShowPassword}
+                  setShowRequirements={setShowRequirements}
+                  showConfirm={showConfirm}
+                  showPassword={showPassword}
+                  showRequirements={showRequirements}
+                  strength={strength}
+                  submitting={submitting}
+                />
               </motion.div>
             )}
           </AnimatePresence>

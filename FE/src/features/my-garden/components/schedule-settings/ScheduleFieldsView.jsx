@@ -1,4 +1,4 @@
-import { CalendarClock, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function ScheduleFieldsView({ STATUS_LABELS, bounds, completing, label, onChange, onComplete, readOnly, scheduleType, status, value }) {

@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle2, ChevronLeft, ChevronRight, FileText, Search, ShieldCheck, ShoppingCart, Star, Store } from "lucide-react";
+import { CheckCircle2, FileText, ShieldCheck } from "lucide-react";
 
 function ShopTermsDialog({ MARKETPLACE_TERMS, acceptTerms, setTermsOpen, termsOpen }) {
   return (

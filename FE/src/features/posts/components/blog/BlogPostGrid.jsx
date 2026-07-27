@@ -2,10 +2,16 @@ import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Calendar, User, ArrowRight, X, Star, PenSquare } from "lucide-react";
+import { Calendar, User, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 
-function BlogPostGrid({ RatingSummary, featuredPost, gridPosts, handleOpenPost, handleOpenPreviewImage }) {
+function BlogPostGrid({
+  RatingSummary,
+  featuredPost,
+  gridPosts,
+  handleOpenPost,
+  handleOpenPreviewImage,
+}) {
   return (
 <>
             {/* Featured Post */}
@@ -15,7 +21,7 @@ function BlogPostGrid({ RatingSummary, featuredPost, gridPosts, handleOpenPost, 
               className="mb-12 w-full max-w-full overflow-hidden"
             >
               <Card
-                className="w-full max-w-full overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer md:max-h-[360px]"
+                className="blog-featured-card"
                 role="button"
                 tabIndex={0}
                 onClick={() => handleOpenPost(featuredPost)}
@@ -86,7 +92,7 @@ function BlogPostGrid({ RatingSummary, featuredPost, gridPosts, handleOpenPost, 
                     className="block h-full w-full max-w-full overflow-hidden text-left"
                     onClick={() => handleOpenPost(post)}
                   >
-                    <Card className="group h-full w-full max-w-full cursor-pointer overflow-hidden border border-border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                    <Card className="blog-grid-card group">
                       <div
                         className="aspect-video w-full max-w-full cursor-zoom-in overflow-hidden"
                         onClick={(event) => handleOpenPreviewImage(event, post)}

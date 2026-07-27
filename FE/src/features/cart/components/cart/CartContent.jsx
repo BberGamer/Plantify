@@ -1,12 +1,24 @@
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowRight, CheckCircle2, FileText, Minus, Plus, ShieldCheck, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrowRight, Minus, Plus, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 
-function CartContent({ cartItems, handleCheckout, removeItem, selectedItems, setTermsOpen, shipping, subtotal, toggleSelect, toggleSelectAll, total, updateQuantity }) {
+function CartContent({
+  cartItems,
+  handleCheckout,
+  removeItem,
+  selectedItems,
+  setTermsOpen,
+  shipping,
+  subtotal,
+  toggleSelect,
+  toggleSelectAll,
+  total,
+  updateQuantity,
+}) {
   return (
 <div className="max-w-7xl mx-auto">
         <motion.div

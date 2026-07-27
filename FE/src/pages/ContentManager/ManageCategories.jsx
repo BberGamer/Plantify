@@ -1,6 +1,6 @@
 // ManageCategories.jsx - Trang quản lý Categories cho Content Manager
 import { useState } from "react";
-import { Loader2, FolderOpen, Trash2, Pencil, Plus } from "lucide-react";
+import { Loader2, FolderOpen, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { usePlantCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from "@/features/plants/hooks";

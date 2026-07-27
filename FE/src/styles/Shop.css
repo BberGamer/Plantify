@@ -1,0 +1,55 @@
+.shop-page {
+  min-height: 100vh;
+  background-image: linear-gradient(to bottom right, rgb(240 253 244 / 30%), white);
+}
+
+.shop-container,
+.shop-marketplace {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+.shop-hero {
+  padding: 4rem 1.5rem;
+  color: white;
+  background-image: linear-gradient(to right, var(--primary), #16a34a);
+}
+
+.shop-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 20%);
+  backdrop-filter: blur(4px);
+}
+
+.shop-search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  background: white;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%);
+}
+
+.shop-marketplace {
+  padding: 3rem 1.5rem;
+}
+
+.shop-marketplace-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .shop-marketplace-grid {
+    flex-direction: row;
+  }
+}

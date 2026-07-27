@@ -1,28 +1,28 @@
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Leaf,
-  Lock,
-  Eye,
-  EyeOff,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  ShieldCheck,
-  XCircle,
-} from "lucide-react";
+import { CardContent } from "@/components/ui/card";
+import { Lock, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
-function ResetPasswordForm({ PasswordRequirements, changeConfirmPassword, changePassword, confirmPassword, errors, handleSubmit, password, setShowConfirm, setShowPassword, setShowRequirements, showConfirm, showPassword, showRequirements, strength, submitting }) {
+function ResetPasswordForm({
+  PasswordRequirements,
+  changeConfirmPassword,
+  changePassword,
+  confirmPassword,
+  errors,
+  handleSubmit,
+  password,
+  setShowConfirm,
+  setShowPassword,
+  setShowRequirements,
+  showConfirm,
+  showPassword,
+  showRequirements,
+  strength,
+  submitting,
+}) {
   return (
 <CardContent>
                   {/* Lỗi chung */}

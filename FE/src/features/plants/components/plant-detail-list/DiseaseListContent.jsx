@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Droplets, Leaf, AlertCircle, Scissors, Sprout, RefreshCw, Bug } from "lucide-react";
+import { Loader2, Bug } from "lucide-react";
 
 function DiseaseListContent({ diseases, formatKnowledgeList, loading, openImagePreview, selectedDiseaseName, selectedImage, setSelectedImage }) {
   return (

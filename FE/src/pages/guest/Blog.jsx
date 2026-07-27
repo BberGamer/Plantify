@@ -4,139 +4,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
-import BlogPostDetail, {
-  BlogPostDetailError,
-  BlogPostDetailSkeleton,
-} from "@/components/common/BlogPostDetail";
-import { ImageWithFallback } from "@/components/common/ImageWithFallback";
-import { CreatePostForm } from "@/features/posts/components/CreatePostForm";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { useCreatePost, usePostDetail, usePosts } from "@/features/posts/hooks";
-import { Search, Calendar, User, ArrowRight, X, Star, PenSquare } from "lucide-react";
-import { motion } from "motion/react";
-import { BlogPostGrid } from "@/features/posts/components/blog/BlogPostGrid";
-import { BlogContent } from "@/features/posts/components/blog/BlogContent";
 
-const categories = [
-  "Tất cả",
-  "Hướng dẫn",
-  "Bệnh & Điều trị",
-  "Phòng ngừa",
-  "Chăm sóc",
-  "Thiết kế",
-  "Kỹ thuật"
-];
-
-const BLOG_GRID_PAGE_SIZE = 6;
-const BLOG_FIRST_PAGE_LIMIT = BLOG_GRID_PAGE_SIZE + 1;
-
-const vietnameseTextReplacements = [
-  [/\bBai dau tien\b/gi, "Bài đầu tiên"],
-  [/\bBai (?=\d)/g, "Bài "],
-  [/\bbai (?=\d)/g, "bài "],
-  [/\bquoc anh\b/gi, "Quốc Anh"],
-  [/\bTat ca\b/gi, "Tất cả"],
-  [/\bHuong dan\b/gi, "Hướng dẫn"],
-  [/\bBenh & Dieu tri\b/gi, "Bệnh & Điều trị"],
-  [/\bPhong ngua\b/gi, "Phòng ngừa"],
-  [/\bCham soc\b/gi, "Chăm sóc"],
-  [/\bThiet ke\b/gi, "Thiết kế"],
-  [/\bKy thuat\b/gi, "Kỹ thuật"]
-];
-
-function formatVietnameseDisplayText(value) {
-  if (typeof value !== "string") {
-    return value;
-  }
-
-  return vietnameseTextReplacements.reduce(
-    (text, [pattern, replacement]) => text.replace(pattern, replacement),
-    value
-  );
-}
-
-/**
- * Format ngày tạo bài viết để hiển thị trong UI blog.
- * @param {string|Date} date - Ngày tạo bài viết từ API
- * @returns {string} Ngày đã format theo tiếng Việt
- */
-function formatPostDate(date) {
-  if (!date) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  }).format(new Date(date));
-}
-
-function getPostPreview(content = "", maxLength = 140) {
-  const plainText = content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-
-  if (plainText.length <= maxLength) {
-    return plainText;
-  }
-
-  return `${plainText.slice(0, maxLength).trim()}...`;
-}
-
-function getPostIdentity(post) {
-  return post?._id || post?.id;
-}
-
-function compareFeaturedPosts(postA, postB) {
-  const commentsDelta = (Number(postB.commentsCount) || 0) - (Number(postA.commentsCount) || 0);
-
-  if (commentsDelta !== 0) {
-    return commentsDelta;
-  }
-
-  return new Date(postB.createdAt || 0).getTime() - new Date(postA.createdAt || 0).getTime();
-}
-
-function RatingSummary({ value }) {
-  const safeValue = Math.max(0, Math.min(Number(value) || 0, 5));
-
-  return (
-    <div className="flex items-center gap-1 text-amber-500">
-      <Star className={`h-4 w-4 ${safeValue > 0 ? "fill-current" : ""}`} />
-      <span className="text-sm font-medium text-foreground">{safeValue.toFixed(1)}</span>
-    </div>
-  );
-}
-
-/**
- * Chuẩn hóa dữ liệu bài viết từ API về shape UI đang sử dụng.
- * @param {Object} post - Bài viết từ backend
- * @returns {Object} Bài viết đã map field cho Blog page
- */
-function mapPostToBlogCard(post) {
-  const content = formatVietnameseDisplayText(post.content);
-
-  return {
-    ...post,
-    id: post._id,
-    title: formatVietnameseDisplayText(post.title),
-    content,
-    category: formatVietnameseDisplayText(post.category),
-    author: formatVietnameseDisplayText(post.author),
-    image: post.thumbnail || post.images?.[0] || "",
-    date: formatPostDate(post.createdAt),
-    preview: getPostPreview(content)
-  };
-}
+import { BlogCreateDialog } from "@/features/posts/components/blog/BlogCreateDialog";
+import { BlogDetailLayer } from "@/features/posts/components/blog/BlogDetailLayer";
+import { BlogFeedState } from "@/features/posts/components/blog/BlogFeedState";
+import { BlogHeaderFilters } from "@/features/posts/components/blog/BlogHeaderFilters";
+import { BlogPostResults } from "@/features/posts/components/blog/BlogPostResults";
+import {
+  BLOG_FIRST_PAGE_LIMIT,
+  RatingSummary,
+  categories,
+  compareFeaturedPosts,
+  getPostIdentity,
+  mapPostToBlogCard,
+} from "@/features/posts/blogPage.support";
+import "@/styles/Blog.css";
 
 function Blog() {
   const location = useLocation();
@@ -183,6 +66,21 @@ function Blog() {
   const showEmptyState = !loading && !error && !featuredPost;
   const showPosts = !loading && !error && featuredPost;
   const showLoadMore = showPosts && hasMore;
+  const feedStatus = showInitialLoading
+    ? "loading"
+    : showErrorState
+      ? "error"
+      : showEmptyState
+        ? "empty"
+        : null;
+  const feedMessage =
+    feedStatus === "loading"
+      ? "Đang tải danh sách bài viết..."
+      : feedStatus === "error"
+        ? `Không thể tải danh sách bài viết: ${error}`
+        : hasActiveFilters
+          ? "Không tìm thấy bài viết phù hợp."
+          : "Chưa có bài viết nào.";
 
   /**
    * Mo modal chi tiet va kich hoat hook fetch full data cho bai viet duoc chon.
@@ -284,7 +182,59 @@ function Blog() {
   }, [location.pathname, location.state, navigate]);
 
   return (
-    <BlogContent RatingSummary={RatingSummary} activeComments={activeComments} activeDisplayPost={activeDisplayPost} categories={categories} createFormKey={createFormKey} creating={creating} creatingPost={creatingPost} detailError={detailError} detailLoading={detailLoading} detailPost={detailPost} error={error} featuredPost={featuredPost} gridPosts={gridPosts} handleClearFilters={handleClearFilters} handleCloseDetail={handleCloseDetail} handleClosePreviewImage={handleClosePreviewImage} handleCreatePost={handleCreatePost} handleOpenPost={handleOpenPost} handleOpenPreviewImage={handleOpenPreviewImage} handleSelectCategory={handleSelectCategory} hasActiveFilters={hasActiveFilters} loadMore={loadMore} loadingMore={loadingMore} previewImage={previewImage} refetch={refetch} searchTerm={searchTerm} selectedCategory={selectedCategory} setCreatingPost={setCreatingPost} setSearchTerm={setSearchTerm} showDetail={showDetail} showEmptyState={showEmptyState} showErrorState={showErrorState} showInitialLoading={showInitialLoading} showLoadMore={showLoadMore} showPosts={showPosts} />
+    <div className="blog-page">
+      <div className="blog-page-content">
+        <BlogHeaderFilters
+          categories={categories}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={handleClearFilters}
+          onCreatePost={() => setCreatingPost(true)}
+          onSearchChange={setSearchTerm}
+          onSelectCategory={handleSelectCategory}
+          searchTerm={searchTerm}
+          selectedCategory={selectedCategory}
+        />
+
+        <BlogFeedState
+          message={feedMessage}
+          onRetry={refetch}
+          status={feedStatus}
+        />
+
+        {showPosts && (
+          <BlogPostResults
+            featuredPost={featuredPost}
+            gridPosts={gridPosts}
+            loadingMore={loadingMore}
+            onLoadMore={loadMore}
+            onOpenPost={handleOpenPost}
+            onOpenPreviewImage={handleOpenPreviewImage}
+            ratingSummary={RatingSummary}
+            showLoadMore={showLoadMore}
+          />
+        )}
+
+        <BlogDetailLayer
+          comments={activeComments}
+          detailError={detailError}
+          detailLoading={detailLoading}
+          detailPost={detailPost}
+          displayPost={activeDisplayPost}
+          onCloseDetail={handleCloseDetail}
+          onClosePreview={handleClosePreviewImage}
+          previewImage={previewImage}
+          showDetail={showDetail}
+        />
+
+        <BlogCreateDialog
+          createFormKey={createFormKey}
+          creating={creating}
+          onCreatePost={handleCreatePost}
+          onOpenChange={setCreatingPost}
+          open={creatingPost}
+        />
+      </div>
+    </div>
   );
 }
 

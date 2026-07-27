@@ -2,15 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ROUTES } from "@/lib/constants";
-import {
-  CheckCircle,
-  Leaf,
-  Plus,
-  ShoppingCart,
-} from "lucide-react";
+import { CheckCircle, Leaf, ShoppingCart } from "lucide-react";
 import { Link } from "react-router";
 
-function DiagnosisResultContent({ DEFAULT_IMAGE, DISPLAY_LABELS, KnowledgeList, availableProducts, confidence, diagnosis, imageUrl, onAddToCart, result, statusContent }) {
+function DiagnosisResultContent({
+  DEFAULT_IMAGE,
+  DISPLAY_LABELS,
+  KnowledgeList,
+  availableProducts,
+  confidence,
+  diagnosis,
+  imageUrl,
+  onAddToCart,
+  result,
+  statusContent,
+}) {
   return (
 <Card className="h-full border-2 border-primary/50 bg-gradient-to-br from-primary/5 to-green-50/50">
       <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2">

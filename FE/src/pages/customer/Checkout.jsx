@@ -1,33 +1,24 @@
 // Checkout.jsx - Trang thanh toán đơn hàng (hỗ trợ COD + VNPay)
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
-  Check,
-  ShieldCheck,
-  Landmark,
-  Banknote,
   CreditCard,
-  ArrowLeft,
   ShoppingBag,
   Loader2,
   XCircle,
-  Wallet,
 } from "lucide-react";
-import { useCheckout } from "@/features/orders/hooks";
 import { CheckoutSuccessView } from "@/features/orders/components/checkout/CheckoutSuccessView";
 import { CheckoutShippingSection } from "@/features/orders/components/checkout/CheckoutShippingSection";
 import { CheckoutPaymentSection } from "@/features/orders/components/checkout/CheckoutPaymentSection";
 import { CheckoutSummary } from "@/features/orders/components/checkout/CheckoutSummary";
+import { useCheckout } from "@/features/orders/hooks";
+import "@/styles/Checkout.css";
 
 function Checkout() {
   const navigate = useNavigate();
   const {
     authLoading,
-    checkoutTotal,
     errors,
     form,
     handleInputChange,
@@ -59,7 +50,7 @@ function Checkout() {
   // === ĐANG TẢI THÔNG TIN HỆ THỐNG ===
   if ((authLoading || isLoadingCart) && !isProcessing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white py-16 px-4 flex items-center justify-center">
+      <div className="checkout-status-view">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
       </div>
     );
@@ -68,7 +59,7 @@ function Checkout() {
   // === ĐANG XÁC THỰC THANH TOÁN VNPAY ===
   if (isProcessing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white py-16 px-4 flex items-center justify-center">
+      <div className="checkout-status-view">
         <Card className="max-w-md w-full border-2 border-green-100 shadow-xl">
           <CardContent className="p-8 text-center">
             <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-6" />
@@ -88,7 +79,7 @@ function Checkout() {
   // === THANH TOÁN THẤT BẠI ===
   if (isFailed) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white py-16 px-4 flex items-center justify-center">
+      <div className="checkout-status-view">
         <Card className="max-w-md w-full border-2 border-red-100 shadow-xl">
           <CardContent className="p-8 text-center">
             <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -127,16 +118,23 @@ function Checkout() {
   // === ĐẶT HÀNG THÀNH CÔNG ===
   if (isSuccess) {
     return (
-      <CheckoutSuccessView form={form} navigate={navigate} orderCode={orderCode} orderTotal={orderTotal} paymentMethod={paymentMethod} remainingAmount={remainingAmount} />
+      <CheckoutSuccessView
+        form={form}
+        navigate={navigate}
+        orderCode={orderCode}
+        orderTotal={orderTotal}
+        paymentMethod={paymentMethod}
+        remainingAmount={remainingAmount}
+      />
     );
   }
 
   // === FORM CHECKOUT ===
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50/10 to-white py-8 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="checkout-page">
+      <div className="checkout-container">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+        <div className="checkout-breadcrumb">
           <Link to="/" className="hover:text-primary transition-colors">
             Trang chủ
           </Link>
@@ -149,7 +147,7 @@ function Checkout() {
         </div>
 
         {/* Title */}
-        <div className="flex items-center gap-3 mb-8">
+        <div className="checkout-title">
           <CreditCard className="w-8 h-8 text-primary" />
           <h1 className="text-4xl font-bold text-foreground">
             Thanh toán đơn hàng
@@ -172,18 +170,37 @@ function Checkout() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="checkout-grid">
             {/* Cột trái: Form thông tin + Phương thức thanh toán */}
             <div className="lg:col-span-2 space-y-6">
               {/* Section 1: Thông tin giao hàng */}
-              <CheckoutShippingSection errors={errors} form={form} handleInputChange={handleInputChange} />
+              <CheckoutShippingSection
+                errors={errors}
+                form={form}
+                handleInputChange={handleInputChange}
+              />
 
               {/* Section 2: Phương thức thanh toán */}
-              <CheckoutPaymentSection paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} setUseWallet={setUseWallet} useWallet={useWallet} walletBalance={walletBalance} />
+              <CheckoutPaymentSection
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+                setUseWallet={setUseWallet}
+                useWallet={useWallet}
+                walletBalance={walletBalance}
+              />
             </div>
 
             {/* Cột phải: Tóm tắt đơn hàng */}
-            <CheckoutSummary handlePlaceOrder={handlePlaceOrder} isSubmitting={isSubmitting} paymentMethod={paymentMethod} remainingAmount={remainingAmount} selectedItems={selectedItems} shippingFee={shippingFee} subtotal={subtotal} walletApplied={walletApplied} />
+            <CheckoutSummary
+              handlePlaceOrder={handlePlaceOrder}
+              isSubmitting={isSubmitting}
+              paymentMethod={paymentMethod}
+              remainingAmount={remainingAmount}
+              selectedItems={selectedItems}
+              shippingFee={shippingFee}
+              subtotal={subtotal}
+              walletApplied={walletApplied}
+            />
           </div>
         )}
       </div>

@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  AlertCircle,
-  Droplets,
-  FlaskConical,
-  Loader2,
-  Plus,
-  Sprout,
-  TriangleAlert,
-} from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getMyGardenDashboard } from "../api";

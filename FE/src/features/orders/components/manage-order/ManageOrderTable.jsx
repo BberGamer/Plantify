@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -9,21 +9,26 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import { Ban, Package, Truck, RotateCcw, Eye } from "lucide-react";
 import {
-  Search,
-  ShoppingBag,
-  Clock3,
-  PackageCheck,
-  Ban,
-  Package,
-  Truck,
-  RotateCcw,
-  Eye,
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react";
+  PAYMENT_STATUS_CONFIG,
+  STATUS_LABELS,
+  formatDate,
+  formatVND,
+  getStatusClassName,
+  isHybridPayment,
+} from "@/features/orders/manageOrder.utils";
 
-function ManageOrderTable({ PAYMENT_STATUS_CONFIG, STATUS_LABELS, filteredOrders, formatDate, formatVND, getStatusClassName, handleCancelPendingOrder, handleConfirmReturn, handleUpdateStatus, isBusinessManager, isHybridPayment, loading, paginatedOrders, setSelectedOrder }) {
+function ManageOrderTable({
+  isBusinessManager,
+  isEmpty,
+  loading,
+  onCancel,
+  onConfirmReturn,
+  onSelect,
+  onStatusUpdate,
+  orders,
+}) {
   return (
 <CardContent className="p-0">
           <Table>
@@ -63,14 +68,14 @@ function ManageOrderTable({ PAYMENT_STATUS_CONFIG, STATUS_LABELS, filteredOrders
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : filteredOrders.length === 0 ? (
+              ) : isEmpty ? (
                 <TableRow className="border-green-100/80 hover:bg-transparent">
                   <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                     Không tìm thấy đơn hàng nào.
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedOrders.map((order) => (
+                orders.map((order) => (
                   <TableRow key={order._id || order.id} className="border-green-100/80 hover:bg-green-50/30">
                     {/* Mã đơn */}
                     <TableCell className="px-4 py-4 font-semibold text-slate-800">
@@ -130,7 +135,7 @@ function ManageOrderTable({ PAYMENT_STATUS_CONFIG, STATUS_LABELS, filteredOrders
                           size="sm"
                           variant="outline"
                           className="border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 font-medium transition-all duration-200"
-                          onClick={() => setSelectedOrder(order)}
+                          onClick={() => onSelect(order)}
                         >
                           <Eye className="mr-1.5 h-3.5 w-3.5" />
                           Chi tiết
@@ -142,7 +147,7 @@ function ManageOrderTable({ PAYMENT_STATUS_CONFIG, STATUS_LABELS, filteredOrders
                               <Button
                                 size="sm"
                                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all duration-200"
-                                onClick={() => handleUpdateStatus(order._id || order.id, "packing")}
+                                onClick={() => onStatusUpdate(order._id || order.id, "packing")}
                               >
                                 <Package className="mr-1.5 h-3.5 w-3.5" />
                                 Đóng hàng
@@ -152,7 +157,7 @@ function ManageOrderTable({ PAYMENT_STATUS_CONFIG, STATUS_LABELS, filteredOrders
                               size="sm"
                               variant="outline"
                               className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 font-medium transition-all duration-200"
-                              onClick={() => handleCancelPendingOrder(order)}
+                              onClick={() => onCancel(order)}
                             >
                               <Ban className="mr-1.5 h-3.5 w-3.5" />
                               Hủy đơn
@@ -165,7 +170,7 @@ function ManageOrderTable({ PAYMENT_STATUS_CONFIG, STATUS_LABELS, filteredOrders
                           <Button
                             size="sm"
                             className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm transition-all duration-200"
-                            onClick={() => handleUpdateStatus(order._id || order.id, "sented")}
+                            onClick={() => onStatusUpdate(order._id || order.id, "sented")}
                           >
                             <Truck className="mr-1.5 h-3.5 w-3.5" />
                             Gửi hàng
@@ -178,7 +183,7 @@ function ManageOrderTable({ PAYMENT_STATUS_CONFIG, STATUS_LABELS, filteredOrders
                             size="sm"
                             variant="outline"
                             className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700 font-medium transition-all duration-200"
-                            onClick={() => handleConfirmReturn(order)}
+                            onClick={() => onConfirmReturn(order)}
                           >
                             <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
                             Xác nhận hoàn trả

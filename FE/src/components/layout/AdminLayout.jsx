@@ -2,14 +2,7 @@
 // Layout quản trị Plantify: sidebar trái, drawer mobile và tùy chọn tài khoản ở cuối sidebar.
 
 import { Link, Outlet, useLocation } from "react-router";
-import {
-  Bell,
-  LayoutDashboard,
-  Leaf,
-  LogOut,
-  Menu,
-  Users
-} from "lucide-react";
+import { LayoutDashboard, Leaf, LogOut, Menu, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,

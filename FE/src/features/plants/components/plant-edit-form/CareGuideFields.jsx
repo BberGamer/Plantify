@@ -1,4 +1,4 @@
-import { Loader2, Plus, X, GripVertical, ImageIcon } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,22 +21,57 @@ function CareGuideFields({ form, handleSubmit, isOpen, loading, plantName, setFo
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="cg-watering">Tưới nước</Label>
-              <Textarea id="cg-watering" value={form.watering} onChange={(e) => setForm((p) => ({ ...p, watering: e.target.value }))} rows={3} placeholder="VD: Tưới mỗi 1–2 tuần" />
+              <Textarea
+                id="cg-watering"
+                value={form.watering}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, watering: e.target.value }))
+                }
+                rows={3}
+                placeholder="VD: Tưới mỗi 1–2 tuần"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="cg-propagation">Nhân giống</Label>
-              <Textarea id="cg-propagation" value={form.propagation} onChange={(e) => setForm((p) => ({ ...p, propagation: e.target.value }))} rows={3} placeholder="VD: Giâm cành trong đất ẩm" />
+              <Textarea
+                id="cg-propagation"
+                value={form.propagation}
+                onChange={(e) =>
+                  setForm((p) => ({
+                    ...p,
+                    propagation: e.target.value,
+                  }))
+                }
+                rows={3}
+                placeholder="VD: Giâm cành trong đất ẩm"
+              />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="cg-pruning">Cắt tỉa</Label>
-            <Textarea id="cg-pruning" value={form.pruning} onChange={(e) => setForm((p) => ({ ...p, pruning: e.target.value }))} rows={3} placeholder="Loại bỏ lá già, lá vàng và cành yếu" />
+            <Textarea
+              id="cg-pruning"
+              value={form.pruning}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, pruning: e.target.value }))
+              }
+              rows={3}
+              placeholder="Loại bỏ lá già, lá vàng và cành yếu"
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="cg-repotting">Thay chậu</Label>
-            <Textarea id="cg-repotting" value={form.repotting} onChange={(e) => setForm((p) => ({ ...p, repotting: e.target.value }))} rows={3} placeholder="VD: Thay chậu 1–2 năm/lần" />
+            <Textarea
+              id="cg-repotting"
+              value={form.repotting}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, repotting: e.target.value }))
+              }
+              rows={3}
+              placeholder="VD: Thay chậu 1–2 năm/lần"
+            />
           </div>
 
           <DialogFooter>

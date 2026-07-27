@@ -1,4 +1,4 @@
-import { CheckCircle2, Flag, Inbox, Loader2, RefreshCcw, RotateCcw } from "lucide-react";
+import { CheckCircle2, Loader2, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-function ManageReportsTable({ ACTION_LABELS, REASON_LABELS, StatusBadge, activeReports, activeStatus, formatDate, getDisplayName, getEntityId, getPostTitle, handleOpenPostDetail, handleProcessReport, handleRestorePost, processingId, restoringPostId }) {
+function ManageReportsTable({
+  ACTION_LABELS,
+  REASON_LABELS,
+  StatusBadge,
+  activeReports,
+  activeStatus,
+  formatDate,
+  getDisplayName,
+  getEntityId,
+  getPostTitle,
+  handleOpenPostDetail,
+  handleProcessReport,
+  handleRestorePost,
+  processingId,
+  restoringPostId,
+}) {
   return (
 <Table>
         <TableHeader>

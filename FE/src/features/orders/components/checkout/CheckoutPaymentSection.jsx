@@ -1,16 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Check,
-  ShieldCheck,
-  Landmark,
-  Banknote,
-  CreditCard,
-  ArrowLeft,
-  ShoppingBag,
-  Loader2,
-  XCircle,
-  Wallet,
-} from "lucide-react";
+import { Landmark, Banknote, Wallet } from "lucide-react";
 
 function CheckoutPaymentSection({ paymentMethod, setPaymentMethod, setUseWallet, useWallet, walletBalance }) {
   return (

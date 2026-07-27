@@ -1,10 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, ChevronLeft, ChevronRight, FileText, Search, ShieldCheck, ShoppingCart, Star, Store } from "lucide-react";
+import { Star } from "lucide-react";
 import { motion } from "motion/react";
 
-function ShopFilters({ categories, handleApplyPrice, handleClearPriceFilter, handleMaxPriceChange, handleMinPriceChange, maxPrice, maxPriceInput, minPrice, minPriceInput, selectedCategory, selectedRating, setPage, setSelectedCategory, setSelectedRating }) {
+function ShopFilters({
+  categories,
+  handleApplyPrice,
+  handleClearPriceFilter,
+  handleMaxPriceChange,
+  handleMinPriceChange,
+  maxPrice,
+  maxPriceInput,
+  minPrice,
+  minPriceInput,
+  selectedCategory,
+  selectedRating,
+  setPage,
+  setSelectedCategory,
+  setSelectedRating,
+}) {
   return (
 <motion.div
             initial={{ opacity: 0, x: -20 }}

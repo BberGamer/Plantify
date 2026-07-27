@@ -1,19 +1,13 @@
-import { Link, Navigate } from "react-router";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Navigate } from "react-router";
+
+
+
+
+
+
+
 import { useAddressBook, useAuth } from "@/features/auth/hooks";
-import { CheckCircle2, Home, Loader2, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { AddressBookContent } from "@/features/auth/components/address-book/AddressBookContent";
 
 function AddressBook() {
@@ -51,7 +45,22 @@ function AddressBook() {
   }
 
   return (
-    <AddressBookContent addresses={addresses} editingId={editingId} form={form} handleDelete={handleDelete} handleEdit={handleEdit} handleProvinceChange={handleProvinceChange} handleSetDefault={handleSetDefault} handleSubmit={handleSubmit} provinces={provinces} resetForm={resetForm} saving={saving} selectedProvince={selectedProvince} setForm={setForm} user={user} />
+    <AddressBookContent
+      addresses={addresses}
+      editingId={editingId}
+      form={form}
+      handleDelete={handleDelete}
+      handleEdit={handleEdit}
+      handleProvinceChange={handleProvinceChange}
+      handleSetDefault={handleSetDefault}
+      handleSubmit={handleSubmit}
+      provinces={provinces}
+      resetForm={resetForm}
+      saving={saving}
+      selectedProvince={selectedProvince}
+      setForm={setForm}
+      user={user}
+    />
   );
 }
 

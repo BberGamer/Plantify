@@ -2,7 +2,7 @@
  * HeroSection.jsx - Hero section với search form và weather widget
  */
 import { motion } from "motion/react";
-import { Search, Sparkles, Leaf, X } from "lucide-react";
+import { Search, Leaf, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { PlantCard } from "@/components/common/PlantCard";

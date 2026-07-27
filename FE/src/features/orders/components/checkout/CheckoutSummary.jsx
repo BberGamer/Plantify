@@ -1,19 +1,8 @@
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-  Check,
-  ShieldCheck,
-  Landmark,
-  Banknote,
-  CreditCard,
-  ArrowLeft,
-  ShoppingBag,
-  Loader2,
-  XCircle,
-  Wallet,
-} from "lucide-react";
+import { Check, ShieldCheck, ArrowLeft, ShoppingBag, Loader2 } from "lucide-react";
 
 function CheckoutSummary({ handlePlaceOrder, isSubmitting, paymentMethod, remainingAmount, selectedItems, shippingFee, subtotal, walletApplied }) {
   return (
@@ -107,7 +96,7 @@ function CheckoutSummary({ handlePlaceOrder, isSubmitting, paymentMethod, remain
                   {/* Nút xác nhận đặt hàng */}
                   <Button
                     size="lg"
-                    className="w-full bg-gradient-to-r from-primary to-green-600 text-white rounded-xl py-6 font-semibold flex items-center justify-center gap-2 shadow-lg shadow-green-600/10 hover:shadow-green-600/25 transition-all"
+                    className="checkout-submit-button"
                     onClick={handlePlaceOrder}
                     disabled={isSubmitting}
                   >

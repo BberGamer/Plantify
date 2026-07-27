@@ -1,25 +1,13 @@
 // ProductForm.jsx - Form tạo/sửa sản phẩm
 import { useEffect, useState } from "react";
-import { Loader2, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ImageUploader } from "@/components/common/ImageUploader";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+
+
+
+
+
+
+
 import { ProductFormDialog } from "@/features/products/components/product-form/ProductFormDialog";
 
 const EMPTY_FORM = {
@@ -108,6 +96,19 @@ export function ProductForm({ categories, onSubmit, loading, editProduct }) {
   const submitLabel = isEditMode ? "Lưu" : "Tạo mới";
 
   return (
-    <ProductFormDialog categories={categories} dialogDescription={dialogDescription} dialogTitle={dialogTitle} formData={formData} handleChange={handleChange} handleClose={handleClose} handleSubmit={handleSubmit} isEditMode={isEditMode} isOpen={isOpen} loading={loading} setIsOpen={setIsOpen} submitLabel={submitLabel} />
+    <ProductFormDialog
+      categories={categories}
+      dialogDescription={dialogDescription}
+      dialogTitle={dialogTitle}
+      formData={formData}
+      handleChange={handleChange}
+      handleClose={handleClose}
+      handleSubmit={handleSubmit}
+      isEditMode={isEditMode}
+      isOpen={isOpen}
+      loading={loading}
+      setIsOpen={setIsOpen}
+      submitLabel={submitLabel}
+    />
   );
 }

@@ -1,20 +1,14 @@
 // ManageDiseaseDialog.jsx - Dialog quản lý đầy đủ kho tri thức bệnh cây
 import { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
-import { ImageUploader } from "@/components/common/ImageUploader";
-import { DiseaseIdentityFields } from "./DiseaseIdentityFields";
-import { DiseaseKnowledgeFields } from "./DiseaseKnowledgeFields";
-import { RecommendedProductsPicker } from "./RecommendedProductsPicker";
+
+
+
+
+
+
+
+
+
 import {
   DISEASE_CATEGORY_OPTIONS,
   getReferenceId,
@@ -169,6 +163,25 @@ export function ManageDiseaseDialog({
       : [];
 
   return (
-    <ManageDiseaseDialogView disease={disease} form={form} handleFieldChange={handleFieldChange} handleNameChange={handleNameChange} handleSubmit={handleSubmit} linkedPlants={linkedPlants} linkedProducts={linkedProducts} loading={loading} onOpenChange={onOpenChange} open={open} plants={plants} plantsError={plantsError} plantsLoading={plantsLoading} products={products} productsError={productsError} productsLoading={productsLoading} toggleAffectedPlant={toggleAffectedPlant} toggleRecommendedProduct={toggleRecommendedProduct} />
+    <ManageDiseaseDialogView
+      disease={disease}
+      form={form}
+      handleFieldChange={handleFieldChange}
+      handleNameChange={handleNameChange}
+      handleSubmit={handleSubmit}
+      linkedPlants={linkedPlants}
+      linkedProducts={linkedProducts}
+      loading={loading}
+      onOpenChange={onOpenChange}
+      open={open}
+      plants={plants}
+      plantsError={plantsError}
+      plantsLoading={plantsLoading}
+      products={products}
+      productsError={productsError}
+      productsLoading={productsLoading}
+      toggleAffectedPlant={toggleAffectedPlant}
+      toggleRecommendedProduct={toggleRecommendedProduct}
+    />
   );
 }

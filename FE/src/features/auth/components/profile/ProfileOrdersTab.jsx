@@ -1,29 +1,23 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/common/EmptyState";
-import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Lock,
-  Package,
-  Heart,
-  Calendar,
-  Leaf,
-  Crown,
-  Briefcase,
-  PenLine,
-  Eye,
-  EyeOff,
-  ShieldCheck,
-  Wallet,
-} from "lucide-react";
+import { Package, Calendar } from "lucide-react";
 import { motion } from "motion/react";
 
-function ProfileOrdersTab({ CANCELLATION_REASON_LABELS, PAYMENT_STATUS_CONFIG, STATUS_CONFIG, formatOrderDate, formatVND, getRemainingPayment, handleCustomerAction, navigate, orders, ordersLoading }) {
+function ProfileOrdersTab({
+  CANCELLATION_REASON_LABELS,
+  PAYMENT_STATUS_CONFIG,
+  STATUS_CONFIG,
+  formatOrderDate,
+  formatVND,
+  getRemainingPayment,
+  handleCustomerAction,
+  navigate,
+  orders,
+  ordersLoading,
+}) {
   return (
 <TabsContent value="orders" className="space-y-6">
               {ordersLoading ? (

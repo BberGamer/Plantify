@@ -1,28 +1,11 @@
 // ManageDiseases.jsx - Trang quản lý Bệnh cây cho Content Manager
 import { useState } from "react";
-import {
-  Search,
-  Loader2,
-  Plus,
-  Pencil,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  Bug,
-  Sprout,
-} from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+
+
+
+
+
+
 import {
   usePlantDiseases,
   useCreatePlantDisease,
@@ -32,13 +15,12 @@ import {
 import { usePlants } from "@/features/plants/hooks";
 import { useProducts } from "@/features/products/hooks";
 import { ManageDiseaseDialog } from "@/features/plant-diseases/components/ManageDiseaseDialog";
-import { DiseaseKnowledgeSummary } from "@/features/plant-diseases/components/DiseaseKnowledgeSummary";
-import {
-  getDiseaseCategoryLabel,
-  getReferenceId,
-} from "@/features/plant-diseases/plantDiseaseForm.utils";
+
+
 import { toast } from "sonner";
-import { ManageDiseasesContent } from "@/features/plant-diseases/components/manage-diseases/ManageDiseasesContent";
+import { ManageDiseasesHeader } from "@/features/plant-diseases/components/manage-diseases/ManageDiseasesHeader";
+import { ManageDiseasesPagination } from "@/features/plant-diseases/components/manage-diseases/ManageDiseasesPagination";
+import { ManageDiseasesTable } from "@/features/plant-diseases/components/manage-diseases/ManageDiseasesTable";
 
 const getTimestampFromId = (hexId) => {
   if (!hexId || hexId.length !== 24) return null;
@@ -52,49 +34,6 @@ const formatDate = (dateStr, id) => {
     dateObj.getMonth() + 1
   ).padStart(2, "0")}/${dateObj.getFullYear()}`;
 };
-
-/**
- * Hiển thị tối đa hai cây bị ảnh hưởng và tổng số còn lại.
- */
-function AffectedPlantsBadges({ disease, plants }) {
-  const affectedPlants = Array.isArray(disease.affectedPlantIds)
-    ? disease.affectedPlantIds
-    : disease.plantId
-      ? [disease.plantId]
-      : [];
-
-  if (affectedPlants.length === 0) {
-    return <span className="text-xs text-muted-foreground">Chưa xác định</span>;
-  }
-
-  return (
-    <div className="flex max-w-full flex-wrap gap-1">
-      {affectedPlants.slice(0, 2).map((affectedPlant) => {
-        const plantId = getReferenceId(affectedPlant);
-        const plantName = affectedPlant?.name
-          || plants.find((plant) => getReferenceId(plant) === plantId)?.name
-          || "Cây liên quan";
-
-        return (
-          <Badge
-            key={plantId}
-            variant="outline"
-            className="max-w-full gap-1 rounded-full border-green-200/50 bg-green-50/50 px-2 py-0.5 text-[11px] font-normal text-green-700"
-            title={plantName}
-          >
-            <Sprout className="h-3 w-3 shrink-0" />
-            <span className="truncate">{plantName}</span>
-          </Badge>
-        );
-      })}
-      {affectedPlants.length > 2 && (
-        <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[10px]">
-          +{affectedPlants.length - 2}
-        </Badge>
-      )}
-    </div>
-  );
-}
 
 export function ManageDiseases() {
   const [search, setSearch] = useState("");
@@ -163,6 +102,45 @@ export function ManageDiseases() {
   };
 
   return (
-    <ManageDiseasesContent AffectedPlantsBadges={AffectedPlantsBadges} creating={creating} deleting={deleting} diseases={diseases} editingDisease={editingDisease} formatDate={formatDate} handleDelete={handleDelete} handleOpenCreate={handleOpenCreate} handleOpenEdit={handleOpenEdit} handleSubmit={handleSubmit} isDialogOpen={isDialogOpen} loading={loading} page={page} pages={pages} plants={plants} plantsError={plantsError} plantsLoading={plantsLoading} products={products} productsError={productsError} productsLoading={productsLoading} search={search} setIsDialogOpen={setIsDialogOpen} setPage={setPage} setSearch={setSearch} total={total} updating={updating} />
+    <div className="min-w-0 max-w-full space-y-6 overflow-x-hidden">
+      <ManageDiseasesHeader
+        onCreate={handleOpenCreate}
+        onPageReset={() => setPage(1)}
+        onSearchChange={setSearch}
+        search={search}
+        total={total}
+      />
+
+      <ManageDiseasesTable
+        deleting={deleting}
+        diseases={diseases}
+        formatDate={formatDate}
+        loading={loading}
+        onDelete={handleDelete}
+        onEdit={handleOpenEdit}
+        plants={plants}
+      />
+
+      <ManageDiseasesPagination
+        loading={loading}
+        onPageChange={setPage}
+        page={page}
+        pages={pages}
+      />
+
+      <ManageDiseaseDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        disease={editingDisease}
+        plants={plants}
+        plantsLoading={plantsLoading}
+        plantsError={plantsError}
+        products={products}
+        productsLoading={productsLoading}
+        productsError={productsError}
+        onSubmit={handleSubmit}
+        loading={creating || updating}
+      />
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Link, Navigate } from "react-router";
+import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +14,22 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, Home, Loader2, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 
-function AddressBookContent({ addresses, editingId, form, handleDelete, handleEdit, handleProvinceChange, handleSetDefault, handleSubmit, provinces, resetForm, saving, selectedProvince, setForm, user }) {
+function AddressBookContent({
+  addresses,
+  editingId,
+  form,
+  handleDelete,
+  handleEdit,
+  handleProvinceChange,
+  handleSetDefault,
+  handleSubmit,
+  provinces,
+  resetForm,
+  saving,
+  selectedProvince,
+  setForm,
+  user,
+}) {
   return (
 <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-6xl">
@@ -164,7 +179,13 @@ function AddressBookContent({ addresses, editingId, form, handleDelete, handleEd
                         <Button type="button" size="icon" variant="outline" onClick={() => handleEdit(address)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button type="button" size="icon" variant="outline" className="text-destructive hover:text-destructive" onClick={() => handleDelete(address._id)}>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(address._id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

@@ -1,15 +1,10 @@
 // DiagnosisResultCard.jsx - UI dùng chung cho kết quả AI mới và DiagnosisHistory
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { ROUTES } from "@/lib/constants";
-import {
-  CheckCircle,
-  Leaf,
-  Plus,
-  ShoppingCart,
-} from "lucide-react";
-import { Link } from "react-router";
+
+
+
+
+
+
 import { DiagnosisResultContent } from "@/features/ai/components/diagnosis-result/DiagnosisResultContent";
 
 const DEFAULT_IMAGE = "/default-product.svg";
@@ -87,6 +82,17 @@ export function DiagnosisResultCard({
   );
 
   return (
-    <DiagnosisResultContent DEFAULT_IMAGE={DEFAULT_IMAGE} DISPLAY_LABELS={DISPLAY_LABELS} KnowledgeList={KnowledgeList} availableProducts={availableProducts} confidence={confidence} diagnosis={diagnosis} imageUrl={imageUrl} onAddToCart={onAddToCart} result={result} statusContent={statusContent} />
+    <DiagnosisResultContent
+      DEFAULT_IMAGE={DEFAULT_IMAGE}
+      DISPLAY_LABELS={DISPLAY_LABELS}
+      KnowledgeList={KnowledgeList}
+      availableProducts={availableProducts}
+      confidence={confidence}
+      diagnosis={diagnosis}
+      imageUrl={imageUrl}
+      onAddToCart={onAddToCart}
+      result={result}
+      statusContent={statusContent}
+    />
   );
 }

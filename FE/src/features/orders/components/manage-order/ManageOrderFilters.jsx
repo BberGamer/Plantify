@@ -2,19 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Search,
-  ShoppingBag,
-  Clock3,
-  PackageCheck,
-  Ban,
-  Package,
-  Truck,
-  RotateCcw,
-  Eye,
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react";
+import { Search } from "lucide-react";
 
 function ManageOrderFilters({ paymentFilter, search, setPaymentFilter, setSearch, setStatusFilter, statusFilter }) {
   return (

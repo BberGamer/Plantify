@@ -8,10 +8,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import {
+  CANCELLATION_REASON_LABELS,
+  PAYMENT_STATUS_CONFIG,
+  STATUS_LABELS,
+  formatDateTime,
+  formatVND,
+  getPaymentMethodLabel,
+  getStatusClassName,
+  isHybridPayment,
+} from "@/features/orders/manageOrder.utils";
 
-function ManageOrderDetailsDialog({ CANCELLATION_REASON_LABELS, PAYMENT_STATUS_CONFIG, STATUS_LABELS, formatDateTime, formatVND, getPaymentMethodLabel, getStatusClassName, isHybridPayment, selectedOrder, setSelectedOrder }) {
+function ManageOrderDetailsDialog({ onClose, selectedOrder }) {
   return (
-<Dialog open={Boolean(selectedOrder)} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+<Dialog open={Boolean(selectedOrder)} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
           {selectedOrder && (
             <>
@@ -103,7 +113,14 @@ function ManageOrderDetailsDialog({ CANCELLATION_REASON_LABELS, PAYMENT_STATUS_C
                         <p className="text-xs font-semibold text-violet-700 uppercase tracking-wide">Chi tiết nguồn thanh toán</p>
                         <div className="flex items-center justify-between text-sm">
                           <span className="flex items-center gap-1.5 text-violet-700">
-                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-violet-200 text-violet-800 text-[10px] font-bold">Ví</span>
+                          <span
+                            className="
+                              inline-flex h-5 w-5 items-center justify-center rounded-full
+                              bg-violet-200 text-[10px] font-bold text-violet-800
+                            "
+                          >
+                            Ví
+                          </span>
                             Thanh toán từ ví
                           </span>
                           <span className="font-semibold text-violet-800">{formatVND(selectedOrder.walletAmount || 0)}</span>
@@ -125,7 +142,14 @@ function ManageOrderDetailsDialog({ CANCELLATION_REASON_LABELS, PAYMENT_STATUS_C
                       <div className="rounded-lg border border-violet-100 bg-violet-50/60 p-3">
                         <div className="flex items-center justify-between text-sm">
                           <span className="flex items-center gap-1.5 text-violet-700">
-                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-violet-200 text-violet-800 text-[10px] font-bold">Ví</span>
+                          <span
+                            className="
+                              inline-flex h-5 w-5 items-center justify-center rounded-full
+                              bg-violet-200 text-[10px] font-bold text-violet-800
+                            "
+                          >
+                            Ví
+                          </span>
                             Thanh toán 100% từ ví
                           </span>
                           <span className="font-semibold text-violet-800">{formatVND(selectedOrder.walletAmount || 0)}</span>

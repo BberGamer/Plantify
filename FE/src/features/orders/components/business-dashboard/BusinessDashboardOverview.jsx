@@ -5,7 +5,7 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { Wallet, Package, Tags, TrendingUp, Boxes, FolderTree, ChevronLeft, ChevronRight } from "lucide-react";
+import { TrendingUp, FolderTree } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -18,7 +18,17 @@ import {
   LabelList
 } from "recharts";
 
-function BusinessDashboardOverview({ categories, error, formatRevenueValue, isLoading, productCategoryData, revenueBadge, revenueData, statsError, statsLoading }) {
+function BusinessDashboardOverview({
+  categories,
+  error,
+  formatRevenueValue,
+  isLoading,
+  productCategoryData,
+  revenueBadge,
+  revenueData,
+  statsError,
+  statsLoading,
+}) {
   return (
 <section className="grid grid-cols-1 gap-6 xl:grid-cols-5">
         <Card className="xl:col-span-3">

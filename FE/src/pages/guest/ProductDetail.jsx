@@ -2,24 +2,15 @@ import { useState, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ImageCarousel } from "@/components/common/ImageCarousel";
-import {
-  Star,
-  ShoppingCart,
-  Shield,
-  Truck,
-  MessageCircle,
-  Plus,
-  Minus,
-  AlertCircle
-} from "lucide-react";
-import { motion } from "motion/react";
+
+
+
+
+import { AlertCircle } from "lucide-react";
+
 import { useProduct } from "@/features/products/hooks";
 import { toast } from "sonner";
-import { ProductReviews } from "@/components/common/ProductReviews";
+
 import { useAuth } from "@/features/auth/hooks";
 import { useCartMutations } from "@/features/cart/hooks";
 import { ProductDetailContent } from "@/features/products/components/product-detail/ProductDetailContent";
@@ -114,7 +105,15 @@ function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50/30 to-white py-12 px-4">
-      <ProductDetailContent handleAddToCart={handleAddToCart} handleBuyNow={handleBuyNow} handleRatingUpdate={handleRatingUpdate} images={images} product={product} quantity={quantity} setQuantity={setQuantity} />
+        <ProductDetailContent
+          handleAddToCart={handleAddToCart}
+          handleBuyNow={handleBuyNow}
+          handleRatingUpdate={handleRatingUpdate}
+          images={images}
+          product={product}
+          quantity={quantity}
+          setQuantity={setQuantity}
+        />
     </div>
   );
 }

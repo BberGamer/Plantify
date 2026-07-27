@@ -1,24 +1,12 @@
 // PlantEditForm.jsx - Form chỉnh sửa Plant + Modal thêm Care Guide + Modal thêm Disease
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { Loader2, Plus, X, GripVertical, ImageIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
+
+
+
+
+
+
+
 
 // Constants
 const EMPTY_PLANT_FORM = {
@@ -42,7 +30,7 @@ const EMPTY_PLANT_FORM = {
 const toCommaString = (arr) => (Array.isArray(arr) && arr.length > 0 ? arr.join(", ") : "");
 const toCommaArray = (str) => (str ? str.split(",").map((t) => t.trim()).filter(Boolean) : []);
 
-import { ImageUploader } from "@/components/common/ImageUploader";
+
 import { textareaToList } from "@/features/plant-diseases/plantDiseaseForm.utils";
 import { DiseaseFields } from "@/features/plants/components/plant-edit-form/DiseaseFields";
 import { PlantEditFields } from "@/features/plants/components/plant-edit-form/PlantEditFields";
@@ -92,7 +80,15 @@ export function PlantEditForm({ plant, categories, onUpdate, loading }) {
   };
 
   return (
-    <PlantEditFields categories={categories} form={form} handleSubmit={handleSubmit} isOpen={isOpen} loading={loading} setForm={setForm} setIsOpen={setIsOpen} />
+      <PlantEditFields
+        categories={categories}
+        form={form}
+        handleSubmit={handleSubmit}
+        isOpen={isOpen}
+        loading={loading}
+        setForm={setForm}
+        setIsOpen={setIsOpen}
+      />
   );
 }
 

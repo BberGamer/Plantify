@@ -1,12 +1,14 @@
 // Browse.jsx - Trang khám phá cây cảnh với real data từ Plants, pagination và search/tag
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router";
-import { PlantCard } from "@/components/common/PlantCard";
+import { useSearchParams } from "react-router";
+
 import { usePlants, usePlantTags } from "@/features/plants/hooks";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+
+
+
+
+import { BrowseFilters } from "@/features/plants/components/browse/BrowseFilters";
+import { BrowseResults } from "@/features/plants/components/browse/BrowseResults";
 
 function Browse() {
   // === URL params ===
@@ -121,169 +123,59 @@ function Browse() {
 
   const hasActiveFilters = searchQuery || tag;
 
+  const handlePageChange = (nextPage) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", String(nextPage));
+    setSearchParams(params);
+  };
+
   return (
-    <div className="min-h-screen py-12 px-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen px-6 py-12">
+      <div className="mx-auto max-w-7xl">
         <div className="mb-10">
-          <h1 className="text-5xl font-bold mb-2">
-            {searchQuery ? `Kết quả cho "${searchQuery}"` : tag ? `Danh mục: ${tagLabel[tag] || tag}` : "Khám phá cây cảnh"}
+          <h1 className="mb-2 text-5xl font-bold">
+            {searchQuery
+              ? `Kết quả cho "${searchQuery}"`
+              : tag
+                ? `Danh mục: ${tagLabel[tag] || tag}`
+                : "Khám phá cây cảnh"}
           </h1>
           <p className="text-xl text-muted-foreground">
-            {searchQuery || tag ? "Tìm thấy các loài phù hợp" : "Tìm kiếm và lọc từ hàng nghìn loại cây cảnh"}
+            {searchQuery || tag
+              ? "Tìm thấy các loài phù hợp"
+              : "Tìm kiếm và lọc từ hàng nghìn loại cây cảnh"}
           </p>
-        </div>
-        <div className="mb-10 space-y-6">
-          {/* === Search Form: đồng bộ với URL === */}
-          <form onSubmit={handleSearchSubmit} className="relative flex items-center gap-2 bg-white rounded-2xl shadow-lg border border-border p-2">
-            <Search className="absolute left-5 w-5 h-5 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Tìm theo tên cây hoặc bệnh cây..."
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-              className="border-0 focus-visible:ring-0 text-lg pl-12 text-foreground h-12"
-            />
-            <Button type="submit" size="lg" className="rounded-xl bg-gradient-to-r from-primary to-green-600 text-white">
-              Tìm kiếm
-            </Button>
-          </form>
-          {/* === Tag navigation (dynamic từ API) === */}
-          <div className="flex flex-wrap gap-2 items-center">
-            <Badge
-              key="all"
-              variant={!tag ? "default" : "secondary"}
-              className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors"
-              onClick={() => handleTagClick("")}
-            >
-              Tất cả
-            </Badge>
-            {visibleTags.map((t) => (
-              <Badge
-                key={t}
-                variant={tag === t ? "default" : "secondary"}
-                className="px-4 py-2 cursor-pointer hover:bg-primary hover:text-white transition-colors animate-in fade-in slide-in-from-top-1 duration-200"
-                onClick={() => handleTagClick(t)}
-              >
-                {tagLabel[t] || t}
-              </Badge>
-            ))}
-            {availableTags.length > TAG_VISIBLE_LIMIT && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAllTags((prev) => !prev)}
-                className="px-3 py-2 h-auto gap-1 text-sm font-medium text-primary hover:text-primary"
-              >
-                {showAllTags ? (
-                  <>
-                    <ChevronUp className="w-4 h-4" />
-                    Thu gọn
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-4 h-4" />
-                    Xem thêm ({remainingTagsCount})
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </div>
-        {/* === Results header === */}
-        <div className="mb-6 flex items-center justify-between">
-          <p className="text-muted-foreground">
-            {loading ? (
-              "Đang tìm kiếm..."
-            ) : (
-              <>
-                Hiển thị <span className="font-semibold text-foreground">{total || plants.length}</span> kết quả
-              </>
-            )}
-          </p>
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setLocalSearch("");
-                setSearchParams({});
-              }}
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Xóa bộ lọc
-            </Button>
-          )}
         </div>
 
-        {/* === Products grid === */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading ? (
-            <div className="col-span-full flex justify-center py-20">
-              <Loader2 className="w-10 h-10 animate-spin text-primary" />
-            </div>
-          ) : error ? (
-            <div className="col-span-full text-center py-20">
-              <p className="text-lg text-red-500 mb-4">Đã xảy ra lỗi: {error}</p>
-              <Button variant="outline" onClick={() => window.location.reload()}>Thử lại</Button>
-            </div>
-          ) : plantCards.length > 0 ? (
-            plantCards.map((plant) => (
-              <Link key={plant.id} to={`/plant/${plant.id}`}>
-                <PlantCard {...plant} />
-              </Link>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-20">
-              <p className="text-lg text-muted-foreground mb-4">Không tìm thấy cây cảnh nào phù hợp</p>
-              <p className="text-sm text-muted-foreground">
-                Thử từ khóa khác hoặc xóa bộ lọc để xem tất cả cây cảnh
-              </p>
-            </div>
-          )}
-        </div>
-        {/* === Pagination === */}
-        {!loading && plants.length > 0 && pages > 1 && (
-          <div className="mt-12 flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              disabled={currentPage <= 1}
-              onClick={() => {
-                const params = new URLSearchParams(searchParams);
-                params.set("page", String(currentPage - 1));
-                setSearchParams(params);
-              }}
-            >
-              Trước
-            </Button>
-            <div className="flex gap-1">
-              {Array.from({ length: pages }, (_, i) => i + 1).map((pageNum) => (
-                <Button
-                  key={pageNum}
-                  variant={pageNum === currentPage ? "default" : "outline"}
-                  size="icon"
-                  onClick={() => {
-                    const params = new URLSearchParams(searchParams);
-                    params.set("page", String(pageNum));
-                    setSearchParams(params);
-                  }}
-                >
-                  {pageNum}
-                </Button>
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              disabled={currentPage >= pages}
-              onClick={() => {
-                const params = new URLSearchParams(searchParams);
-                params.set("page", String(currentPage + 1));
-                setSearchParams(params);
-              }}
-            >
-              Sau
-            </Button>
-          </div>
-        )}
+        <BrowseFilters
+          availableTags={availableTags}
+          localSearch={localSearch}
+          onSearchChange={setLocalSearch}
+          onSearchSubmit={handleSearchSubmit}
+          onTagClick={handleTagClick}
+          onToggleTags={() => setShowAllTags((current) => !current)}
+          remainingTagsCount={remainingTagsCount}
+          showAllTags={showAllTags}
+          tag={tag}
+          tagLabel={tagLabel}
+          visibleTags={visibleTags}
+        />
+
+        <BrowseResults
+          currentPage={currentPage}
+          error={error}
+          hasActiveFilters={hasActiveFilters}
+          loading={loading}
+          onClearFilters={() => {
+            setLocalSearch("");
+            setSearchParams({});
+          }}
+          onPageChange={handlePageChange}
+          pages={pages}
+          plantCards={plantCards}
+          plantsCount={plants.length}
+          total={total}
+        />
       </div>
     </div>
   );

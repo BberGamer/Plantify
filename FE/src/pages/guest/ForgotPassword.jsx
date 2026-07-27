@@ -1,24 +1,11 @@
 // ForgotPassword.jsx - Trang quên mật khẩu: nhập email nhận OTP và xác thực OTP 6 số
 import { Link } from "react-router";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Leaf,
-  Mail,
-  ArrowLeft,
-  Loader2,
-  AlertCircle,
-  ShieldCheck,
-} from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+
+
+
+
+import { Leaf } from "lucide-react";
+import { motion } from "motion/react";
 import { useForgotPasswordFlow } from "@/features/auth/hooks";
 import { ForgotPasswordFlowCard } from "@/features/auth/components/forgot-password/ForgotPasswordFlowCard";
 
@@ -63,7 +50,12 @@ function ForgotPassword() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link to="/" className="group inline-flex items-center gap-2">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-green-600 shadow-lg transition-transform group-hover:scale-110">
+            <div
+              className="
+                flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br
+                from-primary to-green-600 shadow-lg transition-transform group-hover:scale-110
+              "
+            >
               <Leaf className="h-8 w-8 text-white" />
             </div>
             <span className="bg-gradient-to-br from-primary to-green-700 bg-clip-text text-3xl font-bold text-transparent">
@@ -74,12 +66,45 @@ function ForgotPassword() {
 
         {/* Step indicator */}
         <div className="mb-4 flex items-center justify-center gap-3">
-          <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${step >= 1 ? "bg-primary text-white" : "bg-gray-100 text-gray-400"}`}>1</div>
+          <div
+            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+              step >= 1
+                ? "bg-primary text-white"
+                : "bg-gray-100 text-gray-400"
+            }`}
+          >
+            1
+          </div>
           <div className={`h-1 w-12 rounded-full transition-colors ${step >= 2 ? "bg-primary" : "bg-gray-200"}`} />
-          <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${step >= 2 ? "bg-primary text-white" : "bg-gray-100 text-gray-400"}`}>2</div>
+          <div
+            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+              step >= 2
+                ? "bg-primary text-white"
+                : "bg-gray-100 text-gray-400"
+            }`}
+          >
+            2
+          </div>
         </div>
 
-        <ForgotPasswordFlowCard changeEmail={changeEmail} email={email} errors={errors} handleEmailChange={handleEmailChange} handleOtpChange={handleOtpChange} handleOtpKeyDown={handleOtpKeyDown} handleOtpPaste={handleOtpPaste} handleResendOtp={handleResendOtp} handleSendOtp={handleSendOtp} handleVerifyOtp={handleVerifyOtp} otp={otp} otpRefs={otpRefs} resendCountdown={resendCountdown} resending={resending} step={step} submitting={submitting} />
+        <ForgotPasswordFlowCard
+          changeEmail={changeEmail}
+          email={email}
+          errors={errors}
+          handleEmailChange={handleEmailChange}
+          handleOtpChange={handleOtpChange}
+          handleOtpKeyDown={handleOtpKeyDown}
+          handleOtpPaste={handleOtpPaste}
+          handleResendOtp={handleResendOtp}
+          handleSendOtp={handleSendOtp}
+          handleVerifyOtp={handleVerifyOtp}
+          otp={otp}
+          otpRefs={otpRefs}
+          resendCountdown={resendCountdown}
+          resending={resending}
+          step={step}
+          submitting={submitting}
+        />
       </motion.div>
     </div>
   );

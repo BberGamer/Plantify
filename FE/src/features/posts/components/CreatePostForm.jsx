@@ -1,17 +1,11 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import { Loader2, Save, Upload, X } from "lucide-react";
-import { ImageCarousel } from "@/components/common/ImageCarousel";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+
+
+
+
+
+
+
 import { CreatePostFields } from "@/features/posts/components/create-post/CreatePostFields";
 
 const POST_CATEGORIES = [
@@ -117,7 +111,23 @@ function CreatePostForm({ initialPost = null, loading = false, onCancel, onSubmi
   };
 
   return (
-    <CreatePostFields POST_CATEGORIES={POST_CATEGORIES} existingImages={existingImages} fieldIds={fieldIds} formData={formData} handleChange={handleChange} handleClearImages={handleClearImages} handleImageChange={handleImageChange} handleRemoveExistingImage={handleRemoveExistingImage} handleSubmit={handleSubmit} imageFiles={imageFiles} imagePreviews={imagePreviews} initialPost={initialPost} loading={loading} onCancel={onCancel} setFormData={setFormData} />
+    <CreatePostFields
+      POST_CATEGORIES={POST_CATEGORIES}
+      existingImages={existingImages}
+      fieldIds={fieldIds}
+      formData={formData}
+      handleChange={handleChange}
+      handleClearImages={handleClearImages}
+      handleImageChange={handleImageChange}
+      handleRemoveExistingImage={handleRemoveExistingImage}
+      handleSubmit={handleSubmit}
+      imageFiles={imageFiles}
+      imagePreviews={imagePreviews}
+      initialPost={initialPost}
+      loading={loading}
+      onCancel={onCancel}
+      setFormData={setFormData}
+    />
   );
 }
 

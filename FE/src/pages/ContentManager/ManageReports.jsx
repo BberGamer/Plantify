@@ -1,20 +1,13 @@
 // ManageReports.jsx - Trang xu ly report cho Content Manager
 import { useMemo, useState } from "react";
-import { CheckCircle2, Flag, Inbox, Loader2, RefreshCcw, RotateCcw } from "lucide-react";
+import { CheckCircle2, Flag, Inbox, Loader2, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import BlogPostDetail from "@/components/common/BlogPostDetail";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+
 import { useManageReports } from "@/features/reports/hooks";
 import { ManageReportsTable } from "@/features/reports/components/manage-reports/ManageReportsTable";
 
@@ -194,7 +187,22 @@ function ManageReports() {
     }
 
     return (
-      <ManageReportsTable ACTION_LABELS={ACTION_LABELS} REASON_LABELS={REASON_LABELS} StatusBadge={StatusBadge} activeReports={activeReports} activeStatus={activeStatus} formatDate={formatDate} getDisplayName={getDisplayName} getEntityId={getEntityId} getPostTitle={getPostTitle} handleOpenPostDetail={handleOpenPostDetail} handleProcessReport={handleProcessReport} handleRestorePost={handleRestorePost} processingId={processingId} restoringPostId={restoringPostId} />
+      <ManageReportsTable
+        ACTION_LABELS={ACTION_LABELS}
+        REASON_LABELS={REASON_LABELS}
+        StatusBadge={StatusBadge}
+        activeReports={activeReports}
+        activeStatus={activeStatus}
+        formatDate={formatDate}
+        getDisplayName={getDisplayName}
+        getEntityId={getEntityId}
+        getPostTitle={getPostTitle}
+        handleOpenPostDetail={handleOpenPostDetail}
+        handleProcessReport={handleProcessReport}
+        handleRestorePost={handleRestorePost}
+        processingId={processingId}
+        restoringPostId={restoringPostId}
+      />
     );
   }
 

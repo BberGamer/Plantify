@@ -1,20 +1,11 @@
-import { Link, useParams, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
-import {
-  Star,
-  ShoppingCart,
-  Shield,
-  Truck,
-  MessageCircle,
-  Plus,
-  Minus,
-  AlertCircle
-} from "lucide-react";
+import { Star, ShoppingCart, Shield, Truck, MessageCircle, Plus, Minus } from "lucide-react";
 import { motion } from "motion/react";
 import { ProductReviews } from "@/components/common/ProductReviews";
 

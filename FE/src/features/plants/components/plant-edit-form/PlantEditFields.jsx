@@ -1,4 +1,4 @@
-import { Loader2, Plus, X, GripVertical, ImageIcon } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,7 +40,14 @@ function PlantEditFields({ categories, form, handleSubmit, isOpen, loading, setF
               </div>
               <div className="space-y-2">
                 <Label htmlFor="scientificName">Tên khoa học</Label>
-                <Input id="scientificName" value={form.scientificName} onChange={(e) => setForm((p) => ({ ...p, scientificName: e.target.value }))} placeholder="VD: Monstera deliciosa" />
+                <Input
+                  id="scientificName"
+                  value={form.scientificName}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, scientificName: e.target.value }))
+                  }
+                  placeholder="VD: Monstera deliciosa"
+                />
               </div>
             </div>
 
@@ -73,13 +80,28 @@ function PlantEditFields({ categories, form, handleSubmit, isOpen, loading, setF
             {/* Mô tả ngắn */}
             <div className="space-y-2">
               <Label htmlFor="shortDescription">Mô tả ngắn</Label>
-              <Input id="shortDescription" value={form.shortDescription} onChange={(e) => setForm((p) => ({ ...p, shortDescription: e.target.value }))} placeholder="VD: Cây leo nhiệt đới phổ biến" />
+              <Input
+                id="shortDescription"
+                value={form.shortDescription}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, shortDescription: e.target.value }))
+                }
+                placeholder="VD: Cây leo nhiệt đới phổ biến"
+              />
             </div>
 
             {/* Mô tả chi tiết */}
             <div className="space-y-2">
               <Label htmlFor="description">Mô tả chi tiết</Label>
-              <Textarea id="description" value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={3} placeholder="Mô tả chi tiết về cây..." />
+              <Textarea
+                id="description"
+                value={form.description}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, description: e.target.value }))
+                }
+                rows={3}
+                placeholder="Mô tả chi tiết về cây..."
+              />
             </div>
 
             {/* Images */}
@@ -95,7 +117,14 @@ function PlantEditFields({ categories, form, handleSubmit, isOpen, loading, setF
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="sunlight">Ánh sáng</Label>
-                <Input id="sunlight" value={form.sunlight} onChange={(e) => setForm((p) => ({ ...p, sunlight: e.target.value }))} placeholder="VD: Ánh sáng gián tiếp" />
+                <Input
+                  id="sunlight"
+                  value={form.sunlight}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, sunlight: e.target.value }))
+                  }
+                  placeholder="VD: Ánh sáng gián tiếp"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="humidity">Độ ẩm</Label>
@@ -111,11 +140,27 @@ function PlantEditFields({ categories, form, handleSubmit, isOpen, loading, setF
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="temperatureMin">Nhiệt độ min (°C)</Label>
-                <Input id="temperatureMin" type="number" value={form.temperatureMin} onChange={(e) => setForm((p) => ({ ...p, temperatureMin: e.target.value }))} placeholder="VD: 15" />
+                <Input
+                  id="temperatureMin"
+                  type="number"
+                  value={form.temperatureMin}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, temperatureMin: e.target.value }))
+                  }
+                  placeholder="VD: 15"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="temperatureMax">Nhiệt độ max (°C)</Label>
-                <Input id="temperatureMax" type="number" value={form.temperatureMax} onChange={(e) => setForm((p) => ({ ...p, temperatureMax: e.target.value }))} placeholder="VD: 30" />
+                <Input
+                  id="temperatureMax"
+                  type="number"
+                  value={form.temperatureMax}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, temperatureMax: e.target.value }))
+                  }
+                  placeholder="VD: 30"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="origin">Nguồn gốc</Label>

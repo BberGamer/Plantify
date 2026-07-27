@@ -1,21 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle2, ChevronLeft, ChevronRight, FileText, Search, ShieldCheck, ShoppingCart, Star, Store } from "lucide-react";
-import { motion } from "motion/react";
 import {
   useCategories,
   useMarketplaceSearch,
@@ -26,8 +9,9 @@ import { useCartMutations } from "@/features/cart/hooks";
 import { toast } from "sonner";
 import { ShopTermsDialog } from "@/features/products/components/shop/ShopTermsDialog";
 import { ShopFilters } from "@/features/products/components/shop/ShopFilters";
+import { ShopHero } from "@/features/products/components/shop/ShopHero";
 import { ShopProductGrid } from "@/features/products/components/shop/ShopProductGrid";
-import { ShopContent } from "@/features/products/components/shop/ShopContent";
+import "@/styles/Shop.css";
 
 const MARKETPLACE_TERMS = [
   "Khách hàng cung cấp đầy đủ và chính xác thông tin khi đặt hàng.",
@@ -162,7 +146,54 @@ function Shop() {
 
 
   return (
-    <ShopContent MARKETPLACE_TERMS={MARKETPLACE_TERMS} acceptTerms={acceptTerms} categories={categories} error={error} handleAddToCart={handleAddToCart} handleApplyPrice={handleApplyPrice} handleClearPriceFilter={handleClearPriceFilter} handleMaxPriceChange={handleMaxPriceChange} handleMinPriceChange={handleMinPriceChange} handleSearch={handleSearch} loading={loading} maxPrice={maxPrice} maxPriceInput={maxPriceInput} minPrice={minPrice} minPriceInput={minPriceInput} page={page} pages={pages} products={products} searchQuery={searchQuery} selectedCategory={selectedCategory} selectedRating={selectedRating} setPage={setPage} setSearchQuery={setSearchQuery} setSelectedCategory={setSelectedCategory} setSelectedRating={setSelectedRating} setSortBy={setSortBy} setTermsOpen={setTermsOpen} sortBy={sortBy} termsOpen={termsOpen} total={total} />
+    <div className="shop-page">
+      <ShopTermsDialog
+        MARKETPLACE_TERMS={MARKETPLACE_TERMS}
+        acceptTerms={acceptTerms}
+        setTermsOpen={setTermsOpen}
+        termsOpen={termsOpen}
+      />
+
+      <ShopHero
+        onSearch={handleSearch}
+        onSearchChange={setSearchQuery}
+        searchQuery={searchQuery}
+      />
+
+      <section className="shop-marketplace">
+        <div className="shop-marketplace-grid">
+          <ShopFilters
+            categories={categories}
+            handleApplyPrice={handleApplyPrice}
+            handleClearPriceFilter={handleClearPriceFilter}
+            handleMaxPriceChange={handleMaxPriceChange}
+            handleMinPriceChange={handleMinPriceChange}
+            maxPrice={maxPrice}
+            maxPriceInput={maxPriceInput}
+            minPrice={minPrice}
+            minPriceInput={minPriceInput}
+            selectedCategory={selectedCategory}
+            selectedRating={selectedRating}
+            setPage={setPage}
+            setSelectedCategory={setSelectedCategory}
+            setSelectedRating={setSelectedRating}
+          />
+
+          <ShopProductGrid
+            error={error}
+            handleAddToCart={handleAddToCart}
+            loading={loading}
+            page={page}
+            pages={pages}
+            products={products}
+            setPage={setPage}
+            setSortBy={setSortBy}
+            sortBy={sortBy}
+            total={total}
+          />
+        </div>
+      </section>
+    </div>
   );
 }
 

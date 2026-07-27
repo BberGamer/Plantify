@@ -2,12 +2,9 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  DiagnosisResultCard,
-  useAIDoctorPage,
-} from '@/features/ai';
-import { DiagnosisHistoryList } from '@/features/diagnosis-history';
-import { Upload, Sparkles, Bug, ArrowRight, Loader2, X, AlertCircle } from 'lucide-react';
+import { useAIDoctorPage } from '@/features/ai';
+
+import { Sparkles, ArrowRight, Loader2, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AIDoctorWorkspace } from "@/features/ai/components/ai-doctor/AIDoctorWorkspace";
 
@@ -48,7 +45,19 @@ function AIDoctor() {
           </p>
         </motion.div>
 
-        <AIDoctorWorkspace authLoading={authLoading} diagnosis={diagnosis} diagnosisHistory={diagnosisHistory} displayedResult={displayedResult} fileInputRef={fileInputRef} handleAddToCart={handleAddToCart} handleDiagnose={handleDiagnose} handleNewDiagnosis={handleNewDiagnosis} handleSelectHistory={handleSelectHistory} historyId={historyId} isAuthenticated={isAuthenticated} />
+        <AIDoctorWorkspace
+          authLoading={authLoading}
+          diagnosis={diagnosis}
+          diagnosisHistory={diagnosisHistory}
+          displayedResult={displayedResult}
+          fileInputRef={fileInputRef}
+          handleAddToCart={handleAddToCart}
+          handleDiagnose={handleDiagnose}
+          handleNewDiagnosis={handleNewDiagnosis}
+          handleSelectHistory={handleSelectHistory}
+          historyId={historyId}
+          isAuthenticated={isAuthenticated}
+        />
 
         {/* How it works section */}
         <div className="mt-16">

@@ -1,13 +1,22 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DiagnosisResultCard,
-  useAIDoctorPage,
-} from "@/features/ai";
+import { Card, CardContent } from "@/components/ui/card";
+import { DiagnosisResultCard } from "@/features/ai";
 import { DiagnosisHistoryList } from "@/features/diagnosis-history";
-import { Upload, Sparkles, Bug, ArrowRight, Loader2, X, AlertCircle } from "lucide-react";
+import { Upload, Bug, Loader2, X, AlertCircle } from "lucide-react";
 
-function AIDoctorWorkspace({ authLoading, diagnosis, diagnosisHistory, displayedResult, fileInputRef, handleAddToCart, handleDiagnose, handleNewDiagnosis, handleSelectHistory, historyId, isAuthenticated }) {
+function AIDoctorWorkspace({
+  authLoading,
+  diagnosis,
+  diagnosisHistory,
+  displayedResult,
+  fileInputRef,
+  handleAddToCart,
+  handleDiagnose,
+  handleNewDiagnosis,
+  handleSelectHistory,
+  historyId,
+  isAuthenticated,
+}) {
   return (
 <div className="grid md:grid-cols-2 gap-8 md:items-stretch">
           <div className="space-y-6 h-full">

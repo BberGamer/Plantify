@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle2, ChevronLeft, ChevronRight, FileText, Search, ShieldCheck, ShoppingCart, Star, Store } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShoppingCart, Star } from "lucide-react";
 import { motion } from "motion/react";
 
 function ShopProductGrid({ error, handleAddToCart, loading, page, pages, products, setPage, setSortBy, sortBy, total }) {

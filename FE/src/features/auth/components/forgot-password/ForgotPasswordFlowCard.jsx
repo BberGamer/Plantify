@@ -9,17 +9,27 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Leaf,
-  Mail,
-  ArrowLeft,
-  Loader2,
-  AlertCircle,
-  ShieldCheck,
-} from "lucide-react";
+import { Mail, ArrowLeft, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
-function ForgotPasswordFlowCard({ changeEmail, email, errors, handleEmailChange, handleOtpChange, handleOtpKeyDown, handleOtpPaste, handleResendOtp, handleSendOtp, handleVerifyOtp, otp, otpRefs, resendCountdown, resending, step, submitting }) {
+function ForgotPasswordFlowCard({
+  changeEmail,
+  email,
+  errors,
+  handleEmailChange,
+  handleOtpChange,
+  handleOtpKeyDown,
+  handleOtpPaste,
+  handleResendOtp,
+  handleSendOtp,
+  handleVerifyOtp,
+  otp,
+  otpRefs,
+  resendCountdown,
+  resending,
+  step,
+  submitting,
+}) {
   return (
 <Card className="border-2 border-green-100 bg-white/95 shadow-2xl backdrop-blur-sm">
           <AnimatePresence mode="wait">
