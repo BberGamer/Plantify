@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useUserPlantDetail } from "../hooks";
-import { DEFAULT_IMAGE, getUserPlantImage } from "../myGarden.utils";
+import { getUserPlantImage, handleUserPlantImageError } from "../myGarden.utils";
 
 export function UserPlantDetailDialog({
   open,
@@ -51,9 +51,7 @@ export function UserPlantDetailDialog({
             <img
               src={getUserPlantImage(userPlant)}
               alt={userPlant.name}
-              onError={(event) => {
-                event.currentTarget.src = DEFAULT_IMAGE;
-              }}
+              onError={handleUserPlantImageError}
               className="aspect-square w-full rounded-xl border bg-muted object-cover"
             />
             <div className="space-y-5">

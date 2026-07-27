@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   buildUserPlantPayload,
   DEFAULT_IMAGE,
+  getImageFallbackSource,
   getUserPlantImage,
 } from "../../../src/features/my-garden/myGarden.utils.js";
 
@@ -38,6 +39,12 @@ test("dùng ảnh catalogue đầu tiên trước DEFAULT_IMAGE", () => {
     "gallery.jpg"
   );
   assert.equal(getUserPlantImage({}), DEFAULT_IMAGE);
+});
+
+test("fallback ảnh chỉ áp dụng một lần để không lặp khi ảnh mặc định lỗi", () => {
+  assert.equal(getImageFallbackSource("https://cdn.example.com/broken.jpg"), DEFAULT_IMAGE);
+  assert.equal(getImageFallbackSource(DEFAULT_IMAGE), null);
+  assert.equal(getImageFallbackSource(`${DEFAULT_IMAGE}?cache=1`), null);
 });
 
 test("payload form không chứa userId hoặc status", () => {

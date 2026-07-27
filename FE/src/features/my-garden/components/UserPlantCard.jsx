@@ -2,7 +2,7 @@
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { DEFAULT_IMAGE, getUserPlantImage } from "../myGarden.utils";
+import { getUserPlantImage, handleUserPlantImageError } from "../myGarden.utils";
 
 export function UserPlantCard({
   userPlant,
@@ -28,9 +28,7 @@ export function UserPlantCard({
           <img
             src={getUserPlantImage(userPlant)}
             alt={userPlant.name}
-            onError={(event) => {
-              event.currentTarget.src = DEFAULT_IMAGE;
-            }}
+            onError={handleUserPlantImageError}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>

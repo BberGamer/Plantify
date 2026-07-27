@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-labelledby="title desc">
+  <title id="title">Ảnh cây mặc định</title>
+  <desc id="desc">Minh họa một chậu cây xanh</desc>
+  <rect width="640" height="480" fill="#edf7f0"/>
+  <circle cx="320" cy="220" r="150" fill="#d8efdf"/>
+  <path d="M280 190c-64-64-123-20-113 44 57 10 101-19 113-44Zm80 0c64-64 123-20 113 44-57 10-101-19-113-44Zm-40-34c-44-69-4-125 47-119 10 54-9 102-47 119Zm0 0c44-69 4-125-47-119-10 54 9 102 47 119Z" fill="#58a96b"/>
+  <path d="M320 142v142M320 202l-78-50M320 202l78-50" stroke="#337945" stroke-width="16" stroke-linecap="round"/>
+  <path d="M210 286h220l-30 116H240l-30-116Z" fill="#bc7547"/>
+  <path d="M202 278h236v32H202z" rx="16" fill="#d98c59"/>
+</svg>
