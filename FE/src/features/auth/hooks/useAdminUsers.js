@@ -6,6 +6,9 @@ export function useAdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [statusUpdatingUserId, setStatusUpdatingUserId] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const refetchUsers = useCallback(async () => {
     setLoading(true);
@@ -54,21 +57,36 @@ export function useAdminUsers() {
   }, []);
 
   const createUser = async (userData) => {
-    const response = await createAdminUserApi(userData);
-    await refetchUsers();
-    return response;
+    setSubmitting(true);
+    try {
+      const response = await createAdminUserApi(userData);
+      await refetchUsers();
+      return response;
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const updateUserStatus = async (userId, status) => {
-    const response = await updateUserStatusApi(userId, status);
-    await refetchUsers();
-    return response;
+    setStatusUpdatingUserId(userId);
+    try {
+      const response = await updateUserStatusApi(userId, status);
+      await refetchUsers();
+      return response;
+    } finally {
+      setStatusUpdatingUserId("");
+    }
   };
 
   const deleteUser = async (userId) => {
-    const response = await deleteUserApi(userId);
-    await refetchUsers();
-    return response;
+    setDeleting(true);
+    try {
+      const response = await deleteUserApi(userId);
+      await refetchUsers();
+      return response;
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return {
@@ -79,6 +97,9 @@ export function useAdminUsers() {
     createUser,
     updateUserStatus,
     deleteUser,
+    deleting,
+    statusUpdatingUserId,
+    submitting,
   };
 }
 

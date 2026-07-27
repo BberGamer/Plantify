@@ -160,12 +160,12 @@ function ManageOrder() {
   // === HOOKS - phải khai báo TẤT CẢ hook trước mọi conditional return (React Rules of Hooks) ===
   const { user } = useAuth();
   const {
-    error: ordersError,
     loading,
     orders,
-    refetch: fetchOrders,
+    cancelOrder,
+    cancelling: isCancelling,
     setOrders,
-    updateManagedOrder,
+    updateStatus,
   } = useManageOrders();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -173,7 +173,6 @@ function ManageOrder() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [cancelOrderTarget, setCancelOrderTarget] = useState(null);
   const [cancellationReason, setCancellationReason] = useState("");
-  const [isCancelling, setIsCancelling] = useState(false);
   const [orderPage, setOrderPage] = useState(1);
 
   const handleOrderUpdated = useCallback((updatedOrder) => {
@@ -207,18 +206,6 @@ function ManageOrder() {
     user?.role?.toLowerCase() === "business manager"
   );
 
-  // === FETCH DATA ===
-
-  useEffect(() => {
-    if (!ordersError) return;
-    console.error("Lỗi fetch orders:", ordersError);
-    toast.error(
-      ordersError.response?.data?.message
-      || ordersError.message
-      || "Không thể tải danh sách đơn hàng."
-    );
-  }, [ordersError]);
-
   // Kiểm tra quyền truy cập SAU khi đã khai báo đủ hooks
   if (!["business manager", "content manager"].includes(user?.role?.toLowerCase())) {
     return <Navigate to="/unauthorized" replace />;
@@ -236,9 +223,8 @@ function ManageOrder() {
    */
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      await updateManagedOrder(orderId, { status: newStatus });
+      await updateStatus(orderId, newStatus);
       toast.success(`Đã cập nhật: ${STATUS_LABELS[newStatus]}`);
-      fetchOrders();
     } catch (err) {
       console.error("Lỗi cập nhật trạng thái:", err);
       toast.error(err.response?.data?.message || err.message || "Cập nhật thất bại.");
@@ -264,11 +250,7 @@ function ManageOrder() {
 
     const orderId = cancelOrderTarget._id || cancelOrderTarget.id;
     try {
-      setIsCancelling(true);
-      const response = await updateManagedOrder(orderId, {
-        status: "cancelled",
-        cancellationReason,
-      });
+      const response = await cancelOrder(orderId, cancellationReason);
       const refundedAmount = Number(response.data?.data?.order?.refundedAmount || 0);
       toast.success(
         refundedAmount > 0
@@ -277,12 +259,9 @@ function ManageOrder() {
       );
       setCancelOrderTarget(null);
       setCancellationReason("");
-      await fetchOrders();
     } catch (err) {
       console.error("Lỗi hủy đơn hàng:", err);
       toast.error(err.response?.data?.message || err.message || "Hủy đơn hàng thất bại.");
-    } finally {
-      setIsCancelling(false);
     }
   };
 
@@ -299,12 +278,8 @@ function ManageOrder() {
     if (!confirmed) return;
 
     try {
-      await updateManagedOrder(orderId, {
-        status: "cancelled",
-        cancellationReason: "customer_return",
-      });
+      await cancelOrder(orderId, "customer_return");
       toast.success("Đã xác nhận hoàn trả và hủy đơn hàng!");
-      fetchOrders();
     } catch (err) {
       console.error("Lỗi xác nhận hoàn trả:", err);
       toast.error(err.response?.data?.message || err.message || "Thao tác thất bại.");

@@ -25,10 +25,9 @@ function MyPosts() {
   const { posts, loading, error, refetch } = useMyPosts();
   const { create, loading: creating } = useCreatePost();
   const { update, loading: updating } = useUpdatePost();
-  const { remove, loading: deleting } = useDeletePost();
+  const { remove, deletingId } = useDeletePost();
   const [creatingPost, setCreatingPost] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
   const [formKey, setFormKey] = useState(0);
 
   if (!isAuthenticated) {
@@ -68,15 +67,12 @@ function MyPosts() {
 
     if (!confirm(`Xóa bài viết "${post.title}"?`)) return;
 
-    setDeletingId(id);
     try {
       await remove(id);
       toast.success("Đã xóa bài viết");
       refetch();
     } catch (err) {
       toast.error(err.response?.data?.message || "Không thể xóa bài viết");
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -103,7 +99,7 @@ function MyPosts() {
             </p>
           </div>
           <MyPostsList
-            deletingId={deleting ? deletingId : null}
+            deletingId={deletingId}
             error={error}
             loading={loading}
             posts={posts}

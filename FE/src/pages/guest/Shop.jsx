@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,11 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, ChevronLeft, ChevronRight, FileText, Search, ShieldCheck, ShoppingCart, Star, Store } from "lucide-react";
 import { motion } from "motion/react";
-import { useCategories, useProducts } from "@/features/products/hooks";
+import {
+  useCategories,
+  useMarketplaceSearch,
+  useProducts,
+} from "@/features/products/hooks";
 import { useAuth } from "@/features/auth/hooks";
 import { useCartMutations } from "@/features/cart/hooks";
 import { toast } from "sonner";
@@ -43,7 +47,6 @@ function Shop() {
     setTermsOpen(false);
   };
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchParam, setSearchParam] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [sortBy, setSortBy] = useState("popular");
 
@@ -63,14 +66,10 @@ function Shop() {
   const categories = ["Tất cả", ...categoryItems.map((category) => category.name)];
   const { addProduct } = useCartMutations();
 
-  // Live search: debounce searchQuery -> searchParam (350ms)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchParam(searchQuery);
-      setPage(1);
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  const { searchParam, submitSearch } = useMarketplaceSearch(
+    searchQuery,
+    setPage
+  );
 
   // Fetch products using custom hook
   const { products, total, pages, currentPage, loading, error } = useProducts({
@@ -85,9 +84,7 @@ function Shop() {
   });
 
   const handleSearch = (e) => {
-    if (e) e.preventDefault();
-    setSearchParam(searchQuery);
-    setPage(1);
+    submitSearch(e);
   };
 
   const formatPrice = (value) => {

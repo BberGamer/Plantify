@@ -1,5 +1,5 @@
 // ResetPassword.jsx - Trang đặt lại mật khẩu mới sau khi OTP đã được xác thực
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,8 +23,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { usePasswordResetMutations } from "@/features/auth/hooks";
-import { toast } from "sonner";
+import { useResetPasswordFlow } from "@/features/auth/hooks";
 
 /**
  * Tính độ mạnh mật khẩu
@@ -75,100 +74,23 @@ const PasswordRequirements = ({ password }) => {
 
 function ResetPassword() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showRequirements, setShowRequirements] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [countdown, setCountdown] = useState(5);
-  const { resetPassword, resetting: submitting } = usePasswordResetMutations();
+  const {
+    changeConfirmPassword,
+    changePassword,
+    confirmPassword,
+    countdown,
+    errors,
+    handleSubmit,
+    password,
+    setShowRequirements,
+    showRequirements,
+    submitting,
+    success,
+  } = useResetPasswordFlow();
 
   const strength = getPasswordStrength(password);
-
-  // Đọc email + otp từ sessionStorage (đã được set ở trang ForgotPassword sau verify)
-  useEffect(() => {
-    const storedEmail = sessionStorage.getItem("otp_email");
-    const storedOtp = sessionStorage.getItem("otp_code");
-    if (!storedEmail || !storedOtp) {
-      // Không có thông tin OTP — chuyển hướng về forgot-password
-      toast.error("Phiên xác thực không hợp lệ. Vui lòng bắt đầu lại.");
-      navigate("/forgot-password", { replace: true });
-    } else {
-      setEmail(storedEmail);
-      setOtpCode(storedOtp);
-    }
-  }, [navigate]);
-
-  // Đếm ngược redirect về login sau khi thành công
-  useEffect(() => {
-    if (!success) return;
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          navigate("/login", { replace: true });
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [success, navigate]);
-
-  const validate = () => {
-    const errs = {};
-    if (!password) {
-      errs.password = "Mật khẩu mới là bắt buộc";
-    } else if (password.length < 8) {
-      errs.password = "Mật khẩu phải có tối thiểu 8 ký tự";
-    } else if (!/[A-Z]/.test(password)) {
-      errs.password = "Mật khẩu phải chứa ít nhất 1 chữ hoa";
-    } else if (!/[a-z]/.test(password)) {
-      errs.password = "Mật khẩu phải chứa ít nhất 1 chữ thường";
-    } else if (!/[0-9]/.test(password)) {
-      errs.password = "Mật khẩu phải chứa ít nhất 1 chữ số";
-    }
-
-    if (!confirmPassword) {
-      errs.confirmPassword = "Vui lòng xác nhận mật khẩu mới";
-    } else if (password !== confirmPassword) {
-      errs.confirmPassword = "Mật khẩu xác nhận không khớp";
-    }
-    return errs;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
-    setErrors({});
-    try {
-      await resetPassword(email, otpCode, password, confirmPassword);
-      // Xóa sessionStorage sau khi đổi mật khẩu thành công
-      sessionStorage.removeItem("otp_email");
-      sessionStorage.removeItem("otp_code");
-      setSuccess(true);
-      toast.success("Đặt lại mật khẩu thành công!");
-    } catch (error) {
-      const msg = error.response?.data?.message || error.message || "Đã có lỗi xảy ra.";
-      toast.error(msg);
-      // Nếu OTP đã hết hạn — đẩy về lại forgot-password
-      if (msg.includes("hết hạn") || msg.includes("không tồn tại")) {
-        sessionStorage.removeItem("otp_email");
-        sessionStorage.removeItem("otp_code");
-        setTimeout(() => navigate("/forgot-password"), 2000);
-      }
-      setErrors({ general: msg });
-    }
-  };
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
@@ -290,10 +212,7 @@ function ResetPassword() {
                           type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
                           value={password}
-                          onChange={(e) => {
-                            setPassword(e.target.value);
-                            if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
-                          }}
+                          onChange={(e) => changePassword(e.target.value)}
                           onFocus={() => setShowRequirements(true)}
                           className={`pl-10 pr-10 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                           disabled={submitting}
@@ -362,10 +281,7 @@ function ResetPassword() {
                           type={showConfirm ? "text" : "password"}
                           placeholder="••••••••"
                           value={confirmPassword}
-                          onChange={(e) => {
-                            setConfirmPassword(e.target.value);
-                            if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: "" }));
-                          }}
+                          onChange={(e) => changeConfirmPassword(e.target.value)}
                           className={`pl-10 pr-10 ${
                             errors.confirmPassword
                               ? "border-red-500 focus-visible:ring-red-500"

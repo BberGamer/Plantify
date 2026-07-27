@@ -1,6 +1,19 @@
 // api.js - Các hàm gọi API cho chức năng đặt hàng (Orders)
 import { api } from '@/lib/api';
 
+export const openOrderEventStream = ({ token, signal }) => {
+  const apiBaseUrl = import.meta.env.VITE_API_URL ?? '/api';
+  const eventsUrl = `${apiBaseUrl.replace(/\/$/, '')}/orders/events`;
+
+  return fetch(eventsUrl, {
+    headers: {
+      Accept: 'text/event-stream',
+      Authorization: `Bearer ${token}`,
+    },
+    signal,
+  });
+};
+
 /**
  * Tạo đơn hàng COD (thanh toán khi nhận hàng)
  * @param {Object} orderData - { items, shippingInfo, subtotal, shippingFee, totalAmount }

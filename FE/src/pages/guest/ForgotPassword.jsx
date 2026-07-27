@@ -1,6 +1,5 @@
 // ForgotPassword.jsx - Trang quên mật khẩu: nhập email nhận OTP và xác thực OTP 6 số
-import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,131 +19,27 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { usePasswordResetMutations } from "@/features/auth/hooks";
-import { toast } from "sonner";
+import { useForgotPasswordFlow } from "@/features/auth/hooks";
 
 function ForgotPassword() {
-  const navigate = useNavigate();
-
-  // step: 1 = nhập email, 2 = nhập OTP
-  const [step, setStep] = useState(1);
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [errors, setErrors] = useState({});
-  const [resendCountdown, setResendCountdown] = useState(0);
-
-  const otpRefs = useRef([]);
   const {
-    resendPasswordResetOtp,
+    changeEmail,
+    email,
+    errors,
+    handleEmailChange,
+    handleOtpChange,
+    handleOtpKeyDown,
+    handleOtpPaste,
+    handleResendOtp,
+    handleSendOtp,
+    handleVerifyOtp,
+    otp,
+    otpRefs,
+    resendCountdown,
     resending,
-    sendPasswordResetOtp,
-    sending,
-    verifyPasswordResetOtp,
-    verifying,
-  } = usePasswordResetMutations();
-  const submitting = sending || verifying;
-
-  // Xử lý đếm ngược gửi lại OTP
-  useEffect(() => {
-    let timer;
-    if (resendCountdown > 0) {
-      timer = setInterval(() => {
-        setResendCountdown((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [resendCountdown]);
-
-  // ------- Bước 1: Xử lý gửi OTP -------
-  const validateEmail = (val) => {
-    if (!val || !val.trim()) return "Email là bắt buộc";
-    if (!/^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i.test(val.trim()))
-      return "Email không đúng định dạng";
-    return "";
-  };
-
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
-    const emailErr = validateEmail(email);
-    if (emailErr) {
-      setErrors({ email: emailErr });
-      return;
-    }
-    setErrors({});
-    try {
-      await sendPasswordResetOtp(email.trim());
-      setStep(2);
-      setResendCountdown(20); // Bắt đầu đếm ngược 20s
-      toast.success("Mã OTP 6 số đã được gửi đến Gmail của bạn!");
-    } catch (error) {
-      const msg = error.response?.data?.message || error.message || "Đã có lỗi xảy ra.";
-      toast.error(msg);
-      setErrors({ email: msg });
-    }
-  };
-
-  const handleResendOtp = async () => {
-    if (resendCountdown > 0) return;
-    try {
-      await resendPasswordResetOtp(email.trim());
-      setOtp(["", "", "", "", "", ""]);
-      setErrors({});
-      setResendCountdown(20); // Đếm ngược 20s khi gửi lại
-      otpRefs.current[0]?.focus();
-      toast.success("Đã gửi lại mã OTP mới!");
-    } catch (error) {
-      toast.error("Gửi lại OTP thất bại. Vui lòng thử lại.");
-    }
-  };
-
-  // ------- Bước 2: Xử lý xác thực OTP -------
-  const handleOtpChange = (value, idx) => {
-    if (!/^\d?$/.test(value)) return; // chỉ nhận chữ số
-    const next = [...otp];
-    next[idx] = value;
-    setOtp(next);
-    if (errors.otp) setErrors({});
-    if (value !== "" && idx < 5) {
-      otpRefs.current[idx + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (e, idx) => {
-    if (e.key === "Backspace" && !otp[idx] && idx > 0) {
-      otpRefs.current[idx - 1]?.focus();
-    }
-  };
-
-  const handleOtpPaste = (e) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (pasted.length === 6) {
-      setOtp(pasted.split(""));
-      otpRefs.current[5]?.focus();
-    }
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    const fullOtp = otp.join("");
-    if (fullOtp.length !== 6) {
-      setErrors({ otp: "Vui lòng nhập đủ 6 chữ số" });
-      return;
-    }
-    setErrors({});
-    try {
-      await verifyPasswordResetOtp(email.trim(), fullOtp);
-      // Lưu email + otp vào sessionStorage để trang reset-password dùng
-      sessionStorage.setItem("otp_email", email.trim());
-      sessionStorage.setItem("otp_code", fullOtp);
-      toast.success("OTP hợp lệ! Đang chuyển đến trang đặt lại mật khẩu...");
-      navigate("/reset-password");
-    } catch (error) {
-      const msg = error.response?.data?.message || error.message || "Xác thực OTP thất bại.";
-      toast.error(msg);
-      setErrors({ otp: msg });
-    }
-  };
+    step,
+    submitting,
+  } = useForgotPasswordFlow();
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
@@ -211,10 +106,7 @@ function ForgotPassword() {
                           type="email"
                           placeholder="your.email@gmail.com"
                           value={email}
-                          onChange={(e) => {
-                            setEmail(e.target.value);
-                            if (errors.email) setErrors({});
-                          }}
+                          onChange={(e) => handleEmailChange(e.target.value)}
                           className={`pl-10 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                           disabled={submitting}
                           autoComplete="email"
@@ -373,7 +265,7 @@ function ForgotPassword() {
                       <button
                         type="button"
                         className="flex items-center justify-center gap-1 text-muted-foreground hover:text-foreground"
-                        onClick={() => { setStep(1); setOtp(["", "", "", "", "", ""]); setErrors({}); }}
+                        onClick={changeEmail}
                       >
                         <ArrowLeft className="h-3.5 w-3.5" />
                         Thay đổi email

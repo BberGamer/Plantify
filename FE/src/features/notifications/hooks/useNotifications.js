@@ -5,8 +5,9 @@ import {
   getUnreadNotificationCount,
   markAllNotificationsAsRead,
   markNotificationAsRead,
-} from "../api";
-import { NOTIFICATIONS_REFRESH_EVENT } from "../notification.utils";
+  openNotificationEventStream,
+} from "@/features/notifications/api";
+import { NOTIFICATIONS_REFRESH_EVENT } from "@/features/notifications/notification.utils";
 
 const INITIAL_RECONNECT_DELAY_MS = 1000;
 const MAX_RECONNECT_DELAY_MS = 30000;
@@ -75,8 +76,6 @@ export function useNotifications(enabled = true) {
       }
     }
 
-    const apiBaseUrl = import.meta.env.VITE_API_URL ?? "/api";
-    const eventsUrl = `${apiBaseUrl.replace(/\/$/, "")}/notifications/events`;
     let controller = null;
     let streamReader = null;
     let reconnectTimer = null;
@@ -116,11 +115,8 @@ export function useNotifications(enabled = true) {
       let shouldReconnect = true;
 
       try {
-        const response = await fetch(eventsUrl, {
-          headers: {
-            Accept: "text/event-stream",
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await openNotificationEventStream({
+          token,
           signal: activeController.signal,
         });
 

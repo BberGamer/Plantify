@@ -1,5 +1,6 @@
 // useOrderRealtime.js - Lắng nghe thay đổi trạng thái đơn hàng qua SSE
 import { useEffect } from "react";
+import { openOrderEventStream } from "@/features/orders/api";
 
 /**
  * Kết nối SSE bằng JWT và tự kết nối lại khi đường truyền gián đoạn.
@@ -9,8 +10,6 @@ export function useOrderRealtime(onOrderUpdated, enabled = true) {
     const token = localStorage.getItem("token");
     if (!enabled || !token) return undefined;
 
-    const apiBaseUrl = import.meta.env.VITE_API_URL ?? "/api";
-    const eventsUrl = `${apiBaseUrl.replace(/\/$/, "")}/orders/events`;
     let controller;
     let reconnectTimer;
     let stopped = false;
@@ -19,11 +18,8 @@ export function useOrderRealtime(onOrderUpdated, enabled = true) {
       controller = new AbortController();
 
       try {
-        const response = await fetch(eventsUrl, {
-          headers: {
-            Accept: "text/event-stream",
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await openOrderEventStream({
+          token,
           signal: controller.signal,
         });
 

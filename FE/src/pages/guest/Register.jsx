@@ -1,108 +1,24 @@
 // Register.jsx - Trang đăng ký: điền thông tin → gửi OTP → chuyển sang trang xác thực
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf, Mail, Lock, User, Phone, MapPin, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { motion } from "motion/react";
-import { toast } from "sonner";
-import { useRegistrationMutations } from "@/features/auth/hooks";
+import { useRegisterFlow } from "@/features/auth/hooks";
 
 function Register() {
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    address: "",
-    password: "",
-    confirmPassword: ""
-  });
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  const navigate = useNavigate();
-  const { sendRegistrationOtp, sending: submitting } = useRegistrationMutations();
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
-  };
-
-  const validateForm = () => {
-    const { fullName, email, password, confirmPassword, phone } = formData;
-    const newErrors = {};
-
-    if (!fullName || !fullName.trim()) newErrors.fullName = "Họ và tên là bắt buộc";
-    if (!email || !email.trim()) {
-      newErrors.email = "Email là bắt buộc";
-    } else if (!/^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i.test(email.trim())) {
-      newErrors.email = "Email không đúng định dạng";
-    }
-
-    if (phone && phone.trim() !== "") {
-      if (!/^(0[3|5|7|8|9])+([0-9]{8})$/.test(phone.trim())) {
-        newErrors.phone = "Số điện thoại không hợp lệ (bắt đầu 03/05/07/08/09, 10 chữ số)";
-      }
-    }
-
-    if (!password) {
-      newErrors.password = "Mật khẩu là bắt buộc";
-    } else if (password.length < 8) {
-      newErrors.password = "Mật khẩu phải chứa tối thiểu 8 ký tự";
-    }
-
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Mật khẩu xác nhận không trùng khớp";
-    }
-
-    return newErrors;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    try {
-      await sendRegistrationOtp({
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        password: formData.password,
-      });
-      toast.success("Mã OTP 6 số đã được gửi đến Gmail của bạn!");
-      // Chỉ navigate sau khi gửi email thành công
-      navigate("/register/verify-otp", {
-        state: {
-          fullName: formData.fullName,
-          email: formData.email.trim(),
-          phone: formData.phone,
-          address: formData.address,
-          password: formData.password,
-        }
-      });
-    } catch (error) {
-      const msg = error.response?.data?.message || error.message || "Đã có lỗi xảy ra.";
-      const lower = msg.toLowerCase();
-      // Chỉ map vào email field khi đúng là lỗi email trùng hay không hợp lệ
-      if (lower.includes("email đã") || lower.includes("email không hợp lệ")) {
-        setErrors({ email: msg });
-      } else if (lower.includes("điện thoại") || lower.includes("phone") || lower.includes("số điện")) {
-        setErrors({ phone: msg });
-      } else {
-        // Lỗi SMTP / server -> hiện toast, không điền vào field
-        toast.error(msg);
-      }
-    }
-  };
+  const {
+    errors,
+    formData,
+    handleChange,
+    handleSubmit,
+    submitting,
+  } = useRegisterFlow();
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden">

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   createMyAddressApi,
   deleteMyAddressApi,
@@ -30,13 +31,42 @@ function normalizeProvinceData(data) {
   }));
 }
 
-export function useAddressBook(enabled) {
+const EMPTY_FORM = {
+  label: "Nhà riêng",
+  receiverName: "",
+  phone: "",
+  street: "",
+  provinceCode: "",
+  wardCode: "",
+  isDefault: false,
+};
+
+export function useAddressBook(enabled, user) {
   const [addresses, setAddresses] = useState([]);
   const [provinces, setProvinces] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [addressError, setAddressError] = useState(null);
   const [provinceError, setProvinceError] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [editingId, setEditingId] = useState(null);
+  const selectedProvince = useMemo(
+    () => provinces.find((province) => province.code === form.provinceCode),
+    [form.provinceCode, provinces]
+  );
+  const selectedWard = useMemo(
+    () => selectedProvince?.wards.find((ward) => ward.code === form.wardCode),
+    [form.wardCode, selectedProvince]
+  );
+
+  useEffect(() => {
+    if (!user) return;
+    setForm((current) => ({
+      ...current,
+      receiverName: current.receiverName || user.fullName || "",
+      phone: current.phone || user.phone || "",
+    }));
+  }, [user]);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,6 +143,82 @@ export function useAddressBook(enabled) {
     []
   );
 
+  useEffect(() => {
+    if (provinceError) {
+      toast.error("Không thể tải danh sách tỉnh/thành, vui lòng thử lại sau.");
+    }
+  }, [provinceError]);
+
+  useEffect(() => {
+    if (addressError) {
+      toast.error(
+        addressError.response?.data?.message || "Không thể tải sổ địa chỉ."
+      );
+    }
+  }, [addressError]);
+
+  const resetForm = () => {
+    setEditingId(null);
+    setForm({
+      ...EMPTY_FORM,
+      receiverName: user?.fullName || "",
+      phone: user?.phone || "",
+    });
+  };
+  const handleProvinceChange = (provinceCode) => {
+    setForm((current) => ({ ...current, provinceCode, wardCode: "" }));
+  };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!form.street.trim() || !selectedProvince || !selectedWard) {
+      toast.error("Vui lòng nhập đủ địa chỉ chi tiết, tỉnh/thành và xã/phường.");
+      return;
+    }
+    try {
+      await saveAddress(editingId, {
+        ...form,
+        provinceName: selectedProvince.name,
+        wardName: selectedWard.name,
+      });
+      toast.success(editingId ? "Đã cập nhật địa chỉ." : "Đã thêm địa chỉ.");
+      resetForm();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể lưu địa chỉ.");
+    }
+  };
+  const handleEdit = (address) => {
+    setEditingId(address._id);
+    setForm({
+      label: address.label || "Nhà riêng",
+      receiverName: address.receiverName || "",
+      phone: address.phone || "",
+      street: address.street || "",
+      provinceCode: String(address.provinceCode || ""),
+      wardCode: String(address.wardCode || ""),
+      isDefault: Boolean(address.isDefault),
+    });
+  };
+  const handleSetDefault = async (addressId) => {
+    try {
+      await setDefaultAddress(addressId);
+      toast.success("Đã chọn địa chỉ mặc định.");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Không thể đặt địa chỉ mặc định."
+      );
+    }
+  };
+  const handleDelete = async (addressId) => {
+    if (!window.confirm("Bạn có chắc muốn xóa địa chỉ này?")) return;
+    try {
+      await deleteAddress(addressId);
+      toast.success("Đã xóa địa chỉ.");
+      if (editingId === addressId) resetForm();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Không thể xóa địa chỉ.");
+    }
+  };
+
   return {
     addresses,
     provinces,
@@ -124,5 +230,15 @@ export function useAddressBook(enabled) {
     saveAddress,
     setDefaultAddress,
     deleteAddress,
+    editingId,
+    form,
+    handleDelete,
+    handleEdit,
+    handleProvinceChange,
+    handleSetDefault,
+    handleSubmit,
+    resetForm,
+    selectedProvince,
+    setForm,
   };
 }

@@ -1,110 +1,27 @@
 // RegisterVerifyOtp.jsx - Trang xác thực OTP đăng ký (bước 2)
-import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Leaf, Loader2, ShieldCheck, AlertCircle, ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";
-import { toast } from "sonner";
-import { useRegistrationMutations } from "@/features/auth/hooks";
+import { useRegisterVerificationFlow } from "@/features/auth/hooks";
 
 function RegisterVerifyOtp() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Lấy email từ state truyền qua navigate
-  const email = location.state?.email || "";
-
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [resendCountdown, setResendCountdown] = useState(20);
-  const [errors, setErrors] = useState({});
-
-  const otpRefs = useRef([]);
   const {
-    resendRegistrationOtp,
+    email,
+    errors,
+    handleOtpChange,
+    handleOtpKeyDown,
+    handleOtpPaste,
+    handleResendOtp,
+    handleVerifyOtp,
+    otp,
+    otpRefs,
+    resendCountdown,
     resending,
-    verifyRegistrationOtp,
-    verifying: submitting,
-  } = useRegistrationMutations();
-
-  // Nếu không có email (truy cập trực tiếp URL) thì redirect về /register
-  useEffect(() => {
-    if (!email) {
-      toast.error("Vui lòng thực hiện đăng ký trước.");
-      navigate("/register", { replace: true });
-    }
-  }, [email, navigate]);
-
-  // Đếm ngược gửi lại OTP
-  useEffect(() => {
-    let timer;
-    if (resendCountdown > 0) {
-      timer = setInterval(() => setResendCountdown((prev) => prev - 1), 1000);
-    }
-    return () => clearInterval(timer);
-  }, [resendCountdown]);
-
-  // ------- OTP input handlers -------
-  const handleOtpChange = (value, idx) => {
-    if (!/^\d?$/.test(value)) return;
-    const next = [...otp];
-    next[idx] = value;
-    setOtp(next);
-    if (errors.otp) setErrors({});
-    if (value !== "" && idx < 5) otpRefs.current[idx + 1]?.focus();
-  };
-
-  const handleOtpKeyDown = (e, idx) => {
-    if (e.key === "Backspace" && !otp[idx] && idx > 0) {
-      otpRefs.current[idx - 1]?.focus();
-    }
-  };
-
-  const handleOtpPaste = (e) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (pasted.length === 6) {
-      setOtp(pasted.split(""));
-      otpRefs.current[5]?.focus();
-    }
-  };
-
-  // ------- Xác thực OTP -------
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    const fullOtp = otp.join("");
-    if (fullOtp.length !== 6) {
-      setErrors({ otp: "Vui lòng nhập đủ 6 chữ số" });
-      return;
-    }
-    setErrors({});
-    try {
-      await verifyRegistrationOtp(email, fullOtp);
-      toast.success("Đăng ký tài khoản thành công! Hãy đăng nhập.");
-      navigate("/login");
-    } catch (error) {
-      const msg = error.response?.data?.message || error.message || "Xác thực OTP thất bại.";
-      toast.error(msg);
-      setErrors({ otp: msg });
-    }
-  };
-
-  // ------- Gửi lại OTP -------
-  const handleResendOtp = async () => {
-    if (resendCountdown > 0 || !location.state) return;
-    try {
-      // Gọi lại API send-otp với toàn bộ thông tin từ state
-      await resendRegistrationOtp(location.state);
-      setOtp(["", "", "", "", "", ""]);
-      setErrors({});
-      setResendCountdown(20);
-      otpRefs.current[0]?.focus();
-      toast.success("Đã gửi lại mã OTP mới!");
-    } catch (error) {
-      toast.error("Gửi lại OTP thất bại. Vui lòng thử lại.");
-    }
-  };
+    submitting,
+  } = useRegisterVerificationFlow();
 
   if (!email) return null;
 

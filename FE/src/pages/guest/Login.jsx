@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,70 +13,19 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Leaf, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "motion/react";
-import { useLoginMutation } from "@/features/auth/hooks";
-import { toast } from "sonner";
-import { mapBackendRoleToFeRole } from "@/lib/roles";
-import { useCartMutations } from "@/features/cart/hooks";
+import { useLoginFlow } from "@/features/auth/hooks";
 
 function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const { loggingIn, loginUser } = useLoginMutation();
-  const { loading: cartLoading, mergeLocalCart } = useCartMutations();
-  const submitting = loggingIn || cartLoading;
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const getRedirectPath = (role) => {
-    const feRole = mapBackendRoleToFeRole(role);
-    switch (feRole) {
-      case "admin":
-        return "/admin";
-      case "business_manager":
-        return "/business";
-      case "content_manager":
-        return "/content/plants";
-      default:
-        return "/";
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast.error("Vui lòng nhập đầy đủ email và mật khẩu");
-      return;
-    }
-
-    const emailRegex = /^[a-zA-Z0-9._%+\-]+@(gmail\.com|yahoo\.com|fpt\.edu\.vn)$/i;
-    if (!emailRegex.test(email)) {
-      toast.error("Email không đúng định dạng");
-      return;
-    }
-
-    try {
-      const user = await loginUser(email, password);
-      toast.success(`Chào mừng trở lại, ${user.fullName}!`);
-
-      if (mapBackendRoleToFeRole(user.role) === "customer") {
-        try {
-          await mergeLocalCart();
-        } catch (error) {
-          toast.error(error.response?.data?.message || "Không thể đồng bộ giỏ hàng.");
-        }
-      }
-
-      // Chuyển hướng theo role
-      const redirectPath = location.state?.from || getRedirectPath(user.role);
-      navigate(redirectPath, { replace: true });
-    } catch (error) {
-      console.error(error);
-      const errorMsg = error.response?.data?.message || error.message || "Đăng nhập thất bại. Vui lòng thử lại.";
-      toast.error(errorMsg);
-    }
-  };
+  const {
+    email,
+    handleSubmit,
+    password,
+    setEmail,
+    setPassword,
+    submitting,
+  } = useLoginFlow();
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">

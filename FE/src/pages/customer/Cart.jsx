@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,25 +35,16 @@ function Cart() {
   const [termsOpen, setTermsOpen] = useState(false);
   const {
     cartItems,
-    error: cartRequestError,
     loading: cartLoading,
     removeItem: removeCartItem,
     toggleSelect: toggleCartItem,
     toggleSelectAll: toggleAllCartItems,
+    selectedItems,
+    shipping,
+    subtotal,
+    total,
     updateQuantity: updateCartQuantity,
   } = useCart({ authLoading, isAuthenticated });
-  const cartError = cartRequestError?.response?.data?.message
-    || (cartRequestError ? "Không thể tải giỏ hàng." : "");
-
-  useEffect(() => {
-    if (!cartRequestError) return;
-    if (cartRequestError.response?.status === 401) {
-      toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-      navigate("/login", { state: { from: "/cart" }, replace: true });
-      return;
-    }
-    toast.error(cartError);
-  }, [cartError, cartRequestError, navigate]);
 
   const updateQuantity = async (id, delta) => {
     try {
@@ -96,14 +87,6 @@ function Cart() {
 
     navigate("/checkout");
   };
-
-  const selectedItems = cartItems.filter((item) => item.selected);
-  const subtotal = selectedItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const shipping = subtotal > 0 ? 30000 : 0;
-  const total = subtotal + shipping;
 
   if (authLoading || cartLoading) {
     return (

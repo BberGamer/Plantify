@@ -13,13 +13,20 @@ import { initialCreateUserForm } from "../../features/auth/hooks/adminUsers.util
 import "@/styles/AdminUsers.css";
 
 function AdminUsers() {
-  const { users, loading, error, createUser, updateUserStatus, deleteUser } = useAdminUsers();
+  const {
+    createUser,
+    deleteUser,
+    deleting,
+    error,
+    loading,
+    statusUpdatingUserId,
+    submitting,
+    updateUserStatus,
+    users,
+  } = useAdminUsers();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createUserForm, setCreateUserForm] = useState(initialCreateUserForm);
-  const [submitting, setSubmitting] = useState(false);
-  const [statusUpdatingUserId, setStatusUpdatingUserId] = useState("");
   const [deleteTargetUser, setDeleteTargetUser] = useState(null);
-  const [deleting, setDeleting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -100,8 +107,6 @@ function AdminUsers() {
       return;
     }
 
-    setSubmitting(true);
-
     try {
       await createUser({
         fullName: normalizedFullName,
@@ -117,15 +122,11 @@ function AdminUsers() {
     } catch (submitError) {
       const errorMessage = submitError.response?.data?.message || submitError.message || "Không thể tạo tài khoản người dùng";
       toast.error(errorMessage);
-    } finally {
-      setSubmitting(false);
     }
   };
 
   const handleStatusChange = async (user) => {
     const nextStatus = !user.status;
-    setStatusUpdatingUserId(user._id);
-
     try {
       await updateUserStatus(user._id, nextStatus);
       toast.success(
@@ -136,8 +137,6 @@ function AdminUsers() {
     } catch (statusError) {
       const errorMessage = statusError.response?.data?.message || statusError.message || "Không thể cập nhật trạng thái người dùng";
       toast.error(errorMessage);
-    } finally {
-      setStatusUpdatingUserId("");
     }
   };
 
@@ -150,8 +149,6 @@ function AdminUsers() {
       return;
     }
 
-    setDeleting(true);
-
     try {
       await deleteUser(deleteTargetUser._id);
       toast.success("Xóa người dùng thành công");
@@ -159,8 +156,6 @@ function AdminUsers() {
     } catch (deleteError) {
       const errorMessage = deleteError.response?.data?.message || deleteError.message || "Không thể xóa người dùng";
       toast.error(errorMessage);
-    } finally {
-      setDeleting(false);
     }
   };
 

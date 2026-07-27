@@ -1,5 +1,4 @@
 // Checkout.jsx - Trang thanh toán đơn hàng (hỗ trợ COD + VNPay)
-import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,355 +17,36 @@ import {
   XCircle,
   Wallet,
 } from "lucide-react";
-import { toast } from "sonner";
-import confetti from "canvas-confetti";
-import { useAuth } from "@/features/auth/hooks";
-import { extractCartPayload, notifyCartUpdated } from "@/features/cart/cartStorage";
-import { useCheckoutMutations } from "@/features/orders/hooks";
+import { useCheckout } from "@/features/orders/hooks";
 
 function Checkout() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const {
-    createPayment,
-    loadAddresses,
-    loadCart,
-    loadWallet,
-    submitOrder,
-    verifyPayment,
-  } = useCheckoutMutations();
-
-  // === STATE ===
-
-  // Sản phẩm đã chọn từ giỏ hàng
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [subtotal, setSubtotal] = useState(0);
-  const shippingFee = 30000;
-
-  // Form thông tin giao hàng
-  const [form, setForm] = useState({
-    fullName: "",
-    phone: "",
-    email: "",
-    address: "",
-    notes: "",
-  });
-
-  // Validation errors
-  const [errors, setErrors] = useState({});
-
-  // Phương thức thanh toán: 'COD' hoặc 'BANK'
-  const [paymentMethod, setPaymentMethod] = useState("COD");
-  const [walletBalance, setWalletBalance] = useState(0);
-  // Không tự ý trừ ví khi khách chọn COD/VNPay. Khách phải chủ động bật tùy chọn này.
-  const [useWallet, setUseWallet] = useState(false);
-
-  // Trạng thái giao diện
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [isFailed, setIsFailed] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingCart, setIsLoadingCart] = useState(!new URLSearchParams(window.location.search).has("vnp_ResponseCode"));
-  const [orderCode, setOrderCode] = useState("");
-  const [orderTotal, setOrderTotal] = useState(null);
-
-  // === KHỞI TẠO ===
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const vnpResponseCode = searchParams.get("vnp_ResponseCode");
-
-    if (vnpResponseCode) {
-      // VNPay redirect về → xác thực kết quả thanh toán
-      handleVnpayReturn();
-    }
-  }, []);
-
-  const isVnpayCallback = new URLSearchParams(window.location.search).has("vnp_ResponseCode");
-
-  // 1. Điền thông tin cá nhân của user
-  useEffect(() => {
-    if (isVnpayCallback || !user) return;
-
-    setForm((prev) => ({
-      ...prev,
-      fullName: user.fullName || "",
-      phone: user.phone || "",
-      email: user.email || "",
-      address: user.address || "",
-    }));
-  }, [user, isVnpayCallback]);
-
-  // 2. Điền địa chỉ mặc định của user
-  useEffect(() => {
-    if (isVnpayCallback || authLoading || !isAuthenticated) return;
-
-    async function fillDefaultAddress() {
-      try {
-        const response = await loadAddresses();
-        const addresses = response?.data || [];
-        const defaultAddress = addresses.find((address) => address.isDefault);
-
-        if (!defaultAddress) return;
-
-        setForm((prev) => ({
-          ...prev,
-          fullName: defaultAddress.receiverName || prev.fullName,
-          phone: defaultAddress.phone || prev.phone,
-          address: defaultAddress.fullAddress || prev.address,
-        }));
-      } catch {
-        // Khong chan checkout neu so dia chi cua user chua tai duoc.
-      }
-    }
-
-    fillDefaultAddress();
-  }, [authLoading, isAuthenticated, isVnpayCallback]);
-
-  // 3. Tải giỏ hàng từ backend API
-  useEffect(() => {
-    if (isVnpayCallback || authLoading) return;
-
-    if (!isAuthenticated) {
-      setIsLoadingCart(false);
-      return;
-    }
-
-    async function loadSelectedItems() {
-      setIsLoadingCart(true);
-      try {
-        const response = await loadCart();
-        const cart = extractCartPayload(response).items || [];
-        const selected = cart.filter((item) => item.selected);
-
-        setSelectedItems(selected);
-
-        const sum = selected.reduce(
-          (total, item) => total + item.price * item.quantity,
-          0
-        );
-        setSubtotal(sum);
-      } catch (error) {
-        if (error.response?.status === 401) {
-          toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-          navigate("/login", { state: { from: "/checkout" }, replace: true });
-          return;
-        }
-
-        toast.error(error.response?.data?.message || "Không thể tải giỏ hàng.");
-      } finally {
-        setIsLoadingCart(false);
-      }
-    }
-
-    loadSelectedItems();
-  }, [authLoading, isAuthenticated, isVnpayCallback, navigate]);
-
-  useEffect(() => {
-    if (isVnpayCallback || authLoading || !isAuthenticated) return;
-
-    loadWallet()
-      .then(({ data }) => setWalletBalance(Number(data?.data?.balance || 0)))
-      .catch(() => setWalletBalance(0));
-  }, [authLoading, isAuthenticated, isVnpayCallback, loadWallet]);
-
-  // === HELPER FUNCTIONS ===
-
-  /**
-   * Xử lý khi VNPay redirect user về (xác thực kết quả thanh toán)
-   * Luồng: lấy query params → gửi BE verify → hiển thị kết quả
-   */
-  const handleVnpayReturn = async () => {
-    setIsProcessing(true);
-    try {
-      // 1. Lấy toàn bộ VNPay query params từ URL
-      const searchParams = new URLSearchParams(window.location.search);
-      const vnpParams = Object.fromEntries(searchParams.entries());
-
-      // 2. Gửi BE để xác thực checksum và cập nhật đơn hàng
-      const { data } = await verifyPayment(vnpParams);
-
-      if (data.success && data.data.code === "00") {
-        // === THANH TOÁN THÀNH CÔNG ===
-        const order = data.data.order;
-        setOrderCode(order.orderCode);
-        setForm({
-          fullName: order.shippingInfo.fullName,
-          phone: order.shippingInfo.phone,
-          email: order.shippingInfo.email,
-          address: order.shippingInfo.address,
-          notes: order.shippingInfo.notes || "",
-        });
-        setSubtotal(order.subtotal);
-        setOrderTotal(
-          Math.max(0, Number(order.total || 0) - Number(order.walletAmount || 0))
-        );
-        setPaymentMethod("BANK");
-        setIsSuccess(true);
-
-        // 3. Thông báo giỏ hàng đã thay đổi để header cập nhật số lượng
-        notifyCartUpdated();
-
-        // 4. Hiệu ứng thành công
-        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-        toast.success("Đặt hàng thành công!");
-      } else {
-        // === THANH TOÁN THẤT BẠI ===
-        setIsFailed(true);
-        toast.error("Thanh toán không thành công hoặc đã bị hủy.");
-      }
-
-      // Xóa query params khỏi URL (giữ giao diện sạch)
-      window.history.replaceState({}, "", "/checkout");
-    } catch (err) {
-      console.error("Lỗi xác thực VNPay:", err);
-      setIsFailed(true);
-      toast.error("Có lỗi xảy ra khi xác thực thanh toán.");
-      window.history.replaceState({}, "", "/checkout");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // === FORM HANDLERS ===
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    if (!form.fullName.trim())
-      newErrors.fullName = "Vui lòng nhập họ và tên người nhận";
-    if (!form.phone.trim()) {
-      newErrors.phone = "Vui lòng nhập số điện thoại";
-    } else if (!/^\d{10,11}$/.test(form.phone.trim().replace(/\s/g, ""))) {
-      newErrors.phone = "Số điện thoại không hợp lệ (yêu cầu 10-11 chữ số)";
-    }
-    if (!form.email.trim()) {
-      newErrors.email = "Vui lòng nhập địa chỉ email";
-    } else if (!/\S+@\S+\.\S+/.test(form.email.trim())) {
-      newErrors.email = "Địa chỉ email không đúng định dạng";
-    }
-    if (!form.address.trim())
-      newErrors.address = "Vui lòng nhập địa chỉ nhận hàng";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  /**
-   * Xử lý đặt hàng (COD hoặc VNPay)
-   * COD: tạo đơn → hiện thành công
-   * VNPay: tạo đơn → lấy URL → redirect sang VNPay
-   */
-  const handlePlaceOrder = async (e) => {
-    e.preventDefault();
-
-    // Kiểm tra sản phẩm
-    if (selectedItems.length === 0) {
-      toast.error("Không có sản phẩm nào được chọn để thanh toán.");
-      return;
-    }
-
-    // Validate form
-    if (!validateForm()) {
-      toast.error("Vui lòng điền đầy đủ và đúng thông tin giao hàng!");
-      return;
-    }
-
-    // Kiểm tra đăng nhập
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Vui lòng đăng nhập để đặt hàng.");
-      navigate("/login");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    // Map cart items sang format order items cho BE
-    const orderItems = selectedItems.map((item) => ({
-      productId: item.productId,
-      name: item.name,
-      image: item.image,
-      price: item.price,
-      quantity: item.quantity,
-      lineTotal: item.price * item.quantity,
-    }));
-
-    const orderData = {
-      items: orderItems,
-      shippingInfo: {
-        fullName: form.fullName,
-        phone: form.phone,
-        email: form.email,
-        address: form.address,
-        notes: form.notes,
-      },
-      subtotal,
-      shippingFee,
-      total: subtotal + shippingFee,
-      totalAmount: subtotal + shippingFee,
-      useWallet,
-    };
-
-    try {
-      if (paymentMethod === "COD") {
-        // === LUỒNG COD ===
-        const { data } = await submitOrder(orderData);
-        if (data.success) {
-          const order = data.data.order;
-          setOrderCode(order.orderCode);
-          setSubtotal(order.subtotal ?? subtotal);
-          setOrderTotal(
-            Math.max(0, Number(order.total || 0) - Number(order.walletAmount || 0))
-          );
-          setIsSuccess(true);
-          notifyCartUpdated(); // Thông báo giỏ hàng đã thay đổi
-          toast.success("Đặt hàng thành công!");
-          confetti({
-            particleCount: 150,
-            spread: 80,
-            origin: { y: 0.6 },
-          });
-        }
-      } else {
-        // === LUỒNG VNPAY ===
-        const { data } = await createPayment(orderData);
-        if (data.success) {
-          if (data.data.paidWithWallet || !data.data.paymentUrl) {
-            const order = data.data.order;
-            setOrderCode(order.orderCode);
-            setSubtotal(order.subtotal ?? subtotal);
-            setOrderTotal(
-              Math.max(0, Number(order.total || 0) - Number(order.walletAmount || 0))
-            );
-            setIsSuccess(true);
-            notifyCartUpdated();
-            toast.success("Thanh toán bằng ví thành công!");
-            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-          } else {
-            window.location.href = data.data.paymentUrl;
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Lỗi đặt hàng:", err);
-      toast.error(
-        err.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const checkoutTotal = subtotal + shippingFee;
-  const walletApplied = useWallet ? Math.min(walletBalance, checkoutTotal) : 0;
-  const remainingAmount = checkoutTotal - walletApplied;
+    authLoading,
+    checkoutTotal,
+    errors,
+    form,
+    handleInputChange,
+    handlePlaceOrder,
+    isFailed,
+    isLoadingCart,
+    isProcessing,
+    isSubmitting,
+    isSuccess,
+    orderCode,
+    orderTotal,
+    paymentMethod,
+    remainingAmount,
+    retryPayment,
+    selectedItems,
+    setPaymentMethod,
+    setUseWallet,
+    shippingFee,
+    subtotal,
+    useWallet,
+    walletApplied,
+    walletBalance,
+  } = useCheckout();
 
   // ========================================
   // RENDER
@@ -421,10 +101,7 @@ function Checkout() {
               <Button
                 size="lg"
                 className="w-full bg-gradient-to-r from-primary to-green-600 text-white rounded-xl"
-                onClick={() => {
-                  setIsFailed(false);
-                  window.location.reload();
-                }}
+                onClick={retryPayment}
               >
                 Thử thanh toán lại
               </Button>

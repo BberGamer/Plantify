@@ -60,23 +60,26 @@ export function useDeletePost() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   const remove = async (id) => {
     setLoading(true);
+    setDeletingId(id);
     setError(null);
     setSuccess(false);
 
     try {
       const response = await deletePost(id);
       setSuccess(true);
-      setLoading(false);
       return response;
     } catch (err) {
       setError(getErrorMessage(err));
-      setLoading(false);
       throw err;
+    } finally {
+      setLoading(false);
+      setDeletingId(null);
     }
   };
 
-  return { remove, loading, error, success };
+  return { remove, loading, error, success, deletingId };
 }

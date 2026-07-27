@@ -4,4 +4,5 @@ export { useCategories } from "./useCategories";
 export { useProduct } from "./useProduct";
 export { useCreateProduct, useDeleteProduct, useUpdateProduct } from "./useProductActions";
 export { useProducts } from "./useProducts";
+export { useMarketplaceSearch } from "@/features/products/hooks/useMarketplaceSearch";
 

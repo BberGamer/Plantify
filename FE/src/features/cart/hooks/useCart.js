@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import {
   getCart,
   removeCartItem,
@@ -13,6 +15,7 @@ import {
 } from "@/features/cart/cartStorage";
 
 export function useCart({ authLoading, isAuthenticated }) {
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState(() => readLocalCart());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -32,7 +35,16 @@ export function useCart({ authLoading, isAuthenticated }) {
         if (!cancelled) setCartItems(extractCartPayload(response).items);
       })
       .catch((requestError) => {
-        if (!cancelled) setError(requestError);
+        if (cancelled) return;
+        setError(requestError);
+        if (requestError.response?.status === 401) {
+          toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          navigate("/login", { state: { from: "/cart" }, replace: true });
+          return;
+        }
+        toast.error(
+          requestError.response?.data?.message || "Không thể tải giỏ hàng."
+        );
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -41,7 +53,7 @@ export function useCart({ authLoading, isAuthenticated }) {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, navigate]);
 
   const persistItems = async (nextItems, requests) => {
     setCartItems(nextItems);
@@ -115,10 +127,21 @@ export function useCart({ authLoading, isAuthenticated }) {
     });
   };
 
+  const selectedItems = cartItems.filter((item) => item.selected);
+  const subtotal = selectedItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const shipping = subtotal > 0 ? 30000 : 0;
+
   return {
     cartItems,
     loading,
     error,
+    selectedItems,
+    shipping,
+    subtotal,
+    total: subtotal + shipping,
     updateQuantity,
     toggleSelect,
     toggleSelectAll,

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { getAllOrders, updateOrder } from "@/features/orders/api";
 
 export function useManageOrders() {
@@ -6,6 +7,7 @@ export function useManageOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updating, setUpdating] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -16,6 +18,12 @@ export function useManageOrders() {
       return response;
     } catch (requestError) {
       setError(requestError);
+      console.error("Lỗi fetch orders:", requestError);
+      toast.error(
+        requestError.response?.data?.message
+        || requestError.message
+        || "Không thể tải danh sách đơn hàng."
+      );
       return null;
     } finally {
       setLoading(false);
@@ -35,13 +43,35 @@ export function useManageOrders() {
     }
   }, []);
 
+  const updateStatus = useCallback(async (orderId, status) => {
+    const response = await updateManagedOrder(orderId, { status });
+    await refetch();
+    return response;
+  }, [refetch, updateManagedOrder]);
+
+  const cancelOrder = useCallback(async (orderId, cancellationReason) => {
+    setCancelling(true);
+    try {
+      const response = await updateManagedOrder(orderId, {
+        status: "cancelled",
+        cancellationReason,
+      });
+      await refetch();
+      return response;
+    } finally {
+      setCancelling(false);
+    }
+  }, [refetch, updateManagedOrder]);
+
   return {
     orders,
     setOrders,
     loading,
     error,
     updating,
+    cancelling,
     refetch,
-    updateManagedOrder,
+    updateStatus,
+    cancelOrder,
   };
 }

@@ -6,6 +6,7 @@ import { useOrderRealtime } from "./useOrderRealtime";
 
 export { useDashboardStats } from "@/features/orders/hooks/useDashboardStats";
 export { useCheckoutMutations } from "@/features/orders/hooks/useCheckoutMutations";
+export { useCheckout } from "@/features/orders/hooks/useCheckout";
 export { useManageOrders } from "@/features/orders/hooks/useManageOrders";
 export { useOrderRealtime } from "@/features/orders/hooks/useOrderRealtime";
 

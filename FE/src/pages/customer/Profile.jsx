@@ -2,10 +2,6 @@
 // Trang hồ sơ người dùng: hiển thị thông tin thật từ DB, chức vụ, đổi mật khẩu theo cơ chế nút chỉnh sửa
 
 import { useNavigate, Link, useSearchParams } from "react-router";
-import { useMyFavorites } from "@/features/favorites/hooks";
-import { useMyOrders } from "@/features/orders/hooks";
-import { useWallet } from "@/features/wallet/hooks";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +30,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useState, useEffect } from "react";
-import { useProfile } from "@/features/auth/hooks/useProfile";
+import { useCustomerProfile } from "@/features/auth/hooks";
 import "@/styles/Profile.css";
 
 // === Cấu hình hiển thị role theo DB ===
@@ -213,14 +209,28 @@ function Profile() {
   const [activeTab, setActiveTab] = useState(requestedTab === "orders" ? "orders" : "profile");
   const {
     favorites,
-    loading: favLoading,
-    remove: removeFavorite,
-  } = useMyFavorites();
-  const {
+    favLoading,
+    handleCustomerAction,
+    handleUnfavorite,
+    handleStartEditProfile,
+    handleCancelEditProfile,
+    handleSaveProfile,
+    handleStartEditPassword,
+    handleCancelEditPassword,
+    handleSavePassword,
+    isEditingPassword,
+    isEditingProfile,
+    isLoadingPassword,
+    isLoadingProfile,
     orders,
-    loading: ordersLoading,
-    updateOrder: customerUpdateOrder,
-  } = useMyOrders();
+    ordersLoading,
+    passwordForm,
+    profileForm,
+    setPasswordForm,
+    setProfileForm,
+    user,
+    wallet,
+  } = useCustomerProfile();
 
   // === Pagination cho cây yêu thích ===
   const [favPage, setFavPage] = useState(1);
@@ -247,78 +257,6 @@ function Profile() {
     }
     setSearchParams({});
   };
-
-  const handleUnfavorite = async (plantId, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      await removeFavorite(plantId);
-    } catch {
-      // bỏ qua lỗi
-    }
-  };
-
-  /**
-   * Khách hàng xác nhận đã nhận hàng (succeeded) hoặc yêu cầu hoàn trả (returning)
-   * Chỉ khả dụng khi đơn hàng ở trạng thái 'sented'
-   * @param {string} orderId - ID đơn hàng
-   * @param {'succeeded'|'returning'|'cancelled'} action - Hành động
-   */
-  const handleCustomerAction = async (orderId, action) => {
-    const targetOrder = orders.find(
-      (order) => (order._id || order.id) === orderId
-    );
-    const hasWalletPayment = Number(targetOrder?.walletAmount || 0) > 0;
-    const actionLabel = action === 'succeeded'
-      ? 'Đã nhận hàng'
-      : action === 'cancelled'
-        ? 'Hủy đơn hàng'
-        : 'Yêu cầu hoàn trả';
-    const confirmMsg = action === 'succeeded'
-      ? 'Bạn xác nhận đã nhận được hàng?'
-      : action === 'cancelled'
-        ? hasWalletPayment
-          ? 'Bạn có chắc muốn hủy đơn hàng này? Phần tiền đã thanh toán bằng ví sẽ được hoàn lại vào ví.'
-          : 'Bạn có chắc muốn hủy đơn hàng này?'
-        : 'Bạn có muốn yêu cầu hoàn trả đơn hàng này không?';
-
-    if (!window.confirm(confirmMsg)) return;
-
-    try {
-      const response = await customerUpdateOrder(orderId, action);
-      const refundedAmount = Number(
-        response.data?.data?.order?.refundedAmount || 0
-      );
-      toast.success(
-        action === 'cancelled' && refundedAmount > 0
-          ? `Hủy đơn hàng thành công! Đã hoàn ${formatVND(refundedAmount)} vào ví.`
-          : `${actionLabel} thành công!`
-      );
-      await refetchWallet();
-    } catch (err) {
-      console.error('Lỗi customer action:', err);
-      toast.error(err.response?.data?.message || err.message || 'Thao tác thất bại.');
-    }
-  };
-
-  const {
-    user,
-    isEditingProfile,
-    isLoadingProfile,
-    profileForm,
-    setProfileForm,
-    handleStartEditProfile,
-    handleCancelEditProfile,
-    handleSaveProfile,
-    isEditingPassword,
-    isLoadingPassword,
-    passwordForm,
-    setPasswordForm,
-    handleStartEditPassword,
-    handleCancelEditPassword,
-    handleSavePassword,
-  } = useProfile();
-  const { wallet, refetch: refetchWallet } = useWallet(user?.role === "customer");
 
   // Class input tùy trạng thái chỉnh sửa
   const inputClass = (editing) =>
