@@ -23,11 +23,14 @@ describe('My Garden routes', () => {
       { path: '/:id/images/:imageId', methods: expect.objectContaining({ delete: true }) },
       { path: '/:id/care-events', methods: expect.objectContaining({ post: true }) },
       { path: '/:id/care-events', methods: expect.objectContaining({ get: true }) },
-      { path: '/:id/care-events/:eventId', methods: expect.objectContaining({ patch: true }) },
       { path: '/:id/care-events/:eventId', methods: expect.objectContaining({ delete: true }) },
       { path: '/:id', methods: expect.objectContaining({ get: true }) },
       { path: '/:id', methods: expect.objectContaining({ patch: true }) },
       { path: '/:id', methods: expect.objectContaining({ delete: true }) },
     ]));
+    expect(routes.some((route) => (
+      route.path === '/:id/care-events/:eventId'
+      && route.methods.patch
+    ))).toBe(false);
   });
 });

@@ -14,6 +14,7 @@ import { UserPlantAlbum } from "./UserPlantAlbum";
 import { UserPlantCareEvents } from "./UserPlantCareEvents";
 import { UserPlantScheduleSettings } from "./UserPlantScheduleSettings";
 import { UserPlantDiagnosisHistory } from "./UserPlantDiagnosisHistory";
+import { getUserPlantById } from "../api";
 
 export function UserPlantDetailDialog({
   open,
@@ -27,6 +28,16 @@ export function UserPlantDetailDialog({
     open
   );
   const catalogPlant = userPlant?.catalogPlantId;
+  const handleCareChanged = async () => {
+    try {
+      const response = await getUserPlantById(userPlantId);
+      onUserPlantChanged?.(response.data);
+    } catch {
+      // CareEvent đã lưu/xóa; dialog vẫn tự refetch để đồng bộ khi API sẵn sàng.
+    } finally {
+      refetch();
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -100,7 +111,7 @@ export function UserPlantDetailDialog({
           <UserPlantScheduleSettings userPlant={userPlant} readOnly />
           <UserPlantCareEvents
             userPlantId={userPlant._id}
-            readOnly
+            onRecorded={handleCareChanged}
           />
           <UserPlantDiagnosisHistory userPlantId={userPlant._id} />
           </div>

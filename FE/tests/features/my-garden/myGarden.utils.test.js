@@ -186,13 +186,19 @@ test("CareEvent only records watering now and keeps delete without edit form", (
     new URL("../../../src/features/my-garden/components/UserPlantCareEvents.jsx", import.meta.url),
     "utf8"
   );
+  const apiSource = fs.readFileSync(
+    new URL("../../../src/features/my-garden/api.js", import.meta.url),
+    "utf8"
+  );
   assert.ok(source.includes(
     'createCareEvent(userPlantId, { type: "watering" })'
   ));
   assert.ok(source.includes('event.type === "watering"'));
   assert.ok(source.includes("deleteCareEvent"));
   assert.ok(source.includes("Đã tưới"));
+  assert.ok(source.includes("disabled={saving || Boolean(deletingId)}"));
   assert.equal(source.includes("updateCareEvent"), false);
+  assert.equal(apiSource.includes("updateCareEvent"), false);
   assert.equal(source.includes('type="datetime-local"'), false);
   assert.equal(source.includes("<select"), false);
   assert.equal(source.includes("<textarea"), false);
@@ -284,12 +290,29 @@ test("recording care refetches UserPlant schedules without nested forms", () => 
     new URL("../../../src/features/notifications/hooks/useNotifications.js", import.meta.url),
     "utf8"
   );
+  const detailSource = fs.readFileSync(
+    new URL("../../../src/features/my-garden/components/UserPlantDetailDialog.jsx", import.meta.url),
+    "utf8"
+  );
+  const pageSource = fs.readFileSync(
+    new URL("../../../src/pages/customer/MyGarden.jsx", import.meta.url),
+    "utf8"
+  );
   assert.ok(formSource.includes("getUserPlantById(workingPlant._id)"));
   assert.ok(formSource.includes("onRecorded={handleCareRecorded}"));
   assert.ok(careSource.includes("await onRecorded?.()"));
   assert.ok(careSource.includes("requestNotificationsRefresh()"));
   assert.ok(notificationHookSource.includes(
     "window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, refetch)"
+  ));
+  assert.ok(detailSource.includes("onRecorded={handleCareChanged}"));
+  assert.ok(detailSource.includes("getUserPlantById(userPlantId)"));
+  assert.ok(detailSource.includes("onUserPlantChanged?.(response.data)"));
+  assert.ok(pageSource.includes(
+    "onUserPlantChanged={handleUserPlantChanged}"
+  ));
+  assert.ok(pageSource.includes(
+    "setDashboardRefreshKey((current) => current + 1)"
   ));
   assert.equal(careSource.includes("<form"), false);
 });

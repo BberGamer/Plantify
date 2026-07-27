@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const CareEvent = require('./careEvent.model');
 const UserPlant = require('./userPlant.model');
-const { CARE_EVENT_TYPES } = require('./careEvent.model');
+const { Notification } = require('../notifications/notification.model');
 const { runRequiredTransaction } = require('./transaction.utils');
 
 function httpError(message, statusCode = 400) {
@@ -13,26 +13,6 @@ function httpError(message, statusCode = 400) {
 
 function objectId(id, message) {
   if (!mongoose.Types.ObjectId.isValid(id)) throw httpError(message);
-}
-
-function performedAt(value, now = new Date()) {
-  if (value === null || value === '') {
-    throw httpError('Thời gian thực hiện không hợp lệ');
-  }
-  const valueDate = value === undefined ? now : new Date(value);
-  if (Number.isNaN(valueDate.getTime())) {
-    throw httpError('Thời gian thực hiện không hợp lệ');
-  }
-  if (valueDate > now) {
-    throw httpError('Thời gian thực hiện không được ở tương lai');
-  }
-  return valueDate;
-}
-
-function notes(value) {
-  if (value === undefined || value === null) return '';
-  if (typeof value !== 'string') throw httpError('notes phải là chuỗi');
-  return value.trim();
 }
 
 async function ownedPlant(userId, userPlantId) {
@@ -103,32 +83,22 @@ async function syncScheduleFromLatestCareEvent({
 }
 
 function createData(data = {}) {
-  if (!CARE_EVENT_TYPES.includes(data.type)) {
-    throw httpError('type không hợp lệ');
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    throw httpError('Payload ghi nhận tưới không hợp lệ');
+  }
+  const fields = Object.keys(data);
+  if (
+    fields.length !== 1
+    || fields[0] !== 'type'
+    || data.type !== 'watering'
+  ) {
+    throw httpError('Chỉ chấp nhận thao tác tưới với type watering');
   }
   return {
-    type: data.type,
-    performedAt: performedAt(data.performedAt),
-    notes: notes(data.notes),
+    type: 'watering',
+    performedAt: new Date(),
+    notes: '',
   };
-}
-
-function updateData(data = {}) {
-  const result = {};
-  if (data.type !== undefined) {
-    if (!CARE_EVENT_TYPES.includes(data.type)) {
-      throw httpError('type không hợp lệ');
-    }
-    result.type = data.type;
-  }
-  if (data.performedAt !== undefined) {
-    result.performedAt = performedAt(data.performedAt);
-  }
-  if (data.notes !== undefined) result.notes = notes(data.notes);
-  if (!Object.keys(result).length) {
-    throw httpError('Không có dữ liệu cập nhật hợp lệ');
-  }
-  return result;
 }
 
 async function createCareEvent(userId, userPlantId, data) {
@@ -156,6 +126,14 @@ async function createCareEvent(userId, userPlantId, data) {
       type: eventData.type,
       session,
     });
+    await Notification.deleteMany(
+      {
+        recipientId: userId,
+        userPlantId,
+        type: 'plant_watering_due',
+      },
+      { session }
+    );
 
     return careEvent;
   }, 'MongoDB deployment không hỗ trợ transaction bắt buộc để ghi nhận chăm sóc');
@@ -166,49 +144,6 @@ async function getCareEvents(userId, userPlantId) {
   return CareEvent.find({ userId, userPlantId })
     .sort({ performedAt: -1 })
     .lean();
-}
-
-async function updateCareEvent(userId, userPlantId, eventId, data) {
-  objectId(userId, 'User ID không hợp lệ');
-  objectId(userPlantId, 'UserPlant ID không hợp lệ');
-  objectId(eventId, 'CareEvent ID không hợp lệ');
-  const eventUpdate = updateData(data);
-
-  return runRequiredTransaction(async (session) => {
-    const userPlant = await UserPlant.findOne(
-      { _id: userPlantId, userId, status: 'active' },
-      null,
-      { session }
-    );
-    if (!userPlant) return null;
-
-    const eventFilter = { _id: eventId, userId, userPlantId };
-    const oldEvent = await CareEvent.findOne(
-      eventFilter,
-      null,
-      { session }
-    ).lean();
-    if (!oldEvent) return null;
-
-    const updatedEvent = await CareEvent.findOneAndUpdate(
-      eventFilter,
-      eventUpdate,
-      { new: true, runValidators: true, session }
-    ).lean();
-    if (!updatedEvent) return null;
-
-    const typesToSync = new Set([oldEvent.type, updatedEvent.type]);
-    for (const type of typesToSync) {
-      await syncScheduleFromLatestCareEvent({
-        userId,
-        userPlantId,
-        type,
-        session,
-      });
-    }
-
-    return updatedEvent;
-  }, 'MongoDB deployment không hỗ trợ transaction bắt buộc để cập nhật lịch sử chăm sóc');
 }
 
 async function deleteCareEvent(userId, userPlantId, eventId) {
@@ -225,7 +160,7 @@ async function deleteCareEvent(userId, userPlantId, eventId) {
     if (!userPlant) return null;
 
     const deletedEvent = await CareEvent.findOneAndDelete(
-      { _id: eventId, userId, userPlantId },
+      { _id: eventId, userId, userPlantId, type: 'watering' },
       { session }
     ).lean();
     if (!deletedEvent) return null;
@@ -233,7 +168,7 @@ async function deleteCareEvent(userId, userPlantId, eventId) {
     await syncScheduleFromLatestCareEvent({
       userId,
       userPlantId,
-      type: deletedEvent.type,
+      type: 'watering',
       session,
     });
 
@@ -245,6 +180,5 @@ module.exports = {
   syncScheduleFromLatestCareEvent,
   createCareEvent,
   getCareEvents,
-  updateCareEvent,
   deleteCareEvent,
 };
