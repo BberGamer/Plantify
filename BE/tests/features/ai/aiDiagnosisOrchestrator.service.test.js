@@ -116,6 +116,37 @@ describe('AI diagnosis orchestrator scoring', () => {
     }
   );
 
+  test('matches the exact normalized red-spider condition to its canonical pest record', async () => {
+    const redSpiderId = '507f1f77bcf86cd799439017';
+    const redSpider = {
+      _id: redSpiderId,
+      name: 'Nhện đỏ',
+      diseaseKey: 'nhen-do',
+      category: 'pest',
+      aliases: [],
+      symptoms: ['Lá có chấm vàng li ti'],
+      treatments: ['Cách ly cây bị hại'],
+      preventions: ['Kiểm tra mặt dưới lá'],
+      recommendedProducts: [],
+    };
+    aiService.diagnoseFromImage.mockResolvedValue(aiResult({
+      suspectedCondition: 'Nhện đỏ',
+      category: 'pest',
+      observedSymptoms: ['Lá có chấm vàng li ti'],
+    }));
+    PlantDisease.find.mockReturnValue(query([redSpider]));
+
+    const result = await orchestrator.orchestrateDiagnosis({ userId, file });
+
+    expect(result.diagnosis).toEqual(expect.objectContaining({
+      diseaseId: redSpiderId,
+      diseaseKey: 'nhen-do',
+      category: 'pest',
+      matchStatus: 'matched',
+    }));
+    expect(result.diagnosis.matchScore).toBeGreaterThanOrEqual(0.75);
+  });
+
   test('returns needs_review and no recommendations for close candidates', async () => {
     const second = {
       ...leafSpot,

@@ -44,7 +44,6 @@ const MATCHABLE_CATEGORIES = new Set([
 const COMMON_MATCH_WORDS = new Set([
   'benh',
   'disease',
-  'do',
   'va',
 ]);
 
@@ -141,8 +140,12 @@ function getCandidateTerms(disease) {
 }
 
 function getTokenSimilarity(leftValue, rightValue) {
-  const leftTokens = new Set(normalizeMatchText(leftValue).split('-').filter(Boolean));
-  const rightTokens = new Set(normalizeMatchText(rightValue).split('-').filter(Boolean));
+  const normalizedLeft = normalizeMatchText(leftValue);
+  const normalizedRight = normalizeMatchText(rightValue);
+  if (normalizedLeft && normalizedLeft === normalizedRight) return 1;
+
+  const leftTokens = new Set(normalizedLeft.split('-').filter(Boolean));
+  const rightTokens = new Set(normalizedRight.split('-').filter(Boolean));
   if (leftTokens.size === 0 || rightTokens.size === 0) return 0;
 
   const sharedCount = [...leftTokens].filter((token) => rightTokens.has(token)).length;
