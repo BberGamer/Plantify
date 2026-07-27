@@ -5,15 +5,97 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { useAIChat, usePlantDiagnosis } from '@/features/ai';
-import { Upload, Sparkles, Bug, Leaf, ArrowRight, Loader2, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/features/auth/hooks';
+import { addCartItem } from '@/features/cart/api';
+import { notifyCartUpdated } from '@/features/cart/cartStorage';
+import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
+import { Upload, Sparkles, Bug, Leaf, ArrowRight, Loader2, X, CheckCircle, AlertCircle, ShoppingCart } from 'lucide-react';
 import { motion } from 'motion/react';
+
+const STATUS_CONTENT = {
+  matched: {
+    title: 'Đã đối chiếu với kho bệnh cây',
+    description: 'Thông tin điều trị và sản phẩm bên dưới được lấy từ cơ sở tri thức Plantify.',
+    className: 'border-green-200 bg-green-50 text-green-800',
+  },
+  unmatched: {
+    title: 'Chưa tìm thấy bệnh tương ứng',
+    description: 'AI nhận thấy dấu hiệu bất thường nhưng chưa khớp với kho bệnh cây. Không tự ý sử dụng thuốc đặc trị.',
+    className: 'border-amber-200 bg-amber-50 text-amber-800',
+  },
+  low_confidence: {
+    title: 'Độ tin cậy còn thấp',
+    description: 'Ảnh chưa cung cấp đủ dấu hiệu rõ ràng. Hãy chụp gần vùng bị ảnh hưởng trong điều kiện đủ sáng.',
+    className: 'border-amber-200 bg-amber-50 text-amber-800',
+  },
+  unknown: {
+    title: 'Chưa thể xác định tình trạng',
+    description: 'Cây có thể khỏe mạnh hoặc ảnh chưa đủ dữ liệu để kết luận. Hãy theo dõi thêm và thử ảnh khác nếu cần.',
+    className: 'border-blue-200 bg-blue-50 text-blue-800',
+  },
+};
+
+const DISPLAY_LABELS = {
+  low: 'Thấp',
+  medium: 'Trung bình',
+  high: 'Cao',
+  unknown: 'Không xác định',
+  leaf: 'Lá',
+  stem: 'Thân',
+  root: 'Rễ',
+  flower: 'Hoa',
+  whole_plant: 'Toàn cây',
+};
+
+function KnowledgeList({ title, items }) {
+  if (!items?.length) return null;
+  return (
+    <div>
+      <p className="mb-2 text-sm font-semibold">{title}</p>
+      <ul className="space-y-2">
+        {items.map((item, index) => (
+          <li key={`${title}-${index}`} className="flex items-start gap-2 text-sm text-muted-foreground">
+            <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 function AIDoctor() {
   const fileInputRef = useRef(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const diagnosis = usePlantDiagnosis();
   const chat = useAIChat();
+
+  const handleDiagnose = () => {
+    if (!isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để sử dụng tính năng chẩn đoán AI.');
+      navigate('/login', { state: { from: '/ai-doctor' } });
+      return;
+    }
+    diagnosis.diagnose();
+  };
+
+  const handleAddToCart = async (product) => {
+    try {
+      await addCartItem({
+        productId: product._id,
+        quantity: 1,
+        selected: true,
+      });
+      notifyCartUpdated();
+      toast.success(`Đã thêm ${product.name} vào giỏ hàng.`);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Không thể thêm sản phẩm vào giỏ hàng.');
+    }
+  };
 
   useEffect(() => {
     const handleToggleAIChat = () => {
@@ -78,7 +160,7 @@ function AIDoctor() {
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Hỗ trợ: JPG, PNG, WebP • Tối đa 10MB
+                        Hỗ trợ: JPG, PNG, WebP • Tối đa 5MB
                       </p>
                       <input
                         ref={fileInputRef}
@@ -109,7 +191,7 @@ function AIDoctor() {
                       <Button
                         size="lg"
                         className="w-full bg-gradient-to-r from-primary to-green-600"
-                        onClick={diagnosis.diagnose}
+                        onClick={handleDiagnose}
                         disabled={diagnosis.isLoading}
                       >
                         {diagnosis.isLoading ? (
@@ -163,86 +245,95 @@ function AIDoctor() {
                     <Leaf className="w-12 h-12 text-primary mx-auto mb-3" />
                     <p className="text-sm text-muted-foreground mb-1">Bệnh</p>
                     <h3 className="text-2xl font-bold text-primary">
-                      {diagnosis.result.label?.split('___').map((part) => part.replace(/_/g, ' ')).join(' - ')}
+                      {diagnosis.result.diseaseInfo?.name
+                        || diagnosis.result.diagnosis.rawDiseaseName
+                        || 'Chưa xác định'}
                     </h3>
-                    {diagnosis.result.description ? (
+                    {diagnosis.result.diagnosis.description ? (
                       <p className="mt-3 text-sm leading-6 text-muted-foreground max-w-md mx-auto">
-                        {diagnosis.result.description}
+                        {diagnosis.result.diagnosis.description}
                       </p>
                     ) : null}
                   </div>
+                  {STATUS_CONTENT[diagnosis.result.diagnosis.matchStatus] && (
+                    <div className={`rounded-lg border p-3 text-sm ${STATUS_CONTENT[diagnosis.result.diagnosis.matchStatus].className}`}>
+                      <p className="font-semibold">
+                        {STATUS_CONTENT[diagnosis.result.diagnosis.matchStatus].title}
+                      </p>
+                      <p className="mt-1 text-xs">
+                        {STATUS_CONTENT[diagnosis.result.diagnosis.matchStatus].description}
+                      </p>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Độ chính xác</span>
                       <span className="font-semibold">
-                        {(diagnosis.result.confidence * 100).toFixed(2)}%
+                        {(diagnosis.result.diagnosis.confidence * 100).toFixed(1)}%
                       </span>
                     </div>
                     <Progress
-                      value={diagnosis.result.confidence * 100}
+                      value={diagnosis.result.diagnosis.confidence * 100}
                       className="h-3"
                     />
                   </div>
 
-                  {/* Solution Proposal */}
-                  {diagnosis.result.solutionProposal && (
-                    <div className="mt-4 p-4 bg-white/60 rounded-xl border border-primary/20 space-y-3">
-                      <p className="text-sm font-semibold text-primary">Đề xuất giải pháp chi tiết</p>
+                  <div className="grid grid-cols-2 gap-3 rounded-xl border bg-white/60 p-4 text-sm">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Mức độ</p>
+                      <p className="font-semibold">
+                        {DISPLAY_LABELS[diagnosis.result.diagnosis.severity] || 'Không xác định'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Bộ phận ảnh hưởng</p>
+                      <p className="font-semibold">
+                        {DISPLAY_LABELS[diagnosis.result.diagnosis.affectedPart] || 'Không xác định'}
+                      </p>
+                    </div>
+                  </div>
 
-                      {diagnosis.result.solutionProposal.steps?.length > 0 && (
-                        <div>
-                          <p className="text-xs font-medium text-foreground mb-1.5">Các bước thực hiện</p>
-                          <ul className="space-y-1">
-                            {diagnosis.result.solutionProposal.steps.map((step, idx) => (
-                              <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
-                                <span className="bg-green-100 text-green-700 rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 text-[10px] font-medium mt-0.5">
-                                  {idx + 1}
-                                </span>
-                                {step}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                  <div className="space-y-4 rounded-xl border bg-white/60 p-4">
+                    <KnowledgeList title="Triệu chứng" items={diagnosis.result.diseaseInfo?.symptoms} />
+                    <KnowledgeList title="Nguyên nhân" items={diagnosis.result.diseaseInfo?.causes} />
+                    <KnowledgeList title="Cách xử lý" items={diagnosis.result.recommendations?.treatments} />
+                    <KnowledgeList title="Phòng ngừa" items={diagnosis.result.recommendations?.preventions} />
+                  </div>
 
-                      {diagnosis.result.solutionProposal.notes?.length > 0 && (
-                        <div>
-                          <p className="text-xs font-medium text-foreground mb-1.5">Lưu ý</p>
-                          <ul className="space-y-1">
-                            {diagnosis.result.solutionProposal.notes.map((note, idx) => (
-                              <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
-                                <span className="bg-amber-100 text-amber-700 rounded px-1.5 py-0.5 flex-shrink-0">
-                                  !
-                                </span>
-                                {note}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {diagnosis.result.solutionProposal.timeline && (
-                        <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                          <span className="bg-blue-100 text-blue-700 rounded px-1.5 py-0.5 flex-shrink-0">
-                            ⏱
-                          </span>
-                          <span><strong>Thời gian:</strong> {diagnosis.result.solutionProposal.timeline}</span>
-                        </div>
-                      )}
-
-                      {diagnosis.result.solutionProposal.prevention && (
-                        <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                          <span className="bg-purple-100 text-purple-700 rounded px-1.5 py-0.5 flex-shrink-0">
-                            🛡
-                          </span>
-                          <span><strong>Phòng ngừa:</strong> {diagnosis.result.solutionProposal.prevention}</span>
-                        </div>
-                      )}
+                  {diagnosis.result.recommendedProducts?.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="font-semibold">Sản phẩm phù hợp</p>
+                      {diagnosis.result.recommendedProducts
+                        .filter((product) => product.isActive && product.stock > 0)
+                        .map((product) => (
+                          <div key={product._id} className="flex items-center gap-3 rounded-xl border bg-white p-3">
+                            <img
+                              src={product.thumbnail || 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=200'}
+                              alt={product.name}
+                              className="h-16 w-16 rounded-lg object-cover"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold">{product.name}</p>
+                              <p className="text-sm font-bold text-primary">
+                                {Number(product.price || 0).toLocaleString('vi-VN')}đ
+                              </p>
+                              <p className="text-xs text-muted-foreground">Còn {product.stock} sản phẩm</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleAddToCart(product)}
+                              aria-label={`Thêm ${product.name} vào giỏ hàng`}
+                            >
+                              <ShoppingCart className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
                     </div>
                   )}
 
                   <p className="text-xs text-muted-foreground text-center">
-                    Kết quả được phân tích bằng Groq Llama-4 Scout vision
+                    Phân tích hình ảnh bằng OpenRouter; khuyến nghị từ kho kiến thức Plantify.
                   </p>
                 </CardContent>
               </Card>

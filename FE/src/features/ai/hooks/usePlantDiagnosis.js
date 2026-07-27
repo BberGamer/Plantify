@@ -15,13 +15,15 @@ export function usePlantDiagnosis() {
   const processFile = (file) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 
+    if (!file) return;
+
     if (!allowedTypes.includes(file.type)) {
       setError('Định dạng ảnh không được hỗ trợ. Vui lòng sử dụng JPG, PNG, hoặc WebP.');
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 10MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Kích thước ảnh quá lớn. Vui lòng chọn ảnh không vượt quá 5MB.');
       return;
     }
 
@@ -42,26 +44,30 @@ export function usePlantDiagnosis() {
     setResult(null);
 
     try {
-      const prediction = await diagnosePlantDisease(selectedImage);
-      if (prediction) {
-        setResult({
-          label: prediction.label,
-          confidence: prediction.confidence,
-          description: prediction.description,
-          treatment: prediction.treatment || [],
-          solutionProposal: prediction.solutionProposal || null,
-        });
+      const diagnosisResult = await diagnosePlantDisease(selectedImage);
+      if (diagnosisResult?.diagnosis) {
+        setResult(diagnosisResult);
       } else {
         setError('Kết quả không hợp lệ từ server.');
       }
     } catch (apiError) {
-      const errorMsg = apiError.response?.data?.message || apiError.message;
-      if (errorMsg.includes('ECONNREFUSED') || errorMsg.includes('AI service')) {
-        setError('AI service không khả dụng. Vui lòng khởi động AI Service (FastAPI).');
+      const status = apiError.response?.status;
+      const serverMessage = apiError.response?.data?.message;
+
+      if (status === 400) {
+        setError(serverMessage || 'Ảnh hoặc dữ liệu chẩn đoán không hợp lệ.');
+      } else if (status === 401) {
+        setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      } else if (status === 413) {
+        setError('Ảnh vượt quá giới hạn 5MB. Vui lòng chọn ảnh nhỏ hơn.');
+      } else if ([429, 502, 503, 504].includes(status)) {
+        setError(serverMessage || 'Dịch vụ chẩn đoán AI tạm thời không khả dụng. Vui lòng thử lại sau.');
       } else if (apiError.code === 'ECONNABORTED') {
         setError('Yêu cầu chẩn đoán hết thời gian. Vui lòng thử lại.');
+      } else if (!apiError.response) {
+        setError('Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối và thử lại.');
       } else {
-        setError(errorMsg || 'Chẩn đoán thất bại. Vui lòng thử lại.');
+        setError(serverMessage || 'Chẩn đoán thất bại. Vui lòng thử lại.');
       }
     } finally {
       setIsLoading(false);

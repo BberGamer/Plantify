@@ -6,20 +6,31 @@ const AI_API = '/ai';
 /**
  * Gửi ảnh lá cây để chẩn đoán bệnh.
  * @param {File} file - File ảnh upload
- * @returns {Promise<{classId: number, label: string, confidence: number}>}
+ * @param {{userPlantId?: string, catalogPlantId?: string}} references
+ * @returns {Promise<{
+ *   diagnosis: object,
+ *   diseaseInfo: object|null,
+ *   recommendations: object,
+ *   recommendedProducts: object[],
+ *   diagnosisHistoryId: string,
+ *   createdAt: string
+ * }>}
  */
-export async function diagnosePlantDisease(file) {
+export async function diagnosePlantDisease(file, references = {}) {
   const formData = new FormData();
   formData.append('file', file);
+  if (references.userPlantId) {
+    formData.append('userPlantId', references.userPlantId);
+  }
+  if (references.catalogPlantId) {
+    formData.append('catalogPlantId', references.catalogPlantId);
+  }
 
   const response = await api.post(`${AI_API}/diagnose`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
     timeout: 60000,
   });
 
-  return response.data?.data?.prediction;
+  return response.data.data;
 }
 
 /**
