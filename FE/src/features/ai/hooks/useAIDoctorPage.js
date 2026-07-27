@@ -107,6 +107,8 @@ export function useAIDoctorPage() {
     handleNewDiagnosis,
     handleSelectHistory,
     historyId,
+    isAuthenticated,
+    authLoading,
     isChatOpen,
     setIsChatOpen,
   };

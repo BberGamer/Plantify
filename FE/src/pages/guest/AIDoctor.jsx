@@ -25,6 +25,8 @@ function AIDoctor() {
     historyId,
     isChatOpen,
     setIsChatOpen,
+    isAuthenticated,
+    authLoading
   } = useAIDoctorPage();
 
   return (

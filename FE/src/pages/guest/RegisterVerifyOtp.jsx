@@ -11,6 +11,7 @@ function RegisterVerifyOtp() {
   const {
     email,
     errors,
+    handleBackToRegister,
     handleOtpChange,
     handleOtpKeyDown,
     handleOtpPaste,
@@ -164,7 +165,7 @@ function RegisterVerifyOtp() {
                 <button
                   type="button"
                   className="flex items-center justify-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => navigate("/register")}
+                  onClick={handleBackToRegister}
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
                   Quay lại chỉnh sửa thông tin

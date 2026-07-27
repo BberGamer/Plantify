@@ -133,11 +133,14 @@ export function useCart({ authLoading, isAuthenticated }) {
     0
   );
   const shipping = subtotal > 0 ? 30000 : 0;
+  const errorMessage = error?.response?.data?.message
+    || (error ? "Không thể tải giỏ hàng." : "");
 
   return {
     cartItems,
     loading,
     error,
+    errorMessage,
     selectedItems,
     shipping,
     subtotal,

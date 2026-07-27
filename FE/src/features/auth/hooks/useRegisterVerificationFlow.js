@@ -88,10 +88,14 @@ export function useRegisterVerificationFlow() {
       toast.error("Gửi lại OTP thất bại. Vui lòng thử lại.");
     }
   };
+  const handleBackToRegister = () => {
+    navigate("/register");
+  };
 
   return {
     email,
     errors,
+    handleBackToRegister,
     handleOtpChange,
     handleOtpKeyDown,
     handleOtpPaste,

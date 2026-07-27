@@ -35,6 +35,7 @@ function Cart() {
   const [termsOpen, setTermsOpen] = useState(false);
   const {
     cartItems,
+    errorMessage: cartError,
     loading: cartLoading,
     removeItem: removeCartItem,
     toggleSelect: toggleCartItem,
