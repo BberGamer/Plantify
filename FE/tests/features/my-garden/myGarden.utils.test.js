@@ -223,6 +223,12 @@ test("datetime-local seconds round-trip correctly in Asia/Ho_Chi_Minh", () => {
 test("embedded schedules validate boundaries and display status", () => {
   const now = new Date("2026-07-27T12:00:00.000Z");
   const bounds = getScheduleDateBounds(now);
+  assert.equal(
+    bounds.min,
+    toLocalDateTimeInputWithSeconds(
+      new Date(now.getTime() + 60 * 1000)
+    )
+  );
   assert.equal(validateUserPlantSchedule({
     enabled: true,
     frequencyDays: "3",

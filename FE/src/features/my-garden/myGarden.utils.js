@@ -76,7 +76,9 @@ export function addUtcMonths(value, months) {
 
 export function getScheduleDateBounds(now = new Date()) {
   return {
-    min: toLocalDateTimeInputWithSeconds(now),
+    min: toLocalDateTimeInputWithSeconds(
+      new Date(now.getTime() + 60 * 1000)
+    ),
     max: toLocalDateTimeInputWithSeconds(addUtcMonths(now, 12)),
   };
 }

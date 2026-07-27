@@ -2,6 +2,7 @@ jest.mock('../../../src/features/my-garden/careEvent.model', () => {
   const model = {
     create: jest.fn(),
     find: jest.fn(),
+    findOne: jest.fn(),
     findOneAndUpdate: jest.fn(),
     findOneAndDelete: jest.fn(),
   };
@@ -54,6 +55,21 @@ describe('CareEvent service', () => {
     });
     UserPlant.updateOne.mockResolvedValue({ modifiedCount: 1 });
     CareEvent.create.mockImplementation(async (items) => items);
+    CareEvent.findOne.mockReturnValue(query({
+      _id: eventId,
+      type: 'observation',
+      performedAt: new Date('2026-07-20T10:00:00.000Z'),
+    }));
+    CareEvent.findOneAndUpdate.mockReturnValue(query({
+      _id: eventId,
+      type: 'observation',
+      performedAt: new Date('2026-07-20T10:00:00.000Z'),
+    }));
+    CareEvent.findOneAndDelete.mockReturnValue(query({
+      _id: eventId,
+      type: 'observation',
+      performedAt: new Date('2026-07-20T10:00:00.000Z'),
+    }));
   });
 
   afterEach(() => {
@@ -100,6 +116,11 @@ describe('CareEvent service', () => {
       },
     });
     const performedAt = new Date('2026-07-20T10:00:00.000Z');
+    CareEvent.findOne.mockReturnValue(query({
+      _id: eventId,
+      type,
+      performedAt,
+    }));
 
     await service.createCareEvent(userId, plantId, {
       type,
@@ -133,6 +154,233 @@ describe('CareEvent service', () => {
     expect(UserPlant.updateOne).not.toHaveBeenCalled();
   });
 
+  test('creating an older CareEvent does not move the schedule backwards', async () => {
+    UserPlant.findOne.mockResolvedValue({
+      _id: plantId,
+      wateringSchedule: { enabled: true, frequencyDays: 3 },
+    });
+    CareEvent.findOne.mockReturnValue(query({
+      _id: '507f1f77bcf86cd799439014',
+      type: 'watering',
+      performedAt: new Date('2026-07-25T10:00:00.000Z'),
+    }));
+
+    await service.createCareEvent(userId, plantId, {
+      type: 'watering',
+      performedAt: '2026-07-20T10:00:00.000Z',
+    });
+
+    expect(UserPlant.updateOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _id: plantId,
+        userId,
+        'wateringSchedule.enabled': true,
+      }),
+      {
+        $set: {
+          'wateringSchedule.lastCompletedAt':
+            new Date('2026-07-25T10:00:00.000Z'),
+          'wateringSchedule.nextDueAt':
+            new Date('2026-07-28T10:00:00.000Z'),
+        },
+      },
+      { session, runValidators: true }
+    );
+  });
+
+  test('creating a newer CareEvent advances the schedule', async () => {
+    UserPlant.findOne.mockResolvedValue({
+      _id: plantId,
+      wateringSchedule: { enabled: true, frequencyDays: 2 },
+    });
+    const newest = new Date('2026-07-27T10:00:00.000Z');
+    CareEvent.findOne.mockReturnValue(query({
+      _id: eventId,
+      type: 'watering',
+      performedAt: newest,
+    }));
+
+    await service.createCareEvent(userId, plantId, {
+      type: 'watering',
+      performedAt: newest.toISOString(),
+    });
+
+    expect(UserPlant.updateOne).toHaveBeenCalledWith(
+      expect.any(Object),
+      {
+        $set: {
+          'wateringSchedule.lastCompletedAt': newest,
+          'wateringSchedule.nextDueAt':
+            new Date('2026-07-29T10:00:00.000Z'),
+        },
+      },
+      { session, runValidators: true }
+    );
+  });
+
+  test('updating the newest event performedAt recalculates its schedule', async () => {
+    const oldEvent = {
+      _id: eventId,
+      type: 'watering',
+      performedAt: new Date('2026-07-25T10:00:00.000Z'),
+    };
+    const updatedEvent = {
+      ...oldEvent,
+      performedAt: new Date('2026-07-26T11:00:00.000Z'),
+    };
+    UserPlant.findOne.mockResolvedValue({
+      _id: plantId,
+      wateringSchedule: { enabled: true, frequencyDays: 4 },
+    });
+    CareEvent.findOne
+      .mockReturnValueOnce(query(oldEvent))
+      .mockReturnValueOnce(query(updatedEvent));
+    CareEvent.findOneAndUpdate.mockReturnValue(query(updatedEvent));
+
+    await service.updateCareEvent(userId, plantId, eventId, {
+      performedAt: updatedEvent.performedAt.toISOString(),
+    });
+
+    expect(UserPlant.updateOne).toHaveBeenCalledWith(
+      expect.any(Object),
+      {
+        $set: {
+          'wateringSchedule.lastCompletedAt': updatedEvent.performedAt,
+          'wateringSchedule.nextDueAt':
+            new Date('2026-07-30T11:00:00.000Z'),
+        },
+      },
+      { session, runValidators: true }
+    );
+  });
+
+  test.each([
+    ['observation', 1],
+    ['fertilizing', 2],
+  ])('changing watering to %s synchronizes old and new schedule types', async (
+    newType,
+    expectedUpdateCount
+  ) => {
+    const oldEvent = {
+      _id: eventId,
+      type: 'watering',
+      performedAt: new Date('2026-07-26T10:00:00.000Z'),
+    };
+    const updatedEvent = {
+      ...oldEvent,
+      type: newType,
+    };
+    const remainingWatering = {
+      _id: '507f1f77bcf86cd799439014',
+      type: 'watering',
+      performedAt: new Date('2026-07-20T10:00:00.000Z'),
+    };
+    const userPlant = {
+      _id: plantId,
+      wateringSchedule: { enabled: true, frequencyDays: 2 },
+      fertilizingSchedule: { enabled: true, frequencyDays: 5 },
+    };
+    UserPlant.findOne.mockResolvedValue(userPlant);
+    CareEvent.findOne
+      .mockReturnValueOnce(query(oldEvent))
+      .mockReturnValueOnce(query(remainingWatering));
+    if (newType === 'fertilizing') {
+      CareEvent.findOne.mockReturnValueOnce(query(updatedEvent));
+    }
+    CareEvent.findOneAndUpdate.mockReturnValue(query(updatedEvent));
+
+    await service.updateCareEvent(userId, plantId, eventId, {
+      type: newType,
+    });
+
+    expect(UserPlant.updateOne).toHaveBeenCalledTimes(expectedUpdateCount);
+    expect(UserPlant.updateOne).toHaveBeenCalledWith(
+      expect.any(Object),
+      {
+        $set: {
+          'wateringSchedule.lastCompletedAt':
+            remainingWatering.performedAt,
+          'wateringSchedule.nextDueAt':
+            new Date('2026-07-22T10:00:00.000Z'),
+        },
+      },
+      { session, runValidators: true }
+    );
+    if (newType === 'fertilizing') {
+      expect(UserPlant.updateOne).toHaveBeenCalledWith(
+        expect.any(Object),
+        {
+          $set: {
+            'fertilizingSchedule.lastCompletedAt':
+              updatedEvent.performedAt,
+            'fertilizingSchedule.nextDueAt':
+              new Date('2026-07-31T10:00:00.000Z'),
+          },
+        },
+        { session, runValidators: true }
+      );
+    }
+  });
+
+  test('deleting the newest event falls back to the previous event', async () => {
+    const deletedEvent = {
+      _id: eventId,
+      type: 'watering',
+      performedAt: new Date('2026-07-26T10:00:00.000Z'),
+    };
+    const previousEvent = {
+      _id: '507f1f77bcf86cd799439014',
+      type: 'watering',
+      performedAt: new Date('2026-07-20T10:00:00.000Z'),
+    };
+    UserPlant.findOne.mockResolvedValue({
+      _id: plantId,
+      wateringSchedule: { enabled: true, frequencyDays: 3 },
+    });
+    CareEvent.findOneAndDelete.mockReturnValue(query(deletedEvent));
+    CareEvent.findOne.mockReturnValue(query(previousEvent));
+
+    await service.deleteCareEvent(userId, plantId, eventId);
+
+    expect(UserPlant.updateOne).toHaveBeenCalledWith(
+      expect.any(Object),
+      {
+        $set: {
+          'wateringSchedule.lastCompletedAt': previousEvent.performedAt,
+          'wateringSchedule.nextDueAt':
+            new Date('2026-07-23T10:00:00.000Z'),
+        },
+      },
+      { session, runValidators: true }
+    );
+  });
+
+  test('deleting the last event clears lastCompletedAt but preserves nextDueAt', async () => {
+    const configuredNextDueAt = new Date('2026-08-01T10:00:00.000Z');
+    UserPlant.findOne.mockResolvedValue({
+      _id: plantId,
+      wateringSchedule: {
+        enabled: true,
+        frequencyDays: 3,
+        nextDueAt: configuredNextDueAt,
+      },
+    });
+    CareEvent.findOneAndDelete.mockReturnValue(query({
+      _id: eventId,
+      type: 'watering',
+      performedAt: new Date('2026-07-26T10:00:00.000Z'),
+    }));
+    CareEvent.findOne.mockReturnValue(query(null));
+
+    await service.deleteCareEvent(userId, plantId, eventId);
+
+    const update = UserPlant.updateOne.mock.calls[0][1].$set;
+    expect(update).toEqual({
+      'wateringSchedule.lastCompletedAt': null,
+    });
+    expect(update).not.toHaveProperty('wateringSchedule.nextDueAt');
+  });
+
   test('GET filters owners and sorts newest first', async () => {
     const findQuery = query([{ _id: eventId }]);
     CareEvent.find.mockReturnValue(findQuery);
@@ -144,23 +392,19 @@ describe('CareEvent service', () => {
     expect(findQuery.sort).toHaveBeenCalledWith({ performedAt: -1 });
   });
 
-  test('update and hard delete filter by event, user and plant', async () => {
-    const updateQuery = query({ _id: eventId });
-    const deleteQuery = query({ _id: eventId });
-    CareEvent.findOneAndUpdate.mockReturnValue(updateQuery);
-    CareEvent.findOneAndDelete.mockReturnValue(deleteQuery);
+  test('update and hard delete are transactional and filter by event, user and plant', async () => {
     await service.updateCareEvent(userId, plantId, eventId, { notes: 'new' });
     await service.deleteCareEvent(userId, plantId, eventId);
+    expect(session.withTransaction).toHaveBeenCalledTimes(2);
     expect(CareEvent.findOneAndUpdate).toHaveBeenCalledWith(
       { _id: eventId, userId, userPlantId: plantId },
       { notes: 'new' },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true, session }
     );
-    expect(CareEvent.findOneAndDelete).toHaveBeenCalledWith({
-      _id: eventId,
-      userId,
-      userPlantId: plantId,
-    });
+    expect(CareEvent.findOneAndDelete).toHaveBeenCalledWith(
+      { _id: eventId, userId, userPlantId: plantId },
+      { session }
+    );
   });
 
   test('rejects access when active plant does not belong to user', async () => {
@@ -243,4 +487,54 @@ describe('CareEvent service', () => {
     expect(CareEvent.create).not.toHaveBeenCalled();
     expect(UserPlant.updateOne).not.toHaveBeenCalled();
   });
+
+  test.each(['create', 'update', 'delete'])(
+    '%s propagates a schedule sync failure through its transaction',
+    async (operation) => {
+      const careEvent = {
+        _id: eventId,
+        userId,
+        userPlantId: plantId,
+        type: 'watering',
+        performedAt: new Date('2026-07-25T10:00:00.000Z'),
+      };
+      UserPlant.findOne.mockResolvedValue({
+        _id: plantId,
+        wateringSchedule: { enabled: true, frequencyDays: 3 },
+      });
+      UserPlant.updateOne.mockRejectedValue(new Error('schedule sync failed'));
+
+      let operationPromise;
+      if (operation === 'create') {
+        CareEvent.findOne.mockReturnValue(query(careEvent));
+        operationPromise = service.createCareEvent(userId, plantId, {
+          type: 'watering',
+          performedAt: careEvent.performedAt.toISOString(),
+        });
+      } else if (operation === 'update') {
+        CareEvent.findOne
+          .mockReturnValueOnce(query(careEvent))
+          .mockReturnValueOnce(query(careEvent));
+        CareEvent.findOneAndUpdate.mockReturnValue(query(careEvent));
+        operationPromise = service.updateCareEvent(
+          userId,
+          plantId,
+          eventId,
+          { notes: 'changed' }
+        );
+      } else {
+        CareEvent.findOneAndDelete.mockReturnValue(query(careEvent));
+        CareEvent.findOne.mockReturnValue(query(null));
+        operationPromise = service.deleteCareEvent(
+          userId,
+          plantId,
+          eventId
+        );
+      }
+
+      await expect(operationPromise).rejects.toThrow('schedule sync failed');
+      expect(session.withTransaction).toHaveBeenCalledTimes(1);
+      expect(session.endSession).toHaveBeenCalledTimes(1);
+    }
+  );
 });
