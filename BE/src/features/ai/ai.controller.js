@@ -1,5 +1,8 @@
 // ai.controller.js - Xử lý request liên quan đến AI (chat, chẩn đoán bệnh cây)
 const aiService = require('./ai.service');
+const {
+  orchestrateDiagnosis,
+} = require('./aiDiagnosisOrchestrator.service');
 const apiResponse = require('../../utils/apiResponse');
 
 /**
@@ -15,7 +18,7 @@ async function generateText(req, res, next) {
 }
 
 /**
- * POST /api/ai/diagnose - Chẩn đoán bệnh cây từ ảnh.
+ * POST /api/ai/diagnose - Chẩn đoán, match knowledge base và lưu lịch sử.
  */
 async function diagnosePlantDisease(req, res, next) {
   try {
@@ -23,10 +26,14 @@ async function diagnosePlantDisease(req, res, next) {
       return apiResponse.error(res, 'Vui lòng tải lên ảnh cây để chẩn đoán.', 400);
     }
 
-    const { buffer, originalname, mimetype } = req.file;
-    const prediction = await aiService.diagnoseFromImage(buffer, originalname, mimetype);
+    const result = await orchestrateDiagnosis({
+      userId: req.user.id,
+      file: req.file,
+      userPlantId: req.body?.userPlantId,
+      catalogPlantId: req.body?.catalogPlantId,
+    });
 
-    return apiResponse.success(res, 'Chẩn đoán thành công', { prediction });
+    return apiResponse.success(res, 'Chẩn đoán thành công', result);
   } catch (error) {
     return next(error);
   }

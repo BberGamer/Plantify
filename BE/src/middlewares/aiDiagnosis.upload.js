@@ -23,7 +23,7 @@ function imageFileFilter(req, file, cb) {
   cb(null, true);
 }
 
-const uploadDiagnosisImage = multer({
+const uploadSingleDiagnosisImage = multer({
   storage,
   fileFilter: imageFileFilter,
   limits: {
@@ -32,4 +32,31 @@ const uploadDiagnosisImage = multer({
   },
 }).single('file');
 
-module.exports = { uploadDiagnosisImage };
+function normalizeUploadError(error) {
+  if (error instanceof multer.MulterError) {
+    error.statusCode = error.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      error.message = 'Ảnh chẩn đoán không được vượt quá 5MB';
+    }
+    return error;
+  }
+
+  if (error) error.statusCode = error.statusCode || 400;
+  return error;
+}
+
+/**
+ * Nhận duy nhất field multipart "file" vào memory và chuẩn hóa lỗi upload.
+ */
+function uploadDiagnosisImage(req, res, next) {
+  return uploadSingleDiagnosisImage(req, res, (error) => {
+    if (error) return next(normalizeUploadError(error));
+    return next();
+  });
+}
+
+module.exports = {
+  uploadDiagnosisImage,
+  imageFileFilter,
+  normalizeUploadError,
+};
