@@ -4,6 +4,7 @@ const { authenticate } = require('../../middlewares/auth');
 const userPlantController = require('./userPlant.controller');
 const { uploadUserPlantImage } = require('./userPlant.upload');
 const careEventController = require('./careEvent.controller');
+const insightsController = require('./myGardenInsights.controller');
 
 const router = express.Router();
 
@@ -11,6 +12,8 @@ const router = express.Router();
 router.use(authenticate);
 router.post('/', userPlantController.createUserPlant);
 router.get('/', userPlantController.getMyUserPlants);
+router.get('/dashboard', insightsController.getDashboard);
+router.get('/:id/timeline', insightsController.getTimeline);
 router.post('/:id/care-events', careEventController.create);
 router.get('/:id/care-events', careEventController.list);
 router.patch('/:id/care-events/:eventId', careEventController.update);

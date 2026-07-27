@@ -371,3 +371,55 @@ test("My Garden opens requested plant and clears a missing userPlantId query", (
   assert.ok(source.includes('nextParams.delete("userPlantId")'));
   assert.ok(source.includes("Cây này không còn tồn tại trong My Garden."));
 });
+
+test("My Garden dashboard loads summaries and opens the selected plant", () => {
+  const dashboardSource = fs.readFileSync(
+    new URL("../../../src/features/my-garden/components/MyGardenDashboard.jsx", import.meta.url),
+    "utf8"
+  );
+  const pageSource = fs.readFileSync(
+    new URL("../../../src/pages/customer/MyGarden.jsx", import.meta.url),
+    "utf8"
+  );
+  const apiSource = fs.readFileSync(
+    new URL("../../../src/features/my-garden/api.js", import.meta.url),
+    "utf8"
+  );
+
+  assert.ok(apiSource.includes('`${MY_GARDEN_API}/dashboard`'));
+  assert.ok(dashboardSource.includes("getMyGardenDashboard"));
+  assert.ok(dashboardSource.includes("dashboard.totalPlants"));
+  assert.ok(dashboardSource.includes("dashboard.wateringDueToday"));
+  assert.ok(dashboardSource.includes("dashboard.fertilizingDueToday"));
+  assert.ok(dashboardSource.includes("dashboard.overduePlants"));
+  assert.ok(dashboardSource.includes("dashboard.latestDiagnosis"));
+  assert.ok(dashboardSource.includes("onOpenPlant(plant._id)"));
+  assert.ok(pageSource.includes("onOpenPlant={setDetailPlantId}"));
+});
+
+test("UserPlant timeline is paginated and renders care, diagnosis and image events", () => {
+  const timelineSource = fs.readFileSync(
+    new URL("../../../src/features/my-garden/components/UserPlantTimeline.jsx", import.meta.url),
+    "utf8"
+  );
+  const detailSource = fs.readFileSync(
+    new URL("../../../src/features/my-garden/components/UserPlantDetailDialog.jsx", import.meta.url),
+    "utf8"
+  );
+  const apiSource = fs.readFileSync(
+    new URL("../../../src/features/my-garden/api.js", import.meta.url),
+    "utf8"
+  );
+
+  assert.ok(apiSource.includes("`${MY_GARDEN_API}/${userPlantId}/timeline`"));
+  for (const type of ["watering", "fertilizing", "diagnosis", "image"]) {
+    assert.ok(timelineSource.includes(`${type}:`));
+  }
+  assert.ok(timelineSource.includes("page,"));
+  assert.ok(timelineSource.includes("timeline.currentPage"));
+  assert.ok(timelineSource.includes("timeline.pages"));
+  assert.ok(timelineSource.includes("event.diagnosis.historyId"));
+  assert.ok(detailSource.includes(
+    "<UserPlantTimeline userPlantId={userPlant._id} />"
+  ));
+});

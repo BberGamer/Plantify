@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   DeleteUserPlantDialog,
+  MyGardenDashboard,
   UserPlantCard,
   UserPlantDetailDialog,
   UserPlantFormDialog,
@@ -48,6 +49,7 @@ function MyGarden() {
   const [editingPlant, setEditingPlant] = useState(null);
   const [detailPlantId, setDetailPlantId] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
 
   const clearRequestedUserPlant = () => {
     setSearchParams((currentParams) => {
@@ -102,6 +104,7 @@ function MyGarden() {
     if (editingPlant?._id) {
       const updatedPlant = await update(editingPlant._id, payload);
       replaceUserPlant(updatedPlant);
+      setDashboardRefreshKey((current) => current + 1);
       toast.success("Cập nhật cây thành công.");
       return;
     }
@@ -121,6 +124,7 @@ function MyGarden() {
       },
     });
     refetch();
+    setDashboardRefreshKey((current) => current + 1);
     if (failedUploads) {
       toast.error(`Cây đã được tạo nhưng ${failedUploads} ảnh tải thất bại.`);
     } else {
@@ -133,6 +137,7 @@ function MyGarden() {
 
     try {
       await remove(deleteTarget._id);
+      setDashboardRefreshKey((current) => current + 1);
       if (detailPlantId === deleteTarget._id) {
         setDetailPlantId("");
         if (requestedUserPlantId === deleteTarget._id) {
@@ -152,6 +157,11 @@ function MyGarden() {
   const handleEditFromDetail = (userPlant) => {
     setDetailPlantId("");
     openEditDialog(userPlant);
+  };
+
+  const handleUserPlantChanged = (userPlant) => {
+    replaceUserPlant(userPlant);
+    setDashboardRefreshKey((current) => current + 1);
   };
 
   return (
@@ -176,6 +186,11 @@ function MyGarden() {
             Thêm cây
           </Button>
         </div>
+
+        <MyGardenDashboard
+          refreshKey={dashboardRefreshKey}
+          onOpenPlant={setDetailPlantId}
+        />
 
         {loading ? (
           <Card>
@@ -241,7 +256,7 @@ function MyGarden() {
         catalogError={catalogError || ""}
         saving={saving}
         onSubmit={handleSave}
-        onUserPlantChanged={replaceUserPlant}
+        onUserPlantChanged={handleUserPlantChanged}
       />
 
       <UserPlantDetailDialog
@@ -254,7 +269,7 @@ function MyGarden() {
         }}
         userPlantId={detailPlantId}
         onEdit={handleEditFromDetail}
-        onUserPlantChanged={replaceUserPlant}
+        onUserPlantChanged={handleUserPlantChanged}
       />
 
       <DeleteUserPlantDialog

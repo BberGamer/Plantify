@@ -17,6 +17,8 @@ describe('My Garden routes', () => {
     expect(routes).toEqual(expect.arrayContaining([
       { path: '/', methods: expect.objectContaining({ post: true }) },
       { path: '/', methods: expect.objectContaining({ get: true }) },
+      { path: '/dashboard', methods: expect.objectContaining({ get: true }) },
+      { path: '/:id/timeline', methods: expect.objectContaining({ get: true }) },
       { path: '/:id/images', methods: expect.objectContaining({ post: true }) },
       { path: '/:id/images/:imageId', methods: expect.objectContaining({ patch: true }) },
       { path: '/:id/images/:imageId', methods: expect.objectContaining({ delete: true }) },
