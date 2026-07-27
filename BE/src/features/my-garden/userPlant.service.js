@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const Plant = require('../plants/plant.model');
 const UserPlant = require('./userPlant.model');
 
-const USER_PLANT_STATUSES = new Set(['active', 'archived']);
 const CATALOG_PLANT_FIELDS = 'name scientificName thumbnail images';
 
 function createHttpError(message, statusCode) {
@@ -33,13 +32,6 @@ function normalizeOptionalString(value, fieldName) {
   return value;
 }
 
-function normalizeStatus(value) {
-  if (typeof value !== 'string' || !USER_PLANT_STATUSES.has(value)) {
-    throw createHttpError('Trạng thái cây không hợp lệ', 400);
-  }
-  return value;
-}
-
 /**
  * Kiểm tra cây danh mục tồn tại khi user muốn liên kết.
  */
@@ -65,9 +57,7 @@ function normalizeCreateData(data = {}) {
     notes: data.notes === undefined
       ? ''
       : normalizeOptionalString(data.notes, 'notes'),
-    status: data.status === undefined
-      ? 'active'
-      : normalizeStatus(data.status),
+    status: 'active',
   };
 }
 
@@ -92,10 +82,6 @@ function normalizeUpdateData(data = {}) {
   if (data.notes !== undefined) {
     updateData.notes = normalizeOptionalString(data.notes, 'notes');
   }
-  if (data.status !== undefined) {
-    updateData.status = normalizeStatus(data.status);
-  }
-
   if (Object.keys(updateData).length === 0) {
     throw createHttpError('Không có dữ liệu cập nhật hợp lệ', 400);
   }

@@ -40,6 +40,7 @@ describe('userPlantService CRUD', () => {
       name: '  Monstera phòng khách  ',
       coverImageUrl: '/uploads/monstera.jpg',
       notes: 'Đặt cạnh cửa sổ',
+      status: 'archived',
       ignored: true,
     });
 
@@ -178,12 +179,15 @@ describe('userPlantService CRUD', () => {
     );
   });
 
-  test('từ chối name, status, kiểu field và ObjectId không hợp lệ', async () => {
+  test('PATCH chỉ có status bị từ chối vì client không được cập nhật status', async () => {
+    await expect(
+      service.updateMyUserPlant(userId, userPlantId, { status: 'archived' })
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  test('từ chối name, kiểu field và ObjectId không hợp lệ', async () => {
     await expect(
       service.createUserPlant(userId, { name: ' ' })
-    ).rejects.toMatchObject({ statusCode: 400 });
-    await expect(
-      service.createUserPlant(userId, { name: 'Cây', status: 'deleted' })
     ).rejects.toMatchObject({ statusCode: 400 });
     await expect(
       service.createUserPlant(userId, { name: 'Cây', notes: 123 })
