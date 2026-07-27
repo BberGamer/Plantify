@@ -1,12 +1,13 @@
 // api.js - API calls cho AI features (chat, chẩn đoán bệnh cây)
 import { api } from '@/lib/api';
+import { buildDiagnosisFormData } from './diagnosisRequest.utils';
 
 const AI_API = '/ai';
 
 /**
  * Gửi ảnh lá cây để chẩn đoán bệnh.
  * @param {File} file - File ảnh upload
- * @param {{userPlantId?: string, catalogPlantId?: string}} references
+ * @param {{userPlantId?: string}} references
  * @returns {Promise<{
  *   diagnosis: object,
  *   diseaseInfo: object|null,
@@ -17,14 +18,7 @@ const AI_API = '/ai';
  * }>}
  */
 export async function diagnosePlantDisease(file, references = {}) {
-  const formData = new FormData();
-  formData.append('file', file);
-  if (references.userPlantId) {
-    formData.append('userPlantId', references.userPlantId);
-  }
-  if (references.catalogPlantId) {
-    formData.append('catalogPlantId', references.catalogPlantId);
-  }
+  const formData = buildDiagnosisFormData(file, references);
 
   const response = await api.post(`${AI_API}/diagnose`, formData, {
     timeout: 60000,

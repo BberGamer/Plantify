@@ -28,10 +28,12 @@ function AIDoctor() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const canLoadHistory = !authLoading && isAuthenticated;
   const historyId = searchParams.get('historyId') || '';
-  const diagnosis = usePlantDiagnosis();
+  const userPlantId = searchParams.get('userPlantId') || '';
+  const diagnosis = usePlantDiagnosis({ userPlantId });
   const diagnosisHistory = useDiagnosisHistory({
     enabled: canLoadHistory,
     historyId,
+    userPlantId,
     limit: 8,
   });
   const chat = useAIChat();

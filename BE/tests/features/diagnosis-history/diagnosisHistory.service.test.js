@@ -2,10 +2,14 @@ jest.mock('../../../src/features/diagnosis-history/diagnosisHistory.model', () =
   const { buildModelMock } = require('../../mocks/mongoose');
   return buildModelMock();
 });
+jest.mock('../../../src/features/my-garden/userPlant.model', () => ({
+  exists: jest.fn(),
+}));
 
 const DiagnosisHistory = require(
   '../../../src/features/diagnosis-history/diagnosisHistory.model'
 );
+const UserPlant = require('../../../src/features/my-garden/userPlant.model');
 const service = require(
   '../../../src/features/diagnosis-history/diagnosisHistory.service'
 );
@@ -27,7 +31,10 @@ function createQuery() {
 }
 
 describe('diagnosisHistoryService', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    UserPlant.exists.mockResolvedValue({ _id: userPlantId });
+  });
 
   test('creates an owned history and ignores a supplied userId', async () => {
     DiagnosisHistory.mockImplementation((data) => ({
@@ -127,6 +134,21 @@ describe('diagnosisHistoryService', () => {
         select: expect.stringMatching(/symptoms.*causes/),
       }),
     ]));
+  });
+
+  test('checks ownership before listing histories for a UserPlant', async () => {
+    UserPlant.exists.mockResolvedValue(null);
+
+    await expect(
+      service.getMyDiagnosisHistories(userId, { userPlantId })
+    ).rejects.toMatchObject({ statusCode: 404 });
+
+    expect(UserPlant.exists).toHaveBeenCalledWith({
+      _id: userPlantId,
+      userId,
+      status: 'active',
+    });
+    expect(DiagnosisHistory.find).not.toHaveBeenCalled();
   });
 
   test('rejects invalid ids and pagination', async () => {

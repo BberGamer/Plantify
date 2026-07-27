@@ -1,4 +1,5 @@
 const path = require('path');
+const mongoose = require('mongoose');
 const PlantDisease = require('../plant-diseases/plantDisease.model');
 const aiService = require('./ai.service');
 const {
@@ -8,6 +9,7 @@ const {
 const {
   createDiagnosisHistory,
 } = require('../diagnosis-history/diagnosisHistory.service');
+const UserPlant = require('../my-garden/userPlant.model');
 
 const MIN_MATCH_CONFIDENCE = 0.5;
 const MIN_MATCH_SCORE = 0.75;
@@ -248,11 +250,32 @@ async function orchestrateDiagnosis({
   userId,
   file,
   userPlantId,
-  catalogPlantId,
 }) {
   let image = null;
 
   try {
+    let resolvedCatalogPlantId = null;
+    if (userPlantId !== undefined && userPlantId !== null && userPlantId !== '') {
+      if (!mongoose.Types.ObjectId.isValid(userPlantId)) {
+        const error = new Error('UserPlant ID không hợp lệ');
+        error.statusCode = 400;
+        throw error;
+      }
+      const userPlant = await UserPlant.findOne({
+        _id: userPlantId,
+        userId,
+        status: 'active',
+      }).select('catalogPlantId').lean();
+      if (!userPlant) {
+        const error = new Error('Không tìm thấy cây trong My Garden');
+        error.statusCode = 404;
+        throw error;
+      }
+      resolvedCatalogPlantId = userPlant.catalogPlantId || null;
+    } else {
+      userPlantId = null;
+    }
+
     image = await saveDiagnosisImage(userId, file);
     const rawAIResponse = await aiService.diagnoseFromImage(
       file.buffer,
@@ -285,7 +308,7 @@ async function orchestrateDiagnosis({
 
     const history = await createDiagnosisHistory(userId, {
       userPlantId,
-      catalogPlantId,
+      catalogPlantId: resolvedCatalogPlantId,
       image,
       diagnosis,
       ai: {

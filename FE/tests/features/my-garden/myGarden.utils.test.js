@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 import {
+  buildPlantDiagnosisUrl,
   buildUserPlantPayload,
   createUserPlantThenUpload,
   DEFAULT_IMAGE,
@@ -16,6 +17,7 @@ import {
   sortCareEvents,
   toLocalDateTimeInput,
 } from "../../../src/features/my-garden/myGarden.utils.js";
+import { buildDiagnosisFormData } from "../../../src/features/ai/diagnosisRequest.utils.js";
 
 test("ưu tiên coverImageUrl trước ảnh catalogue", () => {
   const image = getUserPlantImage({
@@ -142,4 +144,39 @@ test("payload form không chứa userId, status hoặc coverImageUrl", () => {
   assert.equal("userId" in payload, false);
   assert.equal("status" in payload, false);
   assert.equal("coverImageUrl" in payload, false);
+});
+
+test("FormData diagnosis only sends userPlantId for a linked garden plant", () => {
+  const file = new Blob(["image"], { type: "image/jpeg" });
+  const linked = buildDiagnosisFormData(file, {
+    userPlantId: "plant-1",
+    catalogPlantId: "client-must-not-control-this",
+  });
+  assert.equal(linked.get("userPlantId"), "plant-1");
+  assert.equal(linked.has("catalogPlantId"), false);
+
+  const unlinked = buildDiagnosisFormData(file);
+  assert.equal(unlinked.has("userPlantId"), false);
+});
+
+test("AI Doctor URL preserves userPlantId when opening a history", () => {
+  assert.equal(
+    buildPlantDiagnosisUrl("plant-1"),
+    "/ai-doctor?userPlantId=plant-1"
+  );
+  assert.equal(
+    buildPlantDiagnosisUrl("plant-1", "history-1"),
+    "/ai-doctor?userPlantId=plant-1&historyId=history-1"
+  );
+});
+
+test("My Garden detail reuses diagnosis history with a userPlantId filter", () => {
+  const source = fs.readFileSync(
+    new URL("../../../src/features/my-garden/components/UserPlantDiagnosisHistory.jsx", import.meta.url),
+    "utf8"
+  );
+  assert.ok(source.includes("useDiagnosisHistory"));
+  assert.ok(source.includes("userPlantId,"));
+  assert.ok(source.includes("DiagnosisHistoryList"));
+  assert.ok(source.includes("Chẩn đoán cây này"));
 });

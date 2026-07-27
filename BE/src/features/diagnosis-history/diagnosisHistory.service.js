@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const DiagnosisHistory = require('./diagnosisHistory.model');
+const UserPlant = require('../my-garden/userPlant.model');
 
 const LIST_POPULATE_OPTIONS = [
   {
@@ -122,6 +123,14 @@ async function getMyDiagnosisHistories(userId, filters = {}) {
   const query = { userId };
   if (filters.userPlantId) {
     ensureObjectId(filters.userPlantId, 'UserPlant ID không hợp lệ');
+    const ownedPlant = await UserPlant.exists({
+      _id: filters.userPlantId,
+      userId,
+      status: 'active',
+    });
+    if (!ownedPlant) {
+      throw createHttpError('Không tìm thấy cây trong My Garden', 404);
+    }
     query.userPlantId = filters.userPlantId;
   }
 

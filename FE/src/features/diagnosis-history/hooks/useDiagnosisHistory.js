@@ -13,6 +13,7 @@ function getErrorMessage(error, fallback) {
 export function useDiagnosisHistory({
   enabled,
   historyId,
+  userPlantId = "",
   limit = 8,
 }) {
   const [histories, setHistories] = useState([]);
@@ -49,7 +50,7 @@ export function useDiagnosisHistory({
 
       try {
         const data = await getMyDiagnosisHistories(
-          { page: 1, limit },
+          { page: 1, limit, ...(userPlantId ? { userPlantId } : {}) },
           controller.signal
         );
         if (!cancelled) {
@@ -72,7 +73,7 @@ export function useDiagnosisHistory({
       cancelled = true;
       controller.abort();
     };
-  }, [enabled, limit, listRefreshKey]);
+  }, [enabled, limit, listRefreshKey, userPlantId]);
 
   useEffect(() => {
     if (!enabled || !historyId) {

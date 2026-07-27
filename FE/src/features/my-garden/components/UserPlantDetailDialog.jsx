@@ -12,6 +12,7 @@ import { useUserPlantDetail } from "../hooks";
 import { getUserPlantImage, handleUserPlantImageError } from "../myGarden.utils";
 import { UserPlantAlbum } from "./UserPlantAlbum";
 import { UserPlantCareEvents } from "./UserPlantCareEvents";
+import { UserPlantDiagnosisHistory } from "./UserPlantDiagnosisHistory";
 
 export function UserPlantDetailDialog({
   open,
@@ -96,6 +97,7 @@ export function UserPlantDetailDialog({
           </div>
           <UserPlantAlbum userPlant={userPlant} readOnly />
           <UserPlantCareEvents userPlantId={userPlant._id} readOnly />
+          <UserPlantDiagnosisHistory userPlantId={userPlant._id} />
           </div>
         ) : null}
 

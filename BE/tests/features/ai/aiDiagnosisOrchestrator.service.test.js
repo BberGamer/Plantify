@@ -11,17 +11,23 @@ jest.mock('../../../src/features/diagnosis-history/diagnosisHistory.service', ()
 jest.mock('../../../src/features/plant-diseases/plantDisease.model', () => ({
   find: jest.fn(),
 }));
+jest.mock('../../../src/features/my-garden/userPlant.model', () => ({
+  findOne: jest.fn(),
+}));
 
 const aiService = require('../../../src/features/ai/ai.service');
 const imageStorage = require('../../../src/features/ai/diagnosisImageStorage.service');
 const historyService = require('../../../src/features/diagnosis-history/diagnosisHistory.service');
 const PlantDisease = require('../../../src/features/plant-diseases/plantDisease.model');
+const UserPlant = require('../../../src/features/my-garden/userPlant.model');
 const orchestrator = require('../../../src/features/ai/aiDiagnosisOrchestrator.service');
 
 const userId = '507f1f77bcf86cd799439011';
 const diseaseId = '507f1f77bcf86cd799439012';
 const productId = '507f1f77bcf86cd799439013';
 const historyId = '507f1f77bcf86cd799439014';
+const userPlantId = '507f1f77bcf86cd799439015';
+const catalogPlantId = '507f1f77bcf86cd799439016';
 const file = { buffer: Buffer.from('image'), mimetype: 'image/jpeg' };
 const image = {
   storageKey: `diagnoses/${userId}/2026/07/generated.jpg`,
@@ -52,6 +58,13 @@ const leafSpot = {
 function query(result) {
   return {
     populate: jest.fn().mockReturnThis(),
+    lean: jest.fn().mockResolvedValue(result),
+  };
+}
+
+function userPlantQuery(result) {
+  return {
+    select: jest.fn().mockReturnThis(),
     lean: jest.fn().mockResolvedValue(result),
   };
 }
@@ -221,5 +234,63 @@ describe('AI diagnosis orchestrator scoring', () => {
       orchestrator.orchestrateDiagnosis({ userId, file })
     ).rejects.toThrow('Database failed');
     expect(imageStorage.deleteDiagnosisImage).toHaveBeenCalledWith(image.storageKey);
+  });
+
+  test('validates and checks ownership before storing an image or calling AI', async () => {
+    await expect(orchestrator.orchestrateDiagnosis({
+      userId,
+      file,
+      userPlantId: 'invalid',
+    })).rejects.toMatchObject({ statusCode: 400 });
+
+    expect(imageStorage.saveDiagnosisImage).not.toHaveBeenCalled();
+    expect(aiService.diagnoseFromImage).not.toHaveBeenCalled();
+
+    UserPlant.findOne.mockReturnValue(userPlantQuery(null));
+    await expect(orchestrator.orchestrateDiagnosis({
+      userId,
+      file,
+      userPlantId,
+    })).rejects.toMatchObject({ statusCode: 404 });
+
+    expect(UserPlant.findOne).toHaveBeenCalledWith({
+      _id: userPlantId,
+      userId,
+      status: 'active',
+    });
+    expect(imageStorage.saveDiagnosisImage).not.toHaveBeenCalled();
+    expect(aiService.diagnoseFromImage).not.toHaveBeenCalled();
+  });
+
+  test('uses the owned UserPlant catalogue reference and saves userPlantId', async () => {
+    UserPlant.findOne.mockReturnValue(userPlantQuery({ catalogPlantId }));
+    aiService.diagnoseFromImage.mockResolvedValue(aiResult({ confidence: 0.49 }));
+
+    await orchestrator.orchestrateDiagnosis({
+      userId,
+      file,
+      userPlantId,
+      catalogPlantId: '507f1f77bcf86cd799439099',
+    });
+
+    expect(historyService.createDiagnosisHistory).toHaveBeenCalledWith(
+      userId,
+      expect.objectContaining({
+        userPlantId,
+        catalogPlantId,
+      })
+    );
+  });
+
+  test('keeps diagnosis optional and stores a null userPlantId when omitted', async () => {
+    aiService.diagnoseFromImage.mockResolvedValue(aiResult({ confidence: 0.49 }));
+
+    await orchestrator.orchestrateDiagnosis({ userId, file });
+
+    expect(UserPlant.findOne).not.toHaveBeenCalled();
+    expect(historyService.createDiagnosisHistory).toHaveBeenCalledWith(
+      userId,
+      expect.objectContaining({ userPlantId: null })
+    );
   });
 });

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { History, Loader2, RefreshCw } from "lucide-react";
 
-const DEFAULT_IMAGE = "/default-product.svg";
+const DEFAULT_IMAGE = "/default-plant.svg";
 const MATCH_STATUS_LABELS = {
   matched: "Đã đối chiếu",
   unmatched: "Chưa khớp",

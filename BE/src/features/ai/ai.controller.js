@@ -30,7 +30,6 @@ async function diagnosePlantDisease(req, res, next) {
       userId: req.user.id,
       file: req.file,
       userPlantId: req.body?.userPlantId,
-      catalogPlantId: req.body?.catalogPlantId,
     });
 
     return apiResponse.success(res, 'Chẩn đoán thành công', result);

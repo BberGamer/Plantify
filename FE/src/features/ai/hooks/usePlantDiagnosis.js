@@ -5,7 +5,7 @@ import { diagnosePlantDisease } from '../api';
 /**
  * Hook để chẩn đoán bệnh cây từ ảnh.
  */
-export function usePlantDiagnosis() {
+export function usePlantDiagnosis({ userPlantId = '' } = {}) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [result, setResult] = useState(null);
@@ -44,7 +44,7 @@ export function usePlantDiagnosis() {
     setResult(null);
 
     try {
-      const diagnosisResult = await diagnosePlantDisease(selectedImage);
+      const diagnosisResult = await diagnosePlantDisease(selectedImage, { userPlantId });
       if (diagnosisResult?.diagnosis) {
         setResult(diagnosisResult);
         return diagnosisResult;

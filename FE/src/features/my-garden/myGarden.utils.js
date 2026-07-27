@@ -74,6 +74,13 @@ export function buildUserPlantPayload(form = {}) {
   };
 }
 
+export function buildPlantDiagnosisUrl(userPlantId, historyId = "") {
+  const searchParams = new URLSearchParams();
+  searchParams.set("userPlantId", userPlantId);
+  if (historyId) searchParams.set("historyId", historyId);
+  return `/ai-doctor?${searchParams.toString()}`;
+}
+
 export function getApiErrorMessage(error, fallback) {
   return error.response?.data?.message || error.message || fallback;
 }

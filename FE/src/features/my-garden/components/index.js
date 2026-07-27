@@ -5,3 +5,4 @@ export { UserPlantDetailDialog } from "./UserPlantDetailDialog";
 export { UserPlantFormDialog } from "./UserPlantFormDialog";
 export { UserPlantAlbum } from "./UserPlantAlbum";
 export { UserPlantCareEvents } from "./UserPlantCareEvents";
+export { UserPlantDiagnosisHistory } from "./UserPlantDiagnosisHistory";

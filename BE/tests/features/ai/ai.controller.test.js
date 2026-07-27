@@ -22,7 +22,7 @@ describe('AI diagnosis controller', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  test('orchestrates diagnosis for the authenticated customer with optional ids', async () => {
+  test('orchestrates diagnosis with optional userPlantId and ignores client catalogPlantId', async () => {
     const req = {
       user: { id: '507f1f77bcf86cd799439011', role: 'customer' },
       file,
@@ -47,7 +47,6 @@ describe('AI diagnosis controller', () => {
       userId: req.user.id,
       file,
       userPlantId: req.body.userPlantId,
-      catalogPlantId: req.body.catalogPlantId,
     });
     expect(apiResponse.success).toHaveBeenCalledWith(
       res,
