@@ -57,15 +57,6 @@ export function UserPlantCard({
         <Button
           type="button"
           size="sm"
-          variant="ghost"
-          onClick={() => onView(userPlant)}
-        >
-          <Eye className="mr-1 h-4 w-4" />
-          Xem
-        </Button>
-        <Button
-          type="button"
-          size="sm"
           variant="outline"
           onClick={() => onEdit(userPlant)}
         >
