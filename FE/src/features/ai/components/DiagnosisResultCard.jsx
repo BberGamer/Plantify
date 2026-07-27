@@ -2,12 +2,14 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { ROUTES } from "@/lib/constants";
 import {
   CheckCircle,
   Leaf,
   Plus,
   ShoppingCart,
 } from "lucide-react";
+import { Link } from "react-router";
 
 const DEFAULT_IMAGE = "/default-product.svg";
 const STATUS_CONTENT = {
@@ -170,20 +172,28 @@ export function DiagnosisResultCard({
                 key={product._id}
                 className="flex items-center gap-3 rounded-xl border bg-white p-3"
               >
-                <img
-                  src={product.thumbnail || product.images?.[0] || DEFAULT_IMAGE}
-                  alt={product.name}
-                  className="h-16 w-16 rounded-lg object-cover"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{product.name}</p>
-                  <p className="text-sm font-bold text-primary">
-                    {Number(product.price || 0).toLocaleString("vi-VN")}đ
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Còn {product.stock} sản phẩm
-                  </p>
-                </div>
+                <Link
+                  to={ROUTES.productDetail(product._id)}
+                  className="flex min-w-0 flex-1 items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label={`Xem chi tiết sản phẩm ${product.name}`}
+                >
+                  <img
+                    src={product.thumbnail || product.images?.[0] || DEFAULT_IMAGE}
+                    alt={product.name}
+                    className="h-16 w-16 rounded-lg object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold transition-colors hover:text-primary">
+                      {product.name}
+                    </p>
+                    <p className="text-sm font-bold text-primary">
+                      {Number(product.price || 0).toLocaleString("vi-VN")}đ
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Còn {product.stock} sản phẩm
+                    </p>
+                  </div>
+                </Link>
                 <Button
                   size="sm"
                   variant="outline"

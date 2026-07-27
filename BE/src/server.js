@@ -29,6 +29,7 @@ const cartRoutes = require('./features/cart/cart.routes');
 const orderRoutes = require('./features/orders/order.routes');
 const walletRoutes = require('./features/wallet/wallet.routes');
 const diagnosisHistoryRoutes = require('./features/diagnosis-history/diagnosisHistory.routes');
+const myGardenRoutes = require('./features/my-garden/userPlant.routes');
 
 const app = express();
 const OLD_RESOLVED_POST_TTL_MS = 2 * 24 * 60 * 60 * 1000;
@@ -83,6 +84,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/diagnosis-histories', diagnosisHistoryRoutes);
+app.use('/api/my-garden', myGardenRoutes);
 
 // Error Handler Middleware (sau tất cả các route)
 app.use(errorHandler);
