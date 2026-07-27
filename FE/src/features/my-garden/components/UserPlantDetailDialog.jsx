@@ -93,7 +93,7 @@ export function UserPlantDetailDialog({
               </div>
             </div>
           </div>
-          <UserPlantAlbum userPlant={userPlant} onChanged={(updatedPlant) => { onUserPlantChanged?.(updatedPlant); refetch(); }} />
+          <UserPlantAlbum userPlant={userPlant} readOnly />
           </div>
         ) : null}
 

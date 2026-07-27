@@ -15,7 +15,9 @@ import {
   UserPlantCard,
   UserPlantDetailDialog,
   UserPlantFormDialog,
+  createUserPlantThenUpload,
   getApiErrorMessage,
+  uploadUserPlantImage,
   useMyGarden,
 } from "@/features/my-garden";
 import { usePlants } from "@/features/plants/hooks";
@@ -59,16 +61,34 @@ function MyGarden() {
     if (!nextOpen) setEditingPlant(null);
   };
 
-  const handleSave = async (payload) => {
+  const handleSave = async (payload, pendingFiles = [], onUploadProgress) => {
     if (editingPlant?._id) {
-      await update(editingPlant._id, payload);
+      const updatedPlant = await update(editingPlant._id, payload);
+      replaceUserPlant(updatedPlant);
       toast.success("Cập nhật cây thành công.");
       return;
     }
 
-    await create(payload);
+    const { failedUploads } = await createUserPlantThenUpload({
+      createPlant: create,
+      payload,
+      files: pendingFiles,
+      onProgress: onUploadProgress,
+      uploadImage: async (userPlantId, file, reportProgress) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await uploadUserPlantImage(userPlantId, formData, (event) => {
+          if (event.total) reportProgress(Math.round((event.loaded / event.total) * 100));
+        });
+        replaceUserPlant(response.data);
+      },
+    });
     refetch();
-    toast.success("Đã thêm cây vào My Garden.");
+    if (failedUploads) {
+      toast.error(`Cây đã được tạo nhưng ${failedUploads} ảnh tải thất bại.`);
+    } else {
+      toast.success("Đã thêm cây vào My Garden.");
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -179,6 +199,7 @@ function MyGarden() {
         catalogError={catalogError || ""}
         saving={saving}
         onSubmit={handleSave}
+        onUserPlantChanged={replaceUserPlant}
       />
 
       <UserPlantDetailDialog

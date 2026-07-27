@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildUserPlantPayload,
+  createUserPlantThenUpload,
   DEFAULT_IMAGE,
+  getAlbumCapabilities,
   getImageFallbackSource,
   getUserPlantImage,
 } from "../../../src/features/my-garden/myGarden.utils.js";
@@ -18,6 +20,27 @@ test("ưu tiên coverImageUrl trước ảnh catalogue", () => {
   });
 
   assert.equal(image, "cover.jpg");
+});
+
+test("tạo cây trước rồi upload tuần tự bằng id được trả về, không xóa cây khi lỗi ảnh", async () => {
+  const calls = [];
+  const result = await createUserPlantThenUpload({
+    payload: { name: "Monstera" },
+    files: ["one.jpg", "two.jpg"],
+    createPlant: async () => { calls.push("create"); return { _id: "plant-1" }; },
+    uploadImage: async (userPlantId, file) => {
+      calls.push(`${userPlantId}:${file}`);
+      if (file === "two.jpg") throw new Error("upload failed");
+    },
+  });
+  assert.deepEqual(calls, ["create", "plant-1:one.jpg", "plant-1:two.jpg"]);
+  assert.equal(result.userPlant._id, "plant-1");
+  assert.equal(result.failedUploads, 1);
+});
+
+test("album read-only không có quyền upload, sửa hoặc xóa", () => {
+  assert.deepEqual(getAlbumCapabilities(true), { canUpload: false, canEdit: false, canDelete: false });
+  assert.deepEqual(getAlbumCapabilities(false), { canUpload: true, canEdit: true, canDelete: true });
 });
 
 test("dùng catalogue thumbnail khi không có coverImageUrl", () => {

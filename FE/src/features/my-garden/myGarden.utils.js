@@ -1,5 +1,30 @@
 // myGarden.utils.js - Helper hiển thị và chuẩn hóa dữ liệu My Garden
 export const DEFAULT_IMAGE = "/default-plant.svg";
+export const MAX_ALBUM_IMAGE_SIZE = 5 * 1024 * 1024;
+export const ALBUM_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+export function isValidAlbumFile(file) {
+  return Boolean(file && ALBUM_IMAGE_TYPES.includes(file.type) && file.size <= MAX_ALBUM_IMAGE_SIZE);
+}
+
+export function getAlbumCapabilities(readOnly) {
+  return { canUpload: !readOnly, canEdit: !readOnly, canDelete: !readOnly };
+}
+
+export async function createUserPlantThenUpload({ createPlant, uploadImage, payload, files, onProgress }) {
+  const userPlant = await createPlant(payload);
+  let failedUploads = 0;
+  for (let index = 0; index < files.length; index += 1) {
+    try {
+      await uploadImage(userPlant._id, files[index], (value) => {
+        onProgress?.(Math.round(((index + value / 100) / files.length) * 100));
+      });
+    } catch {
+      failedUploads += 1;
+    }
+  }
+  return { userPlant, failedUploads };
+}
 
 export function getUserPlantImage(userPlant = {}) {
   return userPlant.coverImageUrl
