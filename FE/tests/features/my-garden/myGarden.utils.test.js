@@ -8,6 +8,8 @@ import {
   getAlbumCapabilities,
   getImageFallbackSource,
   getUserPlantImage,
+  removePendingPreview,
+  revokePendingPreviews,
 } from "../../../src/features/my-garden/myGarden.utils.js";
 
 test("ưu tiên coverImageUrl trước ảnh catalogue", () => {
@@ -20,6 +22,18 @@ test("ưu tiên coverImageUrl trước ảnh catalogue", () => {
   });
 
   assert.equal(image, "cover.jpg");
+});
+
+test("preview chỉ revoke ảnh bị xóa và giải phóng toàn bộ khi đóng form", () => {
+  const revoked = [];
+  const previews = [{ preview: "first" }, { preview: "second" }];
+  const afterAdd = [...previews, { preview: "third" }];
+  assert.deepEqual(revoked, []);
+  const remaining = removePendingPreview(afterAdd, 1, (url) => revoked.push(url));
+  assert.deepEqual(revoked, ["second"]);
+  assert.deepEqual(remaining.map((item) => item.preview), ["first", "third"]);
+  revokePendingPreviews(remaining, (url) => revoked.push(url));
+  assert.deepEqual(revoked, ["second", "first", "third"]);
 });
 
 test("tạo cây trước rồi upload tuần tự bằng id được trả về, không xóa cây khi lỗi ảnh", async () => {

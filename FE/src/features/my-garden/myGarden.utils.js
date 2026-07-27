@@ -11,6 +11,16 @@ export function getAlbumCapabilities(readOnly) {
   return { canUpload: !readOnly, canEdit: !readOnly, canDelete: !readOnly };
 }
 
+export function removePendingPreview(items, index, revoke = URL.revokeObjectURL) {
+  const item = items[index];
+  if (item?.preview) revoke(item.preview);
+  return items.filter((_, itemIndex) => itemIndex !== index);
+}
+
+export function revokePendingPreviews(items, revoke = URL.revokeObjectURL) {
+  items.forEach((item) => { if (item?.preview) revoke(item.preview); });
+}
+
 export async function createUserPlantThenUpload({ createPlant, uploadImage, payload, files, onProgress }) {
   const userPlant = await createPlant(payload);
   let failedUploads = 0;

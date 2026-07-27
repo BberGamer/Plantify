@@ -8,20 +8,22 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { UserPlantAlbum } from "./UserPlantAlbum";
-import { buildUserPlantPayload, getApiErrorMessage, isValidAlbumFile } from "../myGarden.utils";
+import { buildUserPlantPayload, getApiErrorMessage, isValidAlbumFile, removePendingPreview, revokePendingPreviews } from "../myGarden.utils";
 
 const NO_CATALOG_VALUE = "none";
 const EMPTY_FORM = { name: "", catalogPlantId: "", notes: "" };
 function getReferenceId(value) { return !value ? "" : typeof value === "object" ? value._id || value.id || "" : value; }
 
 export function UserPlantFormDialog({ open, onOpenChange, userPlant, catalogPlants, catalogLoading, catalogError, saving, onSubmit, onUserPlantChanged }) {
-  const [form, setForm] = useState(EMPTY_FORM); const [pendingFiles, setPendingFiles] = useState([]); const [formError, setFormError] = useState(""); const [submitting, setSubmitting] = useState(false); const [uploadProgress, setUploadProgress] = useState(0); const [workingPlant, setWorkingPlant] = useState(null); const fileInputRef = useRef(null);
+  const [form, setForm] = useState(EMPTY_FORM); const [pendingFiles, setPendingFiles] = useState([]); const [formError, setFormError] = useState(""); const [submitting, setSubmitting] = useState(false); const [uploadProgress, setUploadProgress] = useState(0); const [workingPlant, setWorkingPlant] = useState(null); const fileInputRef = useRef(null); const pendingFilesRef = useRef([]);
   const editing = Boolean(userPlant?._id);
-  useEffect(() => { if (!open) return; setForm(userPlant ? { name: userPlant.name || "", catalogPlantId: getReferenceId(userPlant.catalogPlantId), notes: userPlant.notes || "" } : EMPTY_FORM); setWorkingPlant(userPlant || null); setPendingFiles([]); setFormError(""); setUploadProgress(0); }, [open, userPlant]);
-  useEffect(() => () => pendingFiles.forEach((item) => URL.revokeObjectURL(item.preview)), [pendingFiles]);
+  const clearPendingFiles = () => { revokePendingPreviews(pendingFilesRef.current); pendingFilesRef.current = []; setPendingFiles([]); if (fileInputRef.current) fileInputRef.current.value = ""; setUploadProgress(0); };
+  useEffect(() => { pendingFilesRef.current = pendingFiles; }, [pendingFiles]);
+  useEffect(() => { if (!open) { clearPendingFiles(); return; } clearPendingFiles(); setForm(userPlant ? { name: userPlant.name || "", catalogPlantId: getReferenceId(userPlant.catalogPlantId), notes: userPlant.notes || "" } : EMPTY_FORM); setWorkingPlant(userPlant || null); setFormError(""); }, [open, userPlant]);
+  useEffect(() => () => revokePendingPreviews(pendingFilesRef.current), []);
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
   const selectFiles = (event) => { const files = Array.from(event.target.files || []); event.target.value = ""; const valid = files.filter(isValidAlbumFile).map((file) => ({ file, preview: URL.createObjectURL(file) })); if (valid.length !== files.length) setFormError("Chỉ nhận JPG, PNG, WebP và tối đa 5MB mỗi ảnh."); setPendingFiles((current) => [...current, ...valid]); };
-  const removePendingFile = (index) => setPendingFiles((current) => { URL.revokeObjectURL(current[index].preview); return current.filter((_, itemIndex) => itemIndex !== index); });
+  const removePendingFile = (index) => setPendingFiles((current) => removePendingPreview(current, index));
   const handleSubmit = async (event) => { event.preventDefault(); if (!form.name.trim() || submitting) { if (!form.name.trim()) setFormError("Tên cây là bắt buộc."); return; } setSubmitting(true); setFormError(""); try { await onSubmit(buildUserPlantPayload(form), pendingFiles.map((item) => item.file), setUploadProgress); onOpenChange(false); } catch (error) { setFormError(getApiErrorMessage(error, editing ? "Không thể cập nhật cây." : "Không thể tạo cây.")); } finally { setSubmitting(false); setUploadProgress(0); } };
   const handleAlbumChanged = (plant) => { setWorkingPlant(plant); onUserPlantChanged?.(plant); };
   const disabled = saving || submitting;
