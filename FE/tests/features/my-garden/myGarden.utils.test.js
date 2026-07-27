@@ -267,10 +267,13 @@ test("embedded schedules validate boundaries and display status", () => {
     nextDueAt: "2026-07-28T12:00:00.000Z",
   }, now), "upcoming");
 
-  const source = fs.readFileSync(
-    new URL("../../../src/features/my-garden/components/UserPlantScheduleSettings.jsx", import.meta.url),
+  const source = [
+    "../../../src/features/my-garden/components/UserPlantScheduleSettings.jsx",
+    "../../../src/features/my-garden/components/schedule-settings/ScheduleFieldsView.jsx",
+  ].map((relativePath) => fs.readFileSync(
+    new URL(relativePath, import.meta.url),
     "utf8"
-  );
+  )).join("\n");
   assert.ok(source.includes("min={bounds.min}"));
   assert.ok(source.includes("max={bounds.max}"));
   assert.ok(source.includes("Lịch tưới"));
@@ -403,10 +406,13 @@ test("My Garden opens requested plant and clears a missing userPlantId query", (
 });
 
 test("My Garden dashboard loads summaries and opens the selected plant", () => {
-  const dashboardSource = fs.readFileSync(
-    new URL("../../../src/features/my-garden/components/MyGardenDashboard.jsx", import.meta.url),
+  const dashboardSource = [
+    "../../../src/features/my-garden/components/MyGardenDashboard.jsx",
+    "../../../src/features/my-garden/components/dashboard/MyGardenDashboardContent.jsx",
+  ].map((relativePath) => fs.readFileSync(
+    new URL(relativePath, import.meta.url),
     "utf8"
-  );
+  )).join("\n");
   const pageSource = fs.readFileSync(
     new URL("../../../src/pages/customer/MyGarden.jsx", import.meta.url),
     "utf8"

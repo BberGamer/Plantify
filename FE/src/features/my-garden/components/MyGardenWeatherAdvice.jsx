@@ -183,38 +183,34 @@ export function MyGardenWeatherAdvice() {
               </div>
             </div>
           ) : null}
-
           {result ? (
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="grid auto-rows-fr gap-3">
               {result.advice.map((item) => {
                 const style = ADVICE_STYLE[item.severity] || ADVICE_STYLE.info;
                 const Icon = getAdviceIcon(item.code) || style.icon;
                 const isNormalCare = item.code === "normal_care";
-                const isFullWidth = [
-                  "normal_care",
-                  "above_plant_temperature_limit",
-                  "below_plant_temperature_limit",
-                ].includes(item.code);
                 return (
                   <div
                     key={item.code}
-                    className={`rounded-2xl border p-4 shadow-sm ${
+                    className={`h-full rounded-2xl border p-4 shadow-sm ${
                       isNormalCare
                         ? "border-primary/20 bg-primary/5 text-foreground"
                         : style.className
-                    } ${isFullWidth ? "lg:col-span-2" : ""}`}
+                    }`}
                   >
-                    <div className="flex gap-3">
+                    <div className="flex h-full gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/70">
                         <Icon className="h-5 w-5" />
                       </div>
-                      <div>
+                      <div className="flex min-w-0 flex-1 flex-col">
                         <p className="font-semibold">{item.title}</p>
                         <p className="mt-1 text-sm leading-6">{item.message}</p>
                         {item.plantNames?.length ? (
-                          <p className="mt-3 inline-flex rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium">
-                            Áp dụng: {item.plantNames.join(", ")}
-                          </p>
+                          <div className="mt-auto pt-3">
+                            <p className="inline-flex rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium">
+                              Áp dụng: {item.plantNames.join(", ")}
+                            </p>
+                          </div>
                         ) : null}
                       </div>
                     </div>
