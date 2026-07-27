@@ -1,4 +1,4 @@
-// useCreateReport.js - Hook tao report cho bai viet
+// useCreateReport.js - Quản lý trạng thái tạo báo cáo cho bài viết
 import { useState } from "react";
 import { reportPost } from "../api";
 

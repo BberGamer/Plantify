@@ -1,3 +1,4 @@
+// ImageWithFallback.jsx - Hiển thị ảnh thay thế khi nguồn ảnh chính tải thất bại
 import { ImageOff } from "lucide-react";
 import { useEffect, useState } from "react";
 

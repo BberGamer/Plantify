@@ -1,6 +1,4 @@
-/**
- * Blog.jsx - Trang blog co filter category/search va modal chi tiet bai viet.
- */
+// Blog.jsx - Hiển thị trang blog với tìm kiếm, bộ lọc và chi tiết bài viết
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";

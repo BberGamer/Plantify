@@ -1,5 +1,4 @@
-// progress.jsx
-// Progress bar component dùng radix-ui
+// progress.jsx - Cung cấp primitive thanh thể hiện tiến độ
 "use client";
 
 import * as ProgressPrimitive from "@radix-ui/react-progress";

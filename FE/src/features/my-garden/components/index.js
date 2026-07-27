@@ -1,4 +1,4 @@
-// index.js - Export components của My Garden
+// index.js - Tập trung xuất các component của domain My Garden
 export { DeleteUserPlantDialog } from "./DeleteUserPlantDialog";
 export { UserPlantCard } from "./UserPlantCard";
 export { UserPlantDetailDialog } from "./UserPlantDetailDialog";

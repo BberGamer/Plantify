@@ -1,3 +1,4 @@
+// PlantFormDialog.jsx - Hiển thị nội dung hộp thoại tạo hoặc cập nhật cây
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

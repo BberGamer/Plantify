@@ -1,3 +1,4 @@
+// ManageCareGuides.jsx - Hiển thị trang quản lý hướng dẫn chăm sóc cho Content Manager
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, Plus, Search } from "lucide-react";
 import { toast } from "sonner";

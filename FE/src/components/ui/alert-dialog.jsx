@@ -1,3 +1,4 @@
+// alert-dialog.jsx - Cung cấp primitive hộp thoại cảnh báo và xác nhận hành động
 "use client";
 
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";

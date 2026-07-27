@@ -1,5 +1,4 @@
-// hover-card.jsx
-// Hover card component dùng radix-ui
+// hover-card.jsx - Cung cấp primitive thẻ thông tin xuất hiện khi rê chuột
 "use client";
 
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";

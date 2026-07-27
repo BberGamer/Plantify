@@ -1,4 +1,4 @@
-// api.js - Các hàm gọi API cho Plant Diseases
+// api.js - Gọi API danh sách và thao tác dữ liệu bệnh cây
 import { api } from "@/lib/api";
 
 export const getPlantDiseases = async (params = {}) => {

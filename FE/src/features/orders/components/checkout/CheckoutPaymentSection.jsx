@@ -1,3 +1,4 @@
+// CheckoutPaymentSection.jsx - Hiển thị lựa chọn phương thức thanh toán khi đặt hàng
 import { Card, CardContent } from "@/components/ui/card";
 import { Landmark, Banknote, Wallet } from "lucide-react";
 

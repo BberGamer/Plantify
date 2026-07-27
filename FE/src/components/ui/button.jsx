@@ -1,5 +1,4 @@
-// button.jsx
-// Button component với nhiều variants và sizes
+// button.jsx - Cung cấp primitive nút bấm với nhiều kích thước và biến thể
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";

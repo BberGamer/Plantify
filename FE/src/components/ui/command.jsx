@@ -1,5 +1,4 @@
-// command.jsx
-// Command palette component dùng cmdk
+// command.jsx - Cung cấp primitive bảng lệnh có tìm kiếm và lựa chọn
 "use client";
 
 import { Command as CommandPrimitive } from "cmdk";

@@ -1,3 +1,4 @@
+// ProductReviewList.jsx - Hiển thị danh sách đánh giá và bình luận sản phẩm
 import { motion } from "motion/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProductRatingStars } from "./ProductRatingStars";

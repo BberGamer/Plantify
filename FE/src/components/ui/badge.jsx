@@ -1,3 +1,4 @@
+// badge.jsx - Cung cấp primitive nhãn trạng thái với nhiều biến thể
 import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
 import { cn } from "./utils";

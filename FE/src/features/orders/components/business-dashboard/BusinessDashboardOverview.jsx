@@ -1,3 +1,4 @@
+// BusinessDashboardOverview.jsx - Hiển thị số liệu kinh doanh và đơn hàng gần đây
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {

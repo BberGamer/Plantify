@@ -1,3 +1,4 @@
+// ui-preview.js - Cung cấp dữ liệu người dùng mẫu để xem trước giao diện
 const UI_PREVIEW_USER = {
   name: "Người dùng",
   role: "customer",

@@ -1,3 +1,4 @@
+// Shop.jsx - Hiển thị cửa hàng với tìm kiếm, bộ lọc và danh sách sản phẩm
 import { useState } from "react";
 import {
   useCategories,

@@ -1,3 +1,4 @@
+// useMarketplaceSearch.js - Quản lý trạng thái tìm kiếm và gợi ý sản phẩm
 import { useEffect, useState } from "react";
 
 export function useMarketplaceSearch(searchQuery, setPage) {

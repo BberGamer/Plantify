@@ -1,3 +1,4 @@
+// ThemeToggle.jsx - Cung cấp nút chuyển đổi giữa giao diện sáng và tối
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";

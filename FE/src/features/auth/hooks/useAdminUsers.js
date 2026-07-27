@@ -1,4 +1,4 @@
-// useAdminUsers.js - Hook lấy danh sách người dùng cho trang quản trị
+// useAdminUsers.js - Quản lý trạng thái danh sách và thao tác người dùng quản trị
 import { useCallback, useEffect, useState } from "react";
 import { createAdminUserApi, deleteUserApi, getUsersApi, updateUserStatusApi } from "../api";
 

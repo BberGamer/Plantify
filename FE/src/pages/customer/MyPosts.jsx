@@ -1,3 +1,4 @@
+// MyPosts.jsx - Hiển thị trang quản lý các bài viết của khách hàng
 import { useState } from "react";
 import { Navigate } from "react-router";
 import { toast } from "sonner";

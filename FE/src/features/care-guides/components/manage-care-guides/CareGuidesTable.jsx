@@ -1,3 +1,4 @@
+// CareGuidesTable.jsx - Hiển thị bảng hướng dẫn chăm sóc và các thao tác quản lý
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {

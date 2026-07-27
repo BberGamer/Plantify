@@ -1,3 +1,4 @@
+// PublicLayout.jsx - Bố trí header, nội dung, footer và nút AI cho khu vực công khai
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";

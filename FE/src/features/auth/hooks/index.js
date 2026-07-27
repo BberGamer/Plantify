@@ -1,4 +1,4 @@
-// index.js - Export tất cả hooks liên quan tới auth
+// index.js - Tập trung xuất các hook của domain xác thực
 export { useAuth } from "./useAuth";
 export { useAdminUsers } from "./useAdminUsers";
 export { useProfile } from "./useProfile";

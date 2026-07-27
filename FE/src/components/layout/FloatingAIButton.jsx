@@ -1,3 +1,4 @@
+// FloatingAIButton.jsx - Hiển thị nút nổi để bật cửa sổ trò chuyện AI
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Sparkles } from "lucide-react";
 import { motion } from "motion/react";

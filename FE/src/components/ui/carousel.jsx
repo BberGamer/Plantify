@@ -1,5 +1,4 @@
-// carousel.jsx
-// Carousel component dùng embla-carousel
+// carousel.jsx - Cung cấp primitive băng chuyền để duyệt nội dung theo trang
 "use client";
 
 import * as React from "react";

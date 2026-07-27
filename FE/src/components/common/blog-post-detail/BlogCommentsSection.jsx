@@ -1,3 +1,4 @@
+// BlogCommentsSection.jsx - Hiển thị danh sách và biểu mẫu bình luận trong chi tiết bài viết
 import { motion } from "motion/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";

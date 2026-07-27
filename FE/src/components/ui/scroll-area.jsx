@@ -1,3 +1,4 @@
+// scroll-area.jsx - Cung cấp primitive vùng cuộn có thanh cuộn tùy biến
 "use client";
 
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";

@@ -1,5 +1,4 @@
-// select.jsx
-// Select component dùng radix-ui
+// select.jsx - Cung cấp primitive danh sách lựa chọn một giá trị
 "use client";
 
 import * as SelectPrimitive from "@radix-ui/react-select";

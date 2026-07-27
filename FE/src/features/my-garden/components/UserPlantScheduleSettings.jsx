@@ -1,3 +1,4 @@
+// UserPlantScheduleSettings.jsx - Quản lý và hiển thị cấu hình lịch chăm sóc của một cây
 import { useEffect, useRef, useState } from "react";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { toast } from "sonner";

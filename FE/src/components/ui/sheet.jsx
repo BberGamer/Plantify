@@ -1,3 +1,4 @@
+// sheet.jsx - Cung cấp primitive bảng nội dung trượt từ cạnh màn hình
 "use client";
 
 import * as SheetPrimitive from "@radix-ui/react-dialog";

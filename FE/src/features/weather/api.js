@@ -1,4 +1,4 @@
-// api.js - Cac ham goi API lien quan toi thoi tiet.
+// api.js - Gọi API dữ liệu thời tiết theo vị trí
 import { api } from "@/lib/api";
 
 export const getWeatherByCity = async (city) => {

@@ -1,3 +1,4 @@
+// resizable.jsx - Cung cấp primitive vùng nội dung có thể thay đổi kích thước
 "use client";
 
 import { GripVerticalIcon } from "lucide-react";

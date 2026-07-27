@@ -1,3 +1,4 @@
+// AffectedPlantsBadges.jsx - Hiển thị các cây bị ảnh hưởng dưới dạng nhãn
 import { Badge } from "@/components/ui/badge";
 import { Sprout } from "lucide-react";
 import { getReferenceId } from "@/features/plant-diseases/plantDiseaseForm.utils";

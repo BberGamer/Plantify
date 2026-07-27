@@ -1,5 +1,4 @@
-// roles.js
-// Vai tro nguoi dung va ham so sanh quyen.
+// roles.js - Định nghĩa vai trò và các nhóm quyền sử dụng trong frontend
 export const USER_ROLES = [
   "guest",
   "customer",

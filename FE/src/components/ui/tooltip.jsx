@@ -1,5 +1,4 @@
-// tooltip.jsx
-// Tooltip component dùng radix-ui
+// tooltip.jsx - Cung cấp primitive chú thích xuất hiện khi tương tác
 "use client";
 
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";

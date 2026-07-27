@@ -1,4 +1,4 @@
-// usePostActions.js - Hooks tao / sua / xoa bai viet cua customer
+// usePostActions.js - Quản lý trạng thái tạo, sửa và xóa bài viết của khách hàng
 import { useState } from "react";
 import { createPost, deletePost, updatePost } from "../api";
 

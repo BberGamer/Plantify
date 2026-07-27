@@ -1,3 +1,4 @@
+// ProductFormDialog.jsx - Hiển thị nội dung hộp thoại tạo hoặc chỉnh sửa sản phẩm
 import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/common/ImageUploader";

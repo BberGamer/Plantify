@@ -1,4 +1,4 @@
-// ImageUploader.jsx - Component dùng chung để quản lý danh sách URL hình ảnh
+// ImageUploader.jsx - Hiển thị và quản lý danh sách URL hình ảnh dùng chung
 import { useState } from "react";
 import { Plus, X, ImageIcon } from "lucide-react";
 import { ImageCarousel } from "@/components/common/ImageCarousel";

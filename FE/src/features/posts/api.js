@@ -1,6 +1,4 @@
-/**
- * api.js - Cac ham goi API lien quan toi posts.
- */
+// api.js - Gọi API danh sách, chi tiết và thao tác bài viết
 import { api } from "@/lib/api";
 
 function withoutTags(value = {}) {

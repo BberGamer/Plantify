@@ -1,5 +1,4 @@
-// toggle-group.jsx
-// Toggle group component dùng radix-ui
+// toggle-group.jsx - Cung cấp primitive nhóm nút chuyển đổi trạng thái
 "use client";
 
 import * as React from "react";

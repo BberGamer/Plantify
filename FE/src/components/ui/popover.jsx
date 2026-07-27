@@ -1,3 +1,4 @@
+// popover.jsx - Cung cấp primitive lớp nội dung nổi gắn với phần tử kích hoạt
 "use client";
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";

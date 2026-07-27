@@ -1,3 +1,4 @@
+// ProductReviewForm.jsx - Cung cấp biểu mẫu gửi đánh giá và bình luận sản phẩm
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";

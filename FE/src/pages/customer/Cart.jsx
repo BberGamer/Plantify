@@ -1,3 +1,4 @@
+// Cart.jsx - Hiển thị trang giỏ hàng và điều phối thao tác mua hàng
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";

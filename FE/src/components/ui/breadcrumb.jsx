@@ -1,3 +1,4 @@
+// breadcrumb.jsx - Cung cấp primitive điều hướng phân cấp dạng breadcrumb
 import { Slot } from "@radix-ui/react-slot";
 import { ChevronRight, MoreHorizontal } from "lucide-react";
 import { cn } from "./utils";

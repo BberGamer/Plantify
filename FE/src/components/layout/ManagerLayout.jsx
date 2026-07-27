@@ -1,5 +1,4 @@
-// ManagerLayout.jsx
-// Layout quản lý Plantify: sidebar trái, drawer mobile và tùy chọn tài khoản ở cuối sidebar.
+// ManagerLayout.jsx - Bố trí thanh bên, nội dung và tài khoản cho khu vực quản lý
 
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router";

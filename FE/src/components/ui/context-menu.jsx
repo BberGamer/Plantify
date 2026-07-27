@@ -1,3 +1,4 @@
+// context-menu.jsx - Cung cấp primitive menu ngữ cảnh khi tương tác với nội dung
 "use client";
 
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";

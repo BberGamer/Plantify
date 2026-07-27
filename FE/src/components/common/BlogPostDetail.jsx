@@ -1,6 +1,4 @@
-/**
- * BlogPostDetail.jsx - Modal chi tiet bai viet, loading skeleton, error state va binh luan.
- */
+// BlogPostDetail.jsx - Hiển thị modal chi tiết bài viết cùng trạng thái tải, lỗi và bình luận
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { Card, CardContent } from "@/components/ui/card";

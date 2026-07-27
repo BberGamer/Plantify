@@ -1,3 +1,4 @@
+// AdminUsersTable.jsx - Hiển thị bảng người dùng và các thao tác quản trị
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

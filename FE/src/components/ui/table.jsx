@@ -1,5 +1,4 @@
-// table.jsx
-// Table components
+// table.jsx - Cung cấp primitive bảng dữ liệu có cấu trúc
 "use client";
 
 import { cn } from "./utils";

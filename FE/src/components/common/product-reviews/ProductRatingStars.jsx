@@ -1,3 +1,4 @@
+// ProductRatingStars.jsx - Hiển thị và cho phép chọn mức đánh giá sản phẩm bằng sao
 import { useState } from "react";
 import { Star } from "lucide-react";
 

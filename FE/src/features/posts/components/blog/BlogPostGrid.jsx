@@ -1,3 +1,4 @@
+// BlogPostGrid.jsx - Hiển thị các bài viết theo bố cục lưới
 import { ImageWithFallback } from "@/components/common/ImageWithFallback";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

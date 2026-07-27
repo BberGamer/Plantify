@@ -1,5 +1,4 @@
-// AdminDashboard.jsx
-// Trang tổng quan quản trị với thống kê, biểu đồ tăng trưởng và hoạt động gần đây
+// AdminDashboard.jsx - Hiển thị trang tổng quan quản trị hệ thống
 
 import { useMemo } from "react";
 import { useAdminUsers } from "@/features/auth/hooks";

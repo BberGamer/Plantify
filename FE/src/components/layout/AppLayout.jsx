@@ -1,3 +1,4 @@
+// AppLayout.jsx - Bố trí khung nội dung chung cho các route của ứng dụng
 import { Outlet } from "react-router";
 import {
   SidebarProvider,

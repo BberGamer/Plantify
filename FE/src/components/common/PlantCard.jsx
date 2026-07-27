@@ -1,3 +1,4 @@
+// PlantCard.jsx - Hiển thị thông tin tóm tắt của cây trong danh sách dùng chung
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Wind, Sun, Home, Heart } from "lucide-react";

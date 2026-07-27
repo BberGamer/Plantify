@@ -1,5 +1,4 @@
-// AdminLayout.jsx
-// Layout quản trị Plantify: sidebar trái, drawer mobile và tùy chọn tài khoản ở cuối sidebar.
+// AdminLayout.jsx - Bố trí thanh bên, nội dung và tài khoản cho khu vực quản trị hệ thống
 
 import { Link, Outlet, useLocation } from "react-router";
 import { LayoutDashboard, Leaf, LogOut, Menu, Users } from "lucide-react";

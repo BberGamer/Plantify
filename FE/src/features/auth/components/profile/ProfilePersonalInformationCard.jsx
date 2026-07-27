@@ -1,3 +1,4 @@
+// ProfilePersonalInformationCard.jsx - Hiển thị và chỉnh sửa thông tin cá nhân của người dùng
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

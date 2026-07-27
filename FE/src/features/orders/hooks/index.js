@@ -1,4 +1,4 @@
-// hooks/index.js - Lấy và đồng bộ danh sách đơn hàng của khách hàng
+// index.js - Tập trung xuất các hook của domain đơn hàng
 import { useState, useEffect, useCallback } from "react";
 import { customerUpdateOrder, getMyOrders } from "../api";
 import { useAuth } from "@/features/auth/hooks";

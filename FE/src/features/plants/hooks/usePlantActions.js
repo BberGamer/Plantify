@@ -1,4 +1,4 @@
-// usePlantActions.js - Hook xử lý edit/delete plant
+// usePlantActions.js - Quản lý trạng thái chỉnh sửa và xóa cây
 import { useState, useCallback } from "react";
 import { updatePlant, deletePlant } from "../api";
 

@@ -1,3 +1,4 @@
+// blogPage.support.jsx - Cung cấp dữ liệu và thành phần hỗ trợ hiển thị trang blog
 import { Star } from "lucide-react";
 
 const categories = [

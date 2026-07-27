@@ -1,3 +1,4 @@
+// Unauthorized.jsx - Hiển thị thông báo khi người dùng không có quyền truy cập
 import { Link } from "react-router";
 import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";

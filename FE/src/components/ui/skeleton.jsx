@@ -1,5 +1,4 @@
-// skeleton.jsx
-// Skeleton loading component
+// skeleton.jsx - Cung cấp primitive khung chờ khi nội dung đang tải
 import { cn } from "./utils";
 
 function Skeleton({ className, ...props }) {

@@ -1,5 +1,4 @@
-// textarea.jsx
-// Textarea component
+// textarea.jsx - Cung cấp primitive vùng nhập văn bản nhiều dòng
 import { cn } from "./utils";
 
 function Textarea({ className, ...props }) {

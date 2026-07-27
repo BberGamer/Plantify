@@ -1,3 +1,4 @@
+// CheckoutSuccessView.jsx - Hiển thị kết quả đặt hàng thành công và hướng dẫn tiếp theo
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check } from "lucide-react";

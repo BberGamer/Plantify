@@ -1,3 +1,4 @@
+// ManagerSidebars.jsx - Hiển thị thanh điều hướng desktop và mobile cho khu vực quản lý
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import {

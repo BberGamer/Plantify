@@ -1,4 +1,4 @@
-// Browse.jsx - Trang khám phá cây cảnh với real data từ Plants, pagination và search/tag
+// Browse.jsx - Hiển thị trang khám phá cây với tìm kiếm, bộ lọc và phân trang
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
 

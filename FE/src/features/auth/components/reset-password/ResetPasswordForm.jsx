@@ -1,3 +1,4 @@
+// ResetPasswordForm.jsx - Hiển thị biểu mẫu đặt lại mật khẩu sau khi xác thực OTP
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

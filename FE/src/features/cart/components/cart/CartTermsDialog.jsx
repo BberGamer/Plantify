@@ -1,3 +1,4 @@
+// CartTermsDialog.jsx - Hiển thị điều khoản mua hàng từ trang giỏ hàng
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

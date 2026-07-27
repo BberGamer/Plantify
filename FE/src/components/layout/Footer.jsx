@@ -1,3 +1,4 @@
+// Footer.jsx - Hiển thị chân trang công khai với thông tin và liên kết Plantify
 import { Leaf } from "lucide-react";
 
 function Footer() {

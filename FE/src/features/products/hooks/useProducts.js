@@ -1,4 +1,4 @@
-// useProducts.js - Custom hook để fetch danh sách sản phẩm
+// useProducts.js - Quản lý trạng thái tải danh sách sản phẩm
 import { useState, useEffect, useCallback } from "react";
 import { getProducts } from "../api";
 

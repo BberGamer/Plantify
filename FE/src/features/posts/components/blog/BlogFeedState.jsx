@@ -1,3 +1,4 @@
+// BlogFeedState.jsx - Hiển thị trạng thái tải, lỗi hoặc trống của bảng tin blog
 import { Button } from "@/components/ui/button";
 
 function BlogFeedState({ message, onRetry, status }) {

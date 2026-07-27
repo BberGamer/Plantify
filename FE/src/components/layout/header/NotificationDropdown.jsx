@@ -1,3 +1,4 @@
+// NotificationDropdown.jsx - Hiển thị danh sách thông báo và thao tác đọc trên header
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

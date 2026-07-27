@@ -1,5 +1,4 @@
-// navigation-menu.jsx
-// Navigation menu component dùng radix-ui
+// navigation-menu.jsx - Cung cấp primitive menu điều hướng nhiều cấp
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu";
 import { cva } from "class-variance-authority";
 import { ChevronDownIcon } from "lucide-react";

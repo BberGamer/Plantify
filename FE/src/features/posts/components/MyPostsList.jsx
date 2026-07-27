@@ -1,3 +1,4 @@
+// MyPostsList.jsx - Hiển thị danh sách và trạng thái bài viết của người dùng
 import { FileText, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

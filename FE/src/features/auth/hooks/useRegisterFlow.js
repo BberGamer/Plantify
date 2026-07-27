@@ -1,3 +1,4 @@
+// useRegisterFlow.js - Quản lý trạng thái biểu mẫu và tiến trình đăng ký tài khoản
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";

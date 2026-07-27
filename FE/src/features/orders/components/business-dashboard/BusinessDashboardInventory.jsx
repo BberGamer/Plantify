@@ -1,3 +1,4 @@
+// BusinessDashboardInventory.jsx - Hiển thị tồn kho và sản phẩm cần chú ý trên bảng tổng quan
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -1,3 +1,4 @@
+// drawer.jsx - Cung cấp primitive ngăn kéo trượt chứa nội dung bổ sung
 "use client";
 
 import { Drawer as DrawerPrimitive } from "vaul";

@@ -1,4 +1,4 @@
-// usePlantDiagnosis.js - Hook để chẩn đoán bệnh cây
+// usePlantDiagnosis.js - Quản lý trạng thái ảnh và tiến trình chẩn đoán bệnh cây
 import { useState } from 'react';
 import { diagnosePlantDisease } from '../api';
 

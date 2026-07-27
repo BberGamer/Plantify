@@ -1,3 +1,4 @@
+// CareGuideFields.jsx - Hiển thị trường chọn và thêm hướng dẫn chăm sóc khi sửa cây
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

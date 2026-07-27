@@ -1,5 +1,4 @@
-// input.jsx
-// Input component cơ bản
+// input.jsx - Cung cấp primitive trường nhập liệu văn bản
 import { cn } from "./utils";
 
 function Input({ className, type, ...props }) {

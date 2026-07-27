@@ -1,4 +1,4 @@
-// roleMapping.js - Mapping giữa role và dashboard/allowed roles
+// roleMapping.js - Ánh xạ vai trò với trang tổng quan và quyền truy cập
 
 export const ROLE_DASHBOARD = {
   customer: "/",

@@ -1,5 +1,4 @@
-// tabs.jsx
-// Tabs component dùng radix-ui
+// tabs.jsx - Cung cấp primitive chuyển đổi nội dung theo tab
 "use client";
 
 import * as TabsPrimitive from "@radix-ui/react-tabs";

@@ -1,7 +1,4 @@
-/**
- * ProductReviews.jsx - Section danh gia va binh luan san pham.
- * UI tuong tu BlogPostDetail, dung useProductComments hook.
- */
+// ProductReviews.jsx - Hiển thị khu vực đánh giá và bình luận của sản phẩm
 import { useState } from "react";
 import { useAuth } from "@/features/auth/hooks";
 import { useProductComments } from "@/features/comments/hooks";

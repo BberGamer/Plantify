@@ -1,3 +1,4 @@
+// ManageOrderStats.jsx - Hiển thị các số liệu tổng quan về đơn hàng
 import { Clock3, PackageCheck, ShoppingBag } from "lucide-react";
 
 import { DashboardCard } from "@/components/common/DashboardCard";

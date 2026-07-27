@@ -1,3 +1,4 @@
+// CartContent.jsx - Hiển thị danh sách sản phẩm, tổng tiền và thao tác trong giỏ hàng
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

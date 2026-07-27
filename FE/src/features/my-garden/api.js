@@ -1,4 +1,4 @@
-// api.js - Gọi các API CRUD My Garden của user đang đăng nhập
+// api.js - Gọi API quản lý cây và sự kiện chăm sóc trong My Garden
 import { api } from "@/lib/api";
 
 const MY_GARDEN_API = "/my-garden";

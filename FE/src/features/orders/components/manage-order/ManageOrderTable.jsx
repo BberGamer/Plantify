@@ -1,3 +1,4 @@
+// ManageOrderTable.jsx - Hiển thị bảng đơn hàng và các thao tác quản lý
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";

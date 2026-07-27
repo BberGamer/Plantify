@@ -1,3 +1,4 @@
+// checkbox.jsx - Cung cấp primitive ô chọn cho trạng thái bật hoặc tắt
 "use client";
 
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";

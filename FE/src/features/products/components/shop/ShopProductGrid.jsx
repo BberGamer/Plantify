@@ -1,3 +1,4 @@
+// ShopProductGrid.jsx - Hiển thị danh sách sản phẩm và trạng thái của cửa hàng
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

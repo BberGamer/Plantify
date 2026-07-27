@@ -1,3 +1,4 @@
+// avatar.jsx - Cung cấp primitive hiển thị ảnh đại diện và nội dung thay thế
 "use client";
 
 import * as AvatarPrimitive from "@radix-ui/react-avatar";

@@ -1,3 +1,4 @@
+// MyPostCard.jsx - Hiển thị thông tin tóm tắt và thao tác cho bài viết của người dùng
 import { Calendar, Edit3, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

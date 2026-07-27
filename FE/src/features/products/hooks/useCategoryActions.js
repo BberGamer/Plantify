@@ -1,4 +1,4 @@
-// useCategoryActions.js - Hook tạo / sửa / xóa danh mục sản phẩm
+// useCategoryActions.js - Quản lý trạng thái tạo, sửa và xóa danh mục sản phẩm
 import { useState, useCallback } from "react";
 import { createCategory, deleteCategory, updateCategory } from "../api";
 

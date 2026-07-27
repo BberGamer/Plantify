@@ -1,3 +1,4 @@
+// manageOrder.utils.js - Cung cấp hằng số và tiện ích hiển thị đơn hàng quản lý
 const ORDER_PAGE_SIZE = 8;
 
 const STATUS_LABELS = {

@@ -1,4 +1,4 @@
-// api.js - Các hàm gọi API liên quan tới favorites (cây yêu thích)
+// api.js - Gọi API danh sách và thao tác cây yêu thích
 import { api } from "@/lib/api";
 
 /**

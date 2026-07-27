@@ -1,3 +1,4 @@
+// ForgotPasswordFlowCard.jsx - Hiển thị các bước yêu cầu và xác thực OTP quên mật khẩu
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

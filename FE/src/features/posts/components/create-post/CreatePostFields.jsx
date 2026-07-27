@@ -1,3 +1,4 @@
+// CreatePostFields.jsx - Hiển thị các trường nội dung và hình ảnh của biểu mẫu bài viết
 import { Loader2, Save, Upload, X } from "lucide-react";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { Button } from "@/components/ui/button";

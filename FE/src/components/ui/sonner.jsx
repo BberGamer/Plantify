@@ -1,5 +1,4 @@
-// sonner.jsx
-// Sonner toast component
+// sonner.jsx - Cung cấp primitive hiển thị thông báo nổi bằng Sonner
 "use client";
 
 import { useTheme } from "next-themes";

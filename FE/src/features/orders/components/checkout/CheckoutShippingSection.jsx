@@ -1,3 +1,4 @@
+// CheckoutShippingSection.jsx - Hiển thị và nhập thông tin địa chỉ giao hàng
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";

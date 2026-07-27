@@ -1,3 +1,4 @@
+// accordion.jsx - Cung cấp primitive giao diện nội dung thu gọn dạng accordion
 "use client";
 
 import * as AccordionPrimitive from "@radix-ui/react-accordion";

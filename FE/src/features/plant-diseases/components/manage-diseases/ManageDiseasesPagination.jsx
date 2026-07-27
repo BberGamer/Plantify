@@ -1,3 +1,4 @@
+// ManageDiseasesPagination.jsx - Hiển thị điều hướng phân trang danh sách bệnh cây
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 

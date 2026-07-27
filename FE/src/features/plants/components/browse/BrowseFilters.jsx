@@ -1,3 +1,4 @@
+// BrowseFilters.jsx - Hiển thị bộ lọc tìm kiếm cây trên trang khám phá
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

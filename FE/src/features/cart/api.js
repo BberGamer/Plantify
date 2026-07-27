@@ -1,3 +1,4 @@
+// api.js - Gọi API giỏ hàng, mã giảm giá và phí vận chuyển
 import { api } from "@/lib/api";
 
 export async function getCart() {

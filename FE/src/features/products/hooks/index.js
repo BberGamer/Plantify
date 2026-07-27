@@ -1,4 +1,4 @@
-// hooks/index.js - Export tất cả hooks của products
+// index.js - Tập trung xuất các hook của domain sản phẩm
 export { useCreateCategory, useDeleteCategory, useUpdateCategory } from "./useCategoryActions";
 export { useCategories } from "./useCategories";
 export { useProduct } from "./useProduct";

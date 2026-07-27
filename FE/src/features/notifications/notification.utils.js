@@ -1,3 +1,4 @@
+// notification.utils.js - Cung cấp tiện ích phân loại và điều hướng từ thông báo
 const PLANT_CARE_TYPES = new Set([
   "plant_watering_due",
   "plant_fertilizing_due",

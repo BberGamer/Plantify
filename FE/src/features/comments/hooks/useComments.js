@@ -1,6 +1,4 @@
-/**
- * useComments.js - Custom hook fetch va tao binh luan bai viet va san pham.
- */
+// useComments.js - Quản lý danh sách và thao tác tạo bình luận bài viết, sản phẩm
 import { useEffect, useState } from "react";
 import { createComment, getCommentsByPostId, createProductComment, getCommentsByProductId } from "../api";
 

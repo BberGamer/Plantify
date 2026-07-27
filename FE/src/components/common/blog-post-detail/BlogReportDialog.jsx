@@ -1,3 +1,4 @@
+// BlogReportDialog.jsx - Cung cấp hộp thoại gửi báo cáo cho một bài viết
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

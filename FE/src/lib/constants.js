@@ -1,5 +1,4 @@
-// constants.js
-// Route paths va cau hinh dieu huong theo vai tro.
+// constants.js - Cung cấp các hằng số dùng chung trong frontend
 import {
   BarChart3,
   BookOpen,

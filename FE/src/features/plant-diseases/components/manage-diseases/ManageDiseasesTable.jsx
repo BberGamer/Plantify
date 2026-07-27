@@ -1,3 +1,4 @@
+// ManageDiseasesTable.jsx - Hiển thị bảng bệnh cây và các thao tác quản lý
 import {
   Loader2,
   Pencil,

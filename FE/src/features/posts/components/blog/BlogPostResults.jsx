@@ -1,3 +1,4 @@
+// BlogPostResults.jsx - Hiển thị kết quả bài viết và điều hướng phân trang
 import { Button } from "@/components/ui/button";
 import { BlogPostGrid } from "@/features/posts/components/blog/BlogPostGrid";
 

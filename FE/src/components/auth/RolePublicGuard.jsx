@@ -1,4 +1,4 @@
-// RolePublicGuard.jsx - Chặn Manager/Admin truy cập khu vực Public & Customer.
+// RolePublicGuard.jsx - Chặn tài khoản quản lý và quản trị truy cập khu vực công khai
 // Khu vực này chỉ dành cho khách (chưa đăng nhập) và customer.
 // Manager/Admin đã đăng nhập sẽ bị chuyển về dashboard của role đó.
 import { Navigate } from "react-router";

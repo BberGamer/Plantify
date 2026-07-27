@@ -1,3 +1,4 @@
+// HeaderUserMenu.jsx - Hiển thị menu tài khoản và các hành động của người dùng trên header
 import { Link } from "react-router";
 import {
   LogOut,

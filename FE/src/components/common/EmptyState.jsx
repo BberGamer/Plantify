@@ -1,3 +1,4 @@
+// EmptyState.jsx - Hiển thị trạng thái trống dùng chung kèm nội dung và hành động
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 

@@ -1,6 +1,4 @@
-/**
- * HeroSection.jsx - Hero section với search form và weather widget
- */
+// HeroSection.jsx - Hiển thị khu vực mở đầu, tìm kiếm cây và tiện ích thời tiết
 import { motion } from "motion/react";
 import { Search, Leaf, X } from "lucide-react";
 import { useState } from "react";

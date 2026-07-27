@@ -1,7 +1,4 @@
-﻿/**
- * Home.jsx - Trang chủ Plantify
- * Hien thi hero, cac section gioi thieu va modal chi tiet blog inline.
- */
+﻿// Home.jsx - Hiển thị trang chủ với các khu vực giới thiệu chính của Plantify
 import "@/styles/Home.css";
 
 import { HeroSection } from "@/features/home/components/HeroSection";

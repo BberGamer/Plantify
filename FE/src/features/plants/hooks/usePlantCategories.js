@@ -1,4 +1,4 @@
-// usePlantCategories.js - Hook lấy danh sách danh mục cây
+// usePlantCategories.js - Quản lý trạng thái tải danh sách danh mục cây
 import { useState, useEffect, useCallback } from "react";
 import { getPlantCategories, getPlants } from "../api";
 

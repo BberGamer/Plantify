@@ -1,3 +1,4 @@
+// ProfileFavoritesTab.jsx - Hiển thị danh sách cây yêu thích trong hồ sơ người dùng
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

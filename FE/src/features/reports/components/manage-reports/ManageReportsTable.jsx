@@ -1,3 +1,4 @@
+// ManageReportsTable.jsx - Hiển thị bảng báo cáo và các thao tác xử lý
 import { CheckCircle2, Loader2, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

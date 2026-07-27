@@ -1,5 +1,4 @@
-// switch.jsx
-// Switch component dùng radix-ui
+// switch.jsx - Cung cấp primitive công tắc bật hoặc tắt
 "use client";
 
 import * as SwitchPrimitive from "@radix-ui/react-switch";

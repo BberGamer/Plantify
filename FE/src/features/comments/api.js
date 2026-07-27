@@ -1,6 +1,4 @@
-/**
- * api.js - Cac ham goi API lien quan toi comments.
- */
+// api.js - Gọi API bình luận cho bài viết và sản phẩm
 import { api } from "@/lib/api";
 
 /**

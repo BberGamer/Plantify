@@ -1,3 +1,4 @@
+/* theme.css - Định nghĩa biến màu, chủ đề và token giao diện toàn cục */
 @custom-variant dark (&:is(.dark *));
 
 :root {

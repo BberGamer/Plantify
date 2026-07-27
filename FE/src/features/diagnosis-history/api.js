@@ -1,4 +1,4 @@
-// api.js - Gọi API danh sách và chi tiết lịch sử chẩn đoán của user hiện tại
+// api.js - Gọi API danh sách và chi tiết lịch sử chẩn đoán của người dùng
 import { api } from "@/lib/api";
 
 const DIAGNOSIS_HISTORY_API = "/diagnosis-histories";

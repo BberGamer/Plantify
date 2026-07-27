@@ -1,4 +1,4 @@
-// api.js - Các hàm gọi API liên quan tới plants
+// api.js - Gọi API danh sách, chi tiết và thao tác dữ liệu cây
 // Cung cấp CRUD: lấy danh sách, chi tiết, tạo, cập nhật, xóa cây
 import { api } from "@/lib/api";
 

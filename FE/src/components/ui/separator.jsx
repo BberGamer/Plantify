@@ -1,3 +1,4 @@
+// separator.jsx - Cung cấp primitive đường phân cách nội dung
 "use client";
 
 import * as SeparatorPrimitive from "@radix-ui/react-separator";

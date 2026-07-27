@@ -1,3 +1,4 @@
+// BlogPostDetailStates.jsx - Hiển thị các trạng thái tải và lỗi của chi tiết bài viết
 import { motion } from "motion/react";
 import { X } from "lucide-react";
 

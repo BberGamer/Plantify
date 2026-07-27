@@ -1,8 +1,4 @@
-// Profile.jsx
-// Trang hồ sơ người dùng: hiển thị thông tin thật từ DB, chức vụ, đổi mật khẩu theo cơ chế nút chỉnh sửa
-
-// Profile.jsx
-// Trang hồ sơ người dùng: hiển thị thông tin thật từ DB, chức vụ, đổi mật khẩu theo cơ chế nút chỉnh sửa
+// Profile.jsx - Hiển thị trang hồ sơ, đơn hàng và cây yêu thích của khách hàng
 
 import { useNavigate, useSearchParams } from "react-router";
 

@@ -1,5 +1,4 @@
-// api.js
-// Axios instance gọi API backend (base URL từ env)
+// api.js - Cấu hình HTTP client, token xác thực và xử lý lỗi API dùng chung
 import axios from "axios";
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? "/api";
 const api = axios.create({

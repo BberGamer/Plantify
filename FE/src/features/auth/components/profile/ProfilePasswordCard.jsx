@@ -1,3 +1,4 @@
+// ProfilePasswordCard.jsx - Hiển thị biểu mẫu đổi mật khẩu trong hồ sơ người dùng
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

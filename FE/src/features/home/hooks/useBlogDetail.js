@@ -1,7 +1,4 @@
-/**
- * useBlogDetail.js - Hook quản lý modal chi tiết blog trên Home
- * @returns {object} Blog detail state và handlers
- */
+// useBlogDetail.js - Quản lý trạng thái và vòng đời modal chi tiết bài viết trên trang chủ
 import { useState, useEffect, useCallback } from "react";
 import { usePostDetail } from "@/features/posts/hooks";
 

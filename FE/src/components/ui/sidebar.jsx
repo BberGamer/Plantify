@@ -1,3 +1,4 @@
+// sidebar.jsx - Cung cấp primitive thanh bên thích ứng cho bố cục ứng dụng
 "use client";
 
 import * as React from "react";

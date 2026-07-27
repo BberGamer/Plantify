@@ -1,5 +1,4 @@
-// chart.jsx
-// Chart components dùng recharts
+// chart.jsx - Cung cấp primitive biểu đồ cùng ngữ cảnh, tooltip và chú giải
 "use client";
 
 import * as React from "react";

@@ -1,3 +1,4 @@
+// ManageDiseasesHeader.jsx - Hiển thị tiêu đề và hành động tạo bệnh cây
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search } from "lucide-react";

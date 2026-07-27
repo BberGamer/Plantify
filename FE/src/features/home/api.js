@@ -1,7 +1,4 @@
-/**
- * api.js - API functions cho Home page
- * Chứa các hàm gọi API liên quan đến weather
- */
+// api.js - Gọi API thời tiết phục vụ nội dung trang chủ
 import { api } from "@/lib/api";
 
 /**

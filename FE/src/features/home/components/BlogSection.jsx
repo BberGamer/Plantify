@@ -1,6 +1,4 @@
-/**
- * BlogSection.jsx - Section hiển thị blog posts trên Home
- */
+// BlogSection.jsx - Hiển thị các bài viết nổi bật trên trang chủ
 import { Link } from "react-router";
 import { motion } from "motion/react";
 import { usePosts } from "@/features/posts/hooks";

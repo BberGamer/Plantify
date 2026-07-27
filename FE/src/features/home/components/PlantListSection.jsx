@@ -1,6 +1,4 @@
-/**
- * PlantListSection.jsx - Section hiển thị danh sách cây cảnh
- */
+// PlantListSection.jsx - Hiển thị danh sách cây cảnh nổi bật trên trang chủ
 import { Link } from "react-router";
 import { motion } from "motion/react";
 import { usePlants } from "@/features/plants/hooks";

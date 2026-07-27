@@ -1,3 +1,4 @@
+// ProductDetailContent.jsx - Hiển thị thông tin, đánh giá và thao tác mua sản phẩm
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

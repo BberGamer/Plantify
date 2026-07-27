@@ -1,3 +1,4 @@
+// DiseaseListContent.jsx - Hiển thị danh sách bệnh liên quan trong chi tiết cây
 import { Card } from "@/components/ui/card";
 import {
   Dialog,

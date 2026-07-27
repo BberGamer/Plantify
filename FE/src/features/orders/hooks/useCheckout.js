@@ -1,3 +1,4 @@
+// useCheckout.js - Quản lý trạng thái và vòng đời của quy trình thanh toán
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import confetti from "canvas-confetti";

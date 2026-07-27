@@ -1,4 +1,4 @@
-// ManageReports.jsx - Trang xu ly report cho Content Manager
+// ManageReports.jsx - Hiển thị trang xử lý báo cáo cho Content Manager
 import { useMemo, useState } from "react";
 import { CheckCircle2, Flag, Inbox, Loader2, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";

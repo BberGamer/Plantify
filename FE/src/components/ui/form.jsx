@@ -1,5 +1,4 @@
-// form.jsx
-// Form components dùng react-hook-form
+// form.jsx - Cung cấp primitive biểu mẫu tích hợp trạng thái và thông báo lỗi
 "use client";
 
 import * as React from "react";

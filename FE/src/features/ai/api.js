@@ -1,4 +1,4 @@
-// api.js - API calls cho AI features (chat, chẩn đoán bệnh cây)
+// api.js - Gọi API trò chuyện AI và chẩn đoán bệnh cây từ hình ảnh
 import { api } from '@/lib/api';
 import { buildDiagnosisFormData } from './diagnosisRequest.utils';
 

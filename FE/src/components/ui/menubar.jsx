@@ -1,5 +1,4 @@
-// menubar.jsx
-// Menubar component dùng radix-ui
+// menubar.jsx - Cung cấp primitive thanh menu với các nhóm lệnh
 "use client";
 
 import * as MenubarPrimitive from "@radix-ui/react-menubar";

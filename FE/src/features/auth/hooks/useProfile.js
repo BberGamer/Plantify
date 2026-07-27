@@ -1,5 +1,4 @@
-// useProfile.js - Hook quản lý logic cho trang Profile
-// Bao gồm: cập nhật thông tin cá nhân và đổi mật khẩu
+// useProfile.js - Quản lý trạng thái thông tin và thao tác trên trang hồ sơ
 
 import { useState, useEffect } from "react";
 import { useAuth } from "./useAuth";

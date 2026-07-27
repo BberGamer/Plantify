@@ -1,4 +1,4 @@
-// api.js - Cac ham goi API lien quan toi reports.
+// api.js - Gọi API tạo và quản lý báo cáo nội dung
 import { api } from "@/lib/api";
 
 export const reportPost = async (postId, reason) => {

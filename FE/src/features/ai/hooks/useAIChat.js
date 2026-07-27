@@ -1,4 +1,4 @@
-// useAIChat.js - Hook để gọi AI chat
+// useAIChat.js - Quản lý trạng thái câu hỏi, phản hồi và lỗi của trò chuyện AI
 import { useState } from 'react';
 import { askAI } from '../api';
 

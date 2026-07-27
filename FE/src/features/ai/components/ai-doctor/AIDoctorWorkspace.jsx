@@ -1,3 +1,4 @@
+// AIDoctorWorkspace.jsx - Hiển thị khu vực tải ảnh, lịch sử và kết quả chẩn đoán AI Doctor
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DiagnosisResultCard } from "@/features/ai";

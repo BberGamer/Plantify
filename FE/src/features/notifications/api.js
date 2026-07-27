@@ -1,3 +1,4 @@
+// api.js - Gọi API danh sách, trạng thái đọc và luồng thông báo thời gian thực
 import { api } from "@/lib/api";
 
 export const openNotificationEventStream = ({ token, signal }) => {

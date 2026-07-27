@@ -1,3 +1,4 @@
+// CareGuideDialog.jsx - Hiển thị hộp thoại tạo hoặc chỉnh sửa hướng dẫn chăm sóc
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -1,3 +1,4 @@
+// useCustomerProfile.js - Quản lý thao tác tải và cập nhật hồ sơ khách hàng
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useMyFavorites } from "@/features/favorites/hooks";

@@ -1,3 +1,4 @@
+// MyGardenWeatherAdvice.jsx - Hiển thị lời khuyên chăm sóc cây dựa trên thời tiết
 import { useEffect, useState } from "react";
 import {
   AlertTriangle,

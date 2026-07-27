@@ -1,5 +1,4 @@
-// label.jsx
-// Label component dùng radix-ui
+// label.jsx - Cung cấp primitive nhãn mô tả cho trường biểu mẫu
 "use client";
 
 import * as LabelPrimitive from "@radix-ui/react-label";

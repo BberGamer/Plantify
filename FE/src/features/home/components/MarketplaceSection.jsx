@@ -1,6 +1,4 @@
-/**
- * MarketplaceSection.jsx - Section giới thiệu Marketplace
- */
+// MarketplaceSection.jsx - Giới thiệu khu vực mua sắm sản phẩm trên trang chủ
 import { Link } from "react-router";
 import { Store, ShoppingCart, Package } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

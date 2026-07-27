@@ -1,5 +1,4 @@
-// toggle.jsx
-// Toggle component dùng radix-ui
+// toggle.jsx - Cung cấp primitive nút chuyển đổi trạng thái
 "use client";
 
 import * as TogglePrimitive from "@radix-ui/react-toggle";

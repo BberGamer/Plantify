@@ -1,3 +1,4 @@
+// ScheduleFieldsView.jsx - Hiển thị các trường cấu hình lịch chăm sóc cây
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

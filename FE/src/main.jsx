@@ -1,5 +1,4 @@
-// main.jsx
-// Entry: mount React, router và providers toàn app
+// main.jsx - Khởi tạo và gắn ứng dụng React vào tài liệu HTML
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router";
 import { router } from "@/app/router";

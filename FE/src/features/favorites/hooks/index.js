@@ -1,4 +1,4 @@
-// hooks/index.js - Custom hooks cho chức năng cây yêu thích
+// index.js - Tập trung xuất các hook của domain cây yêu thích
 import { useState, useEffect, useCallback } from "react";
 import { getMyFavorites, addFavorite, removeFavorite, checkFavorite } from "../api";
 import { useAuth } from "@/features/auth/hooks";

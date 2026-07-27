@@ -1,3 +1,4 @@
+// dialog.jsx - Cung cấp primitive hộp thoại phủ trên nội dung hiện tại
 "use client";
 
 import * as React from "react";

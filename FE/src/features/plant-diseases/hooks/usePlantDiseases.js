@@ -1,4 +1,4 @@
-// usePlantDiseases.js - React hooks cho Plant Diseases
+// usePlantDiseases.js - Quản lý danh sách và thao tác dữ liệu bệnh cây
 import { useState, useEffect, useCallback } from "react";
 import {
   getPlantDiseases,

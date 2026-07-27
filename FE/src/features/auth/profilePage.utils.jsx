@@ -1,3 +1,4 @@
+// profilePage.utils.jsx - Cung cấp dữ liệu và tiện ích hiển thị cho trang hồ sơ
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Crown, Leaf, PenLine } from "lucide-react";
 

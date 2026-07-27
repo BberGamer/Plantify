@@ -1,6 +1,4 @@
-/**
- * usePosts.js - Custom hooks fetch danh sach va chi tiet posts.
- */
+// usePosts.js - Quản lý trạng thái danh sách và chi tiết bài viết
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getMyPosts, getPostById, getPosts } from "../api";
 

@@ -1,4 +1,4 @@
-// useCategories.js - Custom hook để fetch danh sách danh mục sản phẩm
+// useCategories.js - Quản lý trạng thái tải danh sách danh mục sản phẩm
 import { useState, useEffect, useCallback } from "react";
 import { getCategories } from "../api";
 

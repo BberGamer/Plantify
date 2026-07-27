@@ -1,6 +1,4 @@
-/**
- * WeatherWidget.jsx - Widget hiển thị thông tin thời tiết
- */
+// WeatherWidget.jsx - Hiển thị và tra cứu thông tin thời tiết theo thành phố
 import { CloudSun, Droplets, Wind, Gauge } from "lucide-react";
 import { useWeather } from "../hooks";
 import { Card, CardContent } from "@/components/ui/card";

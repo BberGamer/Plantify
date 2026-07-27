@@ -1,3 +1,4 @@
+// use-mobile.js - Quản lý trạng thái nhận biết màn hình thiết bị di động
 import * as React from "react";
 const MOBILE_BREAKPOINT = 768;
 function useIsMobile() {

@@ -1,3 +1,4 @@
+// ImageCarousel.jsx - Hiển thị và điều hướng danh sách hình ảnh theo dạng băng chuyền
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";

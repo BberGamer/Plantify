@@ -1,7 +1,4 @@
-/**
- * useWeather.js - Hook quản lý state thời tiết
- * @returns {object} Weather state và các hàm xử lý
- */
+// useWeather.js - Quản lý trạng thái và vòng đời tải dữ liệu thời tiết
 import { useState, useEffect, useCallback } from "react";
 import { getWeatherByCity } from "../api";
 

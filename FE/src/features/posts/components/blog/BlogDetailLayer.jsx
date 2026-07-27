@@ -1,3 +1,4 @@
+// BlogDetailLayer.jsx - Hiển thị lớp chi tiết bài viết và trạng thái liên quan
 import BlogPostDetail, {
   BlogPostDetailError,
   BlogPostDetailSkeleton,

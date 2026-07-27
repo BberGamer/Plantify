@@ -1,3 +1,4 @@
+// ProductDetail.jsx - Hiển thị chi tiết, đánh giá và thao tác mua một sản phẩm
 import { useState, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";

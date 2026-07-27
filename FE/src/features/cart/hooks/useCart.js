@@ -1,3 +1,4 @@
+// useCart.js - Quản lý trạng thái tải và đồng bộ dữ liệu giỏ hàng
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";

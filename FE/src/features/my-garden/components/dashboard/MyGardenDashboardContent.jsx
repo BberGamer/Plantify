@@ -1,3 +1,4 @@
+// MyGardenDashboardContent.jsx - Hiển thị nội dung tổng quan, thống kê và cảnh báo của My Garden
 import { Droplets, FlaskConical, Plus, Sprout, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

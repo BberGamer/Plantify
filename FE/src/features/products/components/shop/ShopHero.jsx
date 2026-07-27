@@ -1,3 +1,4 @@
+// ShopHero.jsx - Hiển thị khu vực giới thiệu và tìm kiếm của cửa hàng
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

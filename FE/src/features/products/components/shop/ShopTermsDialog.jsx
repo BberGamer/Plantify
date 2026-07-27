@@ -1,3 +1,4 @@
+// ShopTermsDialog.jsx - Hiển thị điều khoản mua sắm tại cửa hàng
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

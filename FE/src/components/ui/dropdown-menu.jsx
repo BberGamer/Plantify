@@ -1,5 +1,4 @@
-// dropdown-menu.jsx
-// Dropdown menu component dùng radix-ui
+// dropdown-menu.jsx - Cung cấp primitive menu thả xuống cho danh sách hành động
 "use client";
 
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";

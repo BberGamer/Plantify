@@ -1,3 +1,4 @@
+// ShopFilters.jsx - Hiển thị bộ lọc danh mục và khoảng giá của cửa hàng
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";

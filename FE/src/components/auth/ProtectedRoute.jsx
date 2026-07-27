@@ -1,4 +1,4 @@
-// ProtectedRoute.jsx - Component bảo vệ route yêu cầu đăng nhập và quyền
+// ProtectedRoute.jsx - Bảo vệ route yêu cầu đăng nhập và quyền truy cập phù hợp
 import { Navigate } from "react-router";
 import { useAuth } from "@/features/auth/hooks";
 import { isRoleAllowed } from "@/lib/roleMapping";

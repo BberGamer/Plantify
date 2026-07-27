@@ -1,3 +1,4 @@
+// MyGardenDashboard.jsx - Quản lý trạng thái hiển thị bảng tổng quan My Garden
 import { useEffect, useState } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";

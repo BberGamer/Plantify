@@ -1,3 +1,4 @@
+// CareGuideListContent.jsx - Hiển thị danh sách hướng dẫn chăm sóc trong chi tiết cây
 import { Card } from "@/components/ui/card";
 import { Loader2, Droplets, Leaf, Scissors, Sprout, RefreshCw } from "lucide-react";
 

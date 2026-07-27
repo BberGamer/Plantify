@@ -1,3 +1,4 @@
+// AppSidebar.jsx - Hiển thị thanh điều hướng bên theo vai trò người dùng
 import { Link, useLocation } from "react-router";
 import { cn } from "@/lib/utils";
 import {

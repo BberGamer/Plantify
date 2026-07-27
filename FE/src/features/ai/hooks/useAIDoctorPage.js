@@ -1,3 +1,4 @@
+// useAIDoctorPage.js - Quản lý trạng thái trang, lịch sử, trò chuyện và thao tác AI Doctor
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";

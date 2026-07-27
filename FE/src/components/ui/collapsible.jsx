@@ -1,3 +1,4 @@
+// collapsible.jsx - Cung cấp primitive nội dung có thể mở rộng hoặc thu gọn
 "use client";
 
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";

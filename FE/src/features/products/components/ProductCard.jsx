@@ -1,5 +1,4 @@
-// ProductCard.jsx
-// Card hiển thị tóm tắt sản phẩm cho Business Manager, click để mở trang chi tiết.
+// ProductCard.jsx - Hiển thị thông tin tóm tắt sản phẩm cho quản lý kinh doanh
 import { useNavigate } from "react-router";
 import { Card, CardContent } from "@/components/ui/card";
 

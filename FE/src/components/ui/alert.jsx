@@ -1,3 +1,4 @@
+// alert.jsx - Cung cấp primitive hiển thị thông báo theo nhiều trạng thái
 import { cva } from "class-variance-authority";
 import { cn } from "./utils";
 

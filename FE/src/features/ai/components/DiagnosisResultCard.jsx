@@ -1,4 +1,4 @@
-// DiagnosisResultCard.jsx - UI dùng chung cho kết quả AI mới và DiagnosisHistory
+// DiagnosisResultCard.jsx - Hiển thị thẻ kết quả chẩn đoán mới hoặc từ lịch sử
 
 
 

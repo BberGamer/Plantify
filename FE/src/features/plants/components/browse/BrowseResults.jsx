@@ -1,3 +1,4 @@
+// BrowseResults.jsx - Hiển thị danh sách kết quả và phân trang cây khám phá
 import { Link } from "react-router";
 import { PlantCard } from "@/components/common/PlantCard";
 import { Button } from "@/components/ui/button";

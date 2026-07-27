@@ -1,4 +1,4 @@
-// index.js - Export các hook của plants feature
+// index.js - Tập trung xuất các hook của domain cây
 export {
   usePlants,
   usePlant,

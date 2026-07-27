@@ -1,3 +1,4 @@
+// FloatingAIButton.jsx - Cung cấp nút nổi để mở nhanh chức năng AI Doctor
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Sparkles } from "lucide-react";
 import { motion } from "motion/react";

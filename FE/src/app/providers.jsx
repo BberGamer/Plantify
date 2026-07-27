@@ -1,3 +1,4 @@
+// providers.jsx - Cung cấp ngữ cảnh giao diện và chủ đề cho toàn bộ ứng dụng
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";

@@ -1,4 +1,4 @@
-// useProduct.js - Custom hook để fetch dữ liệu sản phẩm
+// useProduct.js - Quản lý trạng thái tải chi tiết một sản phẩm
 import { useState, useEffect } from "react";
 import { getProductById } from "../api";
 

@@ -1,4 +1,4 @@
-// api.js - Các hàm gọi API cho Care Guides
+// api.js - Gọi API danh sách và thao tác hướng dẫn chăm sóc
 import { api } from "@/lib/api";
 
 export const getCareGuides = async (params = {}) => {

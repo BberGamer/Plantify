@@ -1,4 +1,4 @@
-// useProductActions.js - Hook tạo / sửa / xóa sản phẩm
+// useProductActions.js - Quản lý trạng thái tạo, sửa và xóa sản phẩm
 import { useState } from "react";
 import { createProduct, updateProduct, deleteProduct } from "../api";
 

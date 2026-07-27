@@ -1,5 +1,4 @@
-// slider.jsx
-// Slider component dùng radix-ui
+// slider.jsx - Cung cấp primitive thanh trượt để chọn giá trị
 "use client";
 
 import * as React from "react";

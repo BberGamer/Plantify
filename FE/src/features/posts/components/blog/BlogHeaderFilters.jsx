@@ -1,3 +1,4 @@
+// BlogHeaderFilters.jsx - Hiển thị tiêu đề, tìm kiếm và bộ lọc bài viết
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

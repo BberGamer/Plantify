@@ -1,3 +1,4 @@
+// Header.jsx - Hiển thị thanh đầu trang và điều hướng chính của ứng dụng
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";

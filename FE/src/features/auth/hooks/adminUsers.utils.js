@@ -1,3 +1,4 @@
+// adminUsers.utils.js - Cung cấp tiện ích hiển thị vai trò và trạng thái người dùng quản trị
 const roleBadgeClassNames = {
   Admin: "border-green-200 bg-white text-green-700",
   "Business Manager": "border-green-200 bg-white text-green-700",

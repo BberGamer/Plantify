@@ -1,3 +1,4 @@
+// useRegisterVerificationFlow.js - Quản lý trạng thái và vòng đời xác thực OTP đăng ký
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";

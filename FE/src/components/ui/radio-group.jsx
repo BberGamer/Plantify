@@ -1,5 +1,4 @@
-// radio-group.jsx
-// Radio group component dùng radix-ui
+// radio-group.jsx - Cung cấp primitive nhóm lựa chọn một giá trị
 "use client";
 
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";

@@ -1,4 +1,4 @@
-// useAuth.js - Hook tiện ích để lấy dữ liệu từ AuthContext
+// useAuth.js - Truy cập trạng thái xác thực được cung cấp bởi AuthContext
 import { useContext } from "react";
 import { AuthContext } from "../AuthContext";
 

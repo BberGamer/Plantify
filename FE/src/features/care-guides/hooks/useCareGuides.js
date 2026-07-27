@@ -1,4 +1,4 @@
-// useCareGuides.js - React hooks cho Care Guides
+// useCareGuides.js - Quản lý danh sách và thao tác dữ liệu hướng dẫn chăm sóc
 import { useState, useEffect, useCallback } from "react";
 import {
   getCareGuides,

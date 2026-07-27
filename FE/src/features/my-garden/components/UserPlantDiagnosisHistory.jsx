@@ -1,3 +1,4 @@
+// UserPlantDiagnosisHistory.jsx - Hiển thị lịch sử chẩn đoán gắn với một cây trong My Garden
 import { useNavigate } from "react-router";
 import { Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";

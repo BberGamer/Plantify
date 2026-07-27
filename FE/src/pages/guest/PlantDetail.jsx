@@ -1,3 +1,4 @@
+// PlantDetail.jsx - Hiển thị thông tin, hướng dẫn chăm sóc và bệnh của một cây
 import { useEffect, useState } from "react";
 import { useParams, Link, useSearchParams } from "react-router";
 import {

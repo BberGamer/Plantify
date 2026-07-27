@@ -1,4 +1,4 @@
-// usePlants.js - Custom hooks cho plants CRUD
+// usePlants.js - Quản lý trạng thái danh sách và thao tác CRUD cây
 // Cung cấp: usePlants, usePlant, useCreatePlant, useUpdatePlant, useDeletePlant
 import { useEffect, useState } from "react";
 import { getPlants, getTags, getPlantById, createPlant, updatePlant, deletePlant } from "../api";

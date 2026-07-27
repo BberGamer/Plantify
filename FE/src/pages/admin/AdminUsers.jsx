@@ -1,5 +1,4 @@
-// AdminUsers.jsx
-// Giao diện quản lý người dùng cho khu vực quản trị
+// AdminUsers.jsx - Hiển thị trang quản lý tài khoản người dùng hệ thống
 
 import { useState } from "react";
 import { useAdminUsers } from "@/features/auth/hooks";

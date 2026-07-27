@@ -1,3 +1,4 @@
+// DashboardCard.jsx - Hiển thị thẻ thống kê dùng chung trên các trang tổng quan
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function DashboardCard({ title, value, description, icon: Icon, trend }) {

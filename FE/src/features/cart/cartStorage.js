@@ -1,3 +1,4 @@
+// cartStorage.js - Cung cấp khóa và tiện ích lưu giỏ hàng trong bộ nhớ trình duyệt
 export const CART_STORAGE_KEY = "cart";
 export const CART_UPDATED_EVENT = "cart-updated";
 

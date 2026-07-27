@@ -1,3 +1,4 @@
+// AdminUsersDeleteDialog.jsx - Hiển thị hộp thoại xác nhận xóa người dùng quản trị
 import {
   AlertDialog,
   AlertDialogAction,

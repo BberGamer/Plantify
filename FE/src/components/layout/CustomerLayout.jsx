@@ -1,4 +1,4 @@
-// CustomerLayout.jsx - Layout cho các trang của customer (đã đăng nhập)
+// CustomerLayout.jsx - Bố trí khung giao diện cho các trang khách hàng đã đăng nhập
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";

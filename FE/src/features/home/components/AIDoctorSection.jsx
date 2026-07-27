@@ -1,7 +1,4 @@
-/**
- * AIDoctorSection.jsx - Section Plant Doctor AI trên Homepage
- * Hiển thị danh sách bệnh có thể chuẩn đoán và example result
- */
+// AIDoctorSection.jsx - Giới thiệu khả năng chẩn đoán AI Doctor trên trang chủ
 import { Link } from "react-router";
 import { CircleCheck, Leaf, Sparkles, Droplets, Bug, CircleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";

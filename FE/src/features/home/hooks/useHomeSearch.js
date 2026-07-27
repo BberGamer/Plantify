@@ -1,7 +1,4 @@
-/**
- * useHomeSearch.js - Hook xử lý logic tìm kiếm trên Home
- * @returns {object} Search state và handlers
- */
+// useHomeSearch.js - Quản lý trạng thái tìm kiếm và gợi ý cây trên trang chủ
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { getPlants } from "@/features/plants/api";

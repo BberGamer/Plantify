@@ -1,3 +1,4 @@
+// input-otp.jsx - Cung cấp primitive nhập và hiển thị mã OTP theo từng ô
 "use client";
 
 import * as React from "react";

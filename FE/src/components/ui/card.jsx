@@ -1,3 +1,4 @@
+// card.jsx - Cung cấp primitive thẻ chứa nội dung có cấu trúc
 import { cn } from "./utils";
 
 function Card({ className, ...props }) {

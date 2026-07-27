@@ -1,4 +1,4 @@
-// api.js - Các hàm gọi API cho chức năng đặt hàng (Orders)
+// api.js - Gọi API đặt hàng, thanh toán và quản lý đơn hàng
 import { api } from '@/lib/api';
 
 export const openOrderEventStream = ({ token, signal }) => {

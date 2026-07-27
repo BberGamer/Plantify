@@ -1,3 +1,4 @@
+// ManageDiseaseDialogView.jsx - Hiển thị biểu mẫu tạo hoặc chỉnh sửa bệnh cây
 import {
   Dialog,
   DialogContent,

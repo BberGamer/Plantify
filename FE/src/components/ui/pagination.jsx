@@ -1,5 +1,4 @@
-// pagination.jsx
-// Pagination component
+// pagination.jsx - Cung cấp primitive điều hướng phân trang cho danh sách
 import {
   ChevronLeftIcon,
   ChevronRightIcon,

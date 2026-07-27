@@ -1,7 +1,4 @@
-/**
- * routes.jsx - Định nghĩa cấu trúc routing cho ứng dụng Plantify
- * 4 layout chính: Public (khách), Customer (khách hàng đã login), Manager, Admin, Auth
- */
+// routes.jsx - Định nghĩa cấu trúc route và layout theo vai trò trong ứng dụng
 
 // ============================================================
 // Layout Components
