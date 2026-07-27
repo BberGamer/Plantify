@@ -128,7 +128,7 @@ function populateDiseases(query) {
   return query
     .populate(
       'recommendedProducts',
-      'name thumbnail price stock isActive'
+      'name thumbnail images price stock isActive'
     )
     .lean();
 }

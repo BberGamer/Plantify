@@ -32,6 +32,8 @@ const image = {
 const product = {
   _id: productId,
   name: 'Thuốc trị nấm',
+  thumbnail: '',
+  images: ['https://cdn.example.com/products/fungicide.jpg'],
   stock: 4,
   isActive: true,
 };
@@ -87,7 +89,8 @@ describe('AI diagnosis orchestrator scoring', () => {
         suspectedCondition,
         observedSymptoms: ['Đốm nâu trên lá', 'Vùng vàng nâu trên lá'],
       }));
-      PlantDisease.find.mockReturnValue(query([leafSpot]));
+      const diseaseQuery = query([leafSpot]);
+      PlantDisease.find.mockReturnValue(diseaseQuery);
 
       const result = await orchestrator.orchestrateDiagnosis({ userId, file });
 
@@ -95,6 +98,10 @@ describe('AI diagnosis orchestrator scoring', () => {
         isActive: true,
         category: 'disease',
       });
+      expect(diseaseQuery.populate).toHaveBeenCalledWith(
+        'recommendedProducts',
+        'name thumbnail images price stock isActive'
+      );
       expect(result.diagnosis).toEqual(expect.objectContaining({
         diseaseId,
         diseaseKey: 'dom-la',
@@ -108,6 +115,7 @@ describe('AI diagnosis orchestrator scoring', () => {
         preventions: leafSpot.preventions,
       });
       expect(result.recommendedProducts).toEqual([product]);
+      expect(result.recommendedProducts[0].images).toEqual(product.images);
 
       const payload = historyService.createDiagnosisHistory.mock.calls[0][1];
       expect(payload.diagnosis.diseaseKey).toBe('dom-la');

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const DiagnosisHistory = require('./diagnosisHistory.model');
 
-const POPULATE_OPTIONS = [
+const LIST_POPULATE_OPTIONS = [
   {
     path: 'diagnosis.diseaseId',
     select: 'name diseaseKey category',
@@ -10,9 +10,20 @@ const POPULATE_OPTIONS = [
     path: 'catalogPlantId',
     select: 'name scientificName',
   },
+];
+
+const DETAIL_POPULATE_OPTIONS = [
+  {
+    path: 'diagnosis.diseaseId',
+    select: 'name diseaseKey category symptoms causes treatments preventions images',
+  },
+  {
+    path: 'catalogPlantId',
+    select: 'name scientificName',
+  },
   {
     path: 'recommendationSnapshot.productIds',
-    select: 'name thumbnail price stock isActive',
+    select: 'name thumbnail images price stock isActive',
   },
 ];
 
@@ -121,7 +132,7 @@ async function getMyDiagnosisHistories(userId, filters = {}) {
   const limit = parsePositiveInteger(filters.limit, 'limit', 10, 100);
   const total = await DiagnosisHistory.countDocuments(query);
   const histories = await DiagnosisHistory.find(query)
-    .populate(POPULATE_OPTIONS)
+    .populate(LIST_POPULATE_OPTIONS)
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
@@ -140,7 +151,7 @@ async function getMyDiagnosisHistoryById(userId, historyId) {
   ensureObjectId(historyId, 'DiagnosisHistory ID không hợp lệ');
 
   return DiagnosisHistory.findOne({ _id: historyId, userId })
-    .populate(POPULATE_OPTIONS)
+    .populate(DETAIL_POPULATE_OPTIONS)
     .lean();
 }
 

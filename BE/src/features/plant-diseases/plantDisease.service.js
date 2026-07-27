@@ -269,7 +269,7 @@ async function getAllPlantDiseases(filters = {}) {
     .populate('affectedPlantIds', 'name scientificName thumbnail')
     .populate(
       'recommendedProducts',
-      'name thumbnail price stock ratingAverage ratingCount isActive'
+      'name thumbnail images price stock ratingAverage ratingCount isActive'
     )
     .sort(sortOption)
     .skip((safePage - 1) * safeLimit)
@@ -285,7 +285,7 @@ async function getPlantDiseaseById(id) {
     .populate('affectedPlantIds', 'name scientificName thumbnail')
     .populate(
       'recommendedProducts',
-      'name thumbnail price stock ratingAverage ratingCount isActive'
+      'name thumbnail images price stock ratingAverage ratingCount isActive'
     )
     .lean();
 }

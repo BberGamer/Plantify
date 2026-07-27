@@ -7,6 +7,10 @@ import {
   markNotificationAsRead,
 } from "../api";
 
+const INITIAL_RECONNECT_DELAY_MS = 1000;
+const MAX_RECONNECT_DELAY_MS = 30000;
+const STABLE_CONNECTION_MS = 20000;
+
 export function useNotifications(enabled = true) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -62,14 +66,45 @@ export function useNotifications(enabled = true) {
       }
     }
 
-    const token = localStorage.getItem("token");
     const apiBaseUrl = import.meta.env.VITE_API_URL ?? "/api";
     const eventsUrl = `${apiBaseUrl.replace(/\/$/, "")}/notifications/events`;
-    let controller;
-    let reconnectTimer;
+    let controller = null;
+    let streamReader = null;
+    let reconnectTimer = null;
+    let reconnectAttempt = 0;
 
+    /**
+     * Hẹn kết nối lại theo exponential backoff để tránh tạo vòng lặp request dày.
+     */
+    function scheduleReconnect() {
+      if (cancelled || reconnectTimer || !localStorage.getItem("token")) {
+        return;
+      }
+
+      const delay = Math.min(
+        INITIAL_RECONNECT_DELAY_MS * (2 ** reconnectAttempt),
+        MAX_RECONNECT_DELAY_MS
+      );
+      reconnectAttempt += 1;
+      reconnectTimer = window.setTimeout(() => {
+        reconnectTimer = null;
+        connectRealtime();
+      }, delay);
+    }
+
+    /**
+     * Mở stream notification và chỉ retry khi kết nối bị lỗi ngoài ý muốn.
+     */
     async function connectRealtime() {
-      controller = new AbortController();
+      if (cancelled) return;
+
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const activeController = new AbortController();
+      controller = activeController;
+      let connectedAt = 0;
+      let shouldReconnect = true;
 
       try {
         const response = await fetch(eventsUrl, {
@@ -77,16 +112,24 @@ export function useNotifications(enabled = true) {
             Accept: "text/event-stream",
             Authorization: `Bearer ${token}`,
           },
-          signal: controller.signal,
+          signal: activeController.signal,
         });
+
+        if (response.status === 401 || response.status === 403) {
+          shouldReconnect = false;
+          window.dispatchEvent(new Event("auth-expired"));
+          return;
+        }
 
         if (!response.ok || !response.body) {
           throw new Error(`Không thể kết nối thông báo realtime (${response.status})`);
         }
 
         const reader = response.body.getReader();
+        streamReader = reader;
         const decoder = new TextDecoder();
         let buffer = "";
+        connectedAt = Date.now();
 
         while (!cancelled) {
           const { value, done } = await reader.read();
@@ -116,12 +159,30 @@ export function useNotifications(enabled = true) {
           }
         }
       } catch (streamError) {
-        if (streamError.name !== "AbortError") {
+        const isIntentionalAbort = cancelled
+          || activeController.signal.aborted
+          || streamError.name === "AbortError";
+
+        if (!isIntentionalAbort) {
           console.warn("[Notification realtime] Mất kết nối, đang thử lại...", streamError);
         }
+      } finally {
+        if (controller === activeController) {
+          controller = null;
+        }
+        streamReader = null;
       }
 
-      if (!cancelled) reconnectTimer = setTimeout(connectRealtime, 2000);
+      if (
+        connectedAt
+        && Date.now() - connectedAt >= STABLE_CONNECTION_MS
+      ) {
+        reconnectAttempt = 0;
+      }
+
+      if (shouldReconnect) {
+        scheduleReconnect();
+      }
     }
 
     fetchNotifications();
@@ -129,8 +190,13 @@ export function useNotifications(enabled = true) {
 
     return () => {
       cancelled = true;
-      clearTimeout(reconnectTimer);
+      window.clearTimeout(reconnectTimer);
+      reconnectTimer = null;
       controller?.abort();
+      streamReader?.cancel().catch(() => {
+        // Reader có thể đã đóng cùng AbortController; đây không phải lỗi kết nối thật.
+      });
+      streamReader = null;
     };
   }, [enabled, refreshKey]);
 

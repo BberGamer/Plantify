@@ -3,89 +3,80 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Progress } from '@/components/ui/progress';
-import { useAIChat, usePlantDiagnosis } from '@/features/ai';
+import {
+  DiagnosisResultCard,
+  useAIChat,
+  usePlantDiagnosis,
+} from '@/features/ai';
 import { useAuth } from '@/features/auth/hooks';
 import { addCartItem } from '@/features/cart/api';
 import { notifyCartUpdated } from '@/features/cart/cartStorage';
-import { useNavigate } from 'react-router';
+import {
+  DiagnosisHistoryList,
+  useDiagnosisHistory,
+} from '@/features/diagnosis-history';
+import { useNavigate, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
-import { Upload, Sparkles, Bug, Leaf, ArrowRight, Loader2, X, CheckCircle, AlertCircle, ShoppingCart } from 'lucide-react';
+import { Upload, Sparkles, Bug, ArrowRight, Loader2, X, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-
-const STATUS_CONTENT = {
-  matched: {
-    title: 'Đã đối chiếu với kho bệnh cây',
-    description: 'Thông tin điều trị và sản phẩm bên dưới được lấy từ cơ sở tri thức Plantify.',
-    className: 'border-green-200 bg-green-50 text-green-800',
-  },
-  unmatched: {
-    title: 'Chưa tìm thấy bệnh tương ứng',
-    description: 'AI nhận thấy dấu hiệu bất thường nhưng chưa khớp với kho bệnh cây. Không tự ý sử dụng thuốc đặc trị.',
-    className: 'border-amber-200 bg-amber-50 text-amber-800',
-  },
-  low_confidence: {
-    title: 'Độ tin cậy còn thấp',
-    description: 'Ảnh chưa cung cấp đủ dấu hiệu rõ ràng. Hãy chụp gần vùng bị ảnh hưởng trong điều kiện đủ sáng.',
-    className: 'border-amber-200 bg-amber-50 text-amber-800',
-  },
-  needs_review: {
-    title: 'Kết quả cần được xem xét thêm',
-    description: 'Có nhiều bệnh trong kho kiến thức có mức độ tương đồng gần nhau. Hệ thống chưa đưa ra điều trị hoặc sản phẩm đặc trị để tránh nhầm lẫn.',
-    className: 'border-orange-200 bg-orange-50 text-orange-800',
-  },
-  unknown: {
-    title: 'Chưa thể xác định tình trạng',
-    description: 'Cây có thể khỏe mạnh hoặc ảnh chưa đủ dữ liệu để kết luận. Hãy theo dõi thêm và thử ảnh khác nếu cần.',
-    className: 'border-blue-200 bg-blue-50 text-blue-800',
-  },
-};
-
-const DISPLAY_LABELS = {
-  low: 'Thấp',
-  medium: 'Trung bình',
-  high: 'Cao',
-  unknown: 'Không xác định',
-  leaf: 'Lá',
-  stem: 'Thân',
-  root: 'Rễ',
-  flower: 'Hoa',
-  whole_plant: 'Toàn cây',
-};
-
-function KnowledgeList({ title, items }) {
-  if (!items?.length) return null;
-  return (
-    <div>
-      <p className="mb-2 text-sm font-semibold">{title}</p>
-      <ul className="space-y-2">
-        {items.map((item, index) => (
-          <li key={`${title}-${index}`} className="flex items-start gap-2 text-sm text-muted-foreground">
-            <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 function AIDoctor() {
   const fileInputRef = useRef(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const canLoadHistory = !authLoading && isAuthenticated;
+  const historyId = searchParams.get('historyId') || '';
   const diagnosis = usePlantDiagnosis();
+  const diagnosisHistory = useDiagnosisHistory({
+    enabled: canLoadHistory,
+    historyId,
+    limit: 8,
+  });
   const chat = useAIChat();
+  const displayedResult = historyId
+    ? diagnosisHistory.selectedResult
+    : diagnosis.result;
+  const displayedImageUrl = historyId
+    ? diagnosisHistory.selectedHistory?.image?.url
+    : diagnosis.previewUrl;
 
-  const handleDiagnose = () => {
+  const updateHistoryId = (nextHistoryId) => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    if (nextHistoryId) {
+      nextSearchParams.set('historyId', nextHistoryId);
+    } else {
+      nextSearchParams.delete('historyId');
+    }
+    setSearchParams(nextSearchParams);
+  };
+
+  const handleDiagnose = async () => {
     if (!isAuthenticated) {
       toast.warning('Vui lòng đăng nhập để sử dụng tính năng chẩn đoán AI.');
       navigate('/login', { state: { from: '/ai-doctor' } });
       return;
     }
-    diagnosis.diagnose();
+
+    updateHistoryId('');
+    const result = await diagnosis.diagnose();
+    if (result?.diagnosisHistoryId) {
+      updateHistoryId(result.diagnosisHistoryId);
+      diagnosisHistory.refreshHistories();
+    }
+  };
+
+  const handleSelectHistory = (selectedHistoryId) => {
+    diagnosis.clear();
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    updateHistoryId(selectedHistoryId);
+  };
+
+  const handleNewDiagnosis = () => {
+    diagnosis.clear();
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    updateHistoryId('');
   };
 
   const handleAddToCart = async (product) => {
@@ -135,7 +126,7 @@ function AIDoctor() {
         <div className="grid md:grid-cols-2 gap-8 md:items-stretch">
           <div className="space-y-6 h-full">
             {/* Image Upload Section */}
-            <Card className="h-full border-2 border-dashed border-primary/30 hover:border-primary/50 transition-colors">
+            <Card className="border-2 border-dashed border-primary/30 hover:border-primary/50 transition-colors">
               <CardContent className="p-8">
                 <div className="text-center space-y-6">
                   {!diagnosis.previewUrl ? (
@@ -217,6 +208,17 @@ function AIDoctor() {
               </CardContent>
             </Card>
 
+            <DiagnosisHistoryList
+              enabled={isAuthenticated}
+              authLoading={authLoading}
+              histories={diagnosisHistory.histories}
+              selectedHistoryId={historyId}
+              loading={diagnosisHistory.listLoading}
+              error={diagnosisHistory.listError}
+              onSelect={handleSelectHistory}
+              onRetry={diagnosisHistory.refreshHistories}
+            />
+
             {/* Diagnosis Error */}
             {diagnosis.error && (
               <Card className="border-red-200 bg-red-50">
@@ -236,113 +238,53 @@ function AIDoctor() {
 
           {/* Right Column - Diagnosis Result */}
           <div className="space-y-6 h-full">
-            {/* Diagnosis Result */}
-            {diagnosis.result ? (
-              <Card className="h-full border-2 border-primary/50 bg-gradient-to-br from-primary/5 to-green-50/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    Kết quả chẩn đoán
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex h-full flex-col justify-center space-y-4">
-                  <div className="text-center py-4">
-                    <Leaf className="w-12 h-12 text-primary mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground mb-1">Bệnh</p>
-                    <h3 className="text-2xl font-bold text-primary">
-                      {diagnosis.result.diseaseInfo?.name
-                        || diagnosis.result.diagnosis.rawDiseaseName
-                        || 'Chưa xác định'}
-                    </h3>
-                    {diagnosis.result.diagnosis.description ? (
-                      <p className="mt-3 text-sm leading-6 text-muted-foreground max-w-md mx-auto">
-                        {diagnosis.result.diagnosis.description}
-                      </p>
-                    ) : null}
-                  </div>
-                  {STATUS_CONTENT[diagnosis.result.diagnosis.matchStatus] && (
-                    <div className={`rounded-lg border p-3 text-sm ${STATUS_CONTENT[diagnosis.result.diagnosis.matchStatus].className}`}>
-                      <p className="font-semibold">
-                        {STATUS_CONTENT[diagnosis.result.diagnosis.matchStatus].title}
-                      </p>
-                      <p className="mt-1 text-xs">
-                        {STATUS_CONTENT[diagnosis.result.diagnosis.matchStatus].description}
-                      </p>
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Độ chính xác</span>
-                      <span className="font-semibold">
-                        {(diagnosis.result.diagnosis.confidence * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                    <Progress
-                      value={diagnosis.result.diagnosis.confidence * 100}
-                      className="h-3"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 rounded-xl border bg-white/60 p-4 text-sm">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Mức độ</p>
-                      <p className="font-semibold">
-                        {DISPLAY_LABELS[diagnosis.result.diagnosis.severity] || 'Không xác định'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Bộ phận ảnh hưởng</p>
-                      <p className="font-semibold">
-                        {DISPLAY_LABELS[diagnosis.result.diagnosis.affectedPart] || 'Không xác định'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 rounded-xl border bg-white/60 p-4">
-                    <KnowledgeList title="Dấu hiệu quan sát từ ảnh" items={diagnosis.result.diagnosis.observedSymptoms} />
-                    <KnowledgeList title="Triệu chứng" items={diagnosis.result.diseaseInfo?.symptoms} />
-                    <KnowledgeList title="Nguyên nhân" items={diagnosis.result.diseaseInfo?.causes} />
-                    <KnowledgeList title="Cách xử lý" items={diagnosis.result.recommendations?.treatments} />
-                    <KnowledgeList title="Phòng ngừa" items={diagnosis.result.recommendations?.preventions} />
-                  </div>
-
-                  {diagnosis.result.recommendedProducts?.length > 0 && (
-                    <div className="space-y-3">
-                      <p className="font-semibold">Sản phẩm phù hợp</p>
-                      {diagnosis.result.recommendedProducts
-                        .filter((product) => product.isActive && product.stock > 0)
-                        .map((product) => (
-                          <div key={product._id} className="flex items-center gap-3 rounded-xl border bg-white p-3">
-                            <img
-                              src={product.thumbnail || 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=200'}
-                              alt={product.name}
-                              className="h-16 w-16 rounded-lg object-cover"
-                            />
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold">{product.name}</p>
-                              <p className="text-sm font-bold text-primary">
-                                {Number(product.price || 0).toLocaleString('vi-VN')}đ
-                              </p>
-                              <p className="text-xs text-muted-foreground">Còn {product.stock} sản phẩm</p>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleAddToCart(product)}
-                              aria-label={`Thêm ${product.name} vào giỏ hàng`}
-                            >
-                              <ShoppingCart className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-
-                  <p className="text-xs text-muted-foreground text-center">
-                    Phân tích hình ảnh bằng OpenRouter; khuyến nghị từ kho kiến thức Plantify.
+            {historyId && authLoading ? (
+              <Card className="h-full">
+                <CardContent className="flex h-full items-center justify-center gap-2 p-12 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Đang kiểm tra phiên đăng nhập...
+                </CardContent>
+              </Card>
+            ) : historyId && !isAuthenticated ? (
+              <Card className="h-full border-amber-200 bg-amber-50">
+                <CardContent className="flex h-full flex-col items-center justify-center gap-4 p-12 text-center">
+                  <AlertCircle className="h-10 w-10 text-amber-600" />
+                  <p className="text-sm text-amber-800">
+                    Vui lòng đăng nhập để xem lịch sử chẩn đoán này.
                   </p>
                 </CardContent>
               </Card>
+            ) : historyId && diagnosisHistory.detailLoading ? (
+              <Card className="h-full">
+                <CardContent className="flex h-full items-center justify-center gap-2 p-12 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Đang tải kết quả chẩn đoán...
+                </CardContent>
+              </Card>
+            ) : historyId && diagnosisHistory.detailError ? (
+              <Card className="h-full border-red-200 bg-red-50">
+                <CardContent className="flex h-full flex-col items-center justify-center gap-4 p-12 text-center">
+                  <AlertCircle className="h-10 w-10 text-red-500" />
+                  <p className="text-sm text-red-700">
+                    {diagnosisHistory.detailError}
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={diagnosisHistory.refreshSelectedHistory}
+                    >
+                      Thử lại
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : displayedResult ? (
+              <DiagnosisResultCard
+                result={displayedResult}
+                onAddToCart={handleAddToCart}
+                onNewDiagnosis={handleNewDiagnosis}
+              />
             ) : (
               <Card className="h-full border-2 border-dashed border-border">
                 <CardContent className="flex h-full flex-col items-center justify-center p-12 text-center">

@@ -8,6 +8,7 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const cron = require('node-cron');
+const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const Post = require('./features/posts/post.model');
 const authRoutes = require('./features/auth/auth.routes');
@@ -23,6 +24,7 @@ const favoriteRoutes = require('./features/favorites/favorite.routes');
 const weatherRoutes = require('./features/weather/weather.routes');
 const aiRoutes = require('./features/ai/ai.routes');
 const notificationRoutes = require('./features/notifications/notification.routes');
+const notificationService = require('./features/notifications/notification.service');
 const cartRoutes = require('./features/cart/cart.routes');
 const orderRoutes = require('./features/orders/order.routes');
 const walletRoutes = require('./features/wallet/wallet.routes');
@@ -31,7 +33,7 @@ const diagnosisHistoryRoutes = require('./features/diagnosis-history/diagnosisHi
 const app = express();
 const OLD_RESOLVED_POST_TTL_MS = 2 * 24 * 60 * 60 * 1000;
 
-cron.schedule(
+const resolvedPostCleanupTask = cron.schedule(
   '5 0 * * *',
   async () => {
     try {
@@ -87,6 +89,51 @@ app.use(errorHandler);
 
 // Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on ${PORT}`);
+});
+
+let shutdownStarted = false;
+
+/**
+ * Ngừng nhận request mới, đóng SSE/Change Stream và ngắt MongoDB an toàn.
+ */
+async function shutdownServer(signal) {
+  if (shutdownStarted) return;
+  shutdownStarted = true;
+  console.log(`[server] Đang shutdown theo tín hiệu ${signal}`);
+
+  resolvedPostCleanupTask.stop();
+  const forceShutdownTimer = setTimeout(() => {
+    console.error('[server] Shutdown quá thời gian cho phép');
+    process.exit(1);
+  }, 10000);
+  forceShutdownTimer.unref?.();
+
+  const serverClosed = new Promise((resolve) => {
+    server.close((error) => resolve(error));
+  });
+
+  try {
+    await notificationService.shutdownNotificationRealtime();
+    const closeError = await serverClosed;
+    if (closeError) throw closeError;
+
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
+    clearTimeout(forceShutdownTimer);
+    console.log('[server] Đã shutdown an toàn');
+  } catch (error) {
+    clearTimeout(forceShutdownTimer);
+    console.error('[server] Lỗi khi shutdown:', error);
+    process.exitCode = 1;
+  }
+}
+
+process.once('SIGTERM', () => {
+  void shutdownServer('SIGTERM');
+});
+process.once('SIGINT', () => {
+  void shutdownServer('SIGINT');
 });

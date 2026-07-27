@@ -45,6 +45,23 @@ describe('diagnosisHistoryController', () => {
     expect(apiResponse.notFound).toHaveBeenCalledWith(res, expect.any(String));
   });
 
+  test('returns detail using the authenticated user id', async () => {
+    const history = { _id: req.params.id, userId: req.user.id };
+    service.getMyDiagnosisHistoryById.mockResolvedValue(history);
+
+    await controller.getMyDiagnosisHistoryById(req, res, next);
+
+    expect(service.getMyDiagnosisHistoryById).toHaveBeenCalledWith(
+      req.user.id,
+      req.params.id
+    );
+    expect(apiResponse.success).toHaveBeenCalledWith(
+      res,
+      expect.any(String),
+      history
+    );
+  });
+
   test('passes service errors to the error middleware', async () => {
     const error = new Error('failure');
     service.getMyDiagnosisHistories.mockRejectedValue(error);

@@ -90,6 +90,12 @@ describe('diagnosisHistoryService', () => {
     expect(query.sort).toHaveBeenCalledWith({ createdAt: -1 });
     expect(query.skip).toHaveBeenCalledWith(100);
     expect(query.limit).toHaveBeenCalledWith(100);
+    expect(query.populate).toHaveBeenCalledWith(expect.arrayContaining([
+      expect.objectContaining({
+        path: 'diagnosis.diseaseId',
+        select: 'name diseaseKey category',
+      }),
+    ]));
     expect(result).toEqual(expect.objectContaining({
       total: 205,
       pages: 3,
@@ -110,7 +116,16 @@ describe('diagnosisHistoryService', () => {
     expect(query.populate).toHaveBeenCalledWith(expect.arrayContaining([
       expect.objectContaining({ path: 'diagnosis.diseaseId' }),
       expect.objectContaining({ path: 'catalogPlantId' }),
-      expect.objectContaining({ path: 'recommendationSnapshot.productIds' }),
+      expect.objectContaining({
+        path: 'recommendationSnapshot.productIds',
+        select: 'name thumbnail images price stock isActive',
+      }),
+    ]));
+    expect(query.populate).toHaveBeenCalledWith(expect.arrayContaining([
+      expect.objectContaining({
+        path: 'diagnosis.diseaseId',
+        select: expect.stringMatching(/symptoms.*causes/),
+      }),
     ]));
   });
 

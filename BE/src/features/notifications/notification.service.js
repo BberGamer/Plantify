@@ -2,8 +2,15 @@
 const mongoose = require('mongoose');
 const { Notification } = require('./notification.model');
 
+const HEARTBEAT_INTERVAL_MS = 25000;
+const INITIAL_CHANGE_STREAM_RETRY_MS = 1000;
+const MAX_CHANGE_STREAM_RETRY_MS = 30000;
 const notificationEventClients = new Set();
 let notificationChangeStream = null;
+let changeStreamRetryTimer = null;
+let changeStreamRetryAttempt = 0;
+let changeStreamDisabled = false;
+let realtimeShuttingDown = false;
 
 async function populateNotification(notificationId) {
   return Notification.findById(notificationId)
@@ -13,51 +20,217 @@ async function populateNotification(notificationId) {
     .lean();
 }
 
+/**
+ * Đóng một SSE client theo cách idempotent và giải phóng toàn bộ listener/timer.
+ */
+function closeNotificationClient(client, { endResponse = false } = {}) {
+  if (!client) return;
+  if (client.closed) {
+    if (endResponse && !client.res.destroyed && !client.res.writableEnded) {
+      client.res.end();
+    }
+    return;
+  }
+
+  client.closed = true;
+  clearInterval(client.heartbeat);
+  notificationEventClients.delete(client);
+  client.req.off('aborted', client.cleanup);
+  client.req.off('close', client.cleanup);
+  client.res.off('close', client.cleanup);
+  client.res.off('error', client.cleanup);
+
+  if (endResponse && !client.res.destroyed && !client.res.writableEnded) {
+    client.res.end();
+  }
+
+  if (notificationEventClients.size === 0 && !realtimeShuttingDown) {
+    void stopNotificationChangeStream();
+  }
+}
+
+/**
+ * Ghi dữ liệu SSE nếu socket còn mở; trả false nếu client đã ngắt.
+ */
+function writeNotificationEvent(client, payload) {
+  if (
+    !client
+    || client.closed
+    || client.res.destroyed
+    || client.res.writableEnded
+  ) {
+    closeNotificationClient(client);
+    return false;
+  }
+
+  try {
+    client.res.write(payload);
+    return true;
+  } catch {
+    closeNotificationClient(client);
+    return false;
+  }
+}
+
 function publishNotificationCreated(notification) {
   if (!notification) return;
 
   const recipientId = String(notification.recipientId?._id || notification.recipientId);
   const data = JSON.stringify({ notification });
 
-  for (const client of notificationEventClients) {
+  for (const client of [...notificationEventClients]) {
     if (client.userId === recipientId) {
-      client.res.write(`event: notification.created\ndata: ${data}\n\n`);
+      writeNotificationEvent(
+        client,
+        `event: notification.created\ndata: ${data}\n\n`
+      );
     }
   }
 }
 
+/**
+ * Nhận diện MongoDB standalone hoặc lỗi server không hỗ trợ Change Stream.
+ */
+function isUnsupportedChangeStreamError(error = {}) {
+  const message = String(error.message || '').toLowerCase();
+  return [20, 40573, 40615].includes(Number(error.code))
+    || message.includes('change stream is only supported')
+    || message.includes('$changestream stage is only supported')
+    || (
+      message.includes('change stream')
+      && message.includes('replica set')
+    );
+}
+
+function disableUnsupportedChangeStream(error) {
+  changeStreamDisabled = true;
+  clearTimeout(changeStreamRetryTimer);
+  changeStreamRetryTimer = null;
+  console.info(
+    '[Notification Realtime] MongoDB không hỗ trợ Change Stream; '
+    + 'SSE vẫn hoạt động qua luồng tạo thông báo của ứng dụng.',
+    error?.message || ''
+  );
+}
+
+/**
+ * Đóng Change Stream hiện tại mà không để lỗi close ảnh hưởng backend.
+ */
+async function stopNotificationChangeStream() {
+  clearTimeout(changeStreamRetryTimer);
+  changeStreamRetryTimer = null;
+
+  const stream = notificationChangeStream;
+  notificationChangeStream = null;
+  if (!stream) return;
+
+  try {
+    await stream.close();
+  } catch (error) {
+    if (!isUnsupportedChangeStreamError(error)) {
+      console.warn('[Notification Realtime] Không thể đóng Change Stream:', error);
+    }
+  }
+}
+
+/**
+ * Hẹn khởi động lại Change Stream với backoff khi lỗi có khả năng phục hồi.
+ */
+function scheduleChangeStreamRestart() {
+  if (
+    realtimeShuttingDown
+    || changeStreamDisabled
+    || changeStreamRetryTimer
+    || notificationEventClients.size === 0
+  ) {
+    return;
+  }
+
+  const delay = Math.min(
+    INITIAL_CHANGE_STREAM_RETRY_MS * (2 ** changeStreamRetryAttempt),
+    MAX_CHANGE_STREAM_RETRY_MS
+  );
+  changeStreamRetryAttempt += 1;
+  changeStreamRetryTimer = setTimeout(() => {
+    changeStreamRetryTimer = null;
+    startNotificationChangeStream();
+  }, delay);
+  changeStreamRetryTimer.unref?.();
+}
+
+function handleChangeStreamFailure(stream, error) {
+  if (stream && notificationChangeStream !== stream) return;
+  if (stream) notificationChangeStream = null;
+
+  if (isUnsupportedChangeStreamError(error)) {
+    disableUnsupportedChangeStream(error);
+    void Promise.resolve(stream?.close?.()).catch(() => {});
+    return;
+  }
+
+  if (error) {
+    console.warn('[Notification Realtime] MongoDB Change Stream bị gián đoạn:', error);
+  }
+  void Promise.resolve(stream?.close?.()).catch(() => {});
+  scheduleChangeStreamRestart();
+}
+
+/**
+ * Mở Change Stream dùng chung; MongoDB standalone sẽ tự chuyển sang publish nội bộ.
+ */
 function startNotificationChangeStream() {
-  if (notificationChangeStream) return;
+  if (
+    notificationChangeStream
+    || changeStreamDisabled
+    || realtimeShuttingDown
+    || notificationEventClients.size === 0
+  ) {
+    return;
+  }
 
-  notificationChangeStream = Notification.watch([
-    { $match: { operationType: 'insert' } },
-  ]);
+  const topologyType = mongoose.connection.client?.topology?.description?.type;
+  if (topologyType === 'Single') {
+    disableUnsupportedChangeStream();
+    return;
+  }
 
-  notificationChangeStream.on('change', async (change) => {
-    const notification = await populateNotification(change.documentKey._id);
-    publishNotificationCreated(notification);
+  let stream;
+  try {
+    stream = Notification.watch([
+      { $match: { operationType: 'insert' } },
+    ]);
+    notificationChangeStream = stream;
+  } catch (error) {
+    handleChangeStreamFailure(null, error);
+    return;
+  }
+
+  stream.on('change', async (change) => {
+    try {
+      const notification = await populateNotification(change.documentKey._id);
+      changeStreamRetryAttempt = 0;
+      publishNotificationCreated(notification);
+    } catch (error) {
+      console.warn('[Notification Realtime] Không thể đọc thông báo mới:', error);
+    }
   });
-
-  notificationChangeStream.on('error', (error) => {
-    console.error('[Notification Realtime] MongoDB change stream error:', error);
-    notificationChangeStream = null;
-  });
-
-  notificationChangeStream.on('close', () => {
-    notificationChangeStream = null;
-  });
+  stream.on('error', (error) => handleChangeStreamFailure(stream, error));
+  stream.once('close', () => handleChangeStreamFailure(stream));
 }
 
 /**
  * Mở kết nối SSE để nhận thông báo theo thời gian thực.
  */
 function subscribeNotificationEvents(req, res) {
-  startNotificationChangeStream();
-
   const client = {
+    req,
     res,
     userId: String(req.user.id),
+    heartbeat: null,
+    closed: false,
+    cleanup: null,
   };
+  client.cleanup = () => closeNotificationClient(client);
 
   res.status(200);
   res.set({
@@ -67,15 +240,38 @@ function subscribeNotificationEvents(req, res) {
     'X-Accel-Buffering': 'no',
   });
   res.flushHeaders?.();
-  res.write('event: connected\ndata: {}\n\n');
-
   notificationEventClients.add(client);
-  const heartbeat = setInterval(() => res.write(': keep-alive\n\n'), 25000);
+  req.once('aborted', client.cleanup);
+  req.once('close', client.cleanup);
+  res.once('close', client.cleanup);
+  res.once('error', client.cleanup);
 
-  req.on('close', () => {
-    clearInterval(heartbeat);
-    notificationEventClients.delete(client);
-  });
+  if (!writeNotificationEvent(client, 'event: connected\ndata: {}\n\n')) {
+    return;
+  }
+  if (client.closed) return;
+
+  client.heartbeat = setInterval(() => {
+    writeNotificationEvent(client, ': keep-alive\n\n');
+  }, HEARTBEAT_INTERVAL_MS);
+  client.heartbeat.unref?.();
+  startNotificationChangeStream();
+}
+
+/**
+ * Đóng toàn bộ SSE và Change Stream trước khi backend shutdown.
+ */
+async function shutdownNotificationRealtime() {
+  realtimeShuttingDown = true;
+  clearTimeout(changeStreamRetryTimer);
+  changeStreamRetryTimer = null;
+
+  for (const client of [...notificationEventClients]) {
+    writeNotificationEvent(client, 'event: server.shutdown\ndata: {}\n\n');
+    closeNotificationClient(client, { endResponse: true });
+  }
+
+  await stopNotificationChangeStream();
 }
 
 function ensureObjectId(id, message = 'ID không hợp lệ') {
@@ -232,5 +428,6 @@ module.exports = {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   subscribeNotificationEvents,
+  shutdownNotificationRealtime,
 };
 

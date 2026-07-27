@@ -47,6 +47,7 @@ export function usePlantDiagnosis() {
       const diagnosisResult = await diagnosePlantDisease(selectedImage);
       if (diagnosisResult?.diagnosis) {
         setResult(diagnosisResult);
+        return diagnosisResult;
       } else {
         setError('Kết quả không hợp lệ từ server.');
       }
@@ -72,6 +73,8 @@ export function usePlantDiagnosis() {
     } finally {
       setIsLoading(false);
     }
+
+    return null;
   };
 
   const clear = () => {
