@@ -29,6 +29,11 @@ const STATUS_CONTENT = {
     description: 'Ảnh chưa cung cấp đủ dấu hiệu rõ ràng. Hãy chụp gần vùng bị ảnh hưởng trong điều kiện đủ sáng.',
     className: 'border-amber-200 bg-amber-50 text-amber-800',
   },
+  needs_review: {
+    title: 'Kết quả cần được xem xét thêm',
+    description: 'Có nhiều bệnh trong kho kiến thức có mức độ tương đồng gần nhau. Hệ thống chưa đưa ra điều trị hoặc sản phẩm đặc trị để tránh nhầm lẫn.',
+    className: 'border-orange-200 bg-orange-50 text-orange-800',
+  },
   unknown: {
     title: 'Chưa thể xác định tình trạng',
     description: 'Cây có thể khỏe mạnh hoặc ảnh chưa đủ dữ liệu để kết luận. Hãy theo dõi thêm và thử ảnh khác nếu cần.',
@@ -294,6 +299,7 @@ function AIDoctor() {
                   </div>
 
                   <div className="space-y-4 rounded-xl border bg-white/60 p-4">
+                    <KnowledgeList title="Dấu hiệu quan sát từ ảnh" items={diagnosis.result.diagnosis.observedSymptoms} />
                     <KnowledgeList title="Triệu chứng" items={diagnosis.result.diseaseInfo?.symptoms} />
                     <KnowledgeList title="Nguyên nhân" items={diagnosis.result.diseaseInfo?.causes} />
                     <KnowledgeList title="Cách xử lý" items={diagnosis.result.recommendations?.treatments} />
