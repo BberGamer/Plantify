@@ -14,7 +14,6 @@ import { UserPlantAlbum } from "./UserPlantAlbum";
 import { UserPlantCareEvents } from "./UserPlantCareEvents";
 import { UserPlantScheduleSettings } from "./UserPlantScheduleSettings";
 import { UserPlantDiagnosisHistory } from "./UserPlantDiagnosisHistory";
-import { UserPlantTimeline } from "./UserPlantTimeline";
 
 export function UserPlantDetailDialog({
   open,
@@ -101,11 +100,9 @@ export function UserPlantDetailDialog({
           <UserPlantScheduleSettings userPlant={userPlant} readOnly />
           <UserPlantCareEvents
             userPlantId={userPlant._id}
-            userPlantCreatedAt={userPlant.createdAt}
             readOnly
           />
           <UserPlantDiagnosisHistory userPlantId={userPlant._id} />
-          <UserPlantTimeline userPlantId={userPlant._id} />
           </div>
         ) : null}
 

@@ -20,33 +20,6 @@ describe('My Garden insights controller', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  test('timeline passes token owner, plant and pagination to service', async () => {
-    const timeline = { events: [], total: 0, pages: 1, currentPage: 2 };
-    service.getMyUserPlantTimeline.mockResolvedValue(timeline);
-
-    await controller.getTimeline(req, res, next);
-
-    expect(service.getMyUserPlantTimeline).toHaveBeenCalledWith(
-      req.user.id,
-      req.params.id,
-      req.query
-    );
-    expect(apiResponse.success).toHaveBeenCalledWith(
-      res,
-      expect.any(String),
-      timeline
-    );
-  });
-
-  test('timeline returns 404 for a plant outside current ownership', async () => {
-    service.getMyUserPlantTimeline.mockResolvedValue(null);
-    await controller.getTimeline(req, res, next);
-    expect(apiResponse.notFound).toHaveBeenCalledWith(
-      res,
-      expect.any(String)
-    );
-  });
-
   test('dashboard only uses current token owner', async () => {
     const dashboard = { totalPlants: 0 };
     service.getMyGardenDashboard.mockResolvedValue(dashboard);

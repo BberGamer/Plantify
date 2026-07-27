@@ -23,17 +23,6 @@ export async function getMyGardenDashboard(signal) {
   return response.data;
 }
 
-export async function getUserPlantTimeline(
-  userPlantId,
-  { page = 1, limit = 10, signal } = {}
-) {
-  const response = await api.get(
-    `${MY_GARDEN_API}/${userPlantId}/timeline`,
-    { params: { page, limit }, signal }
-  );
-  return response.data;
-}
-
 export async function updateUserPlant(userPlantId, payload) {
   const response = await api.patch(`${MY_GARDEN_API}/${userPlantId}`, payload);
   return response.data;

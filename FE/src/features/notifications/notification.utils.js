@@ -3,6 +3,14 @@ const PLANT_CARE_TYPES = new Set([
   "plant_fertilizing_due",
 ]);
 
+export const NOTIFICATIONS_REFRESH_EVENT = "plantify:notifications-refresh";
+
+export function requestNotificationsRefresh() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(NOTIFICATIONS_REFRESH_EVENT));
+  }
+}
+
 export function isPlantCareNotification(notification = {}) {
   return PLANT_CARE_TYPES.has(notification.type);
 }

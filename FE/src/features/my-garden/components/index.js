@@ -8,4 +8,3 @@ export { UserPlantCareEvents } from "./UserPlantCareEvents";
 export { UserPlantScheduleSettings } from "./UserPlantScheduleSettings";
 export { UserPlantDiagnosisHistory } from "./UserPlantDiagnosisHistory";
 export { MyGardenDashboard } from "./MyGardenDashboard";
-export { UserPlantTimeline } from "./UserPlantTimeline";

@@ -19,7 +19,6 @@ import {
   sortCareEvents,
   toLocalDateTimeInput,
   toLocalDateTimeInputWithSeconds,
-  validateCareEventPerformedAt,
   validateUserPlantSchedule,
 } from "../../../src/features/my-garden/myGarden.utils.js";
 import { buildDiagnosisFormData } from "../../../src/features/ai/diagnosisRequest.utils.js";
@@ -52,8 +51,8 @@ test("timezone Asia/Ho_Chi_Minh chuyển datetime-local không lệch 7 giờ", 
   } finally { if (previousTimezone === undefined) delete process.env.TZ; else process.env.TZ = previousTimezone; }
 });
 
-test("CareEvent editable/read-only exposes đúng thao tác", () => {
-  assert.deepEqual(getCareEventCapabilities(false), { canCreate: true, canEdit: true, canDelete: true });
+test("CareEvent quick watering/read-only exposes đúng thao tác", () => {
+  assert.deepEqual(getCareEventCapabilities(false), { canCreate: true, canEdit: false, canDelete: true });
   assert.deepEqual(getCareEventCapabilities(true), { canCreate: false, canEdit: false, canDelete: false });
 });
 
@@ -182,34 +181,21 @@ test("AI Doctor URL preserves userPlantId when opening a history", () => {
   );
 });
 
-test("CareEvent accepts any past/current time and rejects future/invalid time", () => {
-  const createdAt = "2026-07-01T00:00:00.000Z";
-  const now = new Date("2026-07-27T12:00:00.000Z");
-
-  assert.equal(
-    validateCareEventPerformedAt("2020-01-01T07:00", createdAt, now).error,
-    ""
-  );
-  assert.match(
-    validateCareEventPerformedAt("2026-07-27T19:01", createdAt, now).error,
-    /tương lai/
-  );
-  assert.match(
-    validateCareEventPerformedAt("", createdAt, now).error,
-    /không hợp lệ/
-  );
-});
-
-test("CareEvent datetime-local preserves seconds and has only a future max", () => {
+test("CareEvent only records watering now and keeps delete without edit form", () => {
   const source = fs.readFileSync(
     new URL("../../../src/features/my-garden/components/UserPlantCareEvents.jsx", import.meta.url),
     "utf8"
   );
-  assert.ok(source.includes('step="1"'));
-  assert.equal(source.includes("min={userPlantCreatedAt"), false);
-  assert.ok(source.includes("max={toLocalDateTimeInputWithSeconds()}"));
-  assert.ok(source.includes("validateCareEventPerformedAt"));
-  assert.ok(source.includes("Ghi nhận chăm sóc"));
+  assert.ok(source.includes(
+    'createCareEvent(userPlantId, { type: "watering" })'
+  ));
+  assert.ok(source.includes('event.type === "watering"'));
+  assert.ok(source.includes("deleteCareEvent"));
+  assert.ok(source.includes("Đã tưới"));
+  assert.equal(source.includes("updateCareEvent"), false);
+  assert.equal(source.includes('type="datetime-local"'), false);
+  assert.equal(source.includes("<select"), false);
+  assert.equal(source.includes("<textarea"), false);
 });
 
 test("datetime-local seconds round-trip correctly in Asia/Ho_Chi_Minh", () => {
@@ -294,9 +280,17 @@ test("recording care refetches UserPlant schedules without nested forms", () => 
     new URL("../../../src/features/my-garden/components/UserPlantCareEvents.jsx", import.meta.url),
     "utf8"
   );
+  const notificationHookSource = fs.readFileSync(
+    new URL("../../../src/features/notifications/hooks/useNotifications.js", import.meta.url),
+    "utf8"
+  );
   assert.ok(formSource.includes("getUserPlantById(workingPlant._id)"));
   assert.ok(formSource.includes("onRecorded={handleCareRecorded}"));
   assert.ok(careSource.includes("await onRecorded?.()"));
+  assert.ok(careSource.includes("requestNotificationsRefresh()"));
+  assert.ok(notificationHookSource.includes(
+    "window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, refetch)"
+  ));
   assert.equal(careSource.includes("<form"), false);
 });
 
@@ -395,31 +389,4 @@ test("My Garden dashboard loads summaries and opens the selected plant", () => {
   assert.ok(dashboardSource.includes("dashboard.latestDiagnosis"));
   assert.ok(dashboardSource.includes("onOpenPlant(plant._id)"));
   assert.ok(pageSource.includes("onOpenPlant={setDetailPlantId}"));
-});
-
-test("UserPlant timeline is paginated and renders care, diagnosis and image events", () => {
-  const timelineSource = fs.readFileSync(
-    new URL("../../../src/features/my-garden/components/UserPlantTimeline.jsx", import.meta.url),
-    "utf8"
-  );
-  const detailSource = fs.readFileSync(
-    new URL("../../../src/features/my-garden/components/UserPlantDetailDialog.jsx", import.meta.url),
-    "utf8"
-  );
-  const apiSource = fs.readFileSync(
-    new URL("../../../src/features/my-garden/api.js", import.meta.url),
-    "utf8"
-  );
-
-  assert.ok(apiSource.includes("`${MY_GARDEN_API}/${userPlantId}/timeline`"));
-  for (const type of ["watering", "fertilizing", "diagnosis", "image"]) {
-    assert.ok(timelineSource.includes(`${type}:`));
-  }
-  assert.ok(timelineSource.includes("page,"));
-  assert.ok(timelineSource.includes("timeline.currentPage"));
-  assert.ok(timelineSource.includes("timeline.pages"));
-  assert.ok(timelineSource.includes("event.diagnosis.historyId"));
-  assert.ok(detailSource.includes(
-    "<UserPlantTimeline userPlantId={userPlant._id} />"
-  ));
 });

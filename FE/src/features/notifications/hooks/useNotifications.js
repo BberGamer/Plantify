@@ -6,6 +6,7 @@ import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
 } from "../api";
+import { NOTIFICATIONS_REFRESH_EVENT } from "../notification.utils";
 
 const INITIAL_RECONNECT_DELAY_MS = 1000;
 const MAX_RECONNECT_DELAY_MS = 30000;
@@ -22,6 +23,14 @@ export function useNotifications(enabled = true) {
   const refetch = useCallback(() => {
     setRefreshKey((currentKey) => currentKey + 1);
   }, []);
+
+  useEffect(() => {
+    if (!enabled) return undefined;
+    window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, refetch);
+    return () => {
+      window.removeEventListener(NOTIFICATIONS_REFRESH_EVENT, refetch);
+    };
+  }, [enabled, refetch]);
 
   useEffect(() => {
     if (!enabled) {

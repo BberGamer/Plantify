@@ -28,36 +28,9 @@ export function sortCareEvents(events) {
 export function getCareEventCapabilities(readOnly) {
   return {
     canCreate: !readOnly,
-    canEdit: !readOnly,
+    canEdit: false,
     canDelete: !readOnly,
   };
-}
-
-export function validateCareEventPerformedAt(
-  value,
-  _userPlantCreatedAt,
-  now = new Date()
-) {
-  if (!value) {
-    return {
-      error: "Thời gian thực hiện không hợp lệ.",
-      performedAt: "",
-    };
-  }
-  const valueDate = new Date(value);
-  if (Number.isNaN(valueDate.getTime())) {
-    return {
-      error: "Thời gian thực hiện không hợp lệ.",
-      performedAt: "",
-    };
-  }
-  if (valueDate > now) {
-    return {
-      error: "Thời gian thực hiện không được ở tương lai.",
-      performedAt: "",
-    };
-  }
-  return { error: "", performedAt: valueDate.toISOString() };
 }
 
 export function addUtcMonths(value, months) {

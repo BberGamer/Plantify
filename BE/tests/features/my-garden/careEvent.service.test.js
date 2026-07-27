@@ -218,6 +218,41 @@ describe('CareEvent service', () => {
     );
   });
 
+  test('quick watering payload defaults performedAt to now and updates schedule', async () => {
+    const performedAt = new Date('2026-07-27T12:00:00.000Z');
+    UserPlant.findOne.mockResolvedValue({
+      _id: plantId,
+      wateringSchedule: { enabled: true, frequencyDays: 2 },
+    });
+    CareEvent.findOne.mockReturnValue(query({
+      _id: eventId,
+      type: 'watering',
+      performedAt,
+    }));
+
+    await service.createCareEvent(userId, plantId, { type: 'watering' });
+
+    expect(CareEvent.create).toHaveBeenCalledWith([
+      expect.objectContaining({
+        type: 'watering',
+        performedAt,
+        userId,
+        userPlantId: plantId,
+      }),
+    ], { session });
+    expect(UserPlant.updateOne).toHaveBeenCalledWith(
+      expect.any(Object),
+      {
+        $set: {
+          'wateringSchedule.lastCompletedAt': performedAt,
+          'wateringSchedule.nextDueAt':
+            new Date('2026-07-29T12:00:00.000Z'),
+        },
+      },
+      { session, runValidators: true }
+    );
+  });
+
   test('updating the newest event performedAt recalculates its schedule', async () => {
     const oldEvent = {
       _id: eventId,
