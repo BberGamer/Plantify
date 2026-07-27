@@ -5,6 +5,7 @@ const userPlantController = require('./userPlant.controller');
 const { uploadUserPlantImage } = require('./userPlant.upload');
 const careEventController = require('./careEvent.controller');
 const insightsController = require('./myGardenInsights.controller');
+const weatherAdviceController = require('../weather/weatherAdvice.controller');
 
 const router = express.Router();
 
@@ -13,6 +14,7 @@ router.use(authenticate);
 router.post('/', userPlantController.createUserPlant);
 router.get('/', userPlantController.getMyUserPlants);
 router.get('/dashboard', insightsController.getDashboard);
+router.get('/weather-advice', weatherAdviceController.getMyGardenWeatherAdvice);
 router.post('/:id/care-events', careEventController.create);
 router.get('/:id/care-events', careEventController.list);
 router.delete('/:id/care-events/:eventId', careEventController.remove);
