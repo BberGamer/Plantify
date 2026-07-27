@@ -27,13 +27,22 @@ async function generateText(prompt, options = {}) {
 // === AI Diagnosis (OpenRouter Vision) ===
 
 /**
- * Chẩn đoán bệnh cây bằng OpenRouter Vision từ ảnh base64.
- * Response shape giữ nguyên để FE không cần đổi:
- *   { classId, label, confidence, description, treatment[], solutionProposal, model }
+ * Chẩn đoán bệnh cây bằng OpenRouter Vision từ Buffer ảnh.
+ * Provider chỉ trả contract chẩn đoán; treatment/product do knowledge base quyết định.
  * @param {Buffer} imageBuffer - Buffer của ảnh upload
  * @param {string} filename - Tên file ảnh
  * @param {string} mimeType - MIME type của ảnh
- * @returns {Promise<{classId: null, label: string, confidence: number, description: string, treatment: string[], solutionProposal: object, model: string}>}
+ * @returns {Promise<{
+ *   diseaseKey: string,
+ *   label: string,
+ *   category: string,
+ *   confidence: number,
+ *   severity: string,
+ *   affectedPart: string,
+ *   description: string,
+ *   model: string,
+ *   provider: 'openrouter'
+ * }>}
  */
 async function diagnoseFromImage(imageBuffer, filename, mimeType) {
   const provider = new OpenRouterDiagnosisProvider();

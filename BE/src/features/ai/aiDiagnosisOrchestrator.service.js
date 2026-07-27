@@ -196,7 +196,9 @@ async function orchestrateDiagnosis({
       treatments: disease?.treatments || [],
       preventions: disease?.preventions || [],
     };
-    const recommendedProducts = disease?.recommendedProducts || [];
+    const recommendedProducts = (disease?.recommendedProducts || []).filter(
+      (product) => product?.isActive === true && Number(product.stock) > 0
+    );
 
     const history = await createDiagnosisHistory(userId, {
       userPlantId,

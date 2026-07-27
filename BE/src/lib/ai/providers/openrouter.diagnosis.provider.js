@@ -4,24 +4,18 @@
 const { AIProvider } = require('../aiProvider.interface');
 const axios = require('axios');
 
-// Prompt chẩn đoán bệnh cây - schema có category + confidenceReason,
-// rule phân loại Disease/Pest/Nutrient/Environment/Unknown, confidence thang rõ ràng,
-// bắt buộc tiếng Việt có dấu trong toàn bộ JSON.
+// Prompt chỉ yêu cầu các field quan sát/chẩn đoán. Điều trị và sản phẩm
+// được quyết định bởi PlantDisease knowledge base, không lấy từ AI.
 const DIAGNOSIS_PROMPT = `Bạn là chuyên gia bệnh cây cảnh. Phân tích ảnh lá/cây và trả lời CHỈ bằng JSON hợp lệ, không markdown, không giải thích ngoài JSON.
 Schema:
 {
+  "diseaseKey": "canonical-key-dang-kebab-case-khong-dau",
   "label": "Tên bệnh/tình trạng chính bằng tiếng Việt",
-  "category": "Disease | Pest | Nutrient | Environment | Unknown",
+  "category": "Disease | Pest | Nutrient | Environment | Healthy | Unknown",
   "confidence": 0.82,
-  "confidenceReason": "Lý do ngắn gọn cho confidence.",
-  "description": "Mô tả ngắn dấu hiệu nhìn thấy và nguyên nhân có thể",
-  "treatment": ["Việc nên làm 1", "Việc nên làm 2", "Việc nên làm 3"],
-  "solutionProposal": {
-    "steps": ["Bước xử lý cụ thể 1", "Bước xử lý cụ thể 2", "Bước xử lý cụ thể 3"],
-    "notes": ["Lưu ý quan trọng", "Điều cần tránh"],
-    "timeline": "Thời gian theo dõi và phục hồi dự kiến",
-    "prevention": "Cách phòng ngừa tái phát"
-  }
+  "severity": "Low | Medium | High | Unknown",
+  "affectedPart": "Leaf | Stem | Root | Flower | Whole_Plant | Unknown",
+  "description": "Mô tả ngắn dấu hiệu nhìn thấy và nguyên nhân có thể"
 }
 
 Quy trình:
@@ -31,26 +25,44 @@ Quy trình:
    - Pest: có sinh vật gây hại hoặc dấu vết (côn trùng, nhện, sâu, ấu trùng, trứng).
    - Nutrient: thiếu/thừa dinh dưỡng, không có dấu hiệu bệnh hay sinh vật rõ ràng.
    - Environment: stress môi trường/sinh lý (thiếu nước, thừa nắng, úng, sốc nhiệt).
+   - Healthy: cây khỏe mạnh, không thấy dấu hiệu bệnh, sâu hại hay stress.
    - Unknown: ảnh không rõ, không phải cây, hoặc không đủ dữ liệu.
-3. Gán label sau khi đã chốt category.
+3. Gán diseaseKey, label, severity và affectedPart sau khi đã chốt category.
 
 Quy tắc cốt lõi:
 - Thấy côn trùng/nhện/sâu/ấu trùng/trứng → ưu tiên Pest. Chỉ xếp Disease khi có bằng chứng rõ cả hai cùng tồn tại.
 - Không bịa triệu chứng không nhìn thấy.
 - Chỉ dùng thông tin quan sát được từ ảnh. Thiếu thông tin cần thiết thì ghi rõ trong description và giảm confidence.
 - Bằng chứng không đủ → label "Không đủ dữ liệu", category "Unknown", confidence thấp. Độ chính xác quan trọng hơn việc luôn đưa ra kết luận.
+- Nếu category là Healthy, diseaseKey phải là "healthy".
+- Nếu category là Unknown, diseaseKey phải là "unknown".
 - Không dùng tiếng Anh trong label/description.
-- Không khẳng định tuyệt đối; ưu tiên lời khuyên chăm sóc an toàn cho cây cảnh.
+- Không thêm bất kỳ field nào ngoài đúng 7 field trong schema.
 
 Confidence và đầu ra:
 - Rõ, triệu chứng điển hình: 0.70–0.95.
 - Trung bình, một phần khớp: 0.50–0.69.
 - Yếu hoặc mơ hồ: 0.20–0.49.
-- Không đủ dữ liệu hoặc không phải cây: ≤0.20.
-- confidenceReason: nêu vắn tắt loại bằng chứng, mức rõ/mờ, hoặc lý do giảm confidence.
-- treatment và solutionProposal: chi tiết, thực tế, các bước phải phù hợp với category đã chốt.`;
+- Không đủ dữ liệu hoặc không phải cây: ≤0.20.`;
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/jpg', 'image/webp']);
+const CATEGORIES = new Set([
+  'disease',
+  'pest',
+  'nutrient',
+  'environment',
+  'healthy',
+  'unknown',
+]);
+const SEVERITIES = new Set(['low', 'medium', 'high', 'unknown']);
+const AFFECTED_PARTS = new Set([
+  'leaf',
+  'stem',
+  'root',
+  'flower',
+  'whole_plant',
+  'unknown',
+]);
 
 function createHttpError(message, statusCode) {
   const error = new Error(message);
@@ -102,6 +114,48 @@ function normalizeConfidence(confidence) {
   return Math.max(0, Math.min(numberValue, 1));
 }
 
+function normalizeDiseaseKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/đ/g, 'd')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function normalizeEnum(value, allowedValues, fallback = 'unknown') {
+  const normalizedValue = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
+  return allowedValues.has(normalizedValue) ? normalizedValue : fallback;
+}
+
+function normalizeDiagnosisResult(parsedResult = {}) {
+  const label = typeof parsedResult.label === 'string'
+    ? parsedResult.label.trim()
+    : '';
+  const category = normalizeEnum(parsedResult.category, CATEGORIES);
+  let diseaseKey = normalizeDiseaseKey(parsedResult.diseaseKey || label);
+
+  if (category === 'healthy') diseaseKey = 'healthy';
+  if (category === 'unknown' || !diseaseKey) diseaseKey = 'unknown';
+
+  return {
+    diseaseKey,
+    label: label || (category === 'healthy' ? 'Cây khỏe mạnh' : 'Không đủ dữ liệu'),
+    category,
+    confidence: normalizeConfidence(parsedResult.confidence),
+    severity: normalizeEnum(parsedResult.severity, SEVERITIES),
+    affectedPart: normalizeEnum(parsedResult.affectedPart, AFFECTED_PARTS),
+    description: typeof parsedResult.description === 'string'
+      ? parsedResult.description.trim()
+      : '',
+  };
+}
+
 class OpenRouterDiagnosisProvider extends AIProvider {
   constructor() {
     super();
@@ -118,6 +172,20 @@ class OpenRouterDiagnosisProvider extends AIProvider {
     }
   }
 
+  /**
+   * Chẩn đoán ảnh theo contract đã normalize, không chứa recommendation từ AI.
+   * @returns {Promise<{
+   *   diseaseKey: string,
+   *   label: string,
+   *   category: 'disease'|'pest'|'nutrient'|'environment'|'healthy'|'unknown',
+   *   confidence: number,
+   *   severity: 'low'|'medium'|'high'|'unknown',
+   *   affectedPart: 'leaf'|'stem'|'root'|'flower'|'whole_plant'|'unknown',
+   *   description: string,
+   *   model: string,
+   *   provider: 'openrouter'
+   * }>}
+   */
   async diagnoseFromImage(imageBuffer, filename, mimeType) {
     if (!imageBuffer || !imageBuffer.length) {
       throw createHttpError('Vui lòng upload ảnh lá cây để chẩn đoán.', 400);
@@ -162,18 +230,15 @@ class OpenRouterDiagnosisProvider extends AIProvider {
 
       rawText = response.data.choices[0] && response.data.choices[0].message && response.data.choices[0].message.content;
       const parsedResult = extractJsonObject(rawText);
+      const normalizedResult = normalizeDiagnosisResult(parsedResult);
 
       console.log('[OpenRouter Vision Diagnosis] Success');
       console.log('=================================');
 
       return {
-        classId: null,
-        label: parsedResult.label || 'Không đủ dữ liệu',
-        confidence: normalizeConfidence(parsedResult.confidence),
-        description: parsedResult.description || '',
-        treatment: Array.isArray(parsedResult.treatment) ? parsedResult.treatment : [],
-        solutionProposal: parsedResult.solutionProposal || null,
-        model: this.modelName
+        ...normalizedResult,
+        model: this.modelName,
+        provider: 'openrouter',
       };
     } catch (error) {
       console.error('=================================');
@@ -200,4 +265,7 @@ class OpenRouterDiagnosisProvider extends AIProvider {
   }
 }
 
-module.exports = { OpenRouterDiagnosisProvider };
+module.exports = {
+  OpenRouterDiagnosisProvider,
+  normalizeDiagnosisResult,
+};

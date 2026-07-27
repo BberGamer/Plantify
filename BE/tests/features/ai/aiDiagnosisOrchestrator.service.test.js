@@ -68,6 +68,18 @@ describe('aiDiagnosisOrchestratorService', () => {
       stock: 5,
       isActive: true,
     };
+    const inactiveProduct = {
+      _id: '507f1f77bcf86cd799439015',
+      name: 'Sản phẩm ngừng bán',
+      stock: 10,
+      isActive: false,
+    };
+    const outOfStockProduct = {
+      _id: '507f1f77bcf86cd799439016',
+      name: 'Sản phẩm hết hàng',
+      stock: 0,
+      isActive: true,
+    };
     const disease = {
       _id: diseaseId,
       name: 'Bệnh đốm lá',
@@ -77,7 +89,7 @@ describe('aiDiagnosisOrchestratorService', () => {
       causes: ['Nấm'],
       treatments: ['Cắt bỏ lá bệnh'],
       preventions: ['Giữ cây thông thoáng'],
-      recommendedProducts: [product],
+      recommendedProducts: [product, inactiveProduct, outOfStockProduct],
       images: [],
     };
     aiService.diagnoseFromImage.mockResolvedValue({
