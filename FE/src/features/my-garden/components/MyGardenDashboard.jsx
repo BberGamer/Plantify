@@ -4,8 +4,8 @@ import {
   Droplets,
   FlaskConical,
   Loader2,
+  Plus,
   Sprout,
-  Stethoscope,
   TriangleAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,11 @@ function ScheduleList({ items, emptyText, onOpenPlant }) {
   );
 }
 
-export function MyGardenDashboard({ refreshKey = 0, onOpenPlant }) {
+export function MyGardenDashboard({
+  refreshKey = 0,
+  onOpenPlant,
+  onAddPlant,
+}) {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -119,8 +123,6 @@ export function MyGardenDashboard({ refreshKey = 0, onOpenPlant }) {
       nextDueAt: schedule.nextDueAt,
     }))
   ));
-  const latestDiagnosisPlant = dashboard.latestDiagnosis?.userPlantId;
-
   return (
     <section className="space-y-3" aria-label="Dashboard My Garden">
       <h2 className="text-lg font-semibold">Tổng quan chăm sóc</h2>
@@ -174,25 +176,21 @@ export function MyGardenDashboard({ refreshKey = 0, onOpenPlant }) {
           </CardContent>
         </Card>
       </div>
-      <Card>
-        <CardContent className="py-5">
-          <div className="mb-2 flex items-center gap-2 font-medium">
-            <Stethoscope className="h-5 w-5 text-violet-600" />
-            Lần chẩn đoán gần nhất
+      <Card className="border-dashed border-primary/40 bg-primary/5">
+        <CardContent className="flex flex-col items-center justify-center gap-3 py-7 text-center sm:flex-row sm:text-left">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10">
+            <Plus className="h-6 w-6 text-primary" />
           </div>
-          {latestDiagnosisPlant ? (
-            <PlantLink
-              plant={latestDiagnosisPlant}
-              onOpenPlant={onOpenPlant}
-              detail={`${dashboard.latestDiagnosis.diseaseName} • ${new Date(
-                dashboard.latestDiagnosis.createdAt
-              ).toLocaleString("vi-VN")}`}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Chưa có chẩn đoán gắn với cây trong My Garden.
+          <div className="flex-1">
+            <p className="font-semibold">Thêm cây vào khu vườn</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Theo dõi lịch tưới, bón phân và nhận cảnh báo chăm sóc phù hợp.
             </p>
-          )}
+          </div>
+          <Button type="button" onClick={onAddPlant}>
+            <Plus className="mr-2 h-4 w-4" />
+            Thêm cây
+          </Button>
         </CardContent>
       </Card>
     </section>

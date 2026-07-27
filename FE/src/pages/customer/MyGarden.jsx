@@ -168,32 +168,13 @@ function MyGarden() {
   return (
     <div className="min-h-screen px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-7xl space-y-8">
-        <div className="flex flex-col gap-5 rounded-2xl border bg-white/85 p-6 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-primary">
-              <Sprout className="h-5 w-5" />
-              <span className="text-sm font-semibold uppercase tracking-wide">
-                Khu vườn cá nhân
-              </span>
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight">My Garden</h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              Lưu thông tin những cây bạn đang chăm sóc và liên kết với
-              catalogue Plantify khi cần.
-            </p>
-          </div>
-          <Button type="button" size="lg" onClick={openCreateDialog}>
-            <Plus className="mr-2 h-5 w-5" />
-            Thêm cây
-          </Button>
-        </div>
+        <MyGardenWeatherAdvice />
 
         <MyGardenDashboard
           refreshKey={dashboardRefreshKey}
           onOpenPlant={setDetailPlantId}
+          onAddPlant={openCreateDialog}
         />
-
-        <MyGardenWeatherAdvice />
 
         {loading ? (
           <Card>

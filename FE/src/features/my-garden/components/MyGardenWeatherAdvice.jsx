@@ -4,9 +4,11 @@ import {
   CloudRain,
   Droplets,
   Loader2,
+  MapPin,
   RefreshCw,
   ShieldAlert,
   Sun,
+  Thermometer,
   Wind,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,8 +36,20 @@ function getAdviceIcon(code) {
   return AlertTriangle;
 }
 
+function WeatherMetric({ icon: Icon, label, value, iconClassName }) {
+  return (
+    <div className="rounded-xl border border-white/70 bg-white/80 p-3 shadow-sm backdrop-blur">
+      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+        <Icon className={`h-4 w-4 ${iconClassName}`} />
+        {label}
+      </div>
+      <p className="mt-2 text-lg font-bold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
 export function MyGardenWeatherAdvice() {
-  const [city, setCity] = useState("Ho Chi Minh");
+  const [city, setCity] = useState("Hà Nội");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -68,63 +82,148 @@ export function MyGardenWeatherAdvice() {
   }, []);
 
   return (
-    <Card className="border-sky-200/80 bg-gradient-to-br from-sky-50 to-white">
-      <CardContent className="space-y-4 p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2 font-semibold text-sky-900">
-              <CloudRain className="h-5 w-5" />
-              Cảnh báo chăm cây theo thời tiết
+    <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 via-white to-primary/10 shadow-sm">
+      <CardContent className="p-0">
+        <div className="relative overflow-hidden bg-gradient-to-r from-primary to-green-600 p-5 text-white sm:p-6">
+          <div className="absolute -right-12 -top-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <h2 className="flex items-center gap-3 text-xl font-bold sm:text-2xl">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/20 ring-1 ring-white/25 backdrop-blur-sm">
+                  <CloudRain className="h-6 w-6" />
+                </span>
+                <span>Cảnh báo chăm cây theo thời tiết</span>
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-white/90">
+                Phân tích riêng cho cây trong My Garden; cảnh báo mưa và nắng
+                chỉ áp dụng cho cây ngoài trời.
+              </p>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Phân tích riêng cho cây trong My Garden; cảnh báo mưa và nắng chỉ áp dụng cho cây ngoài trời.
-            </p>
+
+            <form
+              onSubmit={loadAdvice}
+              className="flex w-full flex-col gap-2 rounded-2xl bg-white/10 p-2 ring-1 ring-white/20 backdrop-blur sm:flex-row lg:max-w-md"
+            >
+              <div className="relative flex-1">
+                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                <Input
+                  value={city}
+                  onChange={(event) => setCity(event.target.value)}
+                  placeholder="Thành phố, ví dụ: Hà Nội"
+                  className="border-0 bg-white pl-9 text-slate-900 shadow-none"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="bg-background text-primary hover:bg-background/90 sm:min-w-28"
+              >
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                Phân tích
+              </Button>
+            </form>
           </div>
-          {result?.weather ? (
-            <div className="rounded-lg bg-white px-3 py-2 text-right text-sm shadow-sm">
-              <p className="font-semibold">{Math.round(result.weather.temperature)}°C · {result.weather.humidity}%</p>
-              <p className="text-xs text-muted-foreground">{result.weather.cityName}, {result.weather.country}</p>
-            </div>
-          ) : null}
         </div>
 
-        <form onSubmit={loadAdvice} className="flex flex-col gap-2 sm:flex-row">
-          <Input
-            value={city}
-            onChange={(event) => setCity(event.target.value)}
-            placeholder="Thành phố, ví dụ: Ho Chi Minh"
-            className="bg-white"
-          />
-          <Button type="submit" disabled={loading} className="sm:min-w-32">
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-            Phân tích
-          </Button>
-        </form>
+        <div className="space-y-5 p-5 sm:p-6">
+          {error ? (
+            <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          ) : null}
 
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {result?.weather ? (
+            <div>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="flex items-center gap-1.5 font-semibold text-slate-900">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    {result.weather.cityName}, {result.weather.country}
+                  </p>
+                  <p className="mt-1 text-sm capitalize text-muted-foreground">
+                    {result.weather.description || "Thời tiết hiện tại"}
+                  </p>
+                </div>
+                {result.generatedAt ? (
+                  <p className="text-xs text-muted-foreground">
+                    Cập nhật {new Date(result.generatedAt).toLocaleTimeString("vi-VN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                ) : null}
+              </div>
 
-        {result ? (
-          <div className="grid gap-3 lg:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <WeatherMetric
+                  icon={Thermometer}
+                  label="Nhiệt độ"
+                  value={`${Math.round(result.weather.temperature)}°C`}
+                  iconClassName="text-rose-500"
+                />
+                <WeatherMetric
+                  icon={Droplets}
+                  label="Độ ẩm"
+                  value={`${result.weather.humidity}%`}
+                  iconClassName="text-sky-500"
+                />
+                <WeatherMetric
+                  icon={CloudRain}
+                  label="Mưa 1 giờ"
+                  value={`${result.weather.rainLastHourMm ?? 0} mm`}
+                  iconClassName="text-blue-600"
+                />
+              </div>
+            </div>
+          ) : null}
+
+          {result ? (
+            <div className="grid gap-3 lg:grid-cols-2">
               {result.advice.map((item) => {
                 const style = ADVICE_STYLE[item.severity] || ADVICE_STYLE.info;
                 const Icon = getAdviceIcon(item.code) || style.icon;
+                const isNormalCare = item.code === "normal_care";
+                const isFullWidth = [
+                  "normal_care",
+                  "above_plant_temperature_limit",
+                  "below_plant_temperature_limit",
+                ].includes(item.code);
                 return (
-                  <div key={item.code} className={`rounded-xl border p-4 ${style.className}`}>
+                  <div
+                    key={item.code}
+                    className={`rounded-2xl border p-4 shadow-sm ${
+                      isNormalCare
+                        ? "border-primary/20 bg-primary/5 text-foreground"
+                        : style.className
+                    } ${isFullWidth ? "lg:col-span-2" : ""}`}
+                  >
                     <div className="flex gap-3">
-                      <Icon className="mt-0.5 h-5 w-5 shrink-0" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/70">
+                        <Icon className="h-5 w-5" />
+                      </div>
                       <div>
                         <p className="font-semibold">{item.title}</p>
                         <p className="mt-1 text-sm leading-6">{item.message}</p>
                         {item.plantNames?.length ? (
-                          <p className="mt-2 text-xs font-medium">Áp dụng: {item.plantNames.join(", ")}</p>
+                          <p className="mt-3 inline-flex rounded-full bg-white/70 px-2.5 py-1 text-xs font-medium">
+                            Áp dụng: {item.plantNames.join(", ")}
+                          </p>
                         ) : null}
                       </div>
                     </div>
                   </div>
                 );
               })}
-          </div>
-        ) : null}
+            </div>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   );

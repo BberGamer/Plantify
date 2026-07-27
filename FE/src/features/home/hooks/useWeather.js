@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getWeatherByCity } from "../api";
 
 export function useWeather() {
-  const [weatherCity, setWeatherCity] = useState("Ho Chi Minh");
+  const [weatherCity, setWeatherCity] = useState("Hà Nội");
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState("");
@@ -45,7 +45,7 @@ export function useWeather() {
   );
 
   useEffect(() => {
-    fetchWeather("Ho Chi Minh");
+    fetchWeather("Hà Nội");
   }, [fetchWeather]);
 
   return {

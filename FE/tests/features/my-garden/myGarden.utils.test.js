@@ -422,7 +422,13 @@ test("My Garden dashboard loads summaries and opens the selected plant", () => {
   assert.ok(dashboardSource.includes("dashboard.wateringDueToday"));
   assert.ok(dashboardSource.includes("dashboard.fertilizingDueToday"));
   assert.ok(dashboardSource.includes("dashboard.overduePlants"));
-  assert.ok(dashboardSource.includes("dashboard.latestDiagnosis"));
+  assert.ok(dashboardSource.includes("onAddPlant"));
+  assert.ok(dashboardSource.includes("Thêm cây vào khu vườn"));
   assert.ok(dashboardSource.includes("onOpenPlant(plant._id)"));
   assert.ok(pageSource.includes("onOpenPlant={setDetailPlantId}"));
+  assert.ok(pageSource.includes("onAddPlant={openCreateDialog}"));
+  assert.ok(
+    pageSource.indexOf("<MyGardenWeatherAdvice />")
+      < pageSource.indexOf("<MyGardenDashboard")
+  );
 });
