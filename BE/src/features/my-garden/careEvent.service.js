@@ -5,7 +5,7 @@ const UserPlant = require('./userPlant.model');
 const { CARE_EVENT_TYPES } = require('./careEvent.model');
 function httpError(message, statusCode = 400) { const error = new Error(message); error.statusCode = statusCode; return error; }
 function objectId(id, message) { if (!mongoose.Types.ObjectId.isValid(id)) throw httpError(message); }
-function date(value) { const valueDate = value === undefined ? new Date() : new Date(value); if (Number.isNaN(valueDate.getTime())) throw httpError('performedAt không hợp lệ'); return valueDate; }
+function date(value) { if (value === undefined) return new Date(); if (value === null || value === '') throw httpError('performedAt không hợp lệ'); const valueDate = new Date(value); if (Number.isNaN(valueDate.getTime())) throw httpError('performedAt không hợp lệ'); return valueDate; }
 function notes(value) { if (value === undefined || value === null) return ''; if (typeof value !== 'string') throw httpError('notes phải là chuỗi'); return value.trim(); }
 async function ownedPlant(userId, userPlantId) { objectId(userId, 'User ID không hợp lệ'); objectId(userPlantId, 'UserPlant ID không hợp lệ'); return UserPlant.findOne({ _id: userPlantId, userId, status: 'active' }); }
 function createData(data = {}) { if (!CARE_EVENT_TYPES.includes(data.type)) throw httpError('type không hợp lệ'); return { type: data.type, performedAt: date(data.performedAt), notes: notes(data.notes) }; }

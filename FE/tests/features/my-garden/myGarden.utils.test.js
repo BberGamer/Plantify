@@ -10,6 +10,9 @@ import {
   getUserPlantImage,
   removePendingPreview,
   revokePendingPreviews,
+  localDateTimeToIso,
+  sortCareEvents,
+  toLocalDateTimeInput,
 } from "../../../src/features/my-garden/myGarden.utils.js";
 
 test("ưu tiên coverImageUrl trước ảnh catalogue", () => {
@@ -22,6 +25,12 @@ test("ưu tiên coverImageUrl trước ảnh catalogue", () => {
   });
 
   assert.equal(image, "cover.jpg");
+});
+
+test("datetime-local giữ đúng thời điểm khi chuyển local sang ISO", () => {
+  const localValue = toLocalDateTimeInput(new Date("2026-07-27T05:00:00.000Z"));
+  assert.equal(localDateTimeToIso(localValue), new Date(localValue).toISOString());
+  assert.deepEqual(sortCareEvents([{ performedAt: "2026-01-01" }, { performedAt: "2026-02-01" }]).map((item) => item.performedAt), ["2026-02-01", "2026-01-01"]);
 });
 
 test("preview chỉ revoke ảnh bị xóa và giải phóng toàn bộ khi đóng form", () => {
