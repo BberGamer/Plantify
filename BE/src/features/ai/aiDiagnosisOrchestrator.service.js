@@ -10,6 +10,8 @@ const {
 } = require('../diagnosis-history/diagnosisHistory.service');
 
 const MIN_MATCH_CONFIDENCE = 0.5;
+const MIN_MATCH_SCORE = 0.75;
+const MIN_SCORE_MARGIN = 0.15;
 const SEVERITIES = new Set(['low', 'medium', 'high', 'unknown']);
 const AFFECTED_PARTS = new Set([
   'leaf',
@@ -19,19 +21,31 @@ const AFFECTED_PARTS = new Set([
   'whole_plant',
   'unknown',
 ]);
-const UNKNOWN_KEYS = new Set([
+const UNKNOWN_CONDITIONS = new Set([
   'unknown',
   'khong-du-du-lieu',
   'khong-xac-dinh',
   'khong-ro',
 ]);
-const HEALTHY_KEYS = new Set([
+const HEALTHY_CONDITIONS = new Set([
   'healthy',
   'healthy-plant',
   'plant-healthy',
   'cay-khoe',
   'cay-khoe-manh',
   'khoe-manh',
+]);
+const MATCHABLE_CATEGORIES = new Set([
+  'disease',
+  'pest',
+  'nutrient',
+  'environment',
+]);
+const COMMON_MATCH_WORDS = new Set([
+  'benh',
+  'disease',
+  'do',
+  'va',
 ]);
 
 function normalizeDiseaseKey(value) {
@@ -61,18 +75,21 @@ function normalizeEnum(value, allowedValues, fallback = 'unknown') {
 }
 
 function normalizeAIResponse(rawResponse = {}) {
-  const rawDiseaseName = typeof rawResponse.label === 'string'
-    ? rawResponse.label.trim()
+  const suspectedCondition = typeof rawResponse.suspectedCondition === 'string'
+    ? rawResponse.suspectedCondition.trim()
     : '';
-  const diseaseKey = normalizeDiseaseKey(
-    rawResponse.diseaseKey || rawDiseaseName || 'unknown'
-  ) || 'unknown';
   const category = String(rawResponse.category || '').trim().toLowerCase();
+  const observedSymptoms = Array.isArray(rawResponse.observedSymptoms)
+    ? rawResponse.observedSymptoms
+      .filter((symptom) => typeof symptom === 'string')
+      .map((symptom) => symptom.trim())
+      .filter(Boolean)
+    : [];
 
   return {
-    diseaseKey,
-    rawDiseaseName,
+    suspectedCondition,
     confidence: normalizeConfidence(rawResponse.confidence),
+    observedSymptoms,
     severity: normalizeEnum(rawResponse.severity, SEVERITIES),
     affectedPart: normalizeEnum(rawResponse.affectedPart, AFFECTED_PARTS),
     description: typeof rawResponse.description === 'string'
@@ -90,22 +107,25 @@ function normalizeAIResponse(rawResponse = {}) {
 
 function isUnknownDiagnosis(diagnosis) {
   return diagnosis.category === 'unknown'
-    || UNKNOWN_KEYS.has(diagnosis.diseaseKey);
+    || UNKNOWN_CONDITIONS.has(normalizeDiseaseKey(diagnosis.suspectedCondition));
 }
 
 function isHealthyDiagnosis(diagnosis) {
   return diagnosis.category === 'healthy'
-    || HEALTHY_KEYS.has(diagnosis.diseaseKey)
+    || HEALTHY_CONDITIONS.has(normalizeDiseaseKey(diagnosis.suspectedCondition))
     || /\b(healthy|khoe manh|cay khoe)\b/.test(
-      normalizeDiseaseKey(diagnosis.rawDiseaseName).replace(/-/g, ' ')
+      normalizeDiseaseKey(diagnosis.suspectedCondition).replace(/-/g, ' ')
     );
 }
 
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function normalizeMatchText(value) {
+  return normalizeDiseaseKey(value)
+    .split('-')
+    .filter((token) => token && !COMMON_MATCH_WORDS.has(token))
+    .join('-');
 }
 
-function populateDisease(query) {
+function populateDiseases(query) {
   return query
     .populate(
       'recommendedProducts',
@@ -114,41 +134,98 @@ function populateDisease(query) {
     .lean();
 }
 
-async function matchPlantDisease(diagnosis) {
-  if (
-    diagnosis.confidence < MIN_MATCH_CONFIDENCE
-    || isUnknownDiagnosis(diagnosis)
-    || isHealthyDiagnosis(diagnosis)
-  ) {
-    return null;
-  }
-
-  const exactMatch = await populateDisease(PlantDisease.findOne({
-    diseaseKey: diagnosis.diseaseKey,
-    isActive: true,
-  }));
-  if (exactMatch) return exactMatch;
-
-  const names = [diagnosis.rawDiseaseName, diagnosis.diseaseKey]
-    .map((value) => String(value || '').trim())
+function getCandidateTerms(disease) {
+  return [disease.name, ...(Array.isArray(disease.aliases) ? disease.aliases : [])]
+    .map(normalizeMatchText)
     .filter(Boolean);
-  if (names.length === 0) return null;
-
-  return populateDisease(PlantDisease.findOne({
-    isActive: true,
-    $or: names.flatMap((name) => {
-      const exactName = new RegExp(`^${escapeRegex(name)}$`, 'i');
-      return [{ name: exactName }, { aliases: exactName }];
-    }),
-  }));
 }
 
-function getMatchStatus(diagnosis, disease) {
-  if (diagnosis.confidence < MIN_MATCH_CONFIDENCE) return 'low_confidence';
-  if (isUnknownDiagnosis(diagnosis) || isHealthyDiagnosis(diagnosis)) {
-    return 'unknown';
+function getTokenSimilarity(leftValue, rightValue) {
+  const leftTokens = new Set(normalizeMatchText(leftValue).split('-').filter(Boolean));
+  const rightTokens = new Set(normalizeMatchText(rightValue).split('-').filter(Boolean));
+  if (leftTokens.size === 0 || rightTokens.size === 0) return 0;
+
+  const sharedCount = [...leftTokens].filter((token) => rightTokens.has(token)).length;
+  if (sharedCount < 2) return 0;
+
+  const containment = sharedCount / Math.min(leftTokens.size, rightTokens.size);
+  const dice = (2 * sharedCount) / (leftTokens.size + rightTokens.size);
+  return (containment * 0.6) + (dice * 0.4);
+}
+
+function getSymptomSimilarity(observedSymptoms, knowledgeSymptoms) {
+  if (!observedSymptoms.length || !knowledgeSymptoms.length) return 0;
+  const scores = observedSymptoms.map((observed) => (
+    Math.max(0, ...knowledgeSymptoms.map(
+      (known) => getTokenSimilarity(observed, known)
+    ))
+  ));
+  return scores.reduce((total, score) => total + score, 0) / scores.length;
+}
+
+function scoreDiseaseCandidate(diagnosis, disease) {
+  const conditionScore = Math.max(
+    0,
+    ...getCandidateTerms(disease).map(
+      (term) => getTokenSimilarity(diagnosis.suspectedCondition, term)
+    )
+  );
+  const symptomScore = getSymptomSimilarity(
+    diagnosis.observedSymptoms,
+    Array.isArray(disease.symptoms) ? disease.symptoms : []
+  );
+  return Number(((conditionScore * 0.8) + (symptomScore * 0.2)).toFixed(4));
+}
+
+function chooseDiseaseMatch(diagnosis, diseases) {
+  const rankedCandidates = diseases
+    .map((disease) => ({
+      disease,
+      score: scoreDiseaseCandidate(diagnosis, disease),
+    }))
+    .sort((left, right) => right.score - left.score);
+  const topCandidate = rankedCandidates[0];
+  const secondCandidate = rankedCandidates[1];
+
+  if (!topCandidate || topCandidate.score < MIN_MATCH_SCORE) {
+    return { disease: null, matchScore: topCandidate?.score || 0, matchStatus: 'unmatched' };
   }
-  return disease ? 'matched' : 'unmatched';
+  if (
+    secondCandidate
+    && topCandidate.score - secondCandidate.score < MIN_SCORE_MARGIN
+  ) {
+    return {
+      disease: null,
+      matchScore: topCandidate.score,
+      matchStatus: 'needs_review',
+    };
+  }
+  return {
+    disease: topCandidate.disease,
+    matchScore: topCandidate.score,
+    matchStatus: 'matched',
+  };
+}
+
+async function matchPlantDisease(diagnosis) {
+  if (diagnosis.confidence < MIN_MATCH_CONFIDENCE) {
+    return { disease: null, matchScore: 0, matchStatus: 'low_confidence' };
+  }
+  if (isUnknownDiagnosis(diagnosis) || isHealthyDiagnosis(diagnosis)) {
+    return { disease: null, matchScore: 0, matchStatus: 'unknown' };
+  }
+  if (!MATCHABLE_CATEGORIES.has(diagnosis.category)) {
+    return { disease: null, matchScore: 0, matchStatus: 'unmatched' };
+  }
+
+  const candidates = await populateDiseases(PlantDisease.find({
+    isActive: true,
+    category: diagnosis.category,
+  }));
+  return chooseDiseaseMatch(
+    diagnosis,
+    candidates.filter((disease) => disease.category === diagnosis.category),
+  );
 }
 
 function buildDiseaseInfo(disease) {
@@ -180,12 +257,15 @@ async function orchestrateDiagnosis({
       image.mimeType
     );
     const normalizedAI = normalizeAIResponse(rawAIResponse);
-    const disease = await matchPlantDisease(normalizedAI);
-    const matchStatus = getMatchStatus(normalizedAI, disease);
+    const matchResult = await matchPlantDisease(normalizedAI);
+    const { disease, matchScore, matchStatus } = matchResult;
     const diagnosis = {
       diseaseId: disease?._id || null,
-      diseaseKey: disease?.diseaseKey || normalizedAI.diseaseKey,
-      rawDiseaseName: normalizedAI.rawDiseaseName,
+      diseaseKey: disease?.diseaseKey || 'unknown',
+      category: disease?.category || normalizedAI.category || 'unknown',
+      rawDiseaseName: normalizedAI.suspectedCondition,
+      observedSymptoms: normalizedAI.observedSymptoms,
+      matchScore,
       confidence: normalizedAI.confidence,
       severity: normalizedAI.severity,
       affectedPart: normalizedAI.affectedPart,
@@ -244,4 +324,8 @@ module.exports = {
   normalizeConfidence,
   normalizeAIResponse,
   matchPlantDisease,
+  normalizeMatchText,
+  getTokenSimilarity,
+  scoreDiseaseCandidate,
+  chooseDiseaseMatch,
 };

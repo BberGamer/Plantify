@@ -46,6 +46,9 @@ describe('diagnosisHistoryService', () => {
       diagnosis: {
         diseaseId,
         diseaseKey: '  LEAF-SPOT ',
+        category: ' Disease ',
+        observedSymptoms: ['Đốm nâu trên lá'],
+        matchScore: 0.9,
         confidence: 0.9,
         matchStatus: 'matched',
       },
@@ -56,6 +59,9 @@ describe('diagnosisHistoryService', () => {
 
     expect(result.userId).toBe(userId);
     expect(result.diagnosis.diseaseKey).toBe('leaf-spot');
+    expect(result.diagnosis.category).toBe('disease');
+    expect(result.diagnosis.observedSymptoms).toEqual(['Đốm nâu trên lá']);
+    expect(result.diagnosis.matchScore).toBe(0.9);
     expect(result).not.toHaveProperty('ignored');
   });
 

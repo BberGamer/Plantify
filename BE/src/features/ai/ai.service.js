@@ -33,10 +33,10 @@ async function generateText(prompt, options = {}) {
  * @param {string} filename - Tên file ảnh
  * @param {string} mimeType - MIME type của ảnh
  * @returns {Promise<{
- *   diseaseKey: string,
- *   label: string,
+ *   suspectedCondition: string,
  *   category: string,
  *   confidence: number,
+ *   observedSymptoms: string[],
  *   severity: string,
  *   affectedPart: string,
  *   description: string,

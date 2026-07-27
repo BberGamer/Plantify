@@ -9,9 +9,9 @@ const axios = require('axios');
 const DIAGNOSIS_PROMPT = `Bạn là chuyên gia bệnh cây cảnh. Phân tích ảnh lá/cây và trả lời CHỈ bằng JSON hợp lệ, không markdown, không giải thích ngoài JSON.
 Schema:
 {
-  "diseaseKey": "canonical-key-dang-kebab-case-khong-dau",
-  "label": "Tên bệnh/tình trạng chính bằng tiếng Việt",
+  "suspectedCondition": "Tên tình trạng nghi ngờ bằng tiếng Việt",
   "category": "Disease | Pest | Nutrient | Environment | Healthy | Unknown",
+  "observedSymptoms": ["Dấu hiệu thực sự quan sát thấy 1", "Dấu hiệu thực sự quan sát thấy 2"],
   "confidence": 0.82,
   "severity": "Low | Medium | High | Unknown",
   "affectedPart": "Leaf | Stem | Root | Flower | Whole_Plant | Unknown",
@@ -27,16 +27,15 @@ Quy trình:
    - Environment: stress môi trường/sinh lý (thiếu nước, thừa nắng, úng, sốc nhiệt).
    - Healthy: cây khỏe mạnh, không thấy dấu hiệu bệnh, sâu hại hay stress.
    - Unknown: ảnh không rõ, không phải cây, hoặc không đủ dữ liệu.
-3. Gán diseaseKey, label, severity và affectedPart sau khi đã chốt category.
+3. Gán suspectedCondition, observedSymptoms, severity và affectedPart sau khi đã chốt category.
 
 Quy tắc cốt lõi:
 - Thấy côn trùng/nhện/sâu/ấu trùng/trứng → ưu tiên Pest. Chỉ xếp Disease khi có bằng chứng rõ cả hai cùng tồn tại.
 - Không bịa triệu chứng không nhìn thấy.
 - Chỉ dùng thông tin quan sát được từ ảnh. Thiếu thông tin cần thiết thì ghi rõ trong description và giảm confidence.
-- Bằng chứng không đủ → label "Không đủ dữ liệu", category "Unknown", confidence thấp. Độ chính xác quan trọng hơn việc luôn đưa ra kết luận.
-- Nếu category là Healthy, diseaseKey phải là "healthy".
-- Nếu category là Unknown, diseaseKey phải là "unknown".
-- Không dùng tiếng Anh trong label/description.
+- Bằng chứng không đủ → suspectedCondition "Không đủ dữ liệu", category "Unknown", confidence thấp.
+- Không tạo diseaseKey hoặc mã bệnh. Backend sẽ quyết định canonical disease.
+- Không dùng tiếng Anh trong suspectedCondition, observedSymptoms hoặc description.
 - Không thêm bất kỳ field nào ngoài đúng 7 field trong schema.
 
 Confidence và đầu ra:
@@ -114,17 +113,6 @@ function normalizeConfidence(confidence) {
   return Math.max(0, Math.min(numberValue, 1));
 }
 
-function normalizeDiseaseKey(value) {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/đ/g, 'd')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
 function normalizeEnum(value, allowedValues, fallback = 'unknown') {
   const normalizedValue = String(value || '')
     .trim()
@@ -134,19 +122,22 @@ function normalizeEnum(value, allowedValues, fallback = 'unknown') {
 }
 
 function normalizeDiagnosisResult(parsedResult = {}) {
-  const label = typeof parsedResult.label === 'string'
-    ? parsedResult.label.trim()
+  const suspectedCondition = typeof parsedResult.suspectedCondition === 'string'
+    ? parsedResult.suspectedCondition.trim()
     : '';
   const category = normalizeEnum(parsedResult.category, CATEGORIES);
-  let diseaseKey = normalizeDiseaseKey(parsedResult.diseaseKey || label);
-
-  if (category === 'healthy') diseaseKey = 'healthy';
-  if (category === 'unknown' || !diseaseKey) diseaseKey = 'unknown';
+  const observedSymptoms = Array.isArray(parsedResult.observedSymptoms)
+    ? parsedResult.observedSymptoms
+      .filter((symptom) => typeof symptom === 'string')
+      .map((symptom) => symptom.trim())
+      .filter(Boolean)
+    : [];
 
   return {
-    diseaseKey,
-    label: label || (category === 'healthy' ? 'Cây khỏe mạnh' : 'Không đủ dữ liệu'),
+    suspectedCondition: suspectedCondition
+      || (category === 'healthy' ? 'Cây khỏe mạnh' : 'Không đủ dữ liệu'),
     category,
+    observedSymptoms,
     confidence: normalizeConfidence(parsedResult.confidence),
     severity: normalizeEnum(parsedResult.severity, SEVERITIES),
     affectedPart: normalizeEnum(parsedResult.affectedPart, AFFECTED_PARTS),
@@ -175,10 +166,10 @@ class OpenRouterDiagnosisProvider extends AIProvider {
   /**
    * Chẩn đoán ảnh theo contract đã normalize, không chứa recommendation từ AI.
    * @returns {Promise<{
-   *   diseaseKey: string,
-   *   label: string,
+   *   suspectedCondition: string,
    *   category: 'disease'|'pest'|'nutrient'|'environment'|'healthy'|'unknown',
    *   confidence: number,
+   *   observedSymptoms: string[],
    *   severity: 'low'|'medium'|'high'|'unknown',
    *   affectedPart: 'leaf'|'stem'|'root'|'flower'|'whole_plant'|'unknown',
    *   description: string,
@@ -215,7 +206,8 @@ class OpenRouterDiagnosisProvider extends AIProvider {
               { type: 'image_url', image_url: { url: imageUrl } }
             ]
           }],
-          max_tokens: 1500
+          max_tokens: 1500,
+          temperature: 0
         },
         {
           headers: {

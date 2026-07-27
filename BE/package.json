@@ -9,6 +9,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "migrate:plant-disease-plants": "node scripts/migrate-plant-disease-affected-plants.js",
+    "migrate:leaf-spot-canonical": "node scripts/migrate-leaf-spot-canonical.js",
     "start": "nodemon src/server.js",
     "dev": "nodemon src/server.js"
   },

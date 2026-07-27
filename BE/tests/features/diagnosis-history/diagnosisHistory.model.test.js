@@ -27,8 +27,23 @@ describe('DiagnosisHistory schema', () => {
     expect(schema.path('catalogPlantId').options.ref).toBe('Plant');
     expect(schema.path('diagnosis.diseaseId').options.ref).toBe('PlantDisease');
     expect(schema.path('diagnosis.diseaseKey').options.lowercase).toBe(true);
+    expect(schema.path('diagnosis.category').options.enum).toEqual([
+      'disease',
+      'pest',
+      'nutrient',
+      'environment',
+      'healthy',
+      'unknown',
+    ]);
     expect(schema.path('diagnosis.confidence').options).toEqual(
       expect.objectContaining({ required: true, min: 0, max: 1 })
+    );
+    expect(schema.path('diagnosis.observedSymptoms').instance).toBe('Array');
+    expect(schema.path('diagnosis.matchScore').options).toEqual(
+      expect.objectContaining({ min: 0, max: 1, default: 0 })
+    );
+    expect(schema.path('diagnosis.matchStatus').options.enum).toContain(
+      'needs_review'
     );
     expect(
       schema.path('recommendationSnapshot.productIds').embeddedSchemaType.options.ref

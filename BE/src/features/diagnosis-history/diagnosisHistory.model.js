@@ -36,10 +36,27 @@ const diagnosisHistorySchema = new mongoose.Schema(
         trim: true,
         lowercase: true,
       },
+      category: {
+        type: String,
+        enum: ['disease', 'pest', 'nutrient', 'environment', 'healthy', 'unknown'],
+        default: 'unknown',
+        lowercase: true,
+        trim: true,
+      },
       rawDiseaseName: {
         type: String,
         default: '',
         trim: true,
+      },
+      observedSymptoms: {
+        type: [String],
+        default: [],
+      },
+      matchScore: {
+        type: Number,
+        min: 0,
+        max: 1,
+        default: 0,
       },
       confidence: {
         type: Number,
@@ -64,7 +81,7 @@ const diagnosisHistorySchema = new mongoose.Schema(
       },
       matchStatus: {
         type: String,
-        enum: ['matched', 'unmatched', 'low_confidence', 'unknown'],
+        enum: ['matched', 'unmatched', 'needs_review', 'low_confidence', 'unknown'],
         required: true,
       },
     },

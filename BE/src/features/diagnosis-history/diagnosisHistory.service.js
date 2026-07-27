@@ -68,7 +68,12 @@ function normalizeCreateData(data = {}) {
     diagnosis: {
       diseaseId: optionalObjectId(diagnosis.diseaseId, 'PlantDisease ID'),
       diseaseKey: String(diagnosis.diseaseKey || '').trim().toLowerCase(),
+      category: String(diagnosis.category || 'unknown').trim().toLowerCase(),
       rawDiseaseName: diagnosis.rawDiseaseName,
+      observedSymptoms: Array.isArray(diagnosis.observedSymptoms)
+        ? diagnosis.observedSymptoms
+        : [],
+      matchScore: diagnosis.matchScore,
       confidence: diagnosis.confidence,
       severity: diagnosis.severity,
       affectedPart: diagnosis.affectedPart,
