@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   CheckCheck,
   Wallet,
+  Sprout,
 } from "lucide-react";
 import {
   NavigationMenu,
@@ -225,6 +226,21 @@ function Header() {
                 </NavigationMenuLink>
               </NavigationMenuItem>
             ))}
+            {canViewNotifications ? (
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link
+                    to={ROUTES.myGarden}
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      location.pathname === ROUTES.myGarden && "bg-accent"
+                    )}
+                  >
+                    My Garden
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            ) : null}
           </NavigationMenuList>
         </NavigationMenu>
 
@@ -250,6 +266,18 @@ function Header() {
                     {item.label}
                   </Link>
                 ))}
+                {canViewNotifications ? (
+                  <Link
+                    to={ROUTES.myGarden}
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent",
+                      location.pathname === ROUTES.myGarden
+                        && "bg-accent text-primary"
+                    )}
+                  >
+                    My Garden
+                  </Link>
+                ) : null}
               </nav>
             </SheetContent>
           </Sheet>
@@ -395,6 +423,14 @@ function Header() {
                       Sổ địa chỉ
                     </Link>
                   </DropdownMenuItem>
+                  {canViewNotifications ? (
+                    <DropdownMenuItem asChild>
+                      <Link to={ROUTES.myGarden} className="cursor-pointer">
+                        <Sprout className="mr-2 h-4 w-4" />
+                        My Garden
+                      </Link>
+                    </DropdownMenuItem>
+                  ) : null}
                   {(user.role === "admin" || user.role === "business_manager" || user.role === "content_manager" || user.role === "business manager" || user.role === "content manager") && (
                     <DropdownMenuItem asChild>
                       <Link

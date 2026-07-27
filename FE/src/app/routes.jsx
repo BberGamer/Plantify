@@ -8,6 +8,7 @@
 // ============================================================
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { CustomerLayout } from "@/components/layout/CustomerLayout";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import AdminLayout from "@/components/layout/AdminLayout";
 import {
@@ -45,6 +46,7 @@ import { AddressBook } from "@/pages/customer/AddressBook";
 import { Cart } from "@/pages/customer/Cart";
 import { Checkout } from "@/pages/customer/Checkout";
 import { MyPosts } from "@/pages/customer/MyPosts";
+import { MyGarden } from "@/pages/customer/MyGarden";
 
 
 
@@ -101,6 +103,14 @@ const customerChildRoutes = [
   { path: "cart", element: <Cart /> },
   { path: "checkout", element: <Checkout /> },
   { path: "my-posts", element: <MyPosts /> },
+  {
+    path: "my-garden",
+    element: (
+      <ProtectedRoute allowedRoles={["customer"]}>
+        <MyGarden />
+      </ProtectedRoute>
+    ),
+  },
 ];
 
 /**

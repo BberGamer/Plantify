@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "test": "node --test tests/features/my-garden/myGarden.utils.test.js"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

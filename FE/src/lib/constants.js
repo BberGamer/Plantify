@@ -8,6 +8,7 @@ import {
   MapPin,
   ShoppingCart,
   Sparkles,
+  Sprout,
   Store,
   User,
   Users
@@ -27,6 +28,7 @@ const ROUTES = {
   profile: "/profile",
   addressBook: "/address-book",
   myPosts: "/my-posts",
+  myGarden: "/my-garden",
   settings: "/settings",
   cart: "/cart",
   checkout: "/checkout",
@@ -61,6 +63,7 @@ const ROLE_SIDEBAR_NAV = {
     { path: "/profile", label: "Hồ sơ", icon: User, roles: ["customer"] },
     { path: "/address-book", label: "Sổ địa chỉ", icon: MapPin, roles: ["customer"] },
     { path: "/my-posts", label: "Bài viết của tôi", icon: BookOpen, roles: ["customer"] },
+    { path: "/my-garden", label: "My Garden", icon: Sprout, roles: ["customer"] },
     {
       path: "/cart",
       label: "Giỏ hàng",

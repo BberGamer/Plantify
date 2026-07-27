@@ -1,0 +1,205 @@
+// MyGarden.jsx - Trang customer quản lý các cây cá nhân bằng CRUD My Garden
+import { useState } from "react";
+import {
+  AlertCircle,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Sprout,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  DeleteUserPlantDialog,
+  UserPlantCard,
+  UserPlantDetailDialog,
+  UserPlantFormDialog,
+  getApiErrorMessage,
+  useMyGarden,
+} from "@/features/my-garden";
+import { usePlants } from "@/features/plants/hooks";
+
+function MyGarden() {
+  const {
+    userPlants,
+    loading,
+    saving,
+    deletingId,
+    error,
+    refetch,
+    create,
+    update,
+    remove,
+  } = useMyGarden();
+  const {
+    plants: catalogPlants,
+    loading: catalogLoading,
+    error: catalogError,
+  } = usePlants({ page: 1, limit: 100 });
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingPlant, setEditingPlant] = useState(null);
+  const [detailPlantId, setDetailPlantId] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const openCreateDialog = () => {
+    setEditingPlant(null);
+    setFormOpen(true);
+  };
+
+  const openEditDialog = (userPlant) => {
+    setEditingPlant(userPlant);
+    setFormOpen(true);
+  };
+
+  const handleFormOpenChange = (nextOpen) => {
+    setFormOpen(nextOpen);
+    if (!nextOpen) setEditingPlant(null);
+  };
+
+  const handleSave = async (payload) => {
+    if (editingPlant?._id) {
+      await update(editingPlant._id, payload);
+      toast.success("Cập nhật cây thành công.");
+      return;
+    }
+
+    await create(payload);
+    refetch();
+    toast.success("Đã thêm cây vào My Garden.");
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget?._id) return;
+
+    try {
+      await remove(deleteTarget._id);
+      if (detailPlantId === deleteTarget._id) setDetailPlantId("");
+      setDeleteTarget(null);
+      toast.success("Đã xóa cây khỏi My Garden.");
+    } catch (deleteError) {
+      toast.error(getApiErrorMessage(
+        deleteError,
+        "Không thể xóa cây khỏi My Garden."
+      ));
+    }
+  };
+
+  const handleEditFromDetail = (userPlant) => {
+    setDetailPlantId("");
+    openEditDialog(userPlant);
+  };
+
+  return (
+    <div className="min-h-screen px-4 py-10 sm:px-6">
+      <div className="mx-auto max-w-7xl space-y-8">
+        <div className="flex flex-col gap-5 rounded-2xl border bg-white/85 p-6 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-primary">
+              <Sprout className="h-5 w-5" />
+              <span className="text-sm font-semibold uppercase tracking-wide">
+                Khu vườn cá nhân
+              </span>
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">My Garden</h1>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              Lưu thông tin những cây bạn đang chăm sóc và liên kết với
+              catalogue Plantify khi cần.
+            </p>
+          </div>
+          <Button type="button" size="lg" onClick={openCreateDialog}>
+            <Plus className="mr-2 h-5 w-5" />
+            Thêm cây
+          </Button>
+        </div>
+
+        {loading ? (
+          <Card>
+            <CardContent className="flex items-center justify-center gap-2 py-24 text-muted-foreground">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              Đang tải My Garden...
+            </CardContent>
+          </Card>
+        ) : error ? (
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardContent className="flex flex-col items-center gap-4 py-16 text-center">
+              <AlertCircle className="h-10 w-10 text-destructive" />
+              <div>
+                <p className="font-semibold text-destructive">
+                  Không thể tải My Garden
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+              </div>
+              <Button type="button" variant="outline" onClick={refetch}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Thử lại
+              </Button>
+            </CardContent>
+          </Card>
+        ) : userPlants.length === 0 ? (
+          <Card className="border-dashed bg-white/80">
+            <CardContent className="flex flex-col items-center py-20 text-center">
+              <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                <Sprout className="h-10 w-10 text-primary" />
+              </div>
+              <h2 className="text-xl font-semibold">Khu vườn đang trống</h2>
+              <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                Thêm cây đầu tiên để bắt đầu quản lý khu vườn cá nhân của bạn.
+              </p>
+              <Button type="button" className="mt-6" onClick={openCreateDialog}>
+                <Plus className="mr-2 h-4 w-4" />
+                Thêm cây đầu tiên
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {userPlants.map((userPlant) => (
+              <UserPlantCard
+                key={userPlant._id}
+                userPlant={userPlant}
+                onView={(plant) => setDetailPlantId(plant._id)}
+                onEdit={openEditDialog}
+                onDelete={setDeleteTarget}
+                deleting={deletingId === userPlant._id}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <UserPlantFormDialog
+        open={formOpen}
+        onOpenChange={handleFormOpenChange}
+        userPlant={editingPlant}
+        catalogPlants={catalogPlants}
+        catalogLoading={catalogLoading}
+        catalogError={catalogError || ""}
+        saving={saving}
+        onSubmit={handleSave}
+      />
+
+      <UserPlantDetailDialog
+        open={Boolean(detailPlantId)}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setDetailPlantId("");
+        }}
+        userPlantId={detailPlantId}
+        onEdit={handleEditFromDetail}
+      />
+
+      <DeleteUserPlantDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setDeleteTarget(null);
+        }}
+        userPlant={deleteTarget}
+        deleting={deletingId === deleteTarget?._id}
+        onConfirm={handleConfirmDelete}
+      />
+    </div>
+  );
+}
+
+export { MyGarden };
