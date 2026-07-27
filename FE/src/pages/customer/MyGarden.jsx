@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   DeleteUserPlantDialog,
   MyGardenDashboard,
+  MyGardenWeatherAdvice,
   UserPlantCard,
   UserPlantDetailDialog,
   UserPlantFormDialog,
@@ -191,6 +192,8 @@ function MyGarden() {
           refreshKey={dashboardRefreshKey}
           onOpenPlant={setDetailPlantId}
         />
+
+        <MyGardenWeatherAdvice />
 
         {loading ? (
           <Card>

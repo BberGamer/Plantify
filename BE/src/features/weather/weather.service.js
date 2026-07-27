@@ -28,8 +28,10 @@ async function getWeatherByCity(city) {
     lang: 'vi',
   });
 
-  const baseUrl = process.env.OPENWEATHER_BASE_URL || DEFAULT_OPENWEATHER_BASE_URL;
-  const response = await fetch(`${baseUrl}?${params.toString()}`);
+  const configuredBaseUrl = process.env.OPENWEATHER_BASE_URL || DEFAULT_OPENWEATHER_BASE_URL;
+  const baseUrl = configuredBaseUrl.replace(/\/$/, '');
+  const endpoint = baseUrl.endsWith('/weather') ? baseUrl : `${baseUrl}/weather`;
+  const response = await fetch(`${endpoint}?${params.toString()}`);
   const data = await response.json();
 
   if (data.cod === '404' || data.cod === 404) {
@@ -46,6 +48,8 @@ async function getWeatherByCity(city) {
 
   const main = data.main || {};
   const wind = data.wind || {};
+  const rain = data.rain || {};
+  const clouds = data.clouds || {};
   const weather = data.weather?.[0] || {};
 
   return {
@@ -55,6 +59,10 @@ async function getWeatherByCity(city) {
     pressure: main.pressure,
     humidity: main.humidity,
     windSpeed: wind.speed,
+    rainLastHourMm: Number(rain['1h'] || 0),
+    rainLastThreeHoursMm: Number(rain['3h'] || 0),
+    cloudiness: clouds.all,
+    conditionCode: weather.id,
     description: weather.description,
     icon: weather.icon,
     iconUrl: weather.icon ? `${OPENWEATHER_ICON_BASE_URL}/${weather.icon}.png` : null,
