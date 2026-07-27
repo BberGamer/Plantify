@@ -46,6 +46,51 @@ describe('userPlantService album', () => {
     expect(userPlant.coverImageUrl).toMatch(/^\/uploads\/my-garden\//);
   });
 
+  test('returns populated catalogue after upload, update and delete', async () => {
+    const catalogPlant = {
+      _id: '507f1f77bcf86cd799439099',
+      name: 'Monstera',
+      scientificName: 'Monstera deliciosa',
+      thumbnail: '/catalog-thumb.jpg',
+      images: ['/catalog-image.jpg'],
+    };
+    const makeDocument = (albumImages = []) => ({
+      albumImages,
+      coverImageUrl: '',
+      save: jest.fn().mockResolvedValue(),
+      populate: jest.fn().mockImplementation(async function populate() { this.catalogPlantId = catalogPlant; }),
+      toObject() { return { _id: userPlantId, catalogPlantId: this.catalogPlantId, coverImageUrl: this.coverImageUrl }; },
+    });
+
+    const uploadDocument = makeDocument();
+    UserPlant.findOne.mockResolvedValueOnce(uploadDocument);
+    fs.mkdir.mockResolvedValue(); fs.writeFile.mockResolvedValue();
+    const uploaded = await service.uploadUserPlantImage(userId, userPlantId, { buffer: validPng, mimetype: 'image/png' });
+
+    const updatedImage = { _id: imageId, url: '/uploads/my-garden/user/plant/current.jpg' };
+    const updateImages = []; updateImages.id = jest.fn().mockReturnValue(updatedImage);
+    const updateDocument = makeDocument(updateImages);
+    UserPlant.findOne.mockResolvedValueOnce(updateDocument);
+    const updated = await service.updateUserPlantImage(userId, userPlantId, imageId, { setAsCover: true });
+
+    const deletedImage = { _id: imageId, url: '/uploads/my-garden/user/plant/current.jpg', storageKey: 'my-garden/user/plant/current.jpg' };
+    const deleteImages = [deletedImage]; deleteImages.id = jest.fn().mockReturnValue(deletedImage);
+    deletedImage.deleteOne = jest.fn(() => deleteImages.splice(0, 1));
+    const deleteDocument = makeDocument(deleteImages);
+    deleteDocument.coverImageUrl = deletedImage.url;
+    UserPlant.findOne.mockResolvedValueOnce(deleteDocument); fs.unlink.mockResolvedValue();
+    const deleted = await service.deleteUserPlantImage(userId, userPlantId, imageId);
+
+    [uploaded, updated, deleted].forEach((result) => {
+      expect(result.catalogPlantId).toEqual(catalogPlant);
+      expect(result.catalogPlantId.name).toBe('Monstera');
+      expect(result.catalogPlantId.images).toEqual(['/catalog-image.jpg']);
+    });
+    [uploadDocument, updateDocument, deleteDocument].forEach((document) => {
+      expect(document.populate).toHaveBeenCalledWith('catalogPlantId', 'name scientificName thumbnail images');
+    });
+  });
+
   test('moves cover to the next image when deleting current cover', async () => {
     const currentImage = { _id: imageId, url: '/uploads/my-garden/user/plant/current.jpg', storageKey: 'my-garden/user/plant/current.jpg' };
     const nextImage = { url: '/uploads/my-garden/user/plant/next.jpg' };

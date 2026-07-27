@@ -65,6 +65,15 @@ async function findOwnedActiveUserPlant(userId, userPlantId) {
   return UserPlant.findOne({ _id: userPlantId, userId, status: 'active' });
 }
 
+/** Populate catalogue rồi chuyển document sang object trước khi trả response album. */
+async function toPopulatedUserPlant(userPlant) {
+  if (!userPlant) return userPlant;
+  if (typeof userPlant.populate === 'function') {
+    await userPlant.populate('catalogPlantId', CATALOG_PLANT_FIELDS);
+  }
+  return typeof userPlant.toObject === 'function' ? userPlant.toObject() : userPlant;
+}
+
 /**
  * Kiểm tra cây danh mục tồn tại khi user muốn liên kết.
  */
@@ -220,7 +229,7 @@ async function uploadUserPlantImage(userId, userPlantId, file, data = {}) {
     userPlant.albumImages.push(image);
     if (!userPlant.coverImageUrl) userPlant.coverImageUrl = image.url;
     await userPlant.save();
-    return userPlant.toObject();
+    return toPopulatedUserPlant(userPlant);
   } catch (error) {
     await fs.unlink(filePath).catch(() => {});
     throw error;
@@ -243,7 +252,7 @@ async function updateUserPlantImage(userId, userPlantId, imageId, data = {}) {
   }
   if (!changed) throw createHttpError('Không có dữ liệu ảnh hợp lệ để cập nhật', 400);
   await userPlant.save();
-  return userPlant.toObject();
+  return toPopulatedUserPlant(userPlant);
 }
 
 /** Xóa metadata và file ảnh; khi xóa cover thì chuyển sang ảnh album kế tiếp. */
@@ -258,7 +267,7 @@ async function deleteUserPlantImage(userId, userPlantId, imageId) {
   if (userPlant.coverImageUrl === url) userPlant.coverImageUrl = userPlant.albumImages[0]?.url || '';
   await userPlant.save();
   await fs.unlink(getSafeStoragePath(storageKey)).catch(() => {});
-  return userPlant.toObject();
+  return toPopulatedUserPlant(userPlant);
 }
 
 module.exports = {
@@ -273,4 +282,5 @@ module.exports = {
   getSafeStoragePath,
   MY_GARDEN_UPLOAD_ROOT,
   getImageTypeFromMagicBytes,
+  toPopulatedUserPlant,
 };
