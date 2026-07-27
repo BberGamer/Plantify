@@ -47,7 +47,7 @@ test("fallback ảnh chỉ áp dụng một lần để không lặp khi ảnh m
   assert.equal(getImageFallbackSource(`${DEFAULT_IMAGE}?cache=1`), null);
 });
 
-test("payload form không chứa userId hoặc status", () => {
+test("payload form không chứa userId, status hoặc coverImageUrl", () => {
   const payload = buildUserPlantPayload({
     name: "  Monstera  ",
     catalogPlantId: "",
@@ -60,9 +60,9 @@ test("payload form không chứa userId hoặc status", () => {
   assert.deepEqual(payload, {
     name: "Monstera",
     catalogPlantId: null,
-    coverImageUrl: "/uploads/cover.jpg",
     notes: "Đặt cạnh cửa sổ",
   });
   assert.equal("userId" in payload, false);
   assert.equal("status" in payload, false);
+  assert.equal("coverImageUrl" in payload, false);
 });

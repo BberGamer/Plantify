@@ -30,7 +30,6 @@ export function buildUserPlantPayload(form = {}) {
   return {
     name: String(form.name || "").trim(),
     catalogPlantId: form.catalogPlantId || null,
-    coverImageUrl: String(form.coverImageUrl || "").trim(),
     notes: String(form.notes || "").trim(),
   };
 }

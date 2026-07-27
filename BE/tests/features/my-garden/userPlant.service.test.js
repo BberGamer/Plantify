@@ -28,6 +28,27 @@ function query(result) {
 describe('userPlantService CRUD', () => {
   beforeEach(() => jest.clearAllMocks());
 
+  test('ignores coverImageUrl in create and update payloads', async () => {
+    UserPlant.mockImplementation((data) => ({ save: jest.fn().mockResolvedValue(data) }));
+    const created = await service.createUserPlant(userId, {
+      name: 'Plant',
+      coverImageUrl: 'https://external.example/image.jpg',
+    });
+    expect(created.coverImageUrl).toBe('');
+
+    const updateQuery = query({ _id: userPlantId, notes: 'Updated' });
+    UserPlant.findOneAndUpdate.mockReturnValue(updateQuery);
+    await service.updateMyUserPlant(userId, userPlantId, {
+      notes: 'Updated',
+      coverImageUrl: 'https://external.example/image.jpg',
+    });
+    expect(UserPlant.findOneAndUpdate).toHaveBeenCalledWith(
+      { _id: userPlantId, userId, status: 'active' },
+      { notes: 'Updated' },
+      { new: true, runValidators: true }
+    );
+  });
+
   test('tạo cây bằng userId từ token và bỏ qua userId trong body', async () => {
     Plant.findById.mockReturnValue(query({ _id: catalogPlantId }));
     UserPlant.mockImplementation((data) => ({
@@ -38,7 +59,7 @@ describe('userPlantService CRUD', () => {
       userId: otherUserId,
       catalogPlantId,
       name: '  Monstera phòng khách  ',
-      coverImageUrl: '/uploads/monstera.jpg',
+      coverImageUrl: '',
       notes: 'Đặt cạnh cửa sổ',
       status: 'archived',
       ignored: true,
@@ -48,7 +69,7 @@ describe('userPlantService CRUD', () => {
       userId,
       catalogPlantId,
       name: 'Monstera phòng khách',
-      coverImageUrl: '/uploads/monstera.jpg',
+      coverImageUrl: '',
       notes: 'Đặt cạnh cửa sổ',
       status: 'active',
     });

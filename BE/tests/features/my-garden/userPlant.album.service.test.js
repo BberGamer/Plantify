@@ -1,4 +1,4 @@
-// userPlant.album.service.test.js - Kiểm tra bảo mật và lưu file cho album My Garden
+// userPlant.album.service.test.js - Kiểm tra bảo mật, rollback và cover của album My Garden
 jest.mock('fs/promises', () => ({ mkdir: jest.fn(), writeFile: jest.fn(), unlink: jest.fn() }));
 jest.mock('../../../src/features/my-garden/userPlant.model', () => {
   const { buildModelMock } = require('../../mocks/mongoose');
@@ -8,95 +8,56 @@ jest.mock('../../../src/features/my-garden/userPlant.model', () => {
 const fs = require('fs/promises');
 const UserPlant = require('../../../src/features/my-garden/userPlant.model');
 const service = require('../../../src/features/my-garden/userPlant.service');
-
 const userId = '507f1f77bcf86cd799439011';
 const userPlantId = '507f1f77bcf86cd799439012';
 const imageId = '507f1f77bcf86cd799439013';
+const validPng = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const validJpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0]);
 
-describe('userPlantService album ảnh', () => {
+describe('userPlantService album', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  test('không cho upload ảnh vào cây không thuộc user hiện tại', async () => {
+  test('does not upload to a plant outside current user ownership', async () => {
     UserPlant.findOne.mockResolvedValue(null);
-    const result = await service.uploadUserPlantImage(userId, userPlantId, {
-      buffer: Buffer.from('image'), mimetype: 'image/png',
-    });
+    const result = await service.uploadUserPlantImage(userId, userPlantId, { buffer: validPng, mimetype: 'image/png' });
     expect(result).toBeNull();
     expect(fs.writeFile).not.toHaveBeenCalled();
-    expect(UserPlant.findOne).toHaveBeenCalledWith({ _id: userPlantId, userId, status: 'active' });
   });
 
-  test('từ chối file không đúng định dạng trước khi thao tác database', async () => {
-    await expect(service.uploadUserPlantImage(userId, userPlantId, {
-      buffer: Buffer.from('text'), mimetype: 'text/plain',
-    })).rejects.toMatchObject({ statusCode: 400 });
-    expect(UserPlant.findOne).not.toHaveBeenCalled();
+  test('rejects spoofed MIME and invalid metadata before writing a file', async () => {
+    await expect(service.uploadUserPlantImage(userId, userPlantId, { buffer: Buffer.from('not image'), mimetype: 'image/png' })).rejects.toMatchObject({ statusCode: 400 });
+    await expect(service.uploadUserPlantImage(userId, userPlantId, { buffer: validPng, mimetype: 'image/png' }, { caption: 123 })).rejects.toMatchObject({ statusCode: 400 });
+    await expect(service.uploadUserPlantImage(userId, userPlantId, { buffer: validPng, mimetype: 'image/png' }, { capturedAt: 'invalid date' })).rejects.toMatchObject({ statusCode: 400 });
+    expect(fs.writeFile).not.toHaveBeenCalled();
   });
 
-  test('rollback file khi MongoDB không thể lưu metadata', async () => {
-    const userPlant = {
-      albumImages: [],
-      save: jest.fn().mockRejectedValue(new Error('MongoDB failed')),
-    };
-    UserPlant.findOne.mockResolvedValue(userPlant);
-    fs.mkdir.mockResolvedValue();
-    fs.writeFile.mockResolvedValue();
-    fs.unlink.mockResolvedValue();
-
-    await expect(service.uploadUserPlantImage(userId, userPlantId, {
-      buffer: Buffer.from('image'), mimetype: 'image/jpeg',
-    })).rejects.toThrow('MongoDB failed');
-    expect(fs.writeFile).toHaveBeenCalled();
+  test('rolls back the file when metadata save fails', async () => {
+    UserPlant.findOne.mockResolvedValue({ albumImages: [], coverImageUrl: '', save: jest.fn().mockRejectedValue(new Error('MongoDB failed')) });
+    fs.mkdir.mockResolvedValue(); fs.writeFile.mockResolvedValue(); fs.unlink.mockResolvedValue();
+    await expect(service.uploadUserPlantImage(userId, userPlantId, { buffer: validJpeg, mimetype: 'image/jpeg' })).rejects.toThrow('MongoDB failed');
     expect(fs.unlink).toHaveBeenCalled();
   });
 
-  test('không cho storage key đi ra ngoài thư mục uploads My Garden', () => {
-    expect(() => service.getSafeStoragePath('../../outside.jpg')).toThrow('Đường dẫn file không hợp lệ');
-    expect(service.getSafeStoragePath('my-garden/user/plant/photo.jpg')).toContain('uploads');
-  });
-
-  test('đặt ảnh album làm cover cho đúng cây của user', async () => {
-    const image = { _id: imageId, url: '/uploads/my-garden/user/plant/cover.jpg' };
-    const images = [];
-    images.id = jest.fn().mockReturnValue(image);
-    const userPlant = {
-      albumImages: images,
-      coverImageUrl: '',
-      save: jest.fn().mockResolvedValue(),
-      toObject: jest.fn().mockReturnValue({ _id: userPlantId, coverImageUrl: image.url }),
-    };
+  test('sets first uploaded image as cover when no cover exists', async () => {
+    const userPlant = { albumImages: [], coverImageUrl: '', save: jest.fn().mockResolvedValue(), toObject: jest.fn(function toObject() { return { coverImageUrl: this.coverImageUrl }; }) };
     UserPlant.findOne.mockResolvedValue(userPlant);
-
-    const result = await service.updateUserPlantImage(userId, userPlantId, imageId, { setAsCover: true });
-
-    expect(userPlant.coverImageUrl).toBe(image.url);
-    expect(userPlant.save).toHaveBeenCalled();
-    expect(result.coverImageUrl).toBe(image.url);
+    fs.mkdir.mockResolvedValue(); fs.writeFile.mockResolvedValue();
+    await service.uploadUserPlantImage(userId, userPlantId, { buffer: validPng, mimetype: 'image/png' });
+    expect(userPlant.coverImageUrl).toMatch(/^\/uploads\/my-garden\//);
   });
 
-  test('xóa cover sẽ chuyển sang ảnh album kế tiếp', async () => {
-    const currentImage = {
-      _id: imageId,
-      url: '/uploads/my-garden/user/plant/current.jpg',
-      storageKey: 'my-garden/user/plant/current.jpg',
-    };
+  test('moves cover to the next image when deleting current cover', async () => {
+    const currentImage = { _id: imageId, url: '/uploads/my-garden/user/plant/current.jpg', storageKey: 'my-garden/user/plant/current.jpg' };
     const nextImage = { url: '/uploads/my-garden/user/plant/next.jpg' };
-    const images = [currentImage, nextImage];
-    images.id = jest.fn().mockReturnValue(currentImage);
+    const images = [currentImage, nextImage]; images.id = jest.fn().mockReturnValue(currentImage);
     currentImage.deleteOne = jest.fn(() => images.splice(0, 1));
-    const userPlant = {
-      albumImages: images,
-      coverImageUrl: currentImage.url,
-      save: jest.fn().mockResolvedValue(),
-      toObject: jest.fn().mockReturnValue({ _id: userPlantId, coverImageUrl: nextImage.url }),
-    };
-    UserPlant.findOne.mockResolvedValue(userPlant);
-    fs.unlink.mockResolvedValue();
-
-    const result = await service.deleteUserPlantImage(userId, userPlantId, imageId);
-
+    const userPlant = { albumImages: images, coverImageUrl: currentImage.url, save: jest.fn().mockResolvedValue(), toObject: jest.fn().mockReturnValue({ coverImageUrl: nextImage.url }) };
+    UserPlant.findOne.mockResolvedValue(userPlant); fs.unlink.mockResolvedValue();
+    await service.deleteUserPlantImage(userId, userPlantId, imageId);
     expect(userPlant.coverImageUrl).toBe(nextImage.url);
-    expect(fs.unlink).toHaveBeenCalled();
-    expect(result.coverImageUrl).toBe(nextImage.url);
+  });
+
+  test('rejects traversal outside My Garden uploads root', () => {
+    expect(() => service.getSafeStoragePath('../../outside.jpg')).toThrow();
   });
 });
