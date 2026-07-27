@@ -40,8 +40,16 @@ function PlantDetail() {
   const plantCareGuides = careGuides.filter((cg) => cg.plantId === id);
 
   // Diseases
-  const { diseases, loading: loadingDiseases, refetch: refetchDiseases } = usePlantDiseases({ limit: 100 });
-  const plantDiseases = diseases.filter((d) => String(d.plantId?._id || d.plantId) === id);
+  const {
+    diseases,
+    loading: loadingDiseases,
+    refetch: refetchDiseases,
+  } = usePlantDiseases({ affectedPlantId: id, limit: 100 });
+  const plantDiseases = diseases.filter((disease) => (
+    (disease.affectedPlantIds || []).some(
+      (affectedPlant) => String(affectedPlant?._id || affectedPlant) === id
+    )
+  ));
 
   // Mutations
   const { update: updatePlant, loading: updatingPlant } = useUpdatePlant();

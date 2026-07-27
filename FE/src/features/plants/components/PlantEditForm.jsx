@@ -43,6 +43,7 @@ const toCommaString = (arr) => (Array.isArray(arr) && arr.length > 0 ? arr.join(
 const toCommaArray = (str) => (str ? str.split(",").map((t) => t.trim()).filter(Boolean) : []);
 
 import { ImageUploader } from "@/components/common/ImageUploader";
+import { textareaToList } from "@/features/plant-diseases/plantDiseaseForm.utils";
 
 // ===================== PLANT EDIT FORM =====================
 
@@ -311,11 +312,11 @@ const DiseaseFormInner = forwardRef(({ plantId, plantName, onCreate, loading }, 
     e.preventDefault();
     await onCreate({
       name: form.name.trim(),
-      symptoms: form.symptoms.trim(),
-      causes: form.causes.trim(),
-      treatment: form.treatment.trim(),
-      prevention: form.prevention.trim(),
-      plantId,
+      symptoms: textareaToList(form.symptoms),
+      causes: textareaToList(form.causes),
+      treatments: textareaToList(form.treatment),
+      preventions: textareaToList(form.prevention),
+      affectedPlantIds: [plantId],
       images: form.images,
     });
     setIsOpen(false);

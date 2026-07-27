@@ -35,7 +35,7 @@ describe('plantService', () => {
     const findChain = chain([]);
     Plant.find.mockReturnValue(findChain);
     Plant.countDocuments.mockResolvedValue(12);
-    PlantDisease.find.mockReturnValue(chain([{ plantId }]));
+    PlantDisease.find.mockReturnValue(chain([{ affectedPlantIds: [plantId] }]));
 
     await getAllPlants({ search: 'yellow leaf', sort: 'popular', page: 2, limit: 5 });
 

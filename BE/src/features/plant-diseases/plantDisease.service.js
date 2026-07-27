@@ -1,23 +1,157 @@
-// Business logic cho Plant Diseases.
+// plantDisease.service.js - Business logic cho kho tri thức bệnh cây
+// Chuẩn hóa canonical key, danh sách kiến thức và liên kết sản phẩm
 const mongoose = require('mongoose');
 const PlantDisease = require('./plantDisease.model');
 const Plant = require('../plants/plant.model');
 
+const DISEASE_CATEGORIES = new Set([
+  'disease',
+  'pest',
+  'nutrient',
+  'environment',
+  'unknown',
+]);
+
 const PLANT_DISEASE_FIELDS = [
-  'plantId',
+  'affectedPlantIds',
   'name',
+  'diseaseKey',
+  'aliases',
+  'category',
   'symptoms',
   'causes',
-  'treatment',
-  'prevention',
+  'treatments',
+  'preventions',
+  'recommendedProducts',
   'images',
+  'isActive',
 ];
 
-function pickPlantDiseaseFields(data = {}) {
-  return PLANT_DISEASE_FIELDS.reduce((result, field) => {
-    if (data[field] !== undefined) result[field] = data[field];
-    return result;
+/**
+ * Chuyển tên bệnh thành canonical key dạng kebab-case ASCII.
+ * @param {string} value - Tên bệnh hoặc key do Content Manager nhập
+ * @returns {string} Canonical key đã chuẩn hóa
+ */
+function normalizeDiseaseKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/đ/g, 'd')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Chuẩn hóa textarea hoặc mảng string thành mảng không rỗng, không trùng.
+ * @param {string|string[]} value - Dữ liệu từ API
+ * @param {string} fieldName - Tên field dùng trong thông báo lỗi
+ * @returns {string[]} Danh sách string đã chuẩn hóa
+ */
+function normalizeStringList(value, fieldName) {
+  const values = Array.isArray(value)
+    ? value
+    : typeof value === 'string'
+      ? value.split(/\r?\n/)
+      : null;
+
+  if (!values) {
+    throw createHttpError(`${fieldName} phải là chuỗi hoặc mảng chuỗi`, 400);
+  }
+
+  const normalizedValues = values
+    .map((item) => String(item || '').trim())
+    .filter(Boolean);
+
+  return normalizedValues.filter((item, index) => (
+    normalizedValues.findIndex(
+      (candidate) => candidate.toLocaleLowerCase('vi') === item.toLocaleLowerCase('vi')
+    ) === index
+  ));
+}
+
+/**
+ * Chỉ lấy và chuẩn hóa các field được phép ghi vào PlantDisease.
+ * Payload cũ treatment/prevention vẫn được nhận và đổi sang field số nhiều.
+ * @param {object} data - Request payload
+ * @param {boolean} isCreate - Có phải thao tác tạo mới không
+ * @returns {object} Payload an toàn cho Mongoose
+ */
+function normalizePlantDiseaseFields(data = {}, isCreate = false) {
+  const sourceData = { ...data };
+  if (sourceData.affectedPlantIds === undefined && sourceData.plantId !== undefined) {
+    sourceData.affectedPlantIds = sourceData.plantId ? [sourceData.plantId] : [];
+  }
+  if (sourceData.treatments === undefined && sourceData.treatment !== undefined) {
+    sourceData.treatments = sourceData.treatment;
+  }
+  if (sourceData.preventions === undefined && sourceData.prevention !== undefined) {
+    sourceData.preventions = sourceData.prevention;
+  }
+
+  const result = PLANT_DISEASE_FIELDS.reduce((normalized, field) => {
+    if (sourceData[field] !== undefined) normalized[field] = sourceData[field];
+    return normalized;
   }, {});
+
+  if (isCreate && result.diseaseKey === undefined && data.name !== undefined) {
+    result.diseaseKey = data.name;
+  }
+  if (result.diseaseKey !== undefined) {
+    result.diseaseKey = normalizeDiseaseKey(result.diseaseKey);
+    if (!result.diseaseKey) {
+      throw createHttpError('Mã bệnh canonical không hợp lệ', 400);
+    }
+  }
+
+  ['aliases', 'symptoms', 'causes', 'treatments', 'preventions', 'images']
+    .forEach((field) => {
+      if (result[field] !== undefined) {
+        result[field] = normalizeStringList(result[field], field);
+      }
+    });
+
+  if (result.category !== undefined) {
+    result.category = String(result.category).trim().toLowerCase();
+    if (!DISEASE_CATEGORIES.has(result.category)) {
+      throw createHttpError('Danh mục bệnh không hợp lệ', 400);
+    }
+  }
+
+  if (result.recommendedProducts !== undefined) {
+    const productIds = Array.isArray(result.recommendedProducts)
+      ? result.recommendedProducts
+      : [result.recommendedProducts];
+
+    result.recommendedProducts = [...new Set(
+      productIds.map((productId) => String(productId || '').trim()).filter(Boolean)
+    )];
+    result.recommendedProducts.forEach((productId) => {
+      ensureObjectId(productId, 'Product ID được khuyến nghị không hợp lệ');
+    });
+  }
+
+  if (result.affectedPlantIds !== undefined) {
+    if (!Array.isArray(result.affectedPlantIds)) {
+      throw createHttpError('affectedPlantIds phải là mảng', 400);
+    }
+
+    result.affectedPlantIds = [...new Set(
+      result.affectedPlantIds
+        .map((plantId) => String(plantId || '').trim())
+        .filter(Boolean)
+    )];
+    result.affectedPlantIds.forEach((plantId) => {
+      ensureObjectId(plantId, 'Plant ID bị ảnh hưởng không hợp lệ');
+    });
+  }
+
+  if (result.isActive !== undefined && typeof result.isActive !== 'boolean') {
+    throw createHttpError('isActive phải là boolean', 400);
+  }
+
+  return result;
 }
 
 function createHttpError(message, statusCode) {
@@ -47,21 +181,34 @@ function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-async function ensurePlantExists(plantId) {
-  ensureObjectId(plantId, 'Plant ID không hợp lệ');
-  const plant = await Plant.findById(plantId).select('_id').lean();
-  if (!plant) {
-    throw createHttpError('Không tìm thấy cây', 404);
+function throwDuplicateDiseaseKeyError(error) {
+  if (error?.code === 11000 && (
+    error?.keyPattern?.diseaseKey || error?.keyValue?.diseaseKey
+  )) {
+    throw createHttpError('Mã bệnh canonical đã tồn tại', 409);
+  }
+  throw error;
+}
+
+async function ensureAffectedPlantsExist(affectedPlantIds = []) {
+  if (affectedPlantIds.length === 0) return;
+
+  const existingPlantCount = await Plant.countDocuments({
+    _id: { $in: affectedPlantIds },
+  });
+
+  if (existingPlantCount !== affectedPlantIds.length) {
+    throw createHttpError('Một hoặc nhiều cây bị ảnh hưởng không tồn tại', 404);
   }
 }
 
 async function getAllPlantDiseases(filters = {}) {
-  const { plantId, search, sort, page = 1, limit = 10 } = filters;
+  const { affectedPlantId, search, sort, page = 1, limit = 10 } = filters;
   const query = {};
 
-  if (plantId) {
-    ensureObjectId(plantId, 'Plant ID không hợp lệ');
-    query.plantId = plantId;
+  if (affectedPlantId) {
+    ensureObjectId(affectedPlantId, 'Affected Plant ID không hợp lệ');
+    query.affectedPlantIds = affectedPlantId;
   }
 
   const keyword = String(search || '').trim();
@@ -71,12 +218,21 @@ async function getAllPlantDiseases(filters = {}) {
     }).select('_id');
     const plantIds = matchingPlants.map(p => p._id);
 
-    const conditions = ['name', 'symptoms', 'causes', 'treatment', 'prevention'].map((field) => ({
+    const conditions = [
+      'name',
+      'diseaseKey',
+      'aliases',
+      'category',
+      'symptoms',
+      'causes',
+      'treatments',
+      'preventions',
+    ].map((field) => ({
       [field]: { $regex: escapeRegex(keyword), $options: 'i' },
     }));
 
     if (plantIds.length > 0) {
-      conditions.push({ plantId: { $in: plantIds } });
+      conditions.push({ affectedPlantIds: { $in: plantIds } });
     }
 
     query.$or = conditions;
@@ -94,7 +250,11 @@ async function getAllPlantDiseases(filters = {}) {
   else if (sort === 'name') sortOption = { name: 1 };
 
   const diseases = await PlantDisease.find(query)
-    .populate('plantId', 'name')
+    .populate('affectedPlantIds', 'name scientificName thumbnail')
+    .populate(
+      'recommendedProducts',
+      'name thumbnail price stock ratingAverage ratingCount isActive'
+    )
     .sort(sortOption)
     .skip((safePage - 1) * safeLimit)
     .limit(safeLimit)
@@ -105,29 +265,36 @@ async function getAllPlantDiseases(filters = {}) {
 
 async function getPlantDiseaseById(id) {
   ensureObjectId(id, 'PlantDisease ID không hợp lệ');
-  return PlantDisease.findById(id).lean();
+  return PlantDisease.findById(id)
+    .populate('affectedPlantIds', 'name scientificName thumbnail')
+    .populate(
+      'recommendedProducts',
+      'name thumbnail price stock ratingAverage ratingCount isActive'
+    )
+    .lean();
 }
 
 async function createPlantDisease(data = {}) {
-  if (!data.plantId) throw createHttpError('ID cây là bắt buộc', 400);
   if (typeof data.name !== 'string' || !data.name.trim()) {
     throw createHttpError('Tên bệnh là bắt buộc', 400);
   }
 
-  await ensurePlantExists(data.plantId);
+  const createData = normalizePlantDiseaseFields(data, true);
+  await ensureAffectedPlantsExist(createData.affectedPlantIds);
 
-  return new PlantDisease(pickPlantDiseaseFields(data)).save();
+  try {
+    return await new PlantDisease(createData).save();
+  } catch (error) {
+    return throwDuplicateDiseaseKeyError(error);
+  }
 }
 
 async function updatePlantDisease(id, data = {}) {
   ensureObjectId(id, 'PlantDisease ID không hợp lệ');
 
-  const updateData = pickPlantDiseaseFields(data);
-  if (updateData.plantId !== undefined && !updateData.plantId) {
-    throw createHttpError('ID cây không được để trống', 400);
-  }
-  if (updateData.plantId !== undefined) {
-    await ensurePlantExists(updateData.plantId);
+  const updateData = normalizePlantDiseaseFields(data);
+  if (updateData.affectedPlantIds !== undefined) {
+    await ensureAffectedPlantsExist(updateData.affectedPlantIds);
   }
   if (updateData.name !== undefined && (
     typeof updateData.name !== 'string' || !updateData.name.trim()
@@ -138,10 +305,14 @@ async function updatePlantDisease(id, data = {}) {
     throw createHttpError('Không có dữ liệu cập nhật hợp lệ', 400);
   }
 
-  return PlantDisease.findByIdAndUpdate(id, updateData, {
-    new: true,
-    runValidators: true,
-  }).lean();
+  try {
+    return await PlantDisease.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).lean();
+  } catch (error) {
+    return throwDuplicateDiseaseKeyError(error);
+  }
 }
 
 async function deletePlantDisease(id) {

@@ -89,16 +89,20 @@ async function getAllPlants(filters = {}) {
     const diseaseMatches = await PlantDisease.find({
       $or: [
         { name: { $regex: escapeRegex(keyword), $options: 'i' } },
+        { diseaseKey: { $regex: escapeRegex(keyword), $options: 'i' } },
+        { aliases: { $regex: escapeRegex(keyword), $options: 'i' } },
+        { category: { $regex: escapeRegex(keyword), $options: 'i' } },
         { symptoms: { $regex: escapeRegex(keyword), $options: 'i' } },
         { causes: { $regex: escapeRegex(keyword), $options: 'i' } },
-        { treatment: { $regex: escapeRegex(keyword), $options: 'i' } },
-        { prevention: { $regex: escapeRegex(keyword), $options: 'i' } },
+        { treatments: { $regex: escapeRegex(keyword), $options: 'i' } },
+        { preventions: { $regex: escapeRegex(keyword), $options: 'i' } },
       ],
-    }).select('plantId').lean();
+    }).select('affectedPlantIds').lean();
 
     const diseasePlantIds = [...new Set(
       diseaseMatches
-        .map((disease) => disease.plantId?.toString())
+        .flatMap((disease) => disease.affectedPlantIds || [])
+        .map((plantId) => plantId?.toString())
         .filter(Boolean)
     )];
 

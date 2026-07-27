@@ -6,7 +6,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  AlertCircle,
   ChevronLeft,
   ChevronRight,
   Bug,
@@ -31,7 +30,13 @@ import {
   useDeletePlantDisease,
 } from "@/features/plant-diseases/hooks";
 import { usePlants } from "@/features/plants/hooks";
+import { useProducts } from "@/features/products/hooks";
 import { ManageDiseaseDialog } from "@/features/plant-diseases/components/ManageDiseaseDialog";
+import { DiseaseKnowledgeSummary } from "@/features/plant-diseases/components/DiseaseKnowledgeSummary";
+import {
+  getDiseaseCategoryLabel,
+  getReferenceId,
+} from "@/features/plant-diseases/plantDiseaseForm.utils";
 import { toast } from "sonner";
 
 const getTimestampFromId = (hexId) => {
@@ -46,6 +51,49 @@ const formatDate = (dateStr, id) => {
     dateObj.getMonth() + 1
   ).padStart(2, "0")}/${dateObj.getFullYear()}`;
 };
+
+/**
+ * Hiển thị tối đa hai cây bị ảnh hưởng và tổng số còn lại.
+ */
+function AffectedPlantsBadges({ disease, plants }) {
+  const affectedPlants = Array.isArray(disease.affectedPlantIds)
+    ? disease.affectedPlantIds
+    : disease.plantId
+      ? [disease.plantId]
+      : [];
+
+  if (affectedPlants.length === 0) {
+    return <span className="text-xs text-muted-foreground">Chưa xác định</span>;
+  }
+
+  return (
+    <div className="flex max-w-full flex-wrap gap-1">
+      {affectedPlants.slice(0, 2).map((affectedPlant) => {
+        const plantId = getReferenceId(affectedPlant);
+        const plantName = affectedPlant?.name
+          || plants.find((plant) => getReferenceId(plant) === plantId)?.name
+          || "Cây liên quan";
+
+        return (
+          <Badge
+            key={plantId}
+            variant="outline"
+            className="max-w-full gap-1 rounded-full border-green-200/50 bg-green-50/50 px-2 py-0.5 text-[11px] font-normal text-green-700"
+            title={plantName}
+          >
+            <Sprout className="h-3 w-3 shrink-0" />
+            <span className="truncate">{plantName}</span>
+          </Badge>
+        );
+      })}
+      {affectedPlants.length > 2 && (
+        <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[10px]">
+          +{affectedPlants.length - 2}
+        </Badge>
+      )}
+    </div>
+  );
+}
 
 export function ManageDiseases() {
   const [search, setSearch] = useState("");
@@ -62,7 +110,16 @@ export function ManageDiseases() {
     search,
   });
 
-  const { plants } = usePlants({ limit: 100 });
+  const {
+    plants,
+    loading: plantsLoading,
+    error: plantsError,
+  } = usePlants({ limit: 100 });
+  const {
+    products,
+    loading: productsLoading,
+    error: productsError,
+  } = useProducts({ limit: 100 });
   const { create, loading: creating } = useCreatePlantDisease();
   const { update, loading: updating } = useUpdatePlantDisease();
   const { remove, loading: deleting } = useDeletePlantDisease();
@@ -134,7 +191,7 @@ export function ManageDiseases() {
               setSearch(event.target.value);
               setPage(1);
             }}
-            placeholder="Tìm theo tên bệnh, cây bị ảnh hưởng..."
+            placeholder="Tìm tên bệnh, canonical key, alias, triệu chứng hoặc cây..."
             className="rounded-full bg-card pl-10"
           />
         </div>
@@ -168,7 +225,7 @@ export function ManageDiseases() {
                 <TableRow>
                   <TableHead className="w-[30%] md:w-[20%] px-5 text-xs uppercase text-primary">Tên bệnh</TableHead>
                   <TableHead className="w-[30%] md:w-[20%] text-xs uppercase text-primary">Cây bị ảnh hưởng</TableHead>
-                  <TableHead className="hidden md:table-cell w-[40%] text-xs uppercase text-primary">Triệu chứng</TableHead>
+                  <TableHead className="hidden md:table-cell w-[40%] text-xs uppercase text-primary">Kiến thức bệnh</TableHead>
                   <TableHead className="w-[25%] md:w-[12%] text-xs uppercase text-primary">Cập nhật</TableHead>
                   <TableHead className="w-[15%] md:w-[8%] px-5 text-right text-xs uppercase text-primary">Thao tác</TableHead>
                 </TableRow>
@@ -202,31 +259,38 @@ export function ManageDiseases() {
                             </span>
                           )}
                         </div>
-                        <span className="min-w-0 overflow-hidden">
+                        <span className="min-w-0 space-y-1 overflow-hidden">
                           <span className="block truncate font-medium text-foreground">
                             {disease.name}
+                          </span>
+                          <span className="flex min-w-0 flex-wrap items-center gap-1">
+                            <code
+                              className="max-w-full truncate rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                              title={disease.diseaseKey}
+                            >
+                              {disease.diseaseKey || "chưa-có-key"}
+                            </code>
+                            <Badge
+                              variant={disease.isActive === false ? "secondary" : "outline"}
+                              className="px-1.5 py-0 text-[9px]"
+                            >
+                              {disease.isActive === false ? "Tạm ẩn" : "Đang dùng"}
+                            </Badge>
+                          </span>
+                          <span
+                            className="block truncate text-[10px] text-muted-foreground"
+                            title={getDiseaseCategoryLabel(disease.category)}
+                          >
+                            {getDiseaseCategoryLabel(disease.category)}
                           </span>
                         </span>
                       </div>
                     </TableCell>
                     <TableCell className="overflow-hidden py-4 text-sm leading-5">
-                      {disease.plantId?.name || disease.plantId ? (
-                        <Badge
-                          variant="outline"
-                          className="bg-green-50/50 text-green-700 border-green-200/50 text-[11px] font-normal py-0.5 px-2.5 rounded-full inline-flex items-center gap-1 max-w-full truncate"
-                          title={disease.plantId?.name}
-                        >
-                          <Sprout className="w-3 h-3 shrink-0" />
-                          <span className="truncate">{disease.plantId?.name || "Chi tiết"}</span>
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">-</span>
-                      )}
+                      <AffectedPlantsBadges disease={disease} plants={plants} />
                     </TableCell>
-                    <TableCell className="hidden md:table-cell overflow-hidden whitespace-normal py-4 text-sm leading-5 text-muted-foreground">
-                      <p className="line-clamp-2 break-words" title={disease.symptoms}>
-                        {disease.symptoms || "Chưa có thông tin triệu chứng"}
-                      </p>
+                    <TableCell className="hidden overflow-hidden whitespace-normal py-3 md:table-cell">
+                      <DiseaseKnowledgeSummary disease={disease} />
                     </TableCell>
                     <TableCell className="py-4 text-sm text-muted-foreground">
                       {formatDate(disease.updatedAt || disease.createdAt, disease._id || disease.id)}
@@ -299,6 +363,11 @@ export function ManageDiseases() {
         onOpenChange={setIsDialogOpen}
         disease={editingDisease}
         plants={plants}
+        plantsLoading={plantsLoading}
+        plantsError={plantsError}
+        products={products}
+        productsLoading={productsLoading}
+        productsError={productsError}
         onSubmit={handleSubmit}
         loading={creating || updating}
       />

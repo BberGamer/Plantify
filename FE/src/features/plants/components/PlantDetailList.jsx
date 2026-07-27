@@ -10,6 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, Droplets, Leaf, AlertCircle, Scissors, Sprout, RefreshCw, Bug } from "lucide-react";
 
+const formatKnowledgeList = (value) => (
+  Array.isArray(value) ? value.join(", ") : value
+);
+
 /**
  * CareGuideList - Danh sách Care Guides
  */
@@ -131,28 +135,28 @@ export function DiseaseList({ diseases, loading }) {
                     <h3>{disease.name}</h3>
                   </div>
                 </div>
-                {disease.symptoms && (
+                {formatKnowledgeList(disease.symptoms) && (
                   <div className="plant-detail-card-content">
                     <span className="plant-detail-card-label">Triệu chứng: </span>
-                    {disease.symptoms}
+                    {formatKnowledgeList(disease.symptoms)}
                   </div>
                 )}
-                {disease.causes && (
+                {formatKnowledgeList(disease.causes) && (
                   <div className="plant-detail-card-content">
                     <span className="plant-detail-card-label">Nguyên nhân: </span>
-                    {disease.causes}
+                    {formatKnowledgeList(disease.causes)}
                   </div>
                 )}
-                {disease.treatment && (
+                {formatKnowledgeList(disease.treatments ?? disease.treatment) && (
                   <div className="plant-detail-card-content">
                     <span className="plant-detail-card-treatment">Điều trị: </span>
-                    {disease.treatment}
+                    {formatKnowledgeList(disease.treatments ?? disease.treatment)}
                   </div>
                 )}
-                {disease.prevention && (
+                {formatKnowledgeList(disease.preventions ?? disease.prevention) && (
                   <div className="plant-detail-card-content">
                     <span className="plant-detail-card-label font-medium text-emerald-600">Phòng ngừa: </span>
-                    {disease.prevention}
+                    {formatKnowledgeList(disease.preventions ?? disease.prevention)}
                   </div>
                 )}
               </div>

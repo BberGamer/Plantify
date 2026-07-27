@@ -55,7 +55,7 @@ function PlantDetail() {
     limit: 100,
   });
   const { diseases, loading: loadingDiseases } = usePlantDiseases({
-    plantId: id,
+    affectedPlantId: id,
     limit: 100,
   });
 
