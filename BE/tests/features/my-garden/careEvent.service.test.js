@@ -16,7 +16,17 @@ const eventId = '507f1f77bcf86cd799439013';
 const query = (result) => ({ sort: jest.fn().mockReturnThis(), lean: jest.fn().mockResolvedValue(result) });
 
 describe('CareEvent service', () => {
-  beforeEach(() => { jest.clearAllMocks(); UserPlant.findOne.mockResolvedValue({ _id: plantId }); });
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-07-27T12:00:00.000Z'));
+    jest.clearAllMocks();
+    UserPlant.findOne.mockResolvedValue({
+      _id: plantId,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    });
+  });
+
+  afterEach(() => jest.useRealTimers());
 
   test('create uses owners from arguments and ignores body owners', async () => {
     CareEvent.create.mockImplementation(async (data) => data);
@@ -62,5 +72,36 @@ describe('CareEvent service', () => {
     for (const performedAt of [null, '', 'not-a-date']) {
       await expect(service.createCareEvent(userId, plantId, { type: 'watering', performedAt })).rejects.toMatchObject({ statusCode: 400 });
     }
+  });
+
+  test('accepts lifecycle boundaries and rejects dates outside them', async () => {
+    CareEvent.create.mockImplementation(async (data) => data);
+
+    await expect(service.createCareEvent(userId, plantId, {
+      type: 'watering',
+      performedAt: '2026-01-01T00:00:00.000Z',
+    })).resolves.toEqual(expect.objectContaining({
+      performedAt: new Date('2026-01-01T00:00:00.000Z'),
+    }));
+    await expect(service.createCareEvent(userId, plantId, {
+      type: 'watering',
+      performedAt: '2026-07-27T12:00:00.000Z',
+    })).resolves.toEqual(expect.objectContaining({
+      performedAt: new Date('2026-07-27T12:00:00.000Z'),
+    }));
+
+    await expect(service.createCareEvent(userId, plantId, {
+      type: 'watering',
+      performedAt: '2025-12-31T23:59:59.999Z',
+    })).rejects.toMatchObject({
+      statusCode: 400,
+      message: expect.stringMatching(/trước ngày tạo cây/),
+    });
+    await expect(service.updateCareEvent(userId, plantId, eventId, {
+      performedAt: '2026-07-27T12:00:00.001Z',
+    })).rejects.toMatchObject({
+      statusCode: 400,
+      message: expect.stringMatching(/tương lai/),
+    });
   });
 });

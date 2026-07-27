@@ -5,6 +5,8 @@ const fs = require('fs/promises');
 const path = require('path');
 const Plant = require('../plants/plant.model');
 const UserPlant = require('./userPlant.model');
+const CareEvent = require('./careEvent.model');
+const DiagnosisHistory = require('../diagnosis-history/diagnosisHistory.model');
 
 const CATALOG_PLANT_FIELDS = 'name scientificName thumbnail images';
 const MY_GARDEN_UPLOAD_ROOT = path.resolve(__dirname, '../../../uploads/my-garden');
@@ -187,17 +189,67 @@ async function updateMyUserPlant(userId, userPlantId, data = {}) {
 }
 
 /**
- * Soft delete cây bằng cách chuyển status sang archived.
+ * Xóa vĩnh viễn cây, dữ liệu chăm sóc và thư mục ảnh thuộc đúng user.
  */
-async function archiveMyUserPlant(userId, userPlantId) {
+function isTransactionUnsupported(error) {
+  return error?.code === 20
+    || error?.codeName === 'IllegalOperation'
+    || /Transaction numbers are only allowed|does not support transactions/i.test(
+      error?.message || ''
+    );
+}
+
+async function deleteUserPlantRecords(userId, userPlantId, session = null) {
+  const sessionOptions = session ? { session } : {};
+  const userPlant = await UserPlant.findOneAndDelete(
+    { _id: userPlantId, userId },
+    sessionOptions
+  ).lean();
+  if (!userPlant) return null;
+
+  await CareEvent.deleteMany({ userId, userPlantId }, sessionOptions);
+  await DiagnosisHistory.updateMany(
+    { userId, userPlantId },
+    { $set: { userPlantId: null } },
+    sessionOptions
+  );
+  return userPlant;
+}
+
+async function removeUserPlantUploadDirectory(userId, userPlantId) {
+  const storageKey = path.posix.join(
+    'my-garden',
+    String(userId),
+    String(userPlantId)
+  );
+  await fs.rm(getSafeStoragePath(storageKey), {
+    recursive: true,
+    force: true,
+  });
+}
+
+async function deleteMyUserPlant(userId, userPlantId) {
   ensureObjectId(userId, 'User ID không hợp lệ');
   ensureObjectId(userPlantId, 'UserPlant ID không hợp lệ');
 
-  return UserPlant.findOneAndUpdate(
-    { _id: userPlantId, userId, status: 'active' },
-    { $set: { status: 'archived' } },
-    { new: true, runValidators: true }
-  ).lean();
+  let userPlant;
+  let session;
+  try {
+    session = await mongoose.startSession();
+    await session.withTransaction(async () => {
+      userPlant = await deleteUserPlantRecords(userId, userPlantId, session);
+    });
+  } catch (error) {
+    if (!isTransactionUnsupported(error)) throw error;
+    userPlant = await deleteUserPlantRecords(userId, userPlantId);
+  } finally {
+    await session?.endSession();
+  }
+
+  if (userPlant) {
+    await removeUserPlantUploadDirectory(userId, userPlantId);
+  }
+  return userPlant;
 }
 
 /** Lưu buffer ảnh, sau đó thêm metadata vào album; xóa file nếu MongoDB lưu lỗi. */
@@ -275,7 +327,7 @@ module.exports = {
   getMyUserPlants,
   getMyUserPlantById,
   updateMyUserPlant,
-  archiveMyUserPlant,
+  deleteMyUserPlant,
   uploadUserPlantImage,
   updateUserPlantImage,
   deleteUserPlantImage,

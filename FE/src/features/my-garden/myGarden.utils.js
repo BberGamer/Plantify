@@ -8,6 +8,34 @@ export function localDateTimeToIso(value) { return new Date(value).toISOString()
 export function sortCareEvents(events) { return [...events].sort((a, b) => new Date(b.performedAt) - new Date(a.performedAt)); }
 export function getCareEventCapabilities(readOnly) { return { canCreate: !readOnly, canEdit: !readOnly, canDelete: !readOnly }; }
 
+export function validateCareEventPerformedAt(
+  value,
+  userPlantCreatedAt,
+  now = new Date()
+) {
+  if (!value) {
+    return { error: "Thời gian thực hiện không hợp lệ.", performedAt: "" };
+  }
+  const valueDate = new Date(value);
+  if (Number.isNaN(valueDate.getTime())) {
+    return { error: "Thời gian thực hiện không hợp lệ.", performedAt: "" };
+  }
+  const createdAt = new Date(userPlantCreatedAt);
+  if (!Number.isNaN(createdAt.getTime()) && valueDate < createdAt) {
+    return {
+      error: "Thời gian thực hiện không được trước ngày tạo cây.",
+      performedAt: "",
+    };
+  }
+  if (valueDate > now) {
+    return {
+      error: "Thời gian thực hiện không được ở tương lai.",
+      performedAt: "",
+    };
+  }
+  return { error: "", performedAt: valueDate.toISOString() };
+}
+
 export function isValidAlbumFile(file) {
   return Boolean(file && ALBUM_IMAGE_TYPES.includes(file.type) && file.size <= MAX_ALBUM_IMAGE_SIZE);
 }

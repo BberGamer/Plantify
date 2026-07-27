@@ -96,7 +96,11 @@ export function UserPlantDetailDialog({
             </div>
           </div>
           <UserPlantAlbum userPlant={userPlant} readOnly />
-          <UserPlantCareEvents userPlantId={userPlant._id} readOnly />
+          <UserPlantCareEvents
+            userPlantId={userPlant._id}
+            userPlantCreatedAt={userPlant.createdAt}
+            readOnly
+          />
           <UserPlantDiagnosisHistory userPlantId={userPlant._id} />
           </div>
         ) : null}

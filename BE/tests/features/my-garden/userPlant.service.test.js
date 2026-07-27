@@ -6,9 +6,24 @@ jest.mock('../../../src/features/my-garden/userPlant.model', () => {
 jest.mock('../../../src/features/plants/plant.model', () => ({
   findById: jest.fn(),
 }));
+jest.mock('../../../src/features/my-garden/careEvent.model', () => ({
+  deleteMany: jest.fn(),
+}));
+jest.mock('../../../src/features/diagnosis-history/diagnosisHistory.model', () => ({
+  updateMany: jest.fn(),
+}));
+jest.mock('fs/promises', () => ({
+  rm: jest.fn(),
+}));
 
+const mongoose = require('mongoose');
+const fs = require('fs/promises');
 const Plant = require('../../../src/features/plants/plant.model');
 const UserPlant = require('../../../src/features/my-garden/userPlant.model');
+const CareEvent = require('../../../src/features/my-garden/careEvent.model');
+const DiagnosisHistory = require(
+  '../../../src/features/diagnosis-history/diagnosisHistory.model'
+);
 const service = require('../../../src/features/my-garden/userPlant.service');
 
 const userId = '507f1f77bcf86cd799439011';
@@ -26,7 +41,23 @@ function query(result) {
 }
 
 describe('userPlantService CRUD', () => {
-  beforeEach(() => jest.clearAllMocks());
+  let session;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    session = {
+      withTransaction: jest.fn(async (callback) => callback()),
+      endSession: jest.fn().mockResolvedValue(),
+    };
+    jest.spyOn(mongoose, 'startSession').mockResolvedValue(session);
+    CareEvent.deleteMany.mockResolvedValue({ deletedCount: 0 });
+    DiagnosisHistory.updateMany.mockResolvedValue({ modifiedCount: 0 });
+    fs.rm.mockResolvedValue();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   test('ignores coverImageUrl in create and update payloads', async () => {
     UserPlant.mockImplementation((data) => ({ save: jest.fn().mockResolvedValue(data) }));
@@ -149,27 +180,41 @@ describe('userPlantService CRUD', () => {
     expect(Plant.findById).toHaveBeenCalledWith(catalogPlantId);
   });
 
-  test('soft delete chỉ archive cây active thuộc user hiện tại', async () => {
-    const archiveQuery = query({
+  test('hard delete cascade đúng dữ liệu thuộc user hiện tại', async () => {
+    const deleteQuery = query({
       _id: userPlantId,
       userId,
-      status: 'archived',
     });
-    UserPlant.findOneAndUpdate.mockReturnValue(archiveQuery);
+    UserPlant.findOneAndDelete.mockReturnValue(deleteQuery);
 
-    const result = await service.archiveMyUserPlant(userId, userPlantId);
+    const result = await service.deleteMyUserPlant(userId, userPlantId);
 
-    expect(UserPlant.findOneAndUpdate).toHaveBeenCalledWith(
-      { _id: userPlantId, userId, status: 'active' },
-      { $set: { status: 'archived' } },
-      { new: true, runValidators: true }
+    expect(session.withTransaction).toHaveBeenCalledTimes(1);
+    expect(UserPlant.findOneAndDelete).toHaveBeenCalledWith(
+      { _id: userPlantId, userId },
+      { session }
     );
-    expect(result.status).toBe('archived');
+    expect(CareEvent.deleteMany).toHaveBeenCalledWith(
+      { userId, userPlantId },
+      { session }
+    );
+    expect(DiagnosisHistory.updateMany).toHaveBeenCalledWith(
+      { userId, userPlantId },
+      { $set: { userPlantId: null } },
+      { session }
+    );
+    expect(fs.rm).toHaveBeenCalledWith(
+      expect.stringContaining(userPlantId),
+      { recursive: true, force: true }
+    );
+    expect(session.endSession).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ _id: userPlantId, userId });
   });
 
   test('không trả record của user khác khi đọc, sửa hoặc xóa', async () => {
     UserPlant.findOne.mockReturnValue(query(null));
     UserPlant.findOneAndUpdate.mockReturnValue(query(null));
+    UserPlant.findOneAndDelete.mockReturnValue(query(null));
 
     await expect(
       service.getMyUserPlantById(otherUserId, userPlantId)
@@ -178,7 +223,7 @@ describe('userPlantService CRUD', () => {
       service.updateMyUserPlant(otherUserId, userPlantId, { name: 'Không được' })
     ).resolves.toBeNull();
     await expect(
-      service.archiveMyUserPlant(otherUserId, userPlantId)
+      service.deleteMyUserPlant(otherUserId, userPlantId)
     ).resolves.toBeNull();
 
     expect(UserPlant.findOne).toHaveBeenCalledWith({
@@ -192,12 +237,60 @@ describe('userPlantService CRUD', () => {
       { name: 'Không được' },
       { new: true, runValidators: true }
     );
-    expect(UserPlant.findOneAndUpdate).toHaveBeenNthCalledWith(
-      2,
-      { _id: userPlantId, userId: otherUserId, status: 'active' },
-      { $set: { status: 'archived' } },
-      { new: true, runValidators: true }
+    expect(UserPlant.findOneAndDelete).toHaveBeenCalledWith(
+      { _id: userPlantId, userId: otherUserId },
+      { session }
     );
+    expect(CareEvent.deleteMany).not.toHaveBeenCalled();
+    expect(DiagnosisHistory.updateMany).not.toHaveBeenCalled();
+    expect(fs.rm).not.toHaveBeenCalled();
+  });
+
+  test('không xóa storage khi cascade transaction thất bại', async () => {
+    UserPlant.findOneAndDelete.mockReturnValue(query({
+      _id: userPlantId,
+      userId,
+    }));
+    CareEvent.deleteMany.mockRejectedValue(new Error('Cascade failed'));
+
+    await expect(
+      service.deleteMyUserPlant(userId, userPlantId)
+    ).rejects.toThrow('Cascade failed');
+
+    expect(DiagnosisHistory.updateMany).not.toHaveBeenCalled();
+    expect(fs.rm).not.toHaveBeenCalled();
+    expect(session.endSession).toHaveBeenCalledTimes(1);
+  });
+
+  test('fallback an toàn khi MongoDB deployment không hỗ trợ transaction', async () => {
+    const unsupportedError = new Error(
+      'Transaction numbers are only allowed on a replica set member'
+    );
+    unsupportedError.code = 20;
+    session.withTransaction.mockRejectedValue(unsupportedError);
+    UserPlant.findOneAndDelete.mockReturnValue(query({
+      _id: userPlantId,
+      userId,
+    }));
+
+    await expect(
+      service.deleteMyUserPlant(userId, userPlantId)
+    ).resolves.toEqual({ _id: userPlantId, userId });
+
+    expect(UserPlant.findOneAndDelete).toHaveBeenCalledWith(
+      { _id: userPlantId, userId },
+      {}
+    );
+    expect(CareEvent.deleteMany).toHaveBeenCalledWith(
+      { userId, userPlantId },
+      {}
+    );
+    expect(DiagnosisHistory.updateMany).toHaveBeenCalledWith(
+      { userId, userPlantId },
+      { $set: { userPlantId: null } },
+      {}
+    );
+    expect(fs.rm).toHaveBeenCalledTimes(1);
   });
 
   test('PATCH chỉ có status bị từ chối vì client không được cập nhật status', async () => {

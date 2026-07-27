@@ -20,6 +20,6 @@ router.patch('/:id/images/:imageId', userPlantController.updateUserPlantImage);
 router.delete('/:id/images/:imageId', userPlantController.deleteUserPlantImage);
 router.get('/:id', userPlantController.getMyUserPlantById);
 router.patch('/:id', userPlantController.updateMyUserPlant);
-router.delete('/:id', userPlantController.archiveMyUserPlant);
+router.delete('/:id', userPlantController.deleteMyUserPlant);
 
 module.exports = router;

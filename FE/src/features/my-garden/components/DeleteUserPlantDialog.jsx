@@ -1,4 +1,4 @@
-// DeleteUserPlantDialog.jsx - Xác nhận soft delete cây khỏi My Garden
+// DeleteUserPlantDialog.jsx - Xác nhận xóa vĩnh viễn cây khỏi My Garden
 import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
@@ -24,15 +24,18 @@ export function DeleteUserPlantDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={(nextOpen) => {
-      if (!deleting) onOpenChange(nextOpen);
-    }}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!deleting) onOpenChange(nextOpen);
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Xóa cây khỏi My Garden?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cây “{userPlant?.name || ""}” sẽ được lưu trữ dưới trạng thái
-            archived và không còn xuất hiện trong danh sách.
+            Cây “{userPlant?.name || ""}”, ảnh album và lịch sử chăm sóc sẽ
+            bị xóa vĩnh viễn. Lịch sử chẩn đoán vẫn được giữ lại.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

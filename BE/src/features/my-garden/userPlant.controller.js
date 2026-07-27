@@ -79,11 +79,11 @@ async function updateMyUserPlant(req, res, next) {
 }
 
 /**
- * DELETE /api/my-garden/:id - Archive cây thuộc user.
+ * DELETE /api/my-garden/:id - Xóa vĩnh viễn cây thuộc user.
  */
-async function archiveMyUserPlant(req, res, next) {
+async function deleteMyUserPlant(req, res, next) {
   try {
-    const userPlant = await userPlantService.archiveMyUserPlant(
+    const userPlant = await userPlantService.deleteMyUserPlant(
       req.user.id,
       req.params.id
     );
@@ -131,7 +131,7 @@ module.exports = {
   getMyUserPlants,
   getMyUserPlantById,
   updateMyUserPlant,
-  archiveMyUserPlant,
+  deleteMyUserPlant,
   uploadUserPlantImage,
   updateUserPlantImage,
   deleteUserPlantImage,

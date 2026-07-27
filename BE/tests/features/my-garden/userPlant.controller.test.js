@@ -50,7 +50,7 @@ describe('userPlantController', () => {
   test.each([
     ['detail', 'getMyUserPlantById'],
     ['update', 'updateMyUserPlant'],
-    ['delete', 'archiveMyUserPlant'],
+    ['delete', 'deleteMyUserPlant'],
   ])('trả 404 khi %s không tìm thấy cây thuộc user', async (_, serviceMethod) => {
     service[serviceMethod].mockResolvedValue(null);
 
@@ -59,7 +59,7 @@ describe('userPlantController', () => {
     } else if (serviceMethod === 'updateMyUserPlant') {
       await controller.updateMyUserPlant(req, res, next);
     } else {
-      await controller.archiveMyUserPlant(req, res, next);
+      await controller.deleteMyUserPlant(req, res, next);
     }
 
     expect(apiResponse.notFound).toHaveBeenCalledWith(res, expect.any(String));

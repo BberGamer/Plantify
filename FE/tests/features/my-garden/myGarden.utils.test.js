@@ -16,6 +16,7 @@ import {
   localDateTimeToIso,
   sortCareEvents,
   toLocalDateTimeInput,
+  validateCareEventPerformedAt,
 } from "../../../src/features/my-garden/myGarden.utils.js";
 import { buildDiagnosisFormData } from "../../../src/features/ai/diagnosisRequest.utils.js";
 
@@ -170,11 +171,56 @@ test("AI Doctor URL preserves userPlantId when opening a history", () => {
   );
 });
 
+test("CareEvent only accepts time from plant creation through now", () => {
+  const createdAt = "2026-07-01T00:00:00.000Z";
+  const now = new Date("2026-07-27T12:00:00.000Z");
+
+  assert.equal(
+    validateCareEventPerformedAt("2026-07-01T07:00", createdAt, now).error,
+    ""
+  );
+  assert.match(
+    validateCareEventPerformedAt("2026-06-30T23:59", createdAt, now).error,
+    /trước ngày tạo cây/
+  );
+  assert.match(
+    validateCareEventPerformedAt("2026-07-27T19:01", createdAt, now).error,
+    /tương lai/
+  );
+  assert.match(
+    validateCareEventPerformedAt("", createdAt, now).error,
+    /không hợp lệ/
+  );
+});
+
+test("CareEvent datetime-local renders lifecycle min and local current max", () => {
+  const source = fs.readFileSync(
+    new URL("../../../src/features/my-garden/components/UserPlantCareEvents.jsx", import.meta.url),
+    "utf8"
+  );
+  assert.ok(source.includes("min={userPlantCreatedAt"));
+  assert.ok(source.includes("max={toLocalDateTimeInput()}"));
+  assert.ok(source.includes("validateCareEventPerformedAt"));
+});
+
+test("My Garden removes a deleted UserPlant from local state after API success", () => {
+  const source = fs.readFileSync(
+    new URL("../../../src/features/my-garden/hooks/useMyGarden.js", import.meta.url),
+    "utf8"
+  );
+  const deleteCall = source.indexOf("await deleteUserPlant(userPlantId)");
+  const filterCall = source.indexOf("userPlant._id !== userPlantId", deleteCall);
+  assert.ok(deleteCall >= 0);
+  assert.ok(filterCall > deleteCall);
+});
+
 test("My Garden detail reuses diagnosis history with a userPlantId filter", () => {
   const source = fs.readFileSync(
     new URL("../../../src/features/my-garden/components/UserPlantDiagnosisHistory.jsx", import.meta.url),
     "utf8"
   );
+  assert.ok(source.includes('from "react-router"'));
+  assert.equal(source.includes('from "react-router-dom"'), false);
   assert.ok(source.includes("useDiagnosisHistory"));
   assert.ok(source.includes("userPlantId,"));
   assert.ok(source.includes("DiagnosisHistoryList"));
