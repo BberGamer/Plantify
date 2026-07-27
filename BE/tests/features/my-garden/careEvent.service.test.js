@@ -49,10 +49,15 @@ describe('CareEvent watering service', () => {
     jest.spyOn(mongoose, 'startSession').mockResolvedValue(session);
     UserPlant.findOne.mockResolvedValue({
       _id: plantId,
-      wateringSchedule: { enabled: false },
+      wateringSchedule: { enabled: true, frequencyDays: 3 },
     });
     UserPlant.updateOne.mockResolvedValue({ modifiedCount: 1 });
     CareEvent.create.mockImplementation(async (items) => items);
+    CareEvent.findOne.mockReturnValue(query({
+      _id: eventId,
+      type: 'watering',
+      performedAt: now,
+    }));
     CareEvent.findOneAndDelete.mockReturnValue(query({
       _id: eventId,
       userId,
@@ -68,7 +73,7 @@ describe('CareEvent watering service', () => {
     jest.restoreAllMocks();
   });
 
-  test('accepts only watering payload, uses server time and token/path ownership', async () => {
+  test('accepts watering payload, uses server time and token/path ownership', async () => {
     const result = await service.createCareEvent(
       userId,
       plantId,
@@ -102,7 +107,7 @@ describe('CareEvent watering service', () => {
   });
 
   test.each([
-    [{ type: 'fertilizing' }],
+    [{ type: 'observation' }],
     [{ type: 'watering', performedAt: '2020-01-01T00:00:00.000Z' }],
     [{ type: 'watering', notes: 'client note' }],
     [{ type: 'watering', userId: otherUserId }],
@@ -148,11 +153,68 @@ describe('CareEvent watering service', () => {
     );
   });
 
+  test('completes fertilizing schedule and only clears its matching notification', async () => {
+    UserPlant.findOne.mockResolvedValue({
+      _id: plantId,
+      fertilizingSchedule: { enabled: true, frequencyDays: 5 },
+    });
+    CareEvent.findOne.mockReturnValue(query({
+      _id: eventId,
+      type: 'fertilizing',
+      performedAt: now,
+    }));
+
+    const result = await service.createCareEvent(
+      userId,
+      plantId,
+      { type: 'fertilizing' }
+    );
+
+    expect(result).toEqual(expect.objectContaining({
+      type: 'fertilizing',
+      performedAt: now,
+    }));
+    expect(UserPlant.updateOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        'fertilizingSchedule.enabled': true,
+      }),
+      {
+        $set: {
+          'fertilizingSchedule.lastCompletedAt': now,
+          'fertilizingSchedule.nextDueAt':
+            new Date('2026-08-01T12:00:00.000Z'),
+        },
+      },
+      { session, runValidators: true }
+    );
+    expect(Notification.deleteMany).toHaveBeenCalledWith(
+      {
+        recipientId: userId,
+        userPlantId: plantId,
+        type: 'plant_fertilizing_due',
+      },
+      { session }
+    );
+  });
+
   test('does not create or delete notifications for a plant outside ownership', async () => {
     UserPlant.findOne.mockResolvedValue(null);
     await expect(
       service.createCareEvent(userId, plantId, { type: 'watering' })
     ).resolves.toBeNull();
+    expect(CareEvent.create).not.toHaveBeenCalled();
+    expect(Notification.deleteMany).not.toHaveBeenCalled();
+  });
+
+  test('rejects completion when the matching schedule is disabled', async () => {
+    UserPlant.findOne.mockResolvedValue({
+      _id: plantId,
+      wateringSchedule: { enabled: false, frequencyDays: 3 },
+    });
+
+    await expect(
+      service.createCareEvent(userId, plantId, { type: 'watering' })
+    ).rejects.toMatchObject({ statusCode: 409 });
     expect(CareEvent.create).not.toHaveBeenCalled();
     expect(Notification.deleteMany).not.toHaveBeenCalled();
   });
@@ -175,7 +237,7 @@ describe('CareEvent watering service', () => {
     expect(findQuery.sort).toHaveBeenCalledWith({ performedAt: -1 });
   });
 
-  test('DELETE only removes an owned watering event and resyncs its schedule', async () => {
+  test('DELETE removes an owned watering event and resyncs its schedule', async () => {
     UserPlant.findOne.mockResolvedValue({
       _id: plantId,
       wateringSchedule: { enabled: true, frequencyDays: 2 },
@@ -194,7 +256,7 @@ describe('CareEvent watering service', () => {
         _id: eventId,
         userId,
         userPlantId: plantId,
-        type: 'watering',
+        type: { $in: ['watering', 'fertilizing'] },
       },
       { session }
     );
@@ -205,6 +267,41 @@ describe('CareEvent watering service', () => {
           'wateringSchedule.lastCompletedAt': previousEvent.performedAt,
           'wateringSchedule.nextDueAt':
             new Date('2026-07-22T10:00:00.000Z'),
+        },
+      },
+      { session, runValidators: true }
+    );
+  });
+
+  test('DELETE resyncs fertilizing schedule for a mistaken fertilizing completion', async () => {
+    const deletedEvent = {
+      _id: eventId,
+      type: 'fertilizing',
+      performedAt: now,
+    };
+    const previousEvent = {
+      _id: '507f1f77bcf86cd799439014',
+      type: 'fertilizing',
+      performedAt: new Date('2026-07-18T10:00:00.000Z'),
+    };
+    UserPlant.findOne.mockResolvedValue({
+      _id: plantId,
+      fertilizingSchedule: { enabled: true, frequencyDays: 7 },
+    });
+    CareEvent.findOneAndDelete.mockReturnValue(query(deletedEvent));
+    CareEvent.findOne.mockReturnValue(query(previousEvent));
+
+    await service.deleteCareEvent(userId, plantId, eventId);
+
+    expect(UserPlant.updateOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        'fertilizingSchedule.enabled': true,
+      }),
+      {
+        $set: {
+          'fertilizingSchedule.lastCompletedAt': previousEvent.performedAt,
+          'fertilizingSchedule.nextDueAt':
+            new Date('2026-07-25T10:00:00.000Z'),
         },
       },
       { session, runValidators: true }

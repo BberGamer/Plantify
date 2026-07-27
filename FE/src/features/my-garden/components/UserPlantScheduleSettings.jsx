@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,16 @@ const STATUS_LABELS = {
   invalid: "Chưa cấu hình",
 };
 
-function ScheduleFields({ label, value, onChange, readOnly, bounds }) {
+function ScheduleFields({
+  label,
+  scheduleType,
+  value,
+  onChange,
+  readOnly,
+  bounds,
+  onComplete,
+  completing,
+}) {
   const status = getUserPlantScheduleStatus(value);
 
   return (
@@ -33,20 +42,35 @@ function ScheduleFields({ label, value, onChange, readOnly, bounds }) {
 
       {readOnly ? (
         value.enabled ? (
-          <div className="space-y-1 text-sm text-muted-foreground">
-            <p>Chu kỳ: {value.frequencyDays} ngày</p>
-            <p>
-              Lần tiếp theo:{" "}
-              {value.nextDueAt
-                ? new Date(value.nextDueAt).toLocaleString("vi-VN")
-                : "Chưa xác định"}
-            </p>
-            <p>
-              Hoàn thành gần nhất:{" "}
-              {value.lastCompletedAt
-                ? new Date(value.lastCompletedAt).toLocaleString("vi-VN")
-                : "Chưa có"}
-            </p>
+          <div className="space-y-3">
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <p>Chu kỳ: {value.frequencyDays} ngày</p>
+              <p>
+                Lần tiếp theo:{" "}
+                {value.nextDueAt
+                  ? new Date(value.nextDueAt).toLocaleString("vi-VN")
+                  : "Chưa xác định"}
+              </p>
+              <p>
+                Hoàn thành gần nhất:{" "}
+                {value.lastCompletedAt
+                  ? new Date(value.lastCompletedAt).toLocaleString("vi-VN")
+                  : "Chưa có"}
+              </p>
+            </div>
+            {onComplete ? (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => onComplete(scheduleType)}
+                disabled={completing}
+              >
+                {completing ? (
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                ) : null}
+                Hoàn thành
+              </Button>
+            ) : null}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
@@ -116,6 +140,7 @@ export function UserPlantScheduleSettings({
   userPlant,
   readOnly = false,
   onChanged,
+  onComplete,
 }) {
   const [watering, setWatering] = useState(
     normalizeUserPlantSchedule(userPlant?.wateringSchedule)
@@ -124,6 +149,14 @@ export function UserPlantScheduleSettings({
     normalizeUserPlantSchedule(userPlant?.fertilizingSchedule)
   );
   const [saving, setSaving] = useState(false);
+  const [completing, setCompleting] = useState({
+    watering: false,
+    fertilizing: false,
+  });
+  const completingRef = useRef({
+    watering: false,
+    fertilizing: false,
+  });
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -174,6 +207,27 @@ export function UserPlantScheduleSettings({
   };
 
   const bounds = getScheduleDateBounds();
+  const complete = async (scheduleType) => {
+    if (completingRef.current[scheduleType]) return;
+    completingRef.current[scheduleType] = true;
+    setCompleting((current) => ({ ...current, [scheduleType]: true }));
+    try {
+      await onComplete?.(scheduleType);
+      toast.success(
+        scheduleType === "watering"
+          ? "Đã hoàn thành lịch tưới."
+          : "Đã hoàn thành lịch bón phân."
+      );
+    } catch (requestError) {
+      toast.error(getApiErrorMessage(
+        requestError,
+        "Không thể hoàn thành lịch chăm sóc."
+      ));
+    } finally {
+      completingRef.current[scheduleType] = false;
+      setCompleting((current) => ({ ...current, [scheduleType]: false }));
+    }
+  };
 
   return (
     <section className="space-y-3 rounded-xl border p-4">
@@ -184,17 +238,23 @@ export function UserPlantScheduleSettings({
       <div className="grid gap-3 lg:grid-cols-2">
         <ScheduleFields
           label="Lịch tưới"
+          scheduleType="watering"
           value={watering}
           onChange={setWatering}
           readOnly={readOnly}
           bounds={bounds}
+          onComplete={readOnly ? onComplete && complete : null}
+          completing={completing.watering}
         />
         <ScheduleFields
           label="Lịch bón phân"
+          scheduleType="fertilizing"
           value={fertilizing}
           onChange={setFertilizing}
           readOnly={readOnly}
           bounds={bounds}
+          onComplete={readOnly ? onComplete && complete : null}
+          completing={completing.fertilizing}
         />
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}

@@ -90,12 +90,14 @@ function createData(data = {}) {
   if (
     fields.length !== 1
     || fields[0] !== 'type'
-    || data.type !== 'watering'
+    || !['watering', 'fertilizing'].includes(data.type)
   ) {
-    throw httpError('Chỉ chấp nhận thao tác tưới với type watering');
+    throw httpError(
+      'Chỉ chấp nhận hoàn thành lịch tưới hoặc bón phân'
+    );
   }
   return {
-    type: 'watering',
+    type: data.type,
     performedAt: new Date(),
     notes: '',
   };
@@ -113,6 +115,10 @@ async function createCareEvent(userId, userPlantId, data) {
       { session }
     );
     if (!userPlant) return null;
+    const scheduleField = scheduleFieldForType(eventData.type);
+    if (!userPlant[scheduleField]?.enabled) {
+      throw httpError('Lịch chăm sóc tương ứng chưa được bật', 409);
+    }
 
     const [careEvent] = await CareEvent.create([{
       ...eventData,
@@ -130,7 +136,9 @@ async function createCareEvent(userId, userPlantId, data) {
       {
         recipientId: userId,
         userPlantId,
-        type: 'plant_watering_due',
+        type: eventData.type === 'watering'
+          ? 'plant_watering_due'
+          : 'plant_fertilizing_due',
       },
       { session }
     );
@@ -160,7 +168,12 @@ async function deleteCareEvent(userId, userPlantId, eventId) {
     if (!userPlant) return null;
 
     const deletedEvent = await CareEvent.findOneAndDelete(
-      { _id: eventId, userId, userPlantId, type: 'watering' },
+      {
+        _id: eventId,
+        userId,
+        userPlantId,
+        type: { $in: ['watering', 'fertilizing'] },
+      },
       { session }
     ).lean();
     if (!deletedEvent) return null;
@@ -168,7 +181,7 @@ async function deleteCareEvent(userId, userPlantId, eventId) {
     await syncScheduleFromLatestCareEvent({
       userId,
       userPlantId,
-      type: 'watering',
+      type: deletedEvent.type,
       session,
     });
 

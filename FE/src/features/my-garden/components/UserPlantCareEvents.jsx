@@ -1,10 +1,9 @@
 // UserPlantCareEvents.jsx - Ghi nhận nhanh và hiển thị lịch sử tưới cây
 import { useCallback, useEffect, useState } from "react";
-import { Droplets, Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
-  createCareEvent,
   deleteCareEvent,
   getCareEvents,
 } from "../api";
@@ -18,11 +17,11 @@ export function UserPlantCareEvents({
   userPlantId,
   onRecorded,
   readOnly = false,
+  refreshKey = 0,
 }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState("");
 
   const load = useCallback(async () => {
@@ -30,7 +29,9 @@ export function UserPlantCareEvents({
     try {
       const response = await getCareEvents(userPlantId);
       setEvents(sortCareEvents(
-        (response.data || []).filter((event) => event.type === "watering")
+        (response.data || []).filter(
+          (event) => ["watering", "fertilizing"].includes(event.type)
+        )
       ));
       setError("");
     } catch (requestError) {
@@ -45,29 +46,10 @@ export function UserPlantCareEvents({
 
   useEffect(() => {
     if (userPlantId) load();
-  }, [userPlantId, load]);
-
-  const recordWatering = async () => {
-    if (saving) return;
-    setSaving(true);
-    try {
-      await createCareEvent(userPlantId, { type: "watering" });
-      await load();
-      await onRecorded?.();
-      requestNotificationsRefresh();
-      toast.success("Đã ghi nhận tưới cây.");
-    } catch (requestError) {
-      toast.error(getApiErrorMessage(
-        requestError,
-        "Không thể ghi nhận tưới cây."
-      ));
-    } finally {
-      setSaving(false);
-    }
-  };
+  }, [userPlantId, load, refreshKey]);
 
   const remove = async (id) => {
-    if (deletingId || saving) return;
+    if (deletingId) return;
     if (!window.confirm("Xóa lần tưới này?")) return;
     setDeletingId(id);
     try {
@@ -90,21 +72,6 @@ export function UserPlantCareEvents({
     <section className="space-y-3 rounded-xl border p-4">
       <div className="flex items-center justify-between gap-3">
         <h3 className="font-semibold">Lịch sử chăm sóc</h3>
-        {!readOnly ? (
-          <Button
-            type="button"
-            size="sm"
-            onClick={recordWatering}
-            disabled={saving || Boolean(deletingId)}
-          >
-            {saving ? (
-              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-            ) : (
-              <Droplets className="mr-1 h-4 w-4" />
-            )}
-            Đã tưới
-          </Button>
-        ) : null}
       </div>
 
       {loading ? (
@@ -121,7 +88,9 @@ export function UserPlantCareEvents({
           className="flex items-center justify-between gap-3 rounded border p-3"
         >
           <div>
-            <p className="font-medium">Đã tưới</p>
+            <p className="font-medium">
+              {item.type === "watering" ? "Đã tưới" : "Đã bón phân"}
+            </p>
             <p className="text-xs text-muted-foreground">
               {new Date(item.performedAt).toLocaleString("vi-VN")}
             </p>
@@ -133,7 +102,7 @@ export function UserPlantCareEvents({
               size="icon"
               variant="ghost"
               className="text-destructive"
-              disabled={Boolean(deletingId) || saving}
+              disabled={Boolean(deletingId)}
               onClick={() => remove(item._id)}
               aria-label="Xóa lần tưới"
             >

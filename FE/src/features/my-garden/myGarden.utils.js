@@ -27,7 +27,7 @@ export function sortCareEvents(events) {
 
 export function getCareEventCapabilities(readOnly) {
   return {
-    canCreate: !readOnly,
+    canCreate: false,
     canEdit: false,
     canDelete: !readOnly,
   };

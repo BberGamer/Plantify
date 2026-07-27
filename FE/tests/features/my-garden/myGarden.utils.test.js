@@ -52,7 +52,7 @@ test("timezone Asia/Ho_Chi_Minh chuyển datetime-local không lệch 7 giờ", 
 });
 
 test("CareEvent quick watering/read-only exposes đúng thao tác", () => {
-  assert.deepEqual(getCareEventCapabilities(false), { canCreate: true, canEdit: false, canDelete: true });
+  assert.deepEqual(getCareEventCapabilities(false), { canCreate: false, canEdit: false, canDelete: true });
   assert.deepEqual(getCareEventCapabilities(true), { canCreate: false, canEdit: false, canDelete: false });
 });
 
@@ -181,7 +181,7 @@ test("AI Doctor URL preserves userPlantId when opening a history", () => {
   );
 });
 
-test("CareEvent only records watering now and keeps delete without edit form", () => {
+test("CareEvent history shows watering/fertilizing and only keeps delete", () => {
   const source = fs.readFileSync(
     new URL("../../../src/features/my-garden/components/UserPlantCareEvents.jsx", import.meta.url),
     "utf8"
@@ -191,12 +191,13 @@ test("CareEvent only records watering now and keeps delete without edit form", (
     "utf8"
   );
   assert.ok(source.includes(
-    'createCareEvent(userPlantId, { type: "watering" })'
+    '["watering", "fertilizing"].includes(event.type)'
   ));
-  assert.ok(source.includes('event.type === "watering"'));
   assert.ok(source.includes("deleteCareEvent"));
   assert.ok(source.includes("Đã tưới"));
-  assert.ok(source.includes("disabled={saving || Boolean(deletingId)}"));
+  assert.ok(source.includes("Đã bón phân"));
+  assert.equal(source.includes("createCareEvent"), false);
+  assert.ok(source.includes("disabled={Boolean(deletingId)}"));
   assert.equal(source.includes("updateCareEvent"), false);
   assert.equal(apiSource.includes("updateCareEvent"), false);
   assert.equal(source.includes('type="datetime-local"'), false);
@@ -275,6 +276,13 @@ test("embedded schedules validate boundaries and display status", () => {
   assert.ok(source.includes("Lịch tưới"));
   assert.ok(source.includes("Lịch bón phân"));
   assert.ok(source.includes("Đã tắt"));
+  assert.ok(source.includes('scheduleType="watering"'));
+  assert.ok(source.includes('scheduleType="fertilizing"'));
+  assert.ok(source.includes("Hoàn thành"));
+  assert.ok(source.includes("completing.watering"));
+  assert.ok(source.includes("completing.fertilizing"));
+  assert.ok(source.includes("completingRef.current[scheduleType]"));
+  assert.ok(source.includes("value.enabled ?"));
 });
 
 test("recording care refetches UserPlant schedules without nested forms", () => {
@@ -306,6 +314,10 @@ test("recording care refetches UserPlant schedules without nested forms", () => 
     "window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, refetch)"
   ));
   assert.ok(detailSource.includes("onRecorded={handleCareChanged}"));
+  assert.ok(detailSource.includes("onComplete={handleScheduleComplete}"));
+  assert.ok(detailSource.includes("createCareEvent(userPlantId, { type })"));
+  assert.ok(detailSource.includes("requestNotificationsRefresh()"));
+  assert.ok(detailSource.includes("refreshKey={careRefreshKey}"));
   assert.ok(detailSource.includes("getUserPlantById(userPlantId)"));
   assert.ok(detailSource.includes("onUserPlantChanged?.(response.data)"));
   assert.ok(pageSource.includes(
@@ -314,6 +326,7 @@ test("recording care refetches UserPlant schedules without nested forms", () => 
   assert.ok(pageSource.includes(
     "setDashboardRefreshKey((current) => current + 1)"
   ));
+  assert.equal(formSource.includes("onComplete="), false);
   assert.equal(careSource.includes("<form"), false);
 });
 

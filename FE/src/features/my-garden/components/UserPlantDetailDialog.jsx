@@ -1,4 +1,5 @@
 // UserPlantDetailDialog.jsx - Dialog tải và hiển thị chi tiết một UserPlant
+import { useState } from "react";
 import { Loader2, Pencil, RefreshCw, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,8 @@ import { UserPlantAlbum } from "./UserPlantAlbum";
 import { UserPlantCareEvents } from "./UserPlantCareEvents";
 import { UserPlantScheduleSettings } from "./UserPlantScheduleSettings";
 import { UserPlantDiagnosisHistory } from "./UserPlantDiagnosisHistory";
-import { getUserPlantById } from "../api";
+import { createCareEvent, getUserPlantById } from "../api";
+import { requestNotificationsRefresh } from "@/features/notifications/notification.utils";
 
 export function UserPlantDetailDialog({
   open,
@@ -27,8 +29,10 @@ export function UserPlantDetailDialog({
     userPlantId,
     open
   );
+  const [careRefreshKey, setCareRefreshKey] = useState(0);
   const catalogPlant = userPlant?.catalogPlantId;
   const handleCareChanged = async () => {
+    setCareRefreshKey((current) => current + 1);
     try {
       const response = await getUserPlantById(userPlantId);
       onUserPlantChanged?.(response.data);
@@ -37,6 +41,11 @@ export function UserPlantDetailDialog({
     } finally {
       refetch();
     }
+  };
+  const handleScheduleComplete = async (type) => {
+    await createCareEvent(userPlantId, { type });
+    await handleCareChanged();
+    requestNotificationsRefresh();
   };
 
   return (
@@ -108,10 +117,15 @@ export function UserPlantDetailDialog({
             </div>
           </div>
           <UserPlantAlbum userPlant={userPlant} readOnly />
-          <UserPlantScheduleSettings userPlant={userPlant} readOnly />
+          <UserPlantScheduleSettings
+            userPlant={userPlant}
+            readOnly
+            onComplete={handleScheduleComplete}
+          />
           <UserPlantCareEvents
             userPlantId={userPlant._id}
             onRecorded={handleCareChanged}
+            refreshKey={careRefreshKey}
           />
           <UserPlantDiagnosisHistory userPlantId={userPlant._id} />
           </div>
