@@ -3,6 +3,16 @@ const mongoose = require('mongoose');
 
 const USER_PLANT_STATUSES = ['active', 'archived'];
 
+const albumImageSchema = new mongoose.Schema(
+  {
+    url: { type: String, required: true },
+    storageKey: { type: String, required: true },
+    caption: { type: String, default: '' },
+    capturedAt: { type: Date, default: null },
+  },
+  { _id: true, timestamps: { createdAt: true, updatedAt: false } }
+);
+
 const userPlantSchema = new mongoose.Schema(
   {
     userId: {
@@ -28,6 +38,10 @@ const userPlantSchema = new mongoose.Schema(
     notes: {
       type: String,
       default: '',
+    },
+    albumImages: {
+      type: [albumImageSchema],
+      default: [],
     },
     status: {
       type: String,

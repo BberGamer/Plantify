@@ -27,3 +27,20 @@ export async function deleteUserPlant(userPlantId) {
   const response = await api.delete(`${MY_GARDEN_API}/${userPlantId}`);
   return response.data;
 }
+
+export async function uploadUserPlantImage(userPlantId, formData, onUploadProgress) {
+  const response = await api.post(`${MY_GARDEN_API}/${userPlantId}/images`, formData, {
+    onUploadProgress,
+  });
+  return response.data;
+}
+
+export async function updateUserPlantImage(userPlantId, imageId, payload) {
+  const response = await api.patch(`${MY_GARDEN_API}/${userPlantId}/images/${imageId}`, payload);
+  return response.data;
+}
+
+export async function deleteUserPlantImage(userPlantId, imageId) {
+  const response = await api.delete(`${MY_GARDEN_API}/${userPlantId}/images/${imageId}`);
+  return response.data;
+}

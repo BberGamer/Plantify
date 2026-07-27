@@ -100,10 +100,39 @@ async function archiveMyUserPlant(req, res, next) {
   }
 }
 
+async function uploadUserPlantImage(req, res, next) {
+  try {
+    const userPlant = await userPlantService.uploadUserPlantImage(req.user.id, req.params.id, req.file, req.body);
+    if (!userPlant) return apiResponse.notFound(res, 'Không tìm thấy cây trong My Garden');
+    return apiResponse.created(res, 'Tải ảnh album thành công', userPlant);
+  } catch (error) { return next(error); }
+}
+
+async function updateUserPlantImage(req, res, next) {
+  try {
+    const userPlant = await userPlantService.updateUserPlantImage(req.user.id, req.params.id, req.params.imageId, req.body);
+    if (userPlant === null) return apiResponse.notFound(res, 'Không tìm thấy cây trong My Garden');
+    if (userPlant === false) return apiResponse.notFound(res, 'Không tìm thấy ảnh album');
+    return apiResponse.success(res, 'Cập nhật ảnh album thành công', userPlant);
+  } catch (error) { return next(error); }
+}
+
+async function deleteUserPlantImage(req, res, next) {
+  try {
+    const userPlant = await userPlantService.deleteUserPlantImage(req.user.id, req.params.id, req.params.imageId);
+    if (userPlant === null) return apiResponse.notFound(res, 'Không tìm thấy cây trong My Garden');
+    if (userPlant === false) return apiResponse.notFound(res, 'Không tìm thấy ảnh album');
+    return apiResponse.success(res, 'Xóa ảnh album thành công', userPlant);
+  } catch (error) { return next(error); }
+}
+
 module.exports = {
   createUserPlant,
   getMyUserPlants,
   getMyUserPlantById,
   updateMyUserPlant,
   archiveMyUserPlant,
+  uploadUserPlantImage,
+  updateUserPlantImage,
+  deleteUserPlantImage,
 };

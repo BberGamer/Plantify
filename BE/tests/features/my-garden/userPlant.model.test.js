@@ -31,6 +31,9 @@ describe('UserPlant schema', () => {
     }));
     expect(schema.path('coverImageUrl').options.default).toBe('');
     expect(schema.path('notes').options.default).toBe('');
+    expect(schema.path('albumImages').schema.path('url').options.required).toBe(true);
+    expect(schema.path('albumImages').schema.path('storageKey').options.required).toBe(true);
+    expect(schema.path('albumImages').schema.path('caption').options.default).toBe('');
     expect(schema.path('status').options).toEqual(expect.objectContaining({
       enum: ['active', 'archived'],
       default: 'active',

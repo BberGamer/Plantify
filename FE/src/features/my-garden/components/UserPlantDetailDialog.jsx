@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/dialog";
 import { useUserPlantDetail } from "../hooks";
 import { getUserPlantImage, handleUserPlantImageError } from "../myGarden.utils";
+import { UserPlantAlbum } from "./UserPlantAlbum";
 
 export function UserPlantDetailDialog({
   open,
   onOpenChange,
   userPlantId,
   onEdit,
+  onUserPlantChanged,
 }) {
   const { userPlant, loading, error, refetch } = useUserPlantDetail(
     userPlantId,
@@ -47,6 +49,7 @@ export function UserPlantDetailDialog({
             </Button>
           </div>
         ) : userPlant ? (
+          <div className="space-y-6">
           <div className="grid gap-6 sm:grid-cols-[220px_1fr]">
             <img
               src={getUserPlantImage(userPlant)}
@@ -89,6 +92,8 @@ export function UserPlantDetailDialog({
                 )}
               </div>
             </div>
+          </div>
+          <UserPlantAlbum userPlant={userPlant} onChanged={(updatedPlant) => { onUserPlantChanged?.(updatedPlant); refetch(); }} />
           </div>
         ) : null}
 

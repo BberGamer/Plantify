@@ -86,6 +86,14 @@ export function useMyGarden() {
     }
   }, []);
 
+  const replaceUserPlant = useCallback((updatedPlant) => {
+    setUserPlants((currentPlants) => currentPlants.map((userPlant) => (
+      userPlant._id === updatedPlant._id
+        ? { ...userPlant, ...updatedPlant, catalogPlantId: updatedPlant.catalogPlantId || userPlant.catalogPlantId }
+        : userPlant
+    )));
+  }, []);
+
   return {
     userPlants,
     loading,
@@ -96,6 +104,7 @@ export function useMyGarden() {
     create,
     update,
     remove,
+    replaceUserPlant,
   };
 }
 

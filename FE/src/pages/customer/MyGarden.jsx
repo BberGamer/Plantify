@@ -31,6 +31,7 @@ function MyGarden() {
     create,
     update,
     remove,
+    replaceUserPlant,
   } = useMyGarden();
   const {
     plants: catalogPlants,
@@ -187,6 +188,7 @@ function MyGarden() {
         }}
         userPlantId={detailPlantId}
         onEdit={handleEditFromDetail}
+        onUserPlantChanged={replaceUserPlant}
       />
 
       <DeleteUserPlantDialog

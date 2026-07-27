@@ -1,9 +1,14 @@
 // userPlant.service.js - Business logic CRUD và ownership cho My Garden
 const mongoose = require('mongoose');
+const crypto = require('crypto');
+const fs = require('fs/promises');
+const path = require('path');
 const Plant = require('../plants/plant.model');
 const UserPlant = require('./userPlant.model');
 
 const CATALOG_PLANT_FIELDS = 'name scientificName thumbnail images';
+const MY_GARDEN_UPLOAD_ROOT = path.resolve(__dirname, '../../../uploads/my-garden');
+const MIME_EXTENSIONS = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
 function createHttpError(message, statusCode) {
   const error = new Error(message);
@@ -30,6 +35,27 @@ function normalizeOptionalString(value, fieldName) {
     throw createHttpError(`${fieldName} phải là chuỗi`, 400);
   }
   return value;
+}
+
+function normalizeOptionalDate(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw createHttpError('capturedAt không hợp lệ', 400);
+  return date;
+}
+
+function getSafeStoragePath(storageKey) {
+  const resolvedPath = path.resolve(MY_GARDEN_UPLOAD_ROOT, storageKey.replace(/^my-garden[\\/]/, ''));
+  if (!resolvedPath.startsWith(`${MY_GARDEN_UPLOAD_ROOT}${path.sep}`)) {
+    throw createHttpError('Đường dẫn file không hợp lệ', 400);
+  }
+  return resolvedPath;
+}
+
+async function findOwnedActiveUserPlant(userId, userPlantId) {
+  ensureObjectId(userId, 'User ID không hợp lệ');
+  ensureObjectId(userPlantId, 'UserPlant ID không hợp lệ');
+  return UserPlant.findOne({ _id: userPlantId, userId, status: 'active' });
 }
 
 /**
@@ -166,10 +192,81 @@ async function archiveMyUserPlant(userId, userPlantId) {
   ).lean();
 }
 
+/** Lưu buffer ảnh, sau đó thêm metadata vào album; xóa file nếu MongoDB lưu lỗi. */
+async function uploadUserPlantImage(userId, userPlantId, file, data = {}) {
+  if (!file?.buffer || !MIME_EXTENSIONS[file.mimetype]) {
+    throw createHttpError('Chưa nhận được ảnh hợp lệ', 400);
+  }
+  const userPlant = await findOwnedActiveUserPlant(userId, userPlantId);
+  if (!userPlant) return null;
+
+  const filename = `${crypto.randomUUID()}.${MIME_EXTENSIONS[file.mimetype]}`;
+  const storageKey = path.posix.join('my-garden', String(userId), String(userPlantId), filename);
+  const filePath = getSafeStoragePath(storageKey);
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  await fs.writeFile(filePath, file.buffer, { flag: 'wx' });
+
+  const image = {
+    _id: new mongoose.Types.ObjectId(),
+    url: `/uploads/${storageKey}`,
+    storageKey,
+    caption: data.caption === undefined ? '' : normalizeOptionalString(data.caption, 'caption').trim(),
+    capturedAt: normalizeOptionalDate(data.capturedAt),
+    createdAt: new Date(),
+  };
+  try {
+    userPlant.albumImages.push(image);
+    await userPlant.save();
+    return userPlant.toObject();
+  } catch (error) {
+    await fs.unlink(filePath).catch(() => {});
+    throw error;
+  }
+}
+
+/** Sửa caption hoặc đặt ảnh album làm cover sau khi xác thực owner. */
+async function updateUserPlantImage(userId, userPlantId, imageId, data = {}) {
+  ensureObjectId(imageId, 'Image ID không hợp lệ');
+  const userPlant = await findOwnedActiveUserPlant(userId, userPlantId);
+  if (!userPlant) return null;
+  const image = userPlant.albumImages.id(imageId);
+  if (!image) return false;
+  let changed = false;
+  if (data.caption !== undefined) { image.caption = normalizeOptionalString(data.caption, 'caption').trim(); changed = true; }
+  if (data.setAsCover !== undefined) {
+    if (typeof data.setAsCover !== 'boolean') throw createHttpError('setAsCover phải là boolean', 400);
+    if (data.setAsCover) userPlant.coverImageUrl = image.url;
+    changed = true;
+  }
+  if (!changed) throw createHttpError('Không có dữ liệu ảnh hợp lệ để cập nhật', 400);
+  await userPlant.save();
+  return userPlant.toObject();
+}
+
+/** Xóa metadata và file ảnh; khi xóa cover thì chuyển sang ảnh album kế tiếp. */
+async function deleteUserPlantImage(userId, userPlantId, imageId) {
+  ensureObjectId(imageId, 'Image ID không hợp lệ');
+  const userPlant = await findOwnedActiveUserPlant(userId, userPlantId);
+  if (!userPlant) return null;
+  const image = userPlant.albumImages.id(imageId);
+  if (!image) return false;
+  const { url, storageKey } = image;
+  image.deleteOne();
+  if (userPlant.coverImageUrl === url) userPlant.coverImageUrl = userPlant.albumImages[0]?.url || '';
+  await userPlant.save();
+  await fs.unlink(getSafeStoragePath(storageKey)).catch(() => {});
+  return userPlant.toObject();
+}
+
 module.exports = {
   createUserPlant,
   getMyUserPlants,
   getMyUserPlantById,
   updateMyUserPlant,
   archiveMyUserPlant,
+  uploadUserPlantImage,
+  updateUserPlantImage,
+  deleteUserPlantImage,
+  getSafeStoragePath,
+  MY_GARDEN_UPLOAD_ROOT,
 };
