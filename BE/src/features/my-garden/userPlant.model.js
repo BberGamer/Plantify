@@ -13,6 +13,49 @@ const albumImageSchema = new mongoose.Schema(
   { _id: true, timestamps: { createdAt: true, updatedAt: false } }
 );
 
+const careScheduleSchema = new mongoose.Schema(
+  {
+    enabled: {
+      type: Boolean,
+      default: false,
+    },
+    frequencyDays: {
+      type: Number,
+      default: null,
+      min: 1,
+      max: 365,
+      validate: {
+        validator: (value) => value === null || Number.isInteger(value),
+        message: 'frequencyDays phải là số nguyên',
+      },
+      required() {
+        return this.enabled;
+      },
+    },
+    lastCompletedAt: {
+      type: Date,
+      default: null,
+    },
+    nextDueAt: {
+      type: Date,
+      default: null,
+      required() {
+        return this.enabled;
+      },
+    },
+  },
+  { _id: false }
+);
+
+function defaultCareSchedule() {
+  return {
+    enabled: false,
+    frequencyDays: null,
+    lastCompletedAt: null,
+    nextDueAt: null,
+  };
+}
+
 const userPlantSchema = new mongoose.Schema(
   {
     userId: {
@@ -42,6 +85,14 @@ const userPlantSchema = new mongoose.Schema(
     albumImages: {
       type: [albumImageSchema],
       default: [],
+    },
+    wateringSchedule: {
+      type: careScheduleSchema,
+      default: defaultCareSchedule,
+    },
+    fertilizingSchedule: {
+      type: careScheduleSchema,
+      default: defaultCareSchedule,
     },
     status: {
       type: String,

@@ -9,6 +9,8 @@ import {
   DEFAULT_IMAGE,
   getAlbumCapabilities,
   getCareEventCapabilities,
+  getScheduleDateBounds,
+  getUserPlantScheduleStatus,
   getImageFallbackSource,
   getUserPlantImage,
   removePendingPreview,
@@ -16,7 +18,9 @@ import {
   localDateTimeToIso,
   sortCareEvents,
   toLocalDateTimeInput,
+  toLocalDateTimeInputWithSeconds,
   validateCareEventPerformedAt,
+  validateUserPlantSchedule,
 } from "../../../src/features/my-garden/myGarden.utils.js";
 import { buildDiagnosisFormData } from "../../../src/features/ai/diagnosisRequest.utils.js";
 
@@ -54,6 +58,7 @@ test("Album và CareEvent nằm ngoài form UserPlant, CareEvent không tạo ne
   const formEnd = formSource.indexOf("</form>", formStart);
   assert.ok(formStart >= 0 && formEnd > formStart);
   assert.ok(formSource.indexOf("<UserPlantAlbum", formEnd) > formEnd);
+  assert.ok(formSource.indexOf("<UserPlantScheduleSettings", formEnd) > formEnd);
   assert.ok(formSource.indexOf("<UserPlantCareEvents", formEnd) > formEnd);
   assert.ok(formSource.indexOf('data-testid="user-plant-create-images"', formEnd) > formEnd);
   assert.equal(careSource.includes("<form"), false);
@@ -171,17 +176,13 @@ test("AI Doctor URL preserves userPlantId when opening a history", () => {
   );
 });
 
-test("CareEvent only accepts time from plant creation through now", () => {
+test("CareEvent accepts any past/current time and rejects future/invalid time", () => {
   const createdAt = "2026-07-01T00:00:00.000Z";
   const now = new Date("2026-07-27T12:00:00.000Z");
 
   assert.equal(
-    validateCareEventPerformedAt("2026-07-01T07:00", createdAt, now).error,
+    validateCareEventPerformedAt("2020-01-01T07:00", createdAt, now).error,
     ""
-  );
-  assert.match(
-    validateCareEventPerformedAt("2026-06-30T23:59", createdAt, now).error,
-    /trước ngày tạo cây/
   );
   assert.match(
     validateCareEventPerformedAt("2026-07-27T19:01", createdAt, now).error,
@@ -193,14 +194,98 @@ test("CareEvent only accepts time from plant creation through now", () => {
   );
 });
 
-test("CareEvent datetime-local renders lifecycle min and local current max", () => {
+test("CareEvent datetime-local preserves seconds and has only a future max", () => {
   const source = fs.readFileSync(
     new URL("../../../src/features/my-garden/components/UserPlantCareEvents.jsx", import.meta.url),
     "utf8"
   );
-  assert.ok(source.includes("min={userPlantCreatedAt"));
-  assert.ok(source.includes("max={toLocalDateTimeInput()}"));
+  assert.ok(source.includes('step="1"'));
+  assert.equal(source.includes("min={userPlantCreatedAt"), false);
+  assert.ok(source.includes("max={toLocalDateTimeInputWithSeconds()}"));
   assert.ok(source.includes("validateCareEventPerformedAt"));
+  assert.ok(source.includes("Ghi nhận chăm sóc"));
+});
+
+test("datetime-local seconds round-trip correctly in Asia/Ho_Chi_Minh", () => {
+  const previousTimezone = process.env.TZ;
+  process.env.TZ = "Asia/Ho_Chi_Minh";
+  try {
+    const utcDate = new Date("2026-07-27T05:30:45.000Z");
+    const localValue = toLocalDateTimeInputWithSeconds(utcDate);
+    assert.equal(localValue, "2026-07-27T12:30:45");
+    assert.equal(localDateTimeToIso(localValue), utcDate.toISOString());
+  } finally {
+    if (previousTimezone === undefined) delete process.env.TZ;
+    else process.env.TZ = previousTimezone;
+  }
+});
+
+test("embedded schedules validate boundaries and display status", () => {
+  const now = new Date("2026-07-27T12:00:00.000Z");
+  const bounds = getScheduleDateBounds(now);
+  assert.equal(validateUserPlantSchedule({
+    enabled: true,
+    frequencyDays: "3",
+    nextDueAt: bounds.min,
+  }, "Lịch tưới", now).error, "");
+  assert.equal(validateUserPlantSchedule({
+    enabled: true,
+    frequencyDays: 365,
+    nextDueAt: bounds.max,
+  }, "Lịch tưới", now).error, "");
+  assert.match(validateUserPlantSchedule({
+    enabled: true,
+    frequencyDays: 0,
+    nextDueAt: bounds.min,
+  }, "Lịch tưới", now).error, /1 đến 365/);
+
+  const pastLocal = toLocalDateTimeInputWithSeconds(
+    new Date(now.getTime() - 1000)
+  );
+  assert.match(validateUserPlantSchedule({
+    enabled: true,
+    frequencyDays: 3,
+    nextDueAt: pastLocal,
+  }, "Lịch tưới", now).error, /quá khứ/);
+
+  assert.equal(getUserPlantScheduleStatus({ enabled: false }, now), "disabled");
+  assert.equal(getUserPlantScheduleStatus({
+    enabled: true,
+    nextDueAt: "2026-07-27T13:00:00.000Z",
+  }, now), "today");
+  assert.equal(getUserPlantScheduleStatus({
+    enabled: true,
+    nextDueAt: "2026-07-27T11:00:00.000Z",
+  }, now), "overdue");
+  assert.equal(getUserPlantScheduleStatus({
+    enabled: true,
+    nextDueAt: "2026-07-28T12:00:00.000Z",
+  }, now), "upcoming");
+
+  const source = fs.readFileSync(
+    new URL("../../../src/features/my-garden/components/UserPlantScheduleSettings.jsx", import.meta.url),
+    "utf8"
+  );
+  assert.ok(source.includes("min={bounds.min}"));
+  assert.ok(source.includes("max={bounds.max}"));
+  assert.ok(source.includes("Lịch tưới"));
+  assert.ok(source.includes("Lịch bón phân"));
+  assert.ok(source.includes("Đã tắt"));
+});
+
+test("recording care refetches UserPlant schedules without nested forms", () => {
+  const formSource = fs.readFileSync(
+    new URL("../../../src/features/my-garden/components/UserPlantFormDialog.jsx", import.meta.url),
+    "utf8"
+  );
+  const careSource = fs.readFileSync(
+    new URL("../../../src/features/my-garden/components/UserPlantCareEvents.jsx", import.meta.url),
+    "utf8"
+  );
+  assert.ok(formSource.includes("getUserPlantById(workingPlant._id)"));
+  assert.ok(formSource.includes("onRecorded={handleCareRecorded}"));
+  assert.ok(careSource.includes("await onRecorded?.()"));
+  assert.equal(careSource.includes("<form"), false);
 });
 
 test("My Garden removes a deleted UserPlant from local state after API success", () => {

@@ -12,7 +12,7 @@ import {
 import {
   getApiErrorMessage,
   sortCareEvents,
-  toLocalDateTimeInput,
+  toLocalDateTimeInputWithSeconds,
   validateCareEventPerformedAt,
 } from "../myGarden.utils";
 
@@ -27,13 +27,14 @@ const TYPES = {
 
 const emptyForm = () => ({
   type: "watering",
-  performedAt: toLocalDateTimeInput(),
+  performedAt: toLocalDateTimeInputWithSeconds(),
   notes: "",
 });
 
 export function UserPlantCareEvents({
   userPlantId,
   userPlantCreatedAt,
+  onRecorded,
   readOnly = false,
 }) {
   const [events, setEvents] = useState([]);
@@ -86,6 +87,7 @@ export function UserPlantCareEvents({
           ? current.map((item) => item._id === form._id ? response.data : item)
           : [...current, response.data]
       ));
+      if (!form._id) await onRecorded?.();
       setForm(null);
       toast.success("Đã lưu lịch sử chăm sóc.");
     } catch (requestError) {
@@ -114,7 +116,10 @@ export function UserPlantCareEvents({
 
   const openForm = (event = null) => {
     setForm(event
-      ? { ...event, performedAt: toLocalDateTimeInput(event.performedAt) }
+      ? {
+        ...event,
+        performedAt: toLocalDateTimeInputWithSeconds(event.performedAt),
+      }
       : emptyForm());
     setFormError("");
   };
@@ -126,7 +131,7 @@ export function UserPlantCareEvents({
         {!readOnly ? (
           <Button type="button" size="sm" onClick={() => openForm()}>
             <Plus className="mr-1 h-4 w-4" />
-            Thêm
+            Ghi nhận chăm sóc
           </Button>
         ) : null}
       </div>
@@ -145,11 +150,9 @@ export function UserPlantCareEvents({
           <input
             className="rounded border p-2"
             type="datetime-local"
+            step="1"
             value={form.performedAt}
-            min={userPlantCreatedAt
-              ? toLocalDateTimeInput(userPlantCreatedAt)
-              : undefined}
-            max={toLocalDateTimeInput()}
+            max={toLocalDateTimeInputWithSeconds()}
             onChange={(event) => {
               setForm({ ...form, performedAt: event.target.value });
               setFormError("");
@@ -168,7 +171,7 @@ export function UserPlantCareEvents({
           ) : null}
           <div className="flex gap-2 sm:col-span-2">
             <Button type="button" size="sm" onClick={save} disabled={saving}>
-              Lưu
+              {form._id ? "Lưu thay đổi" : "Ghi nhận"}
             </Button>
             <Button
               type="button"

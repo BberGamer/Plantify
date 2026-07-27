@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { UserPlantAlbum } from "./UserPlantAlbum";
 import { UserPlantCareEvents } from "./UserPlantCareEvents";
+import { UserPlantScheduleSettings } from "./UserPlantScheduleSettings";
+import { getUserPlantById } from "../api";
 import { buildUserPlantPayload, getApiErrorMessage, isValidAlbumFile, removePendingPreview, revokePendingPreviews } from "../myGarden.utils";
 
 const NO_CATALOG_VALUE = "none";
@@ -61,7 +63,15 @@ export function UserPlantFormDialog({ open, onOpenChange, userPlant, catalogPlan
     if (valid.length !== files.length) setFormError("Chỉ nhận JPG, PNG, WebP và tối đa 5MB mỗi ảnh.");
     setPendingFiles((current) => [...current, ...valid]);
   };
-  const handleAlbumChanged = (plant) => { setWorkingPlant(plant); onUserPlantChanged?.(plant); };
+  const handleUserPlantChanged = (plant) => { setWorkingPlant(plant); onUserPlantChanged?.(plant); };
+  const handleCareRecorded = async () => {
+    try {
+      const response = await getUserPlantById(workingPlant._id);
+      handleUserPlantChanged(response.data);
+    } catch {
+      // CareEvent đã lưu thành công; lần mở/refetch sau sẽ đồng bộ lại UserPlant.
+    }
+  };
 
   return <Dialog open={open} onOpenChange={(nextOpen) => { if (!userPlantSaving) onOpenChange(nextOpen); }}>
     <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
@@ -76,7 +86,7 @@ export function UserPlantFormDialog({ open, onOpenChange, userPlant, catalogPlan
       </form>
 
       {!editing ? <section data-testid="user-plant-create-images" className="space-y-3 rounded-xl border p-4"><div className="flex justify-between"><h3 className="font-medium">Ảnh cây</h3><input ref={fileInputRef} className="hidden" type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={selectFiles} /><Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={userPlantSaving}>Chọn ảnh</Button></div>{pendingFiles.length ? <div className="grid grid-cols-3 gap-2">{pendingFiles.map((item, index) => <div key={item.preview} className="relative"><img src={item.preview} alt="Ảnh chờ tải" className="aspect-square w-full rounded object-cover" /><Button type="button" size="icon" className="absolute right-1 top-1 h-6 w-6" onClick={() => setPendingFiles((current) => removePendingPreview(current, index))}><X className="h-3 w-3" /></Button></div>)}</div> : null}{submitting && pendingFiles.length ? <p className="text-sm text-primary">Đang tải ảnh {uploadProgress}%</p> : null}</section> : null}
-      {editing && workingPlant ? <div data-testid="user-plant-independent-sections" className="space-y-4"><UserPlantAlbum userPlant={workingPlant} onChanged={handleAlbumChanged} /><UserPlantCareEvents userPlantId={workingPlant._id} userPlantCreatedAt={workingPlant.createdAt} /></div> : null}
+      {editing && workingPlant ? <div data-testid="user-plant-independent-sections" className="space-y-4"><UserPlantAlbum userPlant={workingPlant} onChanged={handleUserPlantChanged} /><UserPlantScheduleSettings userPlant={workingPlant} onChanged={handleUserPlantChanged} /><UserPlantCareEvents userPlantId={workingPlant._id} userPlantCreatedAt={workingPlant.createdAt} onRecorded={handleCareRecorded} /></div> : null}
     </DialogContent>
   </Dialog>;
 }

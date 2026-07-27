@@ -7,6 +7,7 @@ const Plant = require('../plants/plant.model');
 const UserPlant = require('./userPlant.model');
 const CareEvent = require('./careEvent.model');
 const DiagnosisHistory = require('../diagnosis-history/diagnosisHistory.model');
+const { runRequiredTransaction } = require('./transaction.utils');
 
 const CATALOG_PLANT_FIELDS = 'name scientificName thumbnail images';
 const MY_GARDEN_UPLOAD_ROOT = path.resolve(__dirname, '../../../uploads/my-garden');
@@ -44,6 +45,89 @@ function normalizeOptionalDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) throw createHttpError('capturedAt không hợp lệ', 400);
   return date;
+}
+
+function addUtcMonths(value, months) {
+  const result = new Date(value);
+  const day = result.getUTCDate();
+  result.setUTCDate(1);
+  result.setUTCMonth(result.getUTCMonth() + months);
+  const lastDay = new Date(Date.UTC(
+    result.getUTCFullYear(),
+    result.getUTCMonth() + 1,
+    0
+  )).getUTCDate();
+  result.setUTCDate(Math.min(day, lastDay));
+  return result;
+}
+
+function normalizeCareSchedule(value, fieldName, now = new Date()) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw createHttpError(`${fieldName} không hợp lệ`, 400);
+  }
+  if (typeof value.enabled !== 'boolean') {
+    throw createHttpError(`${fieldName}.enabled phải là boolean`, 400);
+  }
+
+  const frequencyDays = value.frequencyDays === null
+    || value.frequencyDays === undefined
+    ? null
+    : Number(value.frequencyDays);
+  if (
+    frequencyDays !== null
+    && (!Number.isInteger(frequencyDays)
+      || frequencyDays < 1
+      || frequencyDays > 365)
+  ) {
+    throw createHttpError(
+      `${fieldName}.frequencyDays phải là số nguyên từ 1 đến 365`,
+      400
+    );
+  }
+
+  let nextDueAt = null;
+  if (value.nextDueAt !== null && value.nextDueAt !== undefined && value.nextDueAt !== '') {
+    nextDueAt = new Date(value.nextDueAt);
+    if (Number.isNaN(nextDueAt.getTime())) {
+      throw createHttpError(`${fieldName}.nextDueAt không hợp lệ`, 400);
+    }
+    const lowerBoundary = new Date(now);
+    lowerBoundary.setMilliseconds(0);
+    if (nextDueAt < lowerBoundary) {
+      throw createHttpError(
+        `${fieldName}.nextDueAt không được ở quá khứ`,
+        400
+      );
+    }
+    if (nextDueAt > addUtcMonths(lowerBoundary, 12)) {
+      throw createHttpError(
+        `${fieldName}.nextDueAt không được quá 12 tháng`,
+        400
+      );
+    }
+  }
+
+  if (value.enabled && (!frequencyDays || !nextDueAt)) {
+    throw createHttpError(
+      `${fieldName} cần frequencyDays và nextDueAt khi được bật`,
+      400
+    );
+  }
+
+  return {
+    enabled: value.enabled,
+    frequencyDays,
+    nextDueAt,
+  };
+}
+
+function defaultCareSchedule() {
+  return {
+    enabled: false,
+    frequencyDays: null,
+    lastCompletedAt: null,
+    nextDueAt: null,
+  };
 }
 
 function getImageTypeFromMagicBytes(buffer) {
@@ -90,6 +174,19 @@ async function ensureCatalogPlantExists(catalogPlantId) {
 }
 
 function normalizeCreateData(data = {}) {
+  const wateringSchedule = data.wateringSchedule === undefined
+    ? defaultCareSchedule()
+    : {
+      ...normalizeCareSchedule(data.wateringSchedule, 'wateringSchedule'),
+      lastCompletedAt: null,
+    };
+  const fertilizingSchedule = data.fertilizingSchedule === undefined
+    ? defaultCareSchedule()
+    : {
+      ...normalizeCareSchedule(data.fertilizingSchedule, 'fertilizingSchedule'),
+      lastCompletedAt: null,
+    };
+
   return {
     catalogPlantId: data.catalogPlantId === undefined
       ? null
@@ -99,6 +196,8 @@ function normalizeCreateData(data = {}) {
     notes: data.notes === undefined
       ? ''
       : normalizeOptionalString(data.notes, 'notes'),
+    wateringSchedule,
+    fertilizingSchedule,
     status: 'active',
   };
 }
@@ -118,6 +217,13 @@ function normalizeUpdateData(data = {}) {
   if (data.notes !== undefined) {
     updateData.notes = normalizeOptionalString(data.notes, 'notes');
   }
+  ['wateringSchedule', 'fertilizingSchedule'].forEach((fieldName) => {
+    if (data[fieldName] === undefined) return;
+    const schedule = normalizeCareSchedule(data[fieldName], fieldName);
+    updateData[`${fieldName}.enabled`] = schedule.enabled;
+    updateData[`${fieldName}.frequencyDays`] = schedule.frequencyDays;
+    updateData[`${fieldName}.nextDueAt`] = schedule.nextDueAt;
+  });
   if (Object.keys(updateData).length === 0) {
     throw createHttpError('Không có dữ liệu cập nhật hợp lệ', 400);
   }
@@ -191,14 +297,6 @@ async function updateMyUserPlant(userId, userPlantId, data = {}) {
 /**
  * Xóa vĩnh viễn cây, dữ liệu chăm sóc và thư mục ảnh thuộc đúng user.
  */
-function isTransactionUnsupported(error) {
-  return error?.code === 20
-    || error?.codeName === 'IllegalOperation'
-    || /Transaction numbers are only allowed|does not support transactions/i.test(
-      error?.message || ''
-    );
-}
-
 async function deleteUserPlantRecords(userId, userPlantId, session = null) {
   const sessionOptions = session ? { session } : {};
   const userPlant = await UserPlant.findOneAndDelete(
@@ -232,22 +330,20 @@ async function deleteMyUserPlant(userId, userPlantId) {
   ensureObjectId(userId, 'User ID không hợp lệ');
   ensureObjectId(userPlantId, 'UserPlant ID không hợp lệ');
 
-  let userPlant;
-  let session;
-  try {
-    session = await mongoose.startSession();
-    await session.withTransaction(async () => {
-      userPlant = await deleteUserPlantRecords(userId, userPlantId, session);
-    });
-  } catch (error) {
-    if (!isTransactionUnsupported(error)) throw error;
-    userPlant = await deleteUserPlantRecords(userId, userPlantId);
-  } finally {
-    await session?.endSession();
-  }
+  const userPlant = await runRequiredTransaction(
+    (session) => deleteUserPlantRecords(userId, userPlantId, session),
+    'MongoDB deployment không hỗ trợ transaction bắt buộc để xóa cây an toàn'
+  );
 
   if (userPlant) {
-    await removeUserPlantUploadDirectory(userId, userPlantId);
+    try {
+      await removeUserPlantUploadDirectory(userId, userPlantId);
+    } catch (error) {
+      console.error(
+        `[my-garden] Không thể xóa thư mục album ${userId}/${userPlantId}:`,
+        error
+      );
+    }
   }
   return userPlant;
 }

@@ -30,6 +30,12 @@ const userId = '507f1f77bcf86cd799439011';
 const otherUserId = '507f1f77bcf86cd799439099';
 const userPlantId = '507f1f77bcf86cd799439012';
 const catalogPlantId = '507f1f77bcf86cd799439013';
+const defaultSchedule = {
+  enabled: false,
+  frequencyDays: null,
+  lastCompletedAt: null,
+  nextDueAt: null,
+};
 
 function query(result) {
   return {
@@ -102,6 +108,8 @@ describe('userPlantService CRUD', () => {
       name: 'Monstera phòng khách',
       coverImageUrl: '',
       notes: 'Đặt cạnh cửa sổ',
+      wateringSchedule: defaultSchedule,
+      fertilizingSchedule: defaultSchedule,
       status: 'active',
     });
     expect(result.userId).toBe(userId);
@@ -122,6 +130,8 @@ describe('userPlantService CRUD', () => {
       name: 'Cây của tôi',
       coverImageUrl: '',
       notes: '',
+      wateringSchedule: defaultSchedule,
+      fertilizingSchedule: defaultSchedule,
       status: 'active',
     });
     expect(Plant.findById).not.toHaveBeenCalled();
@@ -262,35 +272,139 @@ describe('userPlantService CRUD', () => {
     expect(session.endSession).toHaveBeenCalledTimes(1);
   });
 
-  test('fallback an toàn khi MongoDB deployment không hỗ trợ transaction', async () => {
+  test('từ chối xóa nếu MongoDB không hỗ trợ transaction và không chạy fallback', async () => {
     const unsupportedError = new Error(
       'Transaction numbers are only allowed on a replica set member'
     );
     unsupportedError.code = 20;
     session.withTransaction.mockRejectedValue(unsupportedError);
+    await expect(
+      service.deleteMyUserPlant(userId, userPlantId)
+    ).rejects.toMatchObject({ statusCode: 503 });
+
+    expect(UserPlant.findOneAndDelete).not.toHaveBeenCalled();
+    expect(CareEvent.deleteMany).not.toHaveBeenCalled();
+    expect(DiagnosisHistory.updateMany).not.toHaveBeenCalled();
+    expect(fs.rm).not.toHaveBeenCalled();
+  });
+
+  test('cleanup album lỗi vẫn trả hard delete thành công và ghi log', async () => {
     UserPlant.findOneAndDelete.mockReturnValue(query({
       _id: userPlantId,
       userId,
     }));
+    fs.rm.mockRejectedValue(new Error('Storage unavailable'));
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     await expect(
       service.deleteMyUserPlant(userId, userPlantId)
     ).resolves.toEqual({ _id: userPlantId, userId });
 
-    expect(UserPlant.findOneAndDelete).toHaveBeenCalledWith(
-      { _id: userPlantId, userId },
-      {}
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Không thể xóa thư mục album'),
+      expect.any(Error)
     );
-    expect(CareEvent.deleteMany).toHaveBeenCalledWith(
-      { userId, userPlantId },
-      {}
+  });
+
+  test('validates embedded schedules and ignores client lastCompletedAt', async () => {
+    const updateQuery = query({ _id: userPlantId });
+    UserPlant.findOneAndUpdate.mockReturnValue(updateQuery);
+
+    await service.updateMyUserPlant(userId, userPlantId, {
+      wateringSchedule: {
+        enabled: true,
+        frequencyDays: 3,
+        nextDueAt: '2026-08-01T00:00:00.000Z',
+        lastCompletedAt: '2026-07-01T00:00:00.000Z',
+      },
+      fertilizingSchedule: {
+        enabled: false,
+        frequencyDays: null,
+        nextDueAt: null,
+        lastCompletedAt: '2026-07-01T00:00:00.000Z',
+      },
+    });
+
+    expect(UserPlant.findOneAndUpdate).toHaveBeenCalledWith(
+      { _id: userPlantId, userId, status: 'active' },
+      {
+        'wateringSchedule.enabled': true,
+        'wateringSchedule.frequencyDays': 3,
+        'wateringSchedule.nextDueAt': new Date('2026-08-01T00:00:00.000Z'),
+        'fertilizingSchedule.enabled': false,
+        'fertilizingSchedule.frequencyDays': null,
+        'fertilizingSchedule.nextDueAt': null,
+      },
+      { new: true, runValidators: true }
     );
-    expect(DiagnosisHistory.updateMany).toHaveBeenCalledWith(
-      { userId, userPlantId },
-      { $set: { userPlantId: null } },
-      {}
-    );
-    expect(fs.rm).toHaveBeenCalledTimes(1);
+  });
+
+  test('rejects invalid schedule configuration and date boundaries', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-07-27T12:00:00.000Z'));
+    try {
+      await expect(service.updateMyUserPlant(userId, userPlantId, {
+        wateringSchedule: {
+          enabled: true,
+          frequencyDays: 0,
+          nextDueAt: '2026-08-01T00:00:00.000Z',
+        },
+      })).rejects.toMatchObject({ statusCode: 400 });
+      await expect(service.updateMyUserPlant(userId, userPlantId, {
+        wateringSchedule: {
+          enabled: true,
+          frequencyDays: 3,
+          nextDueAt: null,
+        },
+      })).rejects.toMatchObject({ statusCode: 400 });
+      await expect(service.updateMyUserPlant(userId, userPlantId, {
+        wateringSchedule: {
+          enabled: true,
+          frequencyDays: 3,
+          nextDueAt: '2026-07-27T11:59:59.999Z',
+        },
+      })).rejects.toMatchObject({
+        statusCode: 400,
+        message: expect.stringMatching(/quá khứ/),
+      });
+      await expect(service.updateMyUserPlant(userId, userPlantId, {
+        wateringSchedule: {
+          enabled: true,
+          frequencyDays: 3,
+          nextDueAt: '2027-07-27T12:00:00.001Z',
+        },
+      })).rejects.toMatchObject({
+        statusCode: 400,
+        message: expect.stringMatching(/12 tháng/),
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('accepts schedule nextDueAt at now and exactly 12 months', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-07-27T12:00:00.000Z'));
+    const updateQuery = query({ _id: userPlantId });
+    UserPlant.findOneAndUpdate.mockReturnValue(updateQuery);
+    try {
+      await expect(service.updateMyUserPlant(userId, userPlantId, {
+        wateringSchedule: {
+          enabled: true,
+          frequencyDays: 1,
+          nextDueAt: '2026-07-27T12:00:00.000Z',
+        },
+      })).resolves.toBeTruthy();
+      await expect(service.updateMyUserPlant(userId, userPlantId, {
+        fertilizingSchedule: {
+          enabled: true,
+          frequencyDays: 365,
+          nextDueAt: '2027-07-27T12:00:00.000Z',
+        },
+      })).resolves.toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test('PATCH chỉ có status bị từ chối vì client không được cập nhật status', async () => {

@@ -34,6 +34,15 @@ describe('UserPlant schema', () => {
     expect(schema.path('albumImages').schema.path('url').options.required).toBe(true);
     expect(schema.path('albumImages').schema.path('storageKey').options.required).toBe(true);
     expect(schema.path('albumImages').schema.path('caption').options.default).toBe('');
+    for (const fieldName of ['wateringSchedule', 'fertilizingSchedule']) {
+      const scheduleSchema = schema.path(fieldName).schema;
+      expect(scheduleSchema.path('enabled').options.default).toBe(false);
+      expect(scheduleSchema.path('frequencyDays').options).toEqual(
+        expect.objectContaining({ min: 1, max: 365, default: null })
+      );
+      expect(scheduleSchema.path('lastCompletedAt').options.default).toBeNull();
+      expect(scheduleSchema.path('nextDueAt').options.default).toBeNull();
+    }
     expect(schema.path('status').options).toEqual(expect.objectContaining({
       enum: ['active', 'archived'],
       default: 'active',

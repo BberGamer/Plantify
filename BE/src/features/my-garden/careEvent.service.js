@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const CareEvent = require('./careEvent.model');
 const UserPlant = require('./userPlant.model');
 const { CARE_EVENT_TYPES } = require('./careEvent.model');
+const { runRequiredTransaction } = require('./transaction.utils');
 
 function httpError(message, statusCode = 400) {
   const error = new Error(message);
@@ -14,19 +15,13 @@ function objectId(id, message) {
   if (!mongoose.Types.ObjectId.isValid(id)) throw httpError(message);
 }
 
-function performedAt(value, plantCreatedAt, now = new Date()) {
+function performedAt(value, now = new Date()) {
   if (value === null || value === '') {
     throw httpError('Thời gian thực hiện không hợp lệ');
   }
-
   const valueDate = value === undefined ? now : new Date(value);
   if (Number.isNaN(valueDate.getTime())) {
     throw httpError('Thời gian thực hiện không hợp lệ');
-  }
-
-  const createdAt = new Date(plantCreatedAt);
-  if (!Number.isNaN(createdAt.getTime()) && valueDate < createdAt) {
-    throw httpError('Thời gian thực hiện không được trước ngày tạo cây');
   }
   if (valueDate > now) {
     throw httpError('Thời gian thực hiện không được ở tương lai');
@@ -46,18 +41,18 @@ async function ownedPlant(userId, userPlantId) {
   return UserPlant.findOne({ _id: userPlantId, userId, status: 'active' });
 }
 
-function createData(data = {}, plantCreatedAt) {
+function createData(data = {}) {
   if (!CARE_EVENT_TYPES.includes(data.type)) {
     throw httpError('type không hợp lệ');
   }
   return {
     type: data.type,
-    performedAt: performedAt(data.performedAt, plantCreatedAt),
+    performedAt: performedAt(data.performedAt),
     notes: notes(data.notes),
   };
 }
 
-function updateData(data = {}, plantCreatedAt) {
+function updateData(data = {}) {
   const result = {};
   if (data.type !== undefined) {
     if (!CARE_EVENT_TYPES.includes(data.type)) {
@@ -66,7 +61,7 @@ function updateData(data = {}, plantCreatedAt) {
     result.type = data.type;
   }
   if (data.performedAt !== undefined) {
-    result.performedAt = performedAt(data.performedAt, plantCreatedAt);
+    result.performedAt = performedAt(data.performedAt);
   }
   if (data.notes !== undefined) result.notes = notes(data.notes);
   if (!Object.keys(result).length) {
@@ -76,13 +71,62 @@ function updateData(data = {}, plantCreatedAt) {
 }
 
 async function createCareEvent(userId, userPlantId, data) {
-  const userPlant = await ownedPlant(userId, userPlantId);
-  if (!userPlant) return null;
-  return CareEvent.create({
-    ...createData(data, userPlant.createdAt),
-    userId,
-    userPlantId,
-  });
+  objectId(userId, 'User ID không hợp lệ');
+  objectId(userPlantId, 'UserPlant ID không hợp lệ');
+  const eventData = createData(data);
+
+  return runRequiredTransaction(async (session) => {
+    const userPlant = await UserPlant.findOne(
+      { _id: userPlantId, userId, status: 'active' },
+      null,
+      { session }
+    );
+    if (!userPlant) return null;
+
+    const [careEvent] = await CareEvent.create([{
+      ...eventData,
+      userId,
+      userPlantId,
+    }], { session });
+
+    const scheduleField = eventData.type === 'watering'
+      ? 'wateringSchedule'
+      : eventData.type === 'fertilizing'
+        ? 'fertilizingSchedule'
+        : null;
+    const schedule = scheduleField ? userPlant[scheduleField] : null;
+
+    if (schedule?.enabled) {
+      if (
+        !Number.isInteger(schedule.frequencyDays)
+        || schedule.frequencyDays < 1
+        || schedule.frequencyDays > 365
+      ) {
+        throw httpError('Cấu hình chu kỳ chăm sóc không hợp lệ', 409);
+      }
+      const nextDueAt = new Date(
+        eventData.performedAt.getTime()
+        + schedule.frequencyDays * 24 * 60 * 60 * 1000
+      );
+      await UserPlant.updateOne(
+        {
+          _id: userPlantId,
+          userId,
+          status: 'active',
+          [`${scheduleField}.enabled`]: true,
+        },
+        {
+          $set: {
+            [`${scheduleField}.lastCompletedAt`]: eventData.performedAt,
+            [`${scheduleField}.nextDueAt`]: nextDueAt,
+          },
+        },
+        { session, runValidators: true }
+      );
+    }
+
+    return careEvent;
+  }, 'MongoDB deployment không hỗ trợ transaction bắt buộc để ghi nhận chăm sóc');
 }
 
 async function getCareEvents(userId, userPlantId) {
@@ -94,11 +138,10 @@ async function getCareEvents(userId, userPlantId) {
 
 async function updateCareEvent(userId, userPlantId, eventId, data) {
   objectId(eventId, 'CareEvent ID không hợp lệ');
-  const userPlant = await ownedPlant(userId, userPlantId);
-  if (!userPlant) return null;
+  if (!await ownedPlant(userId, userPlantId)) return null;
   return CareEvent.findOneAndUpdate(
     { _id: eventId, userId, userPlantId },
-    updateData(data, userPlant.createdAt),
+    updateData(data),
     { new: true, runValidators: true }
   ).lean();
 }
