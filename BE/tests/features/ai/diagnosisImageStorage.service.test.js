@@ -60,7 +60,7 @@ describe('diagnosisImageStorageService', () => {
     );
   });
 
-  test('rejects unsupported types, missing buffers and invalid user ids', async () => {
+  test('rejects unsupported types, missing or empty buffers and invalid user ids', async () => {
     await expect(service.saveDiagnosisImage(userId, {
       mimetype: 'image/gif',
       buffer: Buffer.from('gif'),
@@ -68,6 +68,11 @@ describe('diagnosisImageStorageService', () => {
 
     await expect(service.saveDiagnosisImage(userId, {
       mimetype: 'image/png',
+    })).rejects.toMatchObject({ statusCode: 400 });
+
+    await expect(service.saveDiagnosisImage(userId, {
+      mimetype: 'image/png',
+      buffer: Buffer.alloc(0),
     })).rejects.toMatchObject({ statusCode: 400 });
 
     await expect(service.saveDiagnosisImage('../outside', {
@@ -94,6 +99,8 @@ describe('diagnosisImageStorageService', () => {
     '..\\outside.jpg',
     '/absolute/outside.jpg',
     'C:\\outside.jpg',
+    'products/image.jpg',
+    'diagnoses',
     '',
   ])('rejects unsafe storage key %j', async (storageKey) => {
     await expect(

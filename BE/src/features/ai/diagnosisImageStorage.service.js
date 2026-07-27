@@ -33,6 +33,7 @@ function resolveStoragePath(storageKey) {
     path.posix.isAbsolute(normalizedKey)
     || /^[a-zA-Z]:\//.test(normalizedKey)
     || normalizedKey.split('/').includes('..')
+    || !normalizedKey.startsWith('diagnoses/')
   ) {
     throw createHttpError('Storage key không hợp lệ', 400);
   }
@@ -59,7 +60,7 @@ async function saveDiagnosisImage(userId, file) {
   if (!imageType) {
     throw createHttpError('Chỉ hỗ trợ ảnh JPEG, PNG hoặc WebP', 400);
   }
-  if (!Buffer.isBuffer(file?.buffer)) {
+  if (!Buffer.isBuffer(file?.buffer) || file.buffer.length === 0) {
     throw createHttpError('Buffer ảnh không hợp lệ', 400);
   }
 
