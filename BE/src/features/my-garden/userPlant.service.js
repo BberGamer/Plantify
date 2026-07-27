@@ -121,6 +121,7 @@ function normalizeCareSchedule(value, fieldName, now = new Date()) {
   return {
     enabled: value.enabled,
     frequencyDays,
+    configuredNextDueAt: nextDueAt,
     nextDueAt,
   };
 }
@@ -130,6 +131,7 @@ function defaultCareSchedule() {
     enabled: false,
     frequencyDays: null,
     lastCompletedAt: null,
+    configuredNextDueAt: null,
     nextDueAt: null,
   };
 }
@@ -226,6 +228,7 @@ function normalizeUpdateData(data = {}) {
     const schedule = normalizeCareSchedule(data[fieldName], fieldName);
     updateData[`${fieldName}.enabled`] = schedule.enabled;
     updateData[`${fieldName}.frequencyDays`] = schedule.frequencyDays;
+    updateData[`${fieldName}.configuredNextDueAt`] = schedule.configuredNextDueAt;
     updateData[`${fieldName}.nextDueAt`] = schedule.nextDueAt;
   });
   if (Object.keys(updateData).length === 0) {

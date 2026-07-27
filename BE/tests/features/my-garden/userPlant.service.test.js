@@ -47,6 +47,7 @@ const defaultSchedule = {
   enabled: false,
   frequencyDays: null,
   lastCompletedAt: null,
+  configuredNextDueAt: null,
   nextDueAt: null,
 };
 
@@ -352,9 +353,11 @@ describe('userPlantService CRUD', () => {
       {
         'wateringSchedule.enabled': true,
         'wateringSchedule.frequencyDays': 3,
+        'wateringSchedule.configuredNextDueAt': new Date('2026-08-01T00:00:00.000Z'),
         'wateringSchedule.nextDueAt': new Date('2026-08-01T00:00:00.000Z'),
         'fertilizingSchedule.enabled': false,
         'fertilizingSchedule.frequencyDays': null,
+        'fertilizingSchedule.configuredNextDueAt': null,
         'fertilizingSchedule.nextDueAt': null,
       },
       { new: true, runValidators: true }

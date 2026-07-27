@@ -41,6 +41,7 @@ describe('UserPlant schema', () => {
         expect.objectContaining({ min: 1, max: 365, default: null })
       );
       expect(scheduleSchema.path('lastCompletedAt').options.default).toBeNull();
+      expect(scheduleSchema.path('configuredNextDueAt').options.default).toBeNull();
       expect(scheduleSchema.path('nextDueAt').options.default).toBeNull();
     }
     expect(schema.path('status').options).toEqual(expect.objectContaining({
