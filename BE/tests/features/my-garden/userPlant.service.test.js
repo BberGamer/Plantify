@@ -12,6 +12,15 @@ jest.mock('../../../src/features/my-garden/careEvent.model', () => ({
 jest.mock('../../../src/features/diagnosis-history/diagnosisHistory.model', () => ({
   updateMany: jest.fn(),
 }));
+jest.mock('../../../src/features/notifications/notification.model', () => ({
+  Notification: {
+    deleteMany: jest.fn(),
+  },
+  PLANT_CARE_NOTIFICATION_TYPES: [
+    'plant_watering_due',
+    'plant_fertilizing_due',
+  ],
+}));
 jest.mock('fs/promises', () => ({
   rm: jest.fn(),
 }));
@@ -24,6 +33,10 @@ const CareEvent = require('../../../src/features/my-garden/careEvent.model');
 const DiagnosisHistory = require(
   '../../../src/features/diagnosis-history/diagnosisHistory.model'
 );
+const {
+  Notification,
+  PLANT_CARE_NOTIFICATION_TYPES,
+} = require('../../../src/features/notifications/notification.model');
 const service = require('../../../src/features/my-garden/userPlant.service');
 
 const userId = '507f1f77bcf86cd799439011';
@@ -58,6 +71,7 @@ describe('userPlantService CRUD', () => {
     jest.spyOn(mongoose, 'startSession').mockResolvedValue(session);
     CareEvent.deleteMany.mockResolvedValue({ deletedCount: 0 });
     DiagnosisHistory.updateMany.mockResolvedValue({ modifiedCount: 0 });
+    Notification.deleteMany.mockResolvedValue({ deletedCount: 0 });
     fs.rm.mockResolvedValue();
   });
 
@@ -213,6 +227,13 @@ describe('userPlantService CRUD', () => {
       { $set: { userPlantId: null } },
       { session }
     );
+    expect(Notification.deleteMany).toHaveBeenCalledWith(
+      {
+        userPlantId,
+        type: { $in: PLANT_CARE_NOTIFICATION_TYPES },
+      },
+      { session }
+    );
     expect(fs.rm).toHaveBeenCalledWith(
       expect.stringContaining(userPlantId),
       { recursive: true, force: true }
@@ -285,6 +306,7 @@ describe('userPlantService CRUD', () => {
     expect(UserPlant.findOneAndDelete).not.toHaveBeenCalled();
     expect(CareEvent.deleteMany).not.toHaveBeenCalled();
     expect(DiagnosisHistory.updateMany).not.toHaveBeenCalled();
+    expect(Notification.deleteMany).not.toHaveBeenCalled();
     expect(fs.rm).not.toHaveBeenCalled();
   });
 

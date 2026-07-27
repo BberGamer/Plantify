@@ -23,6 +23,12 @@ import {
   validateUserPlantSchedule,
 } from "../../../src/features/my-garden/myGarden.utils.js";
 import { buildDiagnosisFormData } from "../../../src/features/ai/diagnosisRequest.utils.js";
+import {
+  getPlantCareNotificationMessage,
+  getPlantCareNotificationSubtext,
+  getPlantCareNotificationTarget,
+  isPlantCareNotification,
+} from "../../../src/features/notifications/notification.utils.js";
 
 test("ưu tiên coverImageUrl trước ảnh catalogue", () => {
   const image = getUserPlantImage({
@@ -316,4 +322,52 @@ test("My Garden detail reuses diagnosis history with a userPlantId filter", () =
   assert.ok(source.includes("userPlantId,"));
   assert.ok(source.includes("DiagnosisHistoryList"));
   assert.ok(source.includes("Chẩn đoán cây này"));
+});
+
+test("plant care notification renders message/subtext and targets the correct UserPlant", () => {
+  const watering = {
+    type: "plant_watering_due",
+    message: "Đã đến lúc tưới cây Monstera.",
+    userPlantId: { _id: "plant-1", name: "Monstera" },
+    careDueAt: "2026-07-27T12:00:00.000Z",
+  };
+  const fertilizing = {
+    type: "plant_fertilizing_due",
+    userPlantId: { _id: "plant-2", name: "Rose" },
+  };
+
+  assert.equal(isPlantCareNotification(watering), true);
+  assert.equal(
+    getPlantCareNotificationMessage(watering),
+    "Đã đến lúc tưới cây Monstera."
+  );
+  assert.match(getPlantCareNotificationMessage(fertilizing), /bón phân/);
+  assert.match(getPlantCareNotificationSubtext(watering), /Monstera/);
+  assert.equal(
+    getPlantCareNotificationTarget(watering),
+    "/my-garden?userPlantId=plant-1"
+  );
+  assert.equal(
+    getPlantCareNotificationTarget({ type: "post_commented" }),
+    null
+  );
+
+  const headerSource = fs.readFileSync(
+    new URL("../../../src/components/layout/Header.jsx", import.meta.url),
+    "utf8"
+  );
+  assert.ok(headerSource.includes('case "plant_watering_due"'));
+  assert.ok(headerSource.includes('case "plant_fertilizing_due"'));
+  assert.ok(headerSource.includes("getPlantCareNotificationTarget(notification)"));
+});
+
+test("My Garden opens requested plant and clears a missing userPlantId query", () => {
+  const source = fs.readFileSync(
+    new URL("../../../src/pages/customer/MyGarden.jsx", import.meta.url),
+    "utf8"
+  );
+  assert.ok(source.includes('searchParams.get("userPlantId")'));
+  assert.ok(source.includes("setDetailPlantId(requestedPlant._id)"));
+  assert.ok(source.includes('nextParams.delete("userPlantId")'));
+  assert.ok(source.includes("Cây này không còn tồn tại trong My Garden."));
 });

@@ -7,6 +7,10 @@ const Plant = require('../plants/plant.model');
 const UserPlant = require('./userPlant.model');
 const CareEvent = require('./careEvent.model');
 const DiagnosisHistory = require('../diagnosis-history/diagnosisHistory.model');
+const {
+  Notification,
+  PLANT_CARE_NOTIFICATION_TYPES,
+} = require('../notifications/notification.model');
 const { runRequiredTransaction } = require('./transaction.utils');
 
 const CATALOG_PLANT_FIELDS = 'name scientificName thumbnail images';
@@ -309,6 +313,13 @@ async function deleteUserPlantRecords(userId, userPlantId, session = null) {
   await DiagnosisHistory.updateMany(
     { userId, userPlantId },
     { $set: { userPlantId: null } },
+    sessionOptions
+  );
+  await Notification.deleteMany(
+    {
+      userPlantId,
+      type: { $in: PLANT_CARE_NOTIFICATION_TYPES },
+    },
     sessionOptions
   );
   return userPlant;

@@ -25,6 +25,9 @@ const weatherRoutes = require('./features/weather/weather.routes');
 const aiRoutes = require('./features/ai/ai.routes');
 const notificationRoutes = require('./features/notifications/notification.routes');
 const notificationService = require('./features/notifications/notification.service');
+const {
+  plantCareReminderScheduler,
+} = require('./features/notifications/plantCareReminder.scheduler');
 const cartRoutes = require('./features/cart/cart.routes');
 const orderRoutes = require('./features/orders/order.routes');
 const walletRoutes = require('./features/wallet/wallet.routes');
@@ -54,8 +57,12 @@ const resolvedPostCleanupTask = cron.schedule(
   }
 );
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB, sau đó bắt ngay các lịch chăm sóc bị bỏ lỡ.
+void connectDB().then(() => {
+  if (!shutdownStarted) {
+    plantCareReminderScheduler.start();
+  }
+});
 
 // Middleware
 app.use(cors());
@@ -106,6 +113,7 @@ async function shutdownServer(signal) {
   console.log(`[server] Đang shutdown theo tín hiệu ${signal}`);
 
   resolvedPostCleanupTask.stop();
+  plantCareReminderScheduler.stop();
   const forceShutdownTimer = setTimeout(() => {
     console.error('[server] Shutdown quá thời gian cho phép');
     process.exit(1);

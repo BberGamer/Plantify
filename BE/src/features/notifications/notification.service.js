@@ -17,6 +17,7 @@ async function populateNotification(notificationId) {
     .populate('actorId', 'fullName avatarUrl email')
     .populate('postId', 'title')
     .populate('orderId', 'orderCode status total')
+    .populate('userPlantId', 'name coverImageUrl')
     .lean();
 }
 
@@ -305,14 +306,43 @@ async function createNotification(payload) {
   const { recipientId, actorId } = payload;
 
   ensureObjectId(recipientId, 'Recipient ID không hợp lệ');
-  ensureObjectId(actorId, 'Actor ID không hợp lệ');
-
-  if (String(recipientId) === String(actorId)) {
-    return null;
+  if (actorId !== null && actorId !== undefined) {
+    ensureObjectId(actorId, 'Actor ID không hợp lệ');
+    if (String(recipientId) === String(actorId)) {
+      return null;
+    }
   }
 
   const createdNotification = await Notification.create(payload);
   const notification = await populateNotification(createdNotification._id);
+  publishNotificationCreated(notification);
+  return notification;
+}
+
+async function upsertPlantCareNotification(payload) {
+  ensureObjectId(payload.recipientId, 'Recipient ID không hợp lệ');
+  ensureObjectId(payload.userPlantId, 'UserPlant ID không hợp lệ');
+  if (!payload.dedupeKey) {
+    const error = new Error('dedupeKey là bắt buộc');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  let result;
+  try {
+    result = await Notification.updateOne(
+      { dedupeKey: payload.dedupeKey },
+      { $setOnInsert: payload },
+      { upsert: true, runValidators: true, setDefaultsOnInsert: true }
+    );
+  } catch (error) {
+    if (error?.code === 11000) return null;
+    throw error;
+  }
+
+  if (!result?.upsertedCount || !result.upsertedId) return null;
+
+  const notification = await populateNotification(result.upsertedId);
   publishNotificationCreated(notification);
   return notification;
 }
@@ -375,6 +405,7 @@ async function getNotificationsByRecipient(recipientId, filters = {}) {
     .populate('actorId', 'fullName avatarUrl email')
     .populate('postId', 'title')
     .populate('orderId', 'orderCode status total')
+    .populate('userPlantId', 'name coverImageUrl')
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
@@ -406,6 +437,7 @@ async function markNotificationAsRead(notificationId, recipientId) {
     .populate('actorId', 'fullName avatarUrl email')
     .populate('postId', 'title')
     .populate('orderId', 'orderCode status total')
+    .populate('userPlantId', 'name coverImageUrl')
     .lean();
 }
 
@@ -422,6 +454,7 @@ async function markAllNotificationsAsRead(recipientId) {
 
 module.exports = {
   createNotification,
+  upsertPlantCareNotification,
   createOrderNotification,
   getNotificationsByRecipient,
   getUnreadCount,

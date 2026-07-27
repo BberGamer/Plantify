@@ -1,5 +1,6 @@
 // MyGarden.jsx - Trang customer quản lý các cây cá nhân bằng CRUD My Garden
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import {
   AlertCircle,
   Loader2,
@@ -23,6 +24,8 @@ import {
 import { usePlants } from "@/features/plants/hooks";
 
 function MyGarden() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedUserPlantId = searchParams.get("userPlantId") || "";
   const {
     userPlants,
     loading,
@@ -45,6 +48,40 @@ function MyGarden() {
   const [editingPlant, setEditingPlant] = useState(null);
   const [detailPlantId, setDetailPlantId] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const clearRequestedUserPlant = () => {
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.delete("userPlantId");
+      return nextParams;
+    }, { replace: true });
+  };
+
+  useEffect(() => {
+    if (!requestedUserPlantId || loading || error) return;
+    const requestedPlant = userPlants.find(
+      (userPlant) => userPlant._id === requestedUserPlantId
+    );
+    if (requestedPlant) {
+      setDetailPlantId(requestedPlant._id);
+      return;
+    }
+
+    toast.error("Cây này không còn tồn tại trong My Garden.", {
+      id: `missing-user-plant-${requestedUserPlantId}`,
+    });
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.delete("userPlantId");
+      return nextParams;
+    }, { replace: true });
+  }, [
+    error,
+    loading,
+    requestedUserPlantId,
+    setSearchParams,
+    userPlants,
+  ]);
 
   const openCreateDialog = () => {
     setEditingPlant(null);
@@ -96,7 +133,12 @@ function MyGarden() {
 
     try {
       await remove(deleteTarget._id);
-      if (detailPlantId === deleteTarget._id) setDetailPlantId("");
+      if (detailPlantId === deleteTarget._id) {
+        setDetailPlantId("");
+        if (requestedUserPlantId === deleteTarget._id) {
+          clearRequestedUserPlant();
+        }
+      }
       setDeleteTarget(null);
       toast.success("Đã xóa cây khỏi My Garden.");
     } catch (deleteError) {
@@ -205,7 +247,10 @@ function MyGarden() {
       <UserPlantDetailDialog
         open={Boolean(detailPlantId)}
         onOpenChange={(nextOpen) => {
-          if (!nextOpen) setDetailPlantId("");
+          if (!nextOpen) {
+            setDetailPlantId("");
+            if (requestedUserPlantId) clearRequestedUserPlant();
+          }
         }}
         userPlantId={detailPlantId}
         onEdit={handleEditFromDetail}

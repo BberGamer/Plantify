@@ -16,6 +16,7 @@ import {
   MessageCircle,
   AlertTriangle,
   CheckCheck,
+  Droplets,
   Wallet,
   Sprout,
 } from "lucide-react";
@@ -44,6 +45,12 @@ import { mapBackendRoleToFeRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/hooks";
 import { toast } from "sonner";
+import {
+  getPlantCareNotificationMessage,
+  getPlantCareNotificationSubtext,
+  getPlantCareNotificationTarget,
+  isPlantCareNotification,
+} from "@/features/notifications/notification.utils";
 
 function formatRelativeTime(dateString) {
   if (!dateString) return "";
@@ -75,6 +82,10 @@ function getNotificationIcon(type, notification) {
     return <Wallet className="h-4 w-4 text-violet-500" />;
   }
   switch (type) {
+    case "plant_watering_due":
+      return <Droplets className="h-4 w-4 text-sky-500" />;
+    case "plant_fertilizing_due":
+      return <Sprout className="h-4 w-4 text-emerald-600" />;
     case "order_status_updated":
       return <Package className="h-4 w-4 text-blue-500" />;
     case "post_commented":
@@ -87,6 +98,10 @@ function getNotificationIcon(type, notification) {
 }
 
 function formatNotificationMessage(notification) {
+  if (isPlantCareNotification(notification)) {
+    return getPlantCareNotificationMessage(notification);
+  }
+
   if (notification.type === "order_status_updated") {
     const msg = notification.message || "Đơn hàng của bạn đã được cập nhật trạng thái";
     // Highlight số tiền hoàn trong message (dạng: XXX.XXX ₫ hoặc tương tự)
@@ -106,6 +121,10 @@ function formatNotificationMessage(notification) {
 }
 
 function getNotificationSubtext(notification) {
+  if (isPlantCareNotification(notification)) {
+    return getPlantCareNotificationSubtext(notification);
+  }
+
   if (notification.type === "order_status_updated") {
     return notification.orderId?.orderCode || "Đơn hàng";
   }
@@ -168,6 +187,12 @@ function Header() {
     try {
       if (!notification.readAt) {
         await readNotification(notification._id);
+      }
+
+      const plantCareTarget = getPlantCareNotificationTarget(notification);
+      if (plantCareTarget) {
+        navigate(plantCareTarget);
+        return;
       }
 
       // Thông báo đơn hàng → điều hướng đến trang Profile (xem đơn hàng)
