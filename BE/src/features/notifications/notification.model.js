@@ -1,3 +1,6 @@
+// notification.model.js
+// Định nghĩa schema thông báo và các loại thông báo được gửi đến người dùng.
+
 const mongoose = require('mongoose');
 
 const NOTIFICATION_TYPES = [

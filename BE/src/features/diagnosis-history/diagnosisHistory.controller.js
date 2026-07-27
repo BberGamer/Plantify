@@ -1,3 +1,6 @@
+// diagnosisHistory.controller.js
+// Tiếp nhận request lịch sử chẩn đoán, gọi service và trả response thống nhất.
+
 const diagnosisHistoryService = require('./diagnosisHistory.service');
 const apiResponse = require('../../utils/apiResponse');
 

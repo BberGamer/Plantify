@@ -1,3 +1,6 @@
+// weatherAdvice.controller.js
+// Tiếp nhận request khuyến nghị thời tiết cho My Garden và trả response thống nhất.
+
 const apiResponse = require('../../utils/apiResponse');
 const weatherAdviceService = require('./weatherAdvice.service');
 

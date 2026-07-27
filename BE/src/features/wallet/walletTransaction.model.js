@@ -1,3 +1,6 @@
+// walletTransaction.model.js
+// Định nghĩa schema lưu lịch sử giao dịch cộng, trừ và hoàn tiền của ví người dùng.
+
 const mongoose = require('mongoose');
 
 const walletTransactionSchema = new mongoose.Schema(

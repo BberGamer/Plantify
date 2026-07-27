@@ -1,3 +1,6 @@
+// wallet.controller.js
+// Tiếp nhận request lấy thông tin ví người dùng, gọi service và trả response.
+
 const walletService = require('./wallet.service');
 const { success, error } = require('../../utils/apiResponse');
 

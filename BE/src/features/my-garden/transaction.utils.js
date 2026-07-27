@@ -1,3 +1,6 @@
+// transaction.utils.js
+// Cung cấp tiện ích thực thi transaction MongoDB và xử lý môi trường không hỗ trợ.
+
 const mongoose = require('mongoose');
 
 /** Nhận diện lỗi MongoDB deployment không hỗ trợ transaction. @param {Object} error - Lỗi MongoDB. @returns {boolean} Kết quả nhận diện. */

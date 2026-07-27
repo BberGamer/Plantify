@@ -1,3 +1,6 @@
+// weatherAdvice.service.js
+// Xây dựng khuyến nghị chăm cây dựa trên thời tiết và cây ngoài trời trong My Garden.
+
 const UserPlant = require('../my-garden/userPlant.model');
 const { getWeatherByCity } = require('./weather.service');
 

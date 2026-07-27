@@ -1,3 +1,6 @@
+// diagnosisImageStorage.service.js
+// Kiểm tra, lưu và xóa ảnh được sử dụng trong quy trình chẩn đoán bệnh cây.
+
 const crypto = require('crypto');
 const fs = require('fs/promises');
 const path = require('path');

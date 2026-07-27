@@ -1,3 +1,6 @@
+// wallet.service.js
+// Xử lý tạo ví, truy vấn số dư và cập nhật tiền kèm lịch sử giao dịch.
+
 const Wallet = require('./wallet.model');
 const WalletTransaction = require('./walletTransaction.model');
 

@@ -1,3 +1,6 @@
+// cart.model.js
+// Định nghĩa schema giỏ hàng và các sản phẩm được người dùng thêm vào giỏ.
+
 const mongoose = require('mongoose');
 
 const cartItemSchema = new mongoose.Schema(

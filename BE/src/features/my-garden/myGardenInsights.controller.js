@@ -1,3 +1,6 @@
+// myGardenInsights.controller.js
+// Tiếp nhận request dashboard My Garden, gọi service tổng hợp và trả response.
+
 const apiResponse = require('../../utils/apiResponse');
 const insightsService = require('./myGardenInsights.service');
 

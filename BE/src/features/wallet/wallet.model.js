@@ -1,3 +1,6 @@
+// wallet.model.js
+// Định nghĩa schema ví và số dư hiện tại của người dùng.
+
 const mongoose = require('mongoose');
 
 const walletSchema = new mongoose.Schema(

@@ -1,3 +1,6 @@
+// diagnosisHistory.service.js
+// Xử lý lưu trữ, truy vấn và phân trang lịch sử chẩn đoán của người dùng.
+
 const mongoose = require('mongoose');
 const DiagnosisHistory = require('./diagnosisHistory.model');
 const UserPlant = require('../my-garden/userPlant.model');

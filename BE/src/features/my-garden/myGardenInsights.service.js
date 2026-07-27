@@ -1,3 +1,6 @@
+// myGardenInsights.service.js
+// Tổng hợp số liệu cây, lịch chăm sóc và chẩn đoán cho dashboard My Garden.
+
 const mongoose = require('mongoose');
 const UserPlant = require('./userPlant.model');
 const DiagnosisHistory = require('../diagnosis-history/diagnosisHistory.model');

@@ -1,3 +1,6 @@
+// diagnosisHistory.model.js
+// Định nghĩa schema lưu kết quả và thông tin liên quan của mỗi lần chẩn đoán cây.
+
 const mongoose = require('mongoose');
 
 const diagnosisHistorySchema = new mongoose.Schema(

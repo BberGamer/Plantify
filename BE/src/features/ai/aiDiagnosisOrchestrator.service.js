@@ -1,3 +1,6 @@
+// aiDiagnosisOrchestrator.service.js
+// Điều phối quy trình chẩn đoán ảnh cây, đối chiếu bệnh và lưu lịch sử chẩn đoán.
+
 const path = require('path');
 const mongoose = require('mongoose');
 const PlantDisease = require('../plant-diseases/plantDisease.model');

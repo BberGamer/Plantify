@@ -1,3 +1,6 @@
+// plantCareReminder.scheduler.js
+// Lập lịch chạy tác vụ kiểm tra và tạo thông báo chăm sóc cây đến hạn.
+
 const cron = require('node-cron');
 const {
   checkDuePlantCareNotifications,

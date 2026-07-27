@@ -1,3 +1,6 @@
+// plantCareReminder.service.js
+// Kiểm tra lịch tưới, bón phân và tạo thông báo nhắc chăm sóc cây đến hạn.
+
 const UserPlant = require('../my-garden/userPlant.model');
 const {
   upsertPlantCareNotification,
