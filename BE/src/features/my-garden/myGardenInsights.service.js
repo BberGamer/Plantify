@@ -16,6 +16,7 @@ function ensureObjectId(id, message) {
   }
 }
 
+/** Tính đầu và cuối ngày theo múi giờ Việt Nam. @param {Date} [value=new Date()] - Thời điểm tham chiếu. @returns {Object} Hai mốc UTC start/end. */
 function getVietnamDayBounds(value = new Date()) {
   const shifted = new Date(value.getTime() + VIETNAM_OFFSET_MS);
   const start = new Date(
@@ -31,6 +32,7 @@ function getVietnamDayBounds(value = new Date()) {
   };
 }
 
+/** Map cây và lịch đến hạn sang item dashboard. @param {Object} userPlant - Cây người dùng. @param {string} scheduleType - Loại lịch. @param {Date} nextDueAt - Thời điểm đến hạn. @returns {Object} Item dashboard. */
 function toDashboardPlant(userPlant, scheduleType, nextDueAt) {
   return {
     _id: userPlant._id,
@@ -42,6 +44,7 @@ function toDashboardPlant(userPlant, scheduleType, nextDueAt) {
   };
 }
 
+/** Tổng hợp thống kê, lịch đến hạn và cây gần đây cho My Garden. @param {string} userId - ID người dùng. @param {Date} [now=new Date()] - Thời điểm tham chiếu. @returns {Promise<Object>} Dữ liệu dashboard. */
 async function getMyGardenDashboard(userId, now = new Date()) {
   ensureObjectId(userId, 'User ID không hợp lệ');
   const userPlants = await UserPlant.find({ userId, status: 'active' })

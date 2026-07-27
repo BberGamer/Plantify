@@ -2,6 +2,7 @@
 const weatherService = require('./weather.service');
 const apiResponse = require('../../utils/apiResponse');
 
+/** Lấy thời tiết theo city trong query. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getWeather(req, res, next) {
   try {
     const weather = await weatherService.getWeatherByCity(req.query.city);

@@ -402,6 +402,7 @@ const getAddresses = async (req, res, next) => {
   }
 };
 
+/** Tạo địa chỉ cho người dùng hiện tại. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 const createAddress = async (req, res, next) => {
   try {
     validateAddressInput(req.body);
@@ -412,6 +413,7 @@ const createAddress = async (req, res, next) => {
   }
 };
 
+/** Cập nhật địa chỉ thuộc người dùng hiện tại. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 const updateAddress = async (req, res, next) => {
   try {
     validateAddressInput(req.body);
@@ -422,6 +424,7 @@ const updateAddress = async (req, res, next) => {
   }
 };
 
+/** Xóa địa chỉ thuộc người dùng hiện tại. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 const deleteAddress = async (req, res, next) => {
   try {
     const addresses = await authService.deleteAddress(req.user.id, req.params.addressId);
@@ -431,6 +434,7 @@ const deleteAddress = async (req, res, next) => {
   }
 };
 
+/** Đặt địa chỉ mặc định của người dùng hiện tại. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 const setDefaultAddress = async (req, res, next) => {
   try {
     const addresses = await authService.setDefaultAddress(req.user.id, req.params.addressId);
@@ -440,6 +444,7 @@ const setDefaultAddress = async (req, res, next) => {
   }
 };
 
+/** Đổi mật khẩu sau khi xác minh mật khẩu hiện tại. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 const changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword, confirmPassword } = req.body;

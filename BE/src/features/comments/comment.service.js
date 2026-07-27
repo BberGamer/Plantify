@@ -28,6 +28,7 @@ function ensureCurrentUserId(currentUser) {
   return userId;
 }
 
+/** Validate nội dung và điểm đánh giá của bình luận. @param {Object} [payload={}] - Payload bình luận. @returns {Object} Nội dung và rating đã chuẩn hóa. @throws {Error} Khi payload không hợp lệ. */
 function validateCommentPayload(payload = {}) {
   const content = typeof payload.content === 'string' ? payload.content.trim() : '';
   if (!content) {
@@ -50,6 +51,7 @@ function validateCommentPayload(payload = {}) {
   return { content, rating };
 }
 
+/** Tính lại điểm và số bình luận của bài viết. @param {string} postId - ID bài viết. @returns {Promise<void>} */
 async function syncPostRating(postId) {
   const stats = await Comment.aggregate([
     { $match: { postId: new mongoose.Types.ObjectId(postId), rating: { $gte: 1, $lte: 5 } } },
@@ -69,6 +71,7 @@ async function syncPostRating(postId) {
   });
 }
 
+/** Lấy bình luận theo bộ lọc. @param {Object} [filters={}] - Bộ lọc comment. @returns {Promise<Object[]>} Danh sách bình luận. */
 async function getAllComments(filters = {}) {
   const query = {};
 
@@ -83,6 +86,7 @@ async function getAllComments(filters = {}) {
     .lean();
 }
 
+/** Lấy bình luận của bài viết. @param {string} postId - ID bài viết. @returns {Promise<Object[]>} Danh sách bình luận. */
 async function getCommentsByPostId(postId) {
   ensureObjectId(postId, 'Post ID không hợp lệ');
 
@@ -92,6 +96,7 @@ async function getCommentsByPostId(postId) {
     .lean();
 }
 
+/** Tạo bình luận bài viết và đồng bộ rating. @param {Object} [payload={}] - Dữ liệu bình luận. @param {Object} [currentUser={}] - Người dùng hiện tại. @returns {Promise<Object>} Bình luận vừa tạo. */
 async function createComment(payload = {}, currentUser = {}) {
   const userId = ensureCurrentUserId(currentUser);
   ensureObjectId(payload.postId, 'Post ID không hợp lệ');
@@ -126,6 +131,7 @@ async function createComment(payload = {}, currentUser = {}) {
     .lean();
 }
 
+/** Lấy bình luận của sản phẩm. @param {string} productId - ID sản phẩm. @returns {Promise<Object[]>} Danh sách bình luận. */
 async function getCommentsByProductId(productId) {
   ensureObjectId(productId, 'Product ID không hợp lệ');
 
@@ -135,6 +141,7 @@ async function getCommentsByProductId(productId) {
     .lean();
 }
 
+/** Tính lại điểm và số đánh giá của sản phẩm. @param {string} productId - ID sản phẩm. @returns {Promise<void>} */
 async function syncProductRating(productId) {
   const stats = await Comment.aggregate([
     { $match: { productId: new mongoose.Types.ObjectId(productId), rating: { $gte: 1, $lte: 5 } } },
@@ -154,6 +161,7 @@ async function syncProductRating(productId) {
   });
 }
 
+/** Tạo đánh giá sản phẩm và đồng bộ rating. @param {Object} [payload={}] - Dữ liệu đánh giá. @param {Object} [currentUser={}] - Người dùng hiện tại. @returns {Promise<Object>} Bình luận vừa tạo. */
 async function createProductComment(payload = {}, currentUser = {}) {
   const userId = ensureCurrentUserId(currentUser);
   ensureObjectId(payload.productId, 'Product ID không hợp lệ');

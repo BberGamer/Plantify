@@ -18,6 +18,7 @@ const CARE_REMINDERS = [
   },
 ];
 
+/** Tạo khóa chống gửi trùng nhắc lịch theo cây, loại và lần đến hạn. @param {string} userPlantId - ID cây. @param {string} careType - Loại chăm sóc. @param {Date} nextDueAt - Thời điểm đến hạn. @returns {string} Dedupe key. */
 function buildPlantCareDedupeKey(userPlantId, careType, nextDueAt) {
   return [
     'plant-care',
@@ -27,6 +28,7 @@ function buildPlantCareDedupeKey(userPlantId, careType, nextDueAt) {
   ].join(':');
 }
 
+/** Quét lịch đến hạn và upsert notification chăm sóc tương ứng. @param {Date} [now=new Date()] - Thời điểm chạy job. @returns {Promise<Object>} Thống kê số lịch đã kiểm tra/tạo. */
 async function checkDuePlantCareNotifications(now = new Date()) {
   const duePlants = await UserPlant.find({
     status: 'active',

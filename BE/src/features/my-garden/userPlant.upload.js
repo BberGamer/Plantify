@@ -4,6 +4,7 @@ const multer = require('multer');
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
+/** Chỉ chấp nhận MIME ảnh được hỗ trợ cho album cây. @param {Object} req @param {Object} file @param {Function} callback @returns {void} */
 function imageFileFilter(req, file, callback) {
   if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
     const error = new Error('Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP');
@@ -20,6 +21,7 @@ const uploadSingleUserPlantImage = multer({
   limits: { fileSize: MAX_IMAGE_SIZE, files: 1 },
 }).single('file');
 
+/** Nhận một ảnh album cây vào memory và chuẩn hóa lỗi Multer. @param {Object} req @param {Object} res @param {Function} next @returns {void} */
 function uploadUserPlantImage(req, res, next) {
   uploadSingleUserPlantImage(req, res, (error) => {
     if (error instanceof multer.MulterError) {

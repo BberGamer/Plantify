@@ -53,6 +53,7 @@ function resolveStoragePath(storageKey) {
  * @param {object} file - Multer file có Buffer trong field buffer
  * @returns {Promise<{storageKey: string, url: string, mimeType: string, sizeBytes: number}>}
  */
+/** Validate magic bytes rồi lưu ảnh diagnosis vào thư mục riêng của user. @param {string} userId - ID người dùng. @param {Object} file - File Multer trong memory. @returns {Promise<Object>} Storage key và metadata ảnh. */
 async function saveDiagnosisImage(userId, file) {
   ensureUserId(userId);
 
@@ -93,6 +94,7 @@ async function saveDiagnosisImage(userId, file) {
  * @param {string} storageKey - Đường dẫn tương đối bên trong BE/uploads
  * @returns {Promise<boolean>} true nếu đã xóa file, false nếu file không tồn tại
  */
+/** Xóa ảnh diagnosis khỏi storage nếu tồn tại. @param {string} storageKey - Khóa đường dẫn tương đối. @returns {Promise<void>} */
 async function deleteDiagnosisImage(storageKey) {
   const filePath = resolveStoragePath(storageKey);
 

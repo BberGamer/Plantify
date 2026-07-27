@@ -11,12 +11,14 @@ function ensureObjectId(id, message = 'ID không hợp lệ') {
   }
 }
 
+/** Chuẩn hóa quantity thành số nguyên dương. @param {*} quantity - Số lượng đầu vào. @returns {number} Quantity hợp lệ. */
 function normalizeQuantity(quantity) {
   const normalized = Number(quantity);
   if (!Number.isFinite(normalized) || normalized < 1) return 1;
   return Math.floor(normalized);
 }
 
+/** Lấy hoặc tạo giỏ hàng cho người dùng. @param {string} userId - ID người dùng. @returns {Promise<Object>} Cart document. */
 async function getOrCreateCart(userId) {
   ensureObjectId(userId, 'User ID không hợp lệ');
 
@@ -28,6 +30,7 @@ async function getOrCreateCart(userId) {
   return cart;
 }
 
+/** Map cart item đã populate sang shape trả cho client. @param {Object} item - Cart item. @returns {Object} Item phía client. */
 function toClientItem(item) {
   const product = item.productId;
   const productId = product?._id || product;
@@ -49,6 +52,7 @@ async function populateCart(cart) {
   return cart.populate('items.productId', 'name price stock thumbnail images brand isActive');
 }
 
+/** Lấy giỏ hàng đã populate và tính tổng. @param {string} userId - ID người dùng. @returns {Promise<Object>} Payload giỏ hàng. */
 async function getCart(userId) {
   const cart = await getOrCreateCart(userId);
   await populateCart(cart);
@@ -63,6 +67,7 @@ async function getCart(userId) {
   };
 }
 
+/** Thêm hoặc cộng số lượng sản phẩm, không vượt tồn kho. @param {string} userId - ID người dùng. @param {string} productId - ID sản phẩm. @param {number} [quantity=1] - Số lượng thêm. @param {boolean} [selected=true] - Trạng thái chọn. @returns {Promise<Object>} Giỏ hàng sau cập nhật. */
 async function addItem(userId, productId, quantity = 1, selected = true) {
   ensureObjectId(productId, 'Product ID không hợp lệ');
 
@@ -98,6 +103,7 @@ async function addItem(userId, productId, quantity = 1, selected = true) {
   return getCart(userId);
 }
 
+/** Hợp nhất các item local vào giỏ tài khoản. @param {string} userId - ID người dùng. @param {Array} [items=[]] - Item cục bộ. @returns {Promise<Object>} Giỏ hàng sau hợp nhất. */
 async function mergeItems(userId, items = []) {
   if (!Array.isArray(items)) {
     const error = new Error('Danh sách giỏ hàng không hợp lệ');
@@ -114,6 +120,7 @@ async function mergeItems(userId, items = []) {
   return getCart(userId);
 }
 
+/** Cập nhật quantity hoặc selected của cart item. @param {string} userId - ID người dùng. @param {string} productId - ID sản phẩm. @param {Object} [data={}] - Dữ liệu cập nhật. @returns {Promise<Object>} Giỏ hàng sau cập nhật. */
 async function updateItem(userId, productId, data = {}) {
   ensureObjectId(productId, 'Product ID không hợp lệ');
 
@@ -139,6 +146,7 @@ async function updateItem(userId, productId, data = {}) {
   return getCart(userId);
 }
 
+/** Xóa sản phẩm khỏi giỏ. @param {string} userId - ID người dùng. @param {string} productId - ID sản phẩm. @returns {Promise<Object>} Giỏ hàng sau xóa. */
 async function removeItem(userId, productId) {
   ensureObjectId(productId, 'Product ID không hợp lệ');
 
@@ -149,6 +157,7 @@ async function removeItem(userId, productId) {
   return getCart(userId);
 }
 
+/** Xóa toàn bộ cart item đang được chọn. @param {string} userId - ID người dùng. @returns {Promise<Object>} Giỏ hàng sau xóa. */
 async function removeSelectedItems(userId) {
   const cart = await getOrCreateCart(userId);
   cart.items = cart.items.filter((item) => item.selected === false);

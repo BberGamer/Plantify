@@ -100,6 +100,7 @@ async function deleteMyUserPlant(req, res, next) {
   }
 }
 
+/** Upload ảnh vào album cây của người dùng. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function uploadUserPlantImage(req, res, next) {
   try {
     const userPlant = await userPlantService.uploadUserPlantImage(req.user.id, req.params.id, req.file, req.body);
@@ -108,6 +109,7 @@ async function uploadUserPlantImage(req, res, next) {
   } catch (error) { return next(error); }
 }
 
+/** Cập nhật metadata ảnh trong album cây. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function updateUserPlantImage(req, res, next) {
   try {
     const userPlant = await userPlantService.updateUserPlantImage(req.user.id, req.params.id, req.params.imageId, req.body);
@@ -117,6 +119,7 @@ async function updateUserPlantImage(req, res, next) {
   } catch (error) { return next(error); }
 }
 
+/** Xóa ảnh khỏi album cây và storage. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function deleteUserPlantImage(req, res, next) {
   try {
     const userPlant = await userPlantService.deleteUserPlantImage(req.user.id, req.params.id, req.params.imageId);

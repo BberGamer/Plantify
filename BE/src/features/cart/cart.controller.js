@@ -2,6 +2,7 @@
 const cartService = require('./cart.service');
 const { success, created, error } = require('../../utils/apiResponse');
 
+/** Trả giỏ hàng của người dùng hiện tại. @param {Object} req @param {Object} res @returns {Promise<Object>} HTTP response. */
 async function getMyCart(req, res) {
   try {
     const cart = await cartService.getCart(req.user.id);
@@ -11,6 +12,7 @@ async function getMyCart(req, res) {
   }
 }
 
+/** Thêm sản phẩm từ body vào giỏ. @param {Object} req @param {Object} res @returns {Promise<Object>} HTTP response. */
 async function addCartItem(req, res) {
   try {
     const cart = await cartService.addItem(
@@ -25,6 +27,7 @@ async function addCartItem(req, res) {
   }
 }
 
+/** Hợp nhất giỏ local vào tài khoản. @param {Object} req @param {Object} res @returns {Promise<Object>} HTTP response. */
 async function mergeCart(req, res) {
   try {
     const cart = await cartService.mergeItems(req.user.id, req.body.items);
@@ -34,6 +37,7 @@ async function mergeCart(req, res) {
   }
 }
 
+/** Cập nhật cart item theo productId. @param {Object} req @param {Object} res @returns {Promise<Object>} HTTP response. */
 async function updateCartItem(req, res) {
   try {
     const cart = await cartService.updateItem(req.user.id, req.params.productId, req.body);
@@ -43,6 +47,7 @@ async function updateCartItem(req, res) {
   }
 }
 
+/** Xóa cart item theo productId. @param {Object} req @param {Object} res @returns {Promise<Object>} HTTP response. */
 async function removeCartItem(req, res) {
   try {
     const cart = await cartService.removeItem(req.user.id, req.params.productId);
@@ -52,6 +57,7 @@ async function removeCartItem(req, res) {
   }
 }
 
+/** Xóa toàn bộ cart item đang chọn. @param {Object} req @param {Object} res @returns {Promise<Object>} HTTP response. */
 async function removeSelectedItems(req, res) {
   try {
     const cart = await cartService.removeSelectedItems(req.user.id);

@@ -218,6 +218,7 @@ async function ensureRecommendedProductsExist(recommendedProductIds = []) {
   }
 }
 
+/** Lấy bệnh cây theo search, severity, cây ảnh hưởng và phân trang. @param {Object} [filters={}] - Bộ lọc. @returns {Promise<Object>} Danh sách và metadata. */
 async function getAllPlantDiseases(filters = {}) {
   const { affectedPlantId, search, sort, page = 1, limit = 10 } = filters;
   const query = {};
@@ -279,6 +280,7 @@ async function getAllPlantDiseases(filters = {}) {
   return { diseases, total, pages, currentPage: safePage };
 }
 
+/** Lấy chi tiết bệnh cây đã populate liên kết. @param {string} id - ID bệnh cây. @returns {Promise<Object>} Bệnh cây. */
 async function getPlantDiseaseById(id) {
   ensureObjectId(id, 'PlantDisease ID không hợp lệ');
   return PlantDisease.findById(id)
@@ -290,6 +292,7 @@ async function getPlantDiseaseById(id) {
     .lean();
 }
 
+/** Validate liên kết và tạo bệnh cây. @param {Object} [data={}] - Dữ liệu bệnh. @returns {Promise<Object>} Bệnh vừa tạo. */
 async function createPlantDisease(data = {}) {
   if (typeof data.name !== 'string' || !data.name.trim()) {
     throw createHttpError('Tên bệnh là bắt buộc', 400);
@@ -306,6 +309,7 @@ async function createPlantDisease(data = {}) {
   }
 }
 
+/** Cập nhật bệnh cây và xác minh các reference mới. @param {string} id - ID bệnh. @param {Object} [data={}] - Dữ liệu cập nhật. @returns {Promise<Object>} Bệnh sau cập nhật. */
 async function updatePlantDisease(id, data = {}) {
   ensureObjectId(id, 'PlantDisease ID không hợp lệ');
 
@@ -335,6 +339,7 @@ async function updatePlantDisease(id, data = {}) {
   }
 }
 
+/** Xóa bệnh cây. @param {string} id - ID bệnh. @returns {Promise<Object>} Bệnh đã xóa. */
 async function deletePlantDisease(id) {
   ensureObjectId(id, 'PlantDisease ID không hợp lệ');
   return PlantDisease.findByIdAndDelete(id);

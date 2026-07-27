@@ -6,6 +6,13 @@ function getCurrentUserId(req) {
   return req.user?.id || req.user?._id || req.user?.userId;
 }
 
+/**
+ * Tạo báo cáo bài viết cho người dùng hiện tại.
+ * @param {Object} req - Express request.
+ * @param {Object} res - Express response.
+ * @param {Function} next - Middleware xử lý lỗi.
+ * @returns {Promise<Object>} HTTP response.
+ */
 async function createReport(req, res, next) {
   try {
     const { postId, reason } = req.body;
@@ -17,6 +24,7 @@ async function createReport(req, res, next) {
   }
 }
 
+/** Lấy danh sách báo cáo theo query. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getAllReports(req, res, next) {
   try {
     const reports = await reportService.getAllReports(req.query);
@@ -26,6 +34,7 @@ async function getAllReports(req, res, next) {
   }
 }
 
+/** Xử lý báo cáo theo action trong body. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function processReport(req, res, next) {
   try {
     const { action } = req.body;
@@ -37,6 +46,7 @@ async function processReport(req, res, next) {
   }
 }
 
+/** Khôi phục bài viết bị gỡ do báo cáo. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function restorePost(req, res, next) {
   try {
     const post = await reportService.restorePost(req.params.postId);

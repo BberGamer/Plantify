@@ -2,6 +2,7 @@
 const commentService = require('./comment.service');
 const apiResponse = require('../../utils/apiResponse');
 
+/** Lấy bình luận theo query. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getAllComments(req, res, next) {
   try {
     const comments = await commentService.getAllComments(req.query);
@@ -11,6 +12,7 @@ async function getAllComments(req, res, next) {
   }
 }
 
+/** Lấy bình luận của bài viết. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getCommentsByPostId(req, res, next) {
   try {
     const comments = await commentService.getCommentsByPostId(req.params.postId);
@@ -20,6 +22,7 @@ async function getCommentsByPostId(req, res, next) {
   }
 }
 
+/** Tạo bình luận bài viết cho người dùng hiện tại. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function createComment(req, res, next) {
   try {
     const comment = await commentService.createComment(req.body, req.user);
@@ -29,6 +32,7 @@ async function createComment(req, res, next) {
   }
 }
 
+/** Lấy đánh giá của sản phẩm. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getCommentsByProductId(req, res, next) {
   try {
     const comments = await commentService.getCommentsByProductId(req.params.productId);
@@ -38,6 +42,7 @@ async function getCommentsByProductId(req, res, next) {
   }
 }
 
+/** Tạo đánh giá sản phẩm cho người dùng hiện tại. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function createProductComment(req, res, next) {
   try {
     const comment = await commentService.createProductComment(req.body, req.user);

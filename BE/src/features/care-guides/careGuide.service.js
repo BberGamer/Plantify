@@ -5,6 +5,7 @@ const Plant = require('../plants/plant.model');
 
 const CARE_GUIDE_FIELDS = ['plantId', 'pruning', 'propagation', 'watering', 'repotting'];
 
+/** Chỉ lấy các trường hướng dẫn chăm sóc được model hỗ trợ. @param {Object} [data={}] - Payload đầu vào. @returns {Object} Payload đã lọc. */
 function pickCareGuideFields(data = {}) {
   return CARE_GUIDE_FIELDS.reduce((result, field) => {
     if (data[field] !== undefined) result[field] = data[field];
@@ -47,6 +48,7 @@ async function ensurePlantExists(plantId) {
   }
 }
 
+/** Lấy hướng dẫn chăm sóc theo cây, từ khóa và phân trang. @param {Object} [filters={}] - Bộ lọc. @returns {Promise<Object>} Danh sách và metadata phân trang. */
 async function getAllCareGuides(filters = {}) {
   const { plantId, search, sort, page = 1, limit = 10 } = filters;
   const query = {};
@@ -78,11 +80,13 @@ async function getAllCareGuides(filters = {}) {
   return { careGuides, total, pages, currentPage: safePage };
 }
 
+/** Lấy chi tiết hướng dẫn chăm sóc. @param {string} id - ID hướng dẫn. @returns {Promise<Object>} Hướng dẫn chăm sóc. */
 async function getCareGuideById(id) {
   ensureObjectId(id, 'CareGuide ID không hợp lệ');
   return CareGuide.findById(id).lean();
 }
 
+/** Tạo hướng dẫn sau khi xác minh cây tồn tại. @param {Object} [data={}] - Dữ liệu hướng dẫn. @returns {Promise<Object>} Hướng dẫn vừa tạo. */
 async function createCareGuide(data = {}) {
   if (!data.plantId) {
     throw createHttpError('ID cây là bắt buộc', 400);
@@ -94,6 +98,7 @@ async function createCareGuide(data = {}) {
   return careGuide.save();
 }
 
+/** Cập nhật các trường được phép của hướng dẫn. @param {string} id - ID hướng dẫn. @param {Object} [data={}] - Dữ liệu cập nhật. @returns {Promise<Object>} Hướng dẫn sau cập nhật. */
 async function updateCareGuide(id, data = {}) {
   ensureObjectId(id, 'CareGuide ID không hợp lệ');
 
@@ -114,6 +119,7 @@ async function updateCareGuide(id, data = {}) {
   }).lean();
 }
 
+/** Xóa hướng dẫn chăm sóc. @param {string} id - ID hướng dẫn. @returns {Promise<Object>} Hướng dẫn đã xóa. */
 async function deleteCareGuide(id) {
   ensureObjectId(id, 'CareGuide ID không hợp lệ');
   return CareGuide.findByIdAndDelete(id);

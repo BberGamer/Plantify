@@ -484,6 +484,7 @@ const getAddresses = async (userId) => {
   return user.addresses.sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
 };
 
+/** Validate và chuẩn hóa payload địa chỉ giao hàng. @param {Object} addressData - Dữ liệu địa chỉ. @returns {Object} Địa chỉ hợp lệ. @throws {Error} Khi thiếu trường bắt buộc. */
 const buildAddressPayload = (addressData) => {
   const {
     label,
@@ -516,6 +517,7 @@ const buildAddressPayload = (addressData) => {
   };
 };
 
+/** Thêm địa chỉ và đảm bảo chỉ một địa chỉ mặc định. @param {string} userId - ID người dùng. @param {Object} addressData - Dữ liệu địa chỉ. @returns {Promise<Object[]>} Sổ địa chỉ sau cập nhật. */
 const createAddress = async (userId, addressData) => {
   const user = await User.findById(userId);
   if (!user) {
@@ -538,6 +540,7 @@ const createAddress = async (userId, addressData) => {
   return user.addresses.sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
 };
 
+/** Cập nhật địa chỉ thuộc người dùng và đồng bộ mặc định. @param {string} userId - ID người dùng. @param {string} addressId - ID địa chỉ. @param {Object} addressData - Dữ liệu cập nhật. @returns {Promise<Object[]>} Sổ địa chỉ sau cập nhật. */
 const updateAddress = async (userId, addressId, addressData) => {
   const user = await User.findById(userId);
   if (!user) {
@@ -569,6 +572,7 @@ const updateAddress = async (userId, addressId, addressData) => {
   return user.addresses.sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
 };
 
+/** Xóa địa chỉ và chọn lại mặc định khi cần. @param {string} userId - ID người dùng. @param {string} addressId - ID địa chỉ. @returns {Promise<Object[]>} Sổ địa chỉ sau xóa. */
 const deleteAddress = async (userId, addressId) => {
   const user = await User.findById(userId);
   if (!user) {
@@ -598,6 +602,7 @@ const deleteAddress = async (userId, addressId) => {
   return user.addresses.sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
 };
 
+/** Đặt một địa chỉ làm mặc định duy nhất. @param {string} userId - ID người dùng. @param {string} addressId - ID địa chỉ. @returns {Promise<Object[]>} Sổ địa chỉ sau cập nhật. */
 const setDefaultAddress = async (userId, addressId) => {
   const user = await User.findById(userId);
   if (!user) {
@@ -622,6 +627,7 @@ const setDefaultAddress = async (userId, addressId) => {
   return user.addresses.sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
 };
 
+/** Xác minh mật khẩu hiện tại và đổi mật khẩu người dùng. @param {string} userId - ID người dùng. @param {Object} passwordData - Mật khẩu hiện tại và mật khẩu mới. @returns {Promise<Object>} Kết quả đổi mật khẩu. */
 const changePassword = async (userId, passwordData) => {
   const { currentPassword, newPassword } = passwordData;
 

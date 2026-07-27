@@ -75,6 +75,7 @@ function normalizeEnum(value, allowedValues, fallback = 'unknown') {
   return allowedValues.has(normalizedValue) ? normalizedValue : fallback;
 }
 
+/** Chuẩn hóa response provider AI về schema diagnosis ổn định. @param {Object} [rawResponse={}] - Response thô. @returns {Object} Diagnosis chuẩn hóa. */
 function normalizeAIResponse(rawResponse = {}) {
   const suspectedCondition = typeof rawResponse.suspectedCondition === 'string'
     ? rawResponse.suspectedCondition.trim()
@@ -141,6 +142,7 @@ function getCandidateTerms(disease) {
     .filter(Boolean);
 }
 
+/** Tính độ tương đồng token giữa hai chuỗi đã chuẩn hóa. @param {string} leftValue - Chuỗi thứ nhất. @param {string} rightValue - Chuỗi thứ hai. @returns {number} Điểm từ 0 đến 1. */
 function getTokenSimilarity(leftValue, rightValue) {
   const normalizedLeft = normalizeMatchText(leftValue);
   const normalizedRight = normalizeMatchText(rightValue);
@@ -158,6 +160,7 @@ function getTokenSimilarity(leftValue, rightValue) {
   return (containment * 0.6) + (dice * 0.4);
 }
 
+/** Tính độ tương đồng cao nhất giữa triệu chứng quan sát và knowledge base. @param {string[]} observedSymptoms - Triệu chứng AI. @param {string[]} knowledgeSymptoms - Triệu chứng bệnh. @returns {number} Điểm tương đồng. */
 function getSymptomSimilarity(observedSymptoms, knowledgeSymptoms) {
   if (!observedSymptoms.length || !knowledgeSymptoms.length) return 0;
   const scores = observedSymptoms.map((observed) => (
@@ -168,6 +171,7 @@ function getSymptomSimilarity(observedSymptoms, knowledgeSymptoms) {
   return scores.reduce((total, score) => total + score, 0) / scores.length;
 }
 
+/** Chấm điểm ứng viên bệnh theo tên, tên khoa học và triệu chứng. @param {Object} diagnosis - Diagnosis chuẩn hóa. @param {Object} disease - Bệnh trong knowledge base. @returns {Object} Ứng viên kèm điểm. */
 function scoreDiseaseCandidate(diagnosis, disease) {
   const conditionScore = Math.max(
     0,
@@ -182,6 +186,7 @@ function scoreDiseaseCandidate(diagnosis, disease) {
   return Number(((conditionScore * 0.8) + (symptomScore * 0.2)).toFixed(4));
 }
 
+/** Chọn bệnh phù hợp nhất nếu vượt ngưỡng tin cậy nội bộ. @param {Object} diagnosis - Diagnosis chuẩn hóa. @param {Object[]} diseases - Các bệnh ứng viên. @returns {Object|null} Disease match hoặc `null`. */
 function chooseDiseaseMatch(diagnosis, diseases) {
   const rankedCandidates = diseases
     .map((disease) => ({
@@ -212,6 +217,7 @@ function chooseDiseaseMatch(diagnosis, diseases) {
   };
 }
 
+/** Tìm và chấm điểm bệnh trong database cho kết quả AI. @param {Object} diagnosis - Diagnosis chuẩn hóa. @returns {Promise<Object|null>} Bệnh phù hợp. */
 async function matchPlantDisease(diagnosis) {
   if (diagnosis.confidence < MIN_MATCH_CONFIDENCE) {
     return { disease: null, matchScore: 0, matchStatus: 'low_confidence' };
@@ -233,6 +239,7 @@ async function matchPlantDisease(diagnosis) {
   );
 }
 
+/** Tạo snapshot thông tin bệnh để gắn vào kết quả chẩn đoán. @param {Object|null} disease - Disease document. @returns {Object|null} Snapshot bệnh. */
 function buildDiseaseInfo(disease) {
   if (!disease) return null;
   return {
@@ -246,6 +253,15 @@ function buildDiseaseInfo(disease) {
   };
 }
 
+/**
+ * Điều phối lưu ảnh, gọi provider AI, match knowledge base và lưu lịch sử.
+ * @param {Object} options - Dữ liệu chẩn đoán.
+ * @param {string} options.userId - ID người dùng.
+ * @param {Object} options.file - File ảnh upload.
+ * @param {string} [options.userPlantId] - ID cây My Garden liên kết.
+ * @returns {Promise<Object>} Kết quả diagnosis đã enrich.
+ * @throws {Error} Khi upload, provider hoặc lưu lịch sử thất bại.
+ */
 async function orchestrateDiagnosis({
   userId,
   file,

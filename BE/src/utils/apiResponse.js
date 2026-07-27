@@ -30,6 +30,7 @@ const error = (res, message, statusCode = 500) => {
  * @param {object} res - Express response object
  * @param {string} message - Thông báo lỗi
  */
+/** Trả response lỗi 404 theo format API chung. @param {Object} res - Express response. @param {string} [message='Không tìm thấy'] - Thông báo. @returns {Object} Express response. */
 const notFound = (res, message = 'Không tìm thấy') => {
   return res.status(404).json({ success: false, message, data: null });
 };

@@ -57,6 +57,7 @@ function optionalObjectId(value, fieldName) {
   return value;
 }
 
+/** Validate và chuẩn hóa snapshot chẩn đoán trước khi lưu. @param {Object} [data={}] - Dữ liệu chẩn đoán. @returns {Object} Payload model hợp lệ. @throws {Error} Khi dữ liệu bắt buộc không hợp lệ. */
 function normalizeCreateData(data = {}) {
   const diagnosis = data.diagnosis || {};
   const recommendationSnapshot = data.recommendationSnapshot || {};
@@ -107,6 +108,7 @@ function normalizeCreateData(data = {}) {
   };
 }
 
+/** Tạo lịch sử chẩn đoán và lưu snapshot kết quả AI. @param {string} userId - ID người chẩn đoán. @param {Object} [data={}] - Dữ liệu chẩn đoán. @returns {Promise<Object>} DiagnosisHistory vừa tạo. */
 async function createDiagnosisHistory(userId, data = {}) {
   ensureObjectId(userId, 'User ID không hợp lệ');
 
@@ -117,6 +119,7 @@ async function createDiagnosisHistory(userId, data = {}) {
   return history.save();
 }
 
+/** Lấy lịch sử chẩn đoán của người dùng theo cây và phân trang. @param {string} userId - ID người dùng. @param {Object} [filters={}] - Bộ lọc query. @returns {Promise<Object>} Danh sách và metadata phân trang. */
 async function getMyDiagnosisHistories(userId, filters = {}) {
   ensureObjectId(userId, 'User ID không hợp lệ');
 
@@ -155,6 +158,7 @@ async function getMyDiagnosisHistories(userId, filters = {}) {
   };
 }
 
+/** Lấy một lịch sử chẩn đoán thuộc người dùng. @param {string} userId - ID người dùng. @param {string} historyId - ID lịch sử. @returns {Promise<Object>} Chi tiết lịch sử. */
 async function getMyDiagnosisHistoryById(userId, historyId) {
   ensureObjectId(userId, 'User ID không hợp lệ');
   ensureObjectId(historyId, 'DiagnosisHistory ID không hợp lệ');

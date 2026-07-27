@@ -1,6 +1,7 @@
 const walletService = require('./wallet.service');
 const { success, error } = require('../../utils/apiResponse');
 
+/** Lấy ví của người dùng hiện tại. @param {Object} req @param {Object} res @returns {Promise<Object>} HTTP response. */
 async function getMyWallet(req, res) {
   try {
     const wallet = await walletService.getWallet(req.user.id);

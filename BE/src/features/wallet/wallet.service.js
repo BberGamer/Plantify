@@ -1,6 +1,7 @@
 const Wallet = require('./wallet.model');
 const WalletTransaction = require('./walletTransaction.model');
 
+/** Lấy hoặc tạo ví cho người dùng. @param {string} userId - ID người dùng. @returns {Promise<Object>} Wallet document. */
 async function getOrCreateWallet(userId) {
   return Wallet.findOneAndUpdate(
     { userId },
@@ -9,6 +10,7 @@ async function getOrCreateWallet(userId) {
   );
 }
 
+/** Lấy ví và lịch sử giao dịch. @param {string} userId - ID người dùng. @returns {Promise<Object>} Dữ liệu ví. */
 async function getWallet(userId) {
   const wallet = await getOrCreateWallet(userId);
   const transactions = await WalletTransaction.find({ userId })
@@ -19,6 +21,7 @@ async function getWallet(userId) {
   return { balance: wallet.balance, transactions };
 }
 
+/** Trừ tối đa số dư khả dụng và ghi giao dịch liên kết đơn hàng. @param {string} userId - ID người dùng. @param {number} requestedAmount - Số tiền yêu cầu. @param {Object} order - Đơn hàng liên quan. @returns {Promise<number>} Số tiền thực tế đã trừ. */
 async function debitUpTo(userId, requestedAmount, order) {
   let wallet = await getOrCreateWallet(userId);
   const maximum = Math.max(0, Math.round(Number(requestedAmount) || 0));
@@ -57,6 +60,7 @@ async function debitUpTo(userId, requestedAmount, order) {
   return 0;
 }
 
+/** Hoàn tiền vào ví, chống ghi trùng theo đơn hàng. @param {string} userId - ID người dùng. @param {number} amount - Số tiền hoàn. @param {Object} order - Đơn hàng liên quan. @returns {Promise<Object>} Kết quả hoàn tiền. */
 async function creditRefund(userId, amount, order) {
   const refundAmount = Math.max(0, Math.round(Number(amount) || 0));
   if (refundAmount === 0) return getOrCreateWallet(userId);

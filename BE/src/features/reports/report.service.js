@@ -16,6 +16,7 @@ function ensureObjectId(id, message = 'ID không hợp lệ') {
   }
 }
 
+/** Validate lý do báo cáo theo enum cho phép. @param {string} reason - Lý do. @returns {string} Lý do hợp lệ. @throws {Error} Khi không hợp lệ. */
 function validateReason(reason) {
   if (!Report.REPORT_REASONS.includes(reason)) {
     const error = new Error('Lý do báo cáo không hợp lệ');
@@ -24,6 +25,7 @@ function validateReason(reason) {
   }
 }
 
+/** Validate hành động xử lý báo cáo. @param {string} action - Hành động. @returns {string} Hành động hợp lệ. */
 function validateAction(action) {
   if (!Report.REPORT_ACTIONS.includes(action)) {
     const error = new Error('Hành động xử lý báo cáo không hợp lệ');
@@ -62,6 +64,7 @@ async function ensurePostExists(postId) {
   return post;
 }
 
+/** Tạo báo cáo bài viết, ngăn tự báo cáo và báo cáo trùng đang chờ. @param {string} postId - ID bài viết. @param {string} userId - ID người báo cáo. @param {string} reason - Lý do. @returns {Promise<Object>} Báo cáo vừa tạo. */
 async function createReport(postId, userId, reason) {
   ensureObjectId(postId, 'Post ID không hợp lệ');
   ensureObjectId(userId, 'User ID không hợp lệ');
@@ -99,6 +102,7 @@ async function createReport(postId, userId, reason) {
   return report;
 }
 
+/** Lấy báo cáo theo trạng thái và phân trang. @param {Object} [filters={}] - Bộ lọc. @returns {Promise<Object>} Danh sách và metadata. */
 async function getAllReports(filters = {}) {
   const query = {};
   const page = parsePositiveInteger(filters.page, 1);
@@ -131,6 +135,7 @@ async function getAllReports(filters = {}) {
     .lean();
 }
 
+/** Xử lý báo cáo và cập nhật trạng thái bài viết trong transaction. @param {string} reportId - ID báo cáo. @param {string} managerId - ID người xử lý. @param {string} action - Hành động xử lý. @returns {Promise<Object>} Báo cáo sau xử lý. */
 async function processReport(reportId, managerId, action) {
   ensureObjectId(reportId, 'Report ID không hợp lệ');
   ensureObjectId(managerId, 'Manager ID không hợp lệ');
@@ -186,6 +191,7 @@ async function processReport(reportId, managerId, action) {
     .lean();
 }
 
+/** Khôi phục bài viết và cập nhật các báo cáo liên quan. @param {string} postId - ID bài viết. @returns {Promise<Object>} Bài viết sau khôi phục. */
 async function restorePost(postId) {
   ensureObjectId(postId, 'Post ID không hợp lệ');
 
@@ -220,6 +226,7 @@ async function restorePost(postId) {
   return post.save();
 }
 
+/** Lấy toàn bộ báo cáo của bài viết. @param {string} postId - ID bài viết. @returns {Promise<Object[]>} Danh sách báo cáo. */
 async function getReportsByPost(postId) {
   ensureObjectId(postId, 'Post ID không hợp lệ');
   await ensurePostExists(postId);

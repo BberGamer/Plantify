@@ -69,6 +69,7 @@ function createHttpError(message, statusCode) {
   return error;
 }
 
+/** Trích JSON object đầu tiên từ nội dung trả về của model. @param {string} text - Nội dung model. @returns {Object} JSON đã parse. @throws {Error} Khi không có JSON hợp lệ. */
 function extractJsonObject(text) {
   const normalizedText = text && text.trim();
 
@@ -121,6 +122,7 @@ function normalizeEnum(value, allowedValues, fallback = 'unknown') {
   return allowedValues.has(normalizedValue) ? normalizedValue : fallback;
 }
 
+/** Validate và chuẩn hóa kết quả OpenRouter theo schema diagnosis. @param {Object} [parsedResult={}] - JSON provider. @returns {Object} Diagnosis chuẩn hóa. */
 function normalizeDiagnosisResult(parsedResult = {}) {
   const suspectedCondition = typeof parsedResult.suspectedCondition === 'string'
     ? parsedResult.suspectedCondition.trim()

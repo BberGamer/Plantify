@@ -6,6 +6,7 @@ function getCurrentUserId(req) {
   return req.user?.id || req.user?._id || req.user?.userId;
 }
 
+/** Lấy danh sách thông báo của người dùng hiện tại. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getNotifications(req, res, next) {
   try {
     const notifications = await notificationService.getNotificationsByRecipient(getCurrentUserId(req), req.query);
@@ -15,6 +16,7 @@ async function getNotifications(req, res, next) {
   }
 }
 
+/** Lấy số thông báo chưa đọc. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getUnreadNotificationCount(req, res, next) {
   try {
     const count = await notificationService.getUnreadCount(getCurrentUserId(req));
@@ -24,10 +26,12 @@ async function getUnreadNotificationCount(req, res, next) {
   }
 }
 
+/** Đăng ký SSE thông báo và giữ response mở tới khi client ngắt. @param {Object} req @param {Object} res @returns {void} */
 function streamNotificationEvents(req, res) {
   notificationService.subscribeNotificationEvents(req, res);
 }
 
+/** Đánh dấu một thông báo thuộc người dùng là đã đọc. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function markNotificationAsRead(req, res, next) {
   try {
     const notification = await notificationService.markNotificationAsRead(req.params.id, getCurrentUserId(req));
@@ -42,6 +46,7 @@ async function markNotificationAsRead(req, res, next) {
   }
 }
 
+/** Đánh dấu toàn bộ thông báo là đã đọc. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function markAllNotificationsAsRead(req, res, next) {
   try {
     const result = await notificationService.markAllNotificationsAsRead(getCurrentUserId(req));

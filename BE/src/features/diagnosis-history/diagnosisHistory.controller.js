@@ -1,6 +1,7 @@
 const diagnosisHistoryService = require('./diagnosisHistory.service');
 const apiResponse = require('../../utils/apiResponse');
 
+/** Lấy lịch sử chẩn đoán của người dùng theo query. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getMyDiagnosisHistories(req, res, next) {
   try {
     const result = await diagnosisHistoryService.getMyDiagnosisHistories(
@@ -17,6 +18,7 @@ async function getMyDiagnosisHistories(req, res, next) {
   }
 }
 
+/** Lấy chi tiết lịch sử chẩn đoán thuộc người dùng. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getMyDiagnosisHistoryById(req, res, next) {
   try {
     const history = await diagnosisHistoryService.getMyDiagnosisHistoryById(

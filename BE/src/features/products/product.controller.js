@@ -1,6 +1,7 @@
 // product.controller.js - Xử lý request/response cho Products
 const productService = require('./product.service');
 
+/** Lấy chi tiết sản phẩm theo route param. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getProductById(req, res, next) {
   try {
     const product = await productService.getProductById(req.params.id);
@@ -10,6 +11,7 @@ async function getProductById(req, res, next) {
   }
 }
 
+/** Lấy danh sách sản phẩm theo query filter/phân trang. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getAllProducts(req, res, next) {
   try {
     const { search, category, minPrice, maxPrice, minRating, sortBy, page, limit, includeInactive } = req.query;
@@ -30,6 +32,7 @@ async function getAllProducts(req, res, next) {
   }
 }
 
+/** Lấy toàn bộ danh mục sản phẩm. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function getAllCategories(req, res, next) {
   try {
     const categories = await productService.getAllCategories();
@@ -39,6 +42,7 @@ async function getAllCategories(req, res, next) {
   }
 }
 
+/** Tạo danh mục sản phẩm từ request body. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function createCategory(req, res, next) {
   try {
     const category = await productService.createCategory(req.body);
@@ -48,6 +52,7 @@ async function createCategory(req, res, next) {
   }
 }
 
+/** Cập nhật danh mục sản phẩm. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function updateCategory(req, res, next) {
   try {
     const { id } = req.params;
@@ -63,6 +68,7 @@ async function updateCategory(req, res, next) {
   }
 }
 
+/** Xóa danh mục sản phẩm. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function deleteCategory(req, res, next) {
   try {
     const { id } = req.params;
@@ -78,6 +84,7 @@ async function deleteCategory(req, res, next) {
   }
 }
 
+/** Tạo sản phẩm từ request body. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function createProduct(req, res, next) {
   try {
     const product = await productService.createProduct(req.body);
@@ -87,6 +94,7 @@ async function createProduct(req, res, next) {
   }
 }
 
+/** Cập nhật sản phẩm theo route param. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function updateProduct(req, res, next) {
   try {
     const { id } = req.params;
@@ -102,6 +110,7 @@ async function updateProduct(req, res, next) {
   }
 }
 
+/** Xóa sản phẩm theo route param. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
 async function deleteProduct(req, res, next) {
   try {
     const { id } = req.params;

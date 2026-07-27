@@ -3,6 +3,7 @@ const { getWeatherByCity } = require('./weather.service');
 
 const OUTDOOR_TAGS = new Set(['outdoor', 'ngoai troi', 'ngoài trời']);
 
+/** Chuẩn hóa tag để so khớp không phân biệt dấu/case. @param {*} value - Giá trị tag. @returns {string} Tag chuẩn hóa. */
 function normalizeTag(value) {
   return String(value || '')
     .trim()
@@ -11,11 +12,13 @@ function normalizeTag(value) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
+/** Kiểm tra cây có thuộc nhóm ngoài trời dựa trên tag catalogue. @param {Object} userPlant - Cây người dùng. @returns {boolean} Kết quả phân loại. */
 function isOutdoorPlant(userPlant) {
   const tags = userPlant?.catalogPlantId?.tags || [];
   return tags.some((tag) => OUTDOOR_TAGS.has(normalizeTag(tag)));
 }
 
+/** Tạo item khuyến nghị thời tiết với danh sách cây liên quan. @param {Object} data - Dữ liệu khuyến nghị. @returns {Object} Item khuyến nghị. */
 function createAdvice({ code, severity, title, message, plants = [] }) {
   return {
     code,
@@ -27,6 +30,7 @@ function createAdvice({ code, severity, title, message, plants = [] }) {
   };
 }
 
+/** Áp dụng các business rule thời tiết để tạo khuyến nghị chăm sóc. @param {Object} weather - Thời tiết chuẩn hóa. @param {Object[]} userPlants - Cây người dùng. @returns {Object[]} Danh sách khuyến nghị. */
 function buildWeatherCareAdvice(weather, userPlants) {
   const outdoorPlants = userPlants.filter(isOutdoorPlant);
   const advice = [];
@@ -130,6 +134,7 @@ function buildWeatherCareAdvice(weather, userPlants) {
   return advice;
 }
 
+/** Lấy thời tiết, cây người dùng và xây dựng khuyến nghị My Garden. @param {string} userId - ID người dùng. @param {string} city - Thành phố. @returns {Promise<Object>} Thời tiết và danh sách khuyến nghị. */
 async function getMyGardenWeatherAdvice(userId, city) {
   const [weather, userPlants] = await Promise.all([
     getWeatherByCity(city),

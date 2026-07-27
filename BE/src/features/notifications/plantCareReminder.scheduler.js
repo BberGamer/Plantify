@@ -3,6 +3,13 @@ const {
   checkDuePlantCareNotifications,
 } = require('./plantCareReminder.service');
 
+/**
+ * Tạo scheduler chạy ngay và lặp lại job nhắc lịch chăm sóc.
+ * @param {Object} options - Dependency scheduler.
+ * @param {Function} options.runJob - Job bất đồng bộ cần chạy.
+ * @param {number} options.intervalMs - Chu kỳ chạy.
+ * @returns {Object} Hàm start và stop scheduler.
+ */
 function createPlantCareReminderScheduler({
   cronLibrary = cron,
   checkDue = checkDuePlantCareNotifications,

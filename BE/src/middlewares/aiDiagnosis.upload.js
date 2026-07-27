@@ -32,6 +32,7 @@ const uploadSingleDiagnosisImage = multer({
   },
 }).single('file');
 
+/** Chuyển lỗi Multer thành lỗi HTTP nhất quán. @param {Object} error - Lỗi upload. @returns {Error} Lỗi có statusCode. */
 function normalizeUploadError(error) {
   if (error instanceof multer.MulterError) {
     error.statusCode = error.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
@@ -48,6 +49,7 @@ function normalizeUploadError(error) {
 /**
  * Nhận duy nhất field multipart "file" vào memory và chuẩn hóa lỗi upload.
  */
+/** Nhận một ảnh diagnosis vào memory và chuyển lỗi qua Express. @param {Object} req @param {Object} res @param {Function} next @returns {void} */
 function uploadDiagnosisImage(req, res, next) {
   return uploadSingleDiagnosisImage(req, res, (error) => {
     if (error) return next(normalizeUploadError(error));

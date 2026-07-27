@@ -21,12 +21,14 @@ async function ownedPlant(userId, userPlantId) {
   return UserPlant.findOne({ _id: userPlantId, userId, status: 'active' });
 }
 
+/** Ánh xạ loại chăm sóc sang trường lịch tương ứng. @param {string} type - Loại sự kiện. @returns {string|null} Tên trường lịch hoặc `null`. */
 function scheduleFieldForType(type) {
   if (type === 'watering') return 'wateringSchedule';
   if (type === 'fertilizing') return 'fertilizingSchedule';
   return null;
 }
 
+/** Đồng bộ mốc hoàn thành và lần đến hạn tiếp theo từ sự kiện mới nhất. @param {Object} options - Dữ liệu đồng bộ. @returns {Promise<void>} */
 async function syncScheduleFromLatestCareEvent({
   userId,
   userPlantId,
@@ -88,6 +90,7 @@ async function syncScheduleFromLatestCareEvent({
   );
 }
 
+/** Validate và chuẩn hóa payload sự kiện chăm sóc. @param {Object} [data={}] - Payload đầu vào. @returns {Object} Dữ liệu hợp lệ. @throws {Error} Khi type hoặc thời điểm không hợp lệ. */
 function createData(data = {}) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     throw httpError('Payload ghi nhận tưới không hợp lệ');
@@ -109,6 +112,7 @@ function createData(data = {}) {
   };
 }
 
+/** Tạo sự kiện chăm sóc và cập nhật lịch cây trong transaction. @param {string} userId - ID người dùng. @param {string} userPlantId - ID cây. @param {Object} data - Dữ liệu sự kiện. @returns {Promise<Object>} Sự kiện vừa tạo. @throws {Error} Khi cây không thuộc người dùng hoặc transaction thất bại. */
 async function createCareEvent(userId, userPlantId, data) {
   objectId(userId, 'User ID không hợp lệ');
   objectId(userPlantId, 'UserPlant ID không hợp lệ');
@@ -153,6 +157,7 @@ async function createCareEvent(userId, userPlantId, data) {
   }, 'MongoDB deployment không hỗ trợ transaction bắt buộc để ghi nhận chăm sóc');
 }
 
+/** Lấy lịch sử chăm sóc của cây thuộc người dùng. @param {string} userId - ID người dùng. @param {string} userPlantId - ID cây. @returns {Promise<Object[]>} Danh sách sự kiện. */
 async function getCareEvents(userId, userPlantId) {
   if (!await ownedPlant(userId, userPlantId)) return null;
   return CareEvent.find({ userId, userPlantId })
@@ -160,6 +165,7 @@ async function getCareEvents(userId, userPlantId) {
     .lean();
 }
 
+/** Xóa sự kiện và đồng bộ lại lịch từ sự kiện gần nhất trong transaction. @param {string} userId - ID người dùng. @param {string} userPlantId - ID cây. @param {string} eventId - ID sự kiện. @returns {Promise<Object>} Kết quả xóa. */
 async function deleteCareEvent(userId, userPlantId, eventId) {
   objectId(userId, 'User ID không hợp lệ');
   objectId(userPlantId, 'UserPlant ID không hợp lệ');

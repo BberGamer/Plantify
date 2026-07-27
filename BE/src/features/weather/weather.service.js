@@ -9,6 +9,7 @@ function createHttpError(message, statusCode) {
   return error;
 }
 
+/** Lấy và chuẩn hóa thời tiết hiện tại theo thành phố từ provider cấu hình. @param {string} city - Thành phố cần tra cứu. @returns {Promise<Object>} Dữ liệu thời tiết chuẩn hóa. @throws {Error} Khi city thiếu hoặc provider thất bại. */
 async function getWeatherByCity(city) {
   const normalizedCity = city?.trim();
 
