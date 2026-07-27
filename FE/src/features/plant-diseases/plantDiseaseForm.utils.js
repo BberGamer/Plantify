@@ -5,7 +5,6 @@ export const DISEASE_CATEGORY_OPTIONS = [
   { value: "pest", label: "Sâu bệnh / côn trùng" },
   { value: "nutrient", label: "Dinh dưỡng" },
   { value: "environment", label: "Môi trường" },
-  { value: "unknown", label: "Chưa xác định" },
 ];
 
 /**

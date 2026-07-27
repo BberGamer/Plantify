@@ -74,6 +74,7 @@ export function DiseaseIdentityFields({
           <Select
             value={form.category}
             onValueChange={(value) => onFieldChange("category", value)}
+            required
           >
             <SelectTrigger id="md-category">
               <SelectValue placeholder="Chọn nhóm vấn đề" />

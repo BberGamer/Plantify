@@ -7,7 +7,6 @@ const DISEASE_CATEGORIES = [
   'pest',
   'nutrient',
   'environment',
-  'unknown',
 ];
 
 const plantDiseaseSchema = new mongoose.Schema(

@@ -3,13 +3,13 @@
 const mongoose = require('mongoose');
 const PlantDisease = require('./plantDisease.model');
 const Plant = require('../plants/plant.model');
+const Product = require('../products/product.model');
 
 const DISEASE_CATEGORIES = new Set([
   'disease',
   'pest',
   'nutrient',
   'environment',
-  'unknown',
 ]);
 
 const PLANT_DISEASE_FIELDS = [
@@ -202,6 +202,22 @@ async function ensureAffectedPlantsExist(affectedPlantIds = []) {
   }
 }
 
+/**
+ * Xác nhận toàn bộ sản phẩm đề xuất thực sự tồn tại trong database.
+ * @param {string[]} recommendedProductIds - Danh sách Product ID đã chuẩn hóa
+ */
+async function ensureRecommendedProductsExist(recommendedProductIds = []) {
+  if (recommendedProductIds.length === 0) return;
+
+  const existingProductCount = await Product.countDocuments({
+    _id: { $in: recommendedProductIds },
+  });
+
+  if (existingProductCount !== recommendedProductIds.length) {
+    throw createHttpError('Một hoặc nhiều sản phẩm đề xuất không tồn tại', 404);
+  }
+}
+
 async function getAllPlantDiseases(filters = {}) {
   const { affectedPlantId, search, sort, page = 1, limit = 10 } = filters;
   const query = {};
@@ -281,6 +297,7 @@ async function createPlantDisease(data = {}) {
 
   const createData = normalizePlantDiseaseFields(data, true);
   await ensureAffectedPlantsExist(createData.affectedPlantIds);
+  await ensureRecommendedProductsExist(createData.recommendedProducts);
 
   try {
     return await new PlantDisease(createData).save();
@@ -295,6 +312,9 @@ async function updatePlantDisease(id, data = {}) {
   const updateData = normalizePlantDiseaseFields(data);
   if (updateData.affectedPlantIds !== undefined) {
     await ensureAffectedPlantsExist(updateData.affectedPlantIds);
+  }
+  if (updateData.recommendedProducts !== undefined) {
+    await ensureRecommendedProductsExist(updateData.recommendedProducts);
   }
   if (updateData.name !== undefined && (
     typeof updateData.name !== 'string' || !updateData.name.trim()

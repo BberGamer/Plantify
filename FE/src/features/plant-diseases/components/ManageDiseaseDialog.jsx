@@ -16,6 +16,7 @@ import { DiseaseIdentityFields } from "./DiseaseIdentityFields";
 import { DiseaseKnowledgeFields } from "./DiseaseKnowledgeFields";
 import { RecommendedProductsPicker } from "./RecommendedProductsPicker";
 import {
+  DISEASE_CATEGORY_OPTIONS,
   getReferenceId,
   listToTextarea,
   normalizeDiseaseKey,
@@ -63,7 +64,11 @@ export function ManageDiseaseDialog({
         name: disease.name || "",
         diseaseKey: disease.diseaseKey || normalizeDiseaseKey(disease.name),
         aliases: listToTextarea(disease.aliases),
-        category: disease.category || "disease",
+        category: DISEASE_CATEGORY_OPTIONS.some(
+          (option) => option.value === disease.category
+        )
+          ? disease.category
+          : "",
         affectedPlantIds: Array.isArray(disease.affectedPlantIds)
           ? disease.affectedPlantIds.map(getReferenceId).filter(Boolean)
           : disease.plantId

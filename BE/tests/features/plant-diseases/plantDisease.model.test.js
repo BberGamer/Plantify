@@ -43,7 +43,6 @@ describe('PlantDisease schema', () => {
       'pest',
       'nutrient',
       'environment',
-      'unknown',
     ]);
     expect(categoryPath.options.default).toBe('disease');
   });

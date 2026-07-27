@@ -6,9 +6,13 @@ jest.mock('../../../src/features/plants/plant.model', () => ({
   countDocuments: jest.fn(),
   find: jest.fn(),
 }));
+jest.mock('../../../src/features/products/product.model', () => ({
+  countDocuments: jest.fn(),
+}));
 
 const PlantDisease = require('../../../src/features/plant-diseases/plantDisease.model');
 const Plant = require('../../../src/features/plants/plant.model');
+const Product = require('../../../src/features/products/product.model');
 const service = require('../../../src/features/plant-diseases/plantDisease.service');
 const id = '507f1f77bcf86cd799439011';
 const plantId = '507f1f77bcf86cd799439012';
@@ -20,6 +24,7 @@ describe('plantDiseaseService CRUD', () => {
 
   test('tạo bệnh cây với canonical key và các field dạng mảng', async () => {
     Plant.countDocuments.mockResolvedValue(2);
+    Product.countDocuments.mockResolvedValue(1);
     PlantDisease.mockImplementation((data) => ({ save: jest.fn().mockResolvedValue(data) }));
 
     const result = await service.createPlantDisease({
@@ -50,6 +55,9 @@ describe('plantDiseaseService CRUD', () => {
     expect(result).not.toHaveProperty('ignored');
     expect(Plant.countDocuments).toHaveBeenCalledWith({
       _id: { $in: [plantId, secondPlantId] },
+    });
+    expect(Product.countDocuments).toHaveBeenCalledWith({
+      _id: { $in: [productId] },
     });
   });
 
@@ -111,6 +119,9 @@ describe('plantDiseaseService CRUD', () => {
       service.updatePlantDisease(id, { category: 'fungus' })
     ).rejects.toMatchObject({ statusCode: 400 });
     await expect(
+      service.updatePlantDisease(id, { category: 'unknown' })
+    ).rejects.toMatchObject({ statusCode: 400 });
+    await expect(
       service.updatePlantDisease(id, { recommendedProducts: ['invalid-id'] })
     ).rejects.toMatchObject({ statusCode: 400 });
     await expect(
@@ -122,6 +133,17 @@ describe('plantDiseaseService CRUD', () => {
     await expect(
       service.updatePlantDisease(id, { isActive: 'false' })
     ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  test('chặn sản phẩm đề xuất không tồn tại', async () => {
+    Product.countDocuments.mockResolvedValue(0);
+
+    await expect(
+      service.updatePlantDisease(id, { recommendedProducts: [productId] })
+    ).rejects.toMatchObject({ statusCode: 404 });
+    expect(Product.countDocuments).toHaveBeenCalledWith({
+      _id: { $in: [productId] },
+    });
   });
 
   test('trả lỗi conflict khi diseaseKey bị trùng', async () => {
