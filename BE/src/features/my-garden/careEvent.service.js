@@ -64,10 +64,16 @@ async function syncScheduleFromLatestCareEvent({
     ) {
       throw httpError('Cấu hình chu kỳ chăm sóc không hợp lệ', 409);
     }
+    if (!schedule.configuredNextDueAt && schedule.nextDueAt) {
+      scheduleUpdate[`${scheduleField}.configuredNextDueAt`] = schedule.nextDueAt;
+    }
     scheduleUpdate[`${scheduleField}.nextDueAt`] = new Date(
       new Date(latestEvent.performedAt).getTime()
       + schedule.frequencyDays * 24 * 60 * 60 * 1000
     );
+  } else {
+    scheduleUpdate[`${scheduleField}.nextDueAt`] =
+      schedule.configuredNextDueAt || schedule.nextDueAt || null;
   }
 
   await UserPlant.updateOne(

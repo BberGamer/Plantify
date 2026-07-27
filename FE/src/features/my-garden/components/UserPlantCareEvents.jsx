@@ -50,18 +50,18 @@ export function UserPlantCareEvents({
 
   const remove = async (id) => {
     if (deletingId) return;
-    if (!window.confirm("Xóa lần tưới này?")) return;
+    if (!window.confirm("Xóa hành động này?")) return;
     setDeletingId(id);
     try {
       await deleteCareEvent(userPlantId, id);
       await load();
       await onRecorded?.();
       requestNotificationsRefresh();
-      toast.success("Đã xóa lần tưới.");
+      toast.success("Đã xóa.");
     } catch (requestError) {
       toast.error(getApiErrorMessage(
         requestError,
-        "Không thể xóa lần tưới."
+        "Không thể xóa."
       ));
     } finally {
       setDeletingId("");
@@ -80,7 +80,7 @@ export function UserPlantCareEvents({
         <p className="text-sm text-destructive">{error}</p>
       ) : events.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Chưa có lần tưới nào.
+          Chưa có lịch sử chăm sóc.
         </p>
       ) : events.map((item) => (
         <div

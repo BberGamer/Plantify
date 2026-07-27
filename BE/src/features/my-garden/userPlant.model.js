@@ -36,6 +36,14 @@ const careScheduleSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // Mốc do người dùng cấu hình, không bị CareEvent ghi đè.
+    configuredNextDueAt: {
+      type: Date,
+      default: null,
+      required() {
+        return this.enabled;
+      },
+    },
     nextDueAt: {
       type: Date,
       default: null,
@@ -52,6 +60,7 @@ function defaultCareSchedule() {
     enabled: false,
     frequencyDays: null,
     lastCompletedAt: null,
+    configuredNextDueAt: null,
     nextDueAt: null,
   };
 }

@@ -308,13 +308,15 @@ describe('CareEvent watering service', () => {
     );
   });
 
-  test('deleting the last watering clears lastCompletedAt and preserves nextDueAt', async () => {
+  test('deleting the last watering restores its configured next due date', async () => {
+    const configuredNextDueAt = new Date('2026-07-27T12:00:00.000Z');
     UserPlant.findOne.mockResolvedValue({
       _id: plantId,
       wateringSchedule: {
         enabled: true,
         frequencyDays: 2,
-        nextDueAt: new Date('2026-08-01T00:00:00.000Z'),
+        configuredNextDueAt,
+        nextDueAt: new Date('2026-07-29T12:00:00.000Z'),
       },
     });
     CareEvent.findOne.mockReturnValue(query(null));
@@ -322,7 +324,10 @@ describe('CareEvent watering service', () => {
     await service.deleteCareEvent(userId, plantId, eventId);
 
     expect(UserPlant.updateOne.mock.calls[0][1]).toEqual({
-      $set: { 'wateringSchedule.lastCompletedAt': null },
+      $set: {
+        'wateringSchedule.lastCompletedAt': null,
+        'wateringSchedule.nextDueAt': configuredNextDueAt,
+      },
     });
   });
 
