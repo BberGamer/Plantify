@@ -254,9 +254,6 @@ class OpenRouterDiagnosisProvider extends AIProvider {
     }
   }
 
-  async generateText() {
-    throw createHttpError('OpenRouterDiagnosisProvider chỉ hỗ trợ diagnoseFromImage().', 500);
-  }
 }
 
 module.exports = {

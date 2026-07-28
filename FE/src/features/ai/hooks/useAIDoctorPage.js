@@ -1,8 +1,7 @@
-// useAIDoctorPage.js - Quản lý trạng thái trang, lịch sử, trò chuyện và thao tác AI Doctor
-import { useEffect, useRef, useState } from "react";
+// useAIDoctorPage.js - Quản lý trạng thái trang, lịch sử và thao tác AI Doctor
+import { useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import { useAIChat } from "@/features/ai/hooks/useAIChat";
 import { usePlantDiagnosis } from "@/features/ai/hooks/usePlantDiagnosis";
 import { useAuth } from "@/features/auth/hooks";
 import { useCartMutations } from "@/features/cart/hooks";
@@ -14,7 +13,6 @@ import { useDiagnosisHistory } from "@/features/diagnosis-history";
  */
 export function useAIDoctorPage() {
   const fileInputRef = useRef(null);
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -27,7 +25,6 @@ export function useAIDoctorPage() {
     userPlantId,
     limit: 8,
   });
-  const chat = useAIChat();
   const { addItem } = useCartMutations();
 
   const updateHistoryId = (nextHistoryId) => {
@@ -86,18 +83,7 @@ export function useAIDoctorPage() {
     }
   };
 
-  useEffect(() => {
-    const handleToggleAIChat = () => {
-      setIsChatOpen((current) => !current);
-    };
-    window.addEventListener("plantify:toggle-ai-chat", handleToggleAIChat);
-    return () => {
-      window.removeEventListener("plantify:toggle-ai-chat", handleToggleAIChat);
-    };
-  }, []);
-
   return {
-    chat,
     diagnosis,
     diagnosisHistory,
     displayedImageUrl: historyId
@@ -114,7 +100,5 @@ export function useAIDoctorPage() {
     historyId,
     isAuthenticated,
     authLoading,
-    isChatOpen,
-    setIsChatOpen,
   };
 }

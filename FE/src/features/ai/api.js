@@ -1,4 +1,4 @@
-// api.js - Gọi API trò chuyện AI và chẩn đoán bệnh cây từ hình ảnh
+// api.js - Gọi API chẩn đoán bệnh cây từ hình ảnh
 import { api } from '@/lib/api';
 import { buildDiagnosisFormData } from './diagnosisRequest.utils';
 
@@ -25,14 +25,4 @@ export async function diagnosePlantDisease(file, references = {}) {
   });
 
   return response.data.data;
-}
-
-/**
- * Gửi câu hỏi cho AI.
- * @param {string} prompt - Câu hỏi từ user
- * @returns {Promise<string>} - Phản hồi từ AI
- */
-export async function askAI(prompt) {
-  const response = await api.post(`${AI_API}/chat`, { prompt });
-  return response.data?.data?.text;
 }

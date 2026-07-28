@@ -1,6 +1,3 @@
-jest.mock('../../../src/features/ai/ai.service', () => ({
-  generateText: jest.fn(),
-}));
 jest.mock('../../../src/features/ai/aiDiagnosisOrchestrator.service', () => ({
   orchestrateDiagnosis: jest.fn(),
 }));

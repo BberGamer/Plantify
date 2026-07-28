@@ -1,16 +1,13 @@
 const router = require('../../../src/features/ai/ai.routes');
 
 describe('AI routes', () => {
-  test('keeps chat unchanged and protects diagnosis in the required order', () => {
+  test('only exposes the protected diagnosis route in the required order', () => {
     const chatRoute = router.stack.find((layer) => layer.route?.path === '/chat');
     const diagnosisRoute = router.stack.find(
       (layer) => layer.route?.path === '/diagnose'
     );
 
-    expect(chatRoute.route.methods).toEqual(expect.objectContaining({ post: true }));
-    expect(chatRoute.route.stack.map((layer) => layer.handle.name)).toEqual([
-      'generateText',
-    ]);
+    expect(chatRoute).toBeUndefined();
     expect(diagnosisRoute.route.methods).toEqual(
       expect.objectContaining({ post: true })
     );

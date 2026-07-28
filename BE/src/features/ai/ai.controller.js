@@ -1,21 +1,8 @@
-// ai.controller.js - Xử lý request liên quan đến AI (chat, chẩn đoán bệnh cây)
-const aiService = require('./ai.service');
+// ai.controller.js - Xử lý request chẩn đoán bệnh cây bằng AI
 const {
   orchestrateDiagnosis,
 } = require('./aiDiagnosisOrchestrator.service');
 const apiResponse = require('../../utils/apiResponse');
-
-/**
- * POST /api/ai/chat - Gọi AI chat để trả lời câu hỏi.
- */
-async function generateText(req, res, next) {
-  try {
-    const result = await aiService.generateText(req.body.prompt, req.body.options);
-    return apiResponse.success(res, 'Gọi AI thành công', result);
-  } catch (error) {
-    return next(error);
-  }
-}
 
 /**
  * POST /api/ai/diagnose - Chẩn đoán, match knowledge base và lưu lịch sử.
@@ -39,6 +26,5 @@ async function diagnosePlantDisease(req, res, next) {
 }
 
 module.exports = {
-  generateText,
   diagnosePlantDisease,
 };

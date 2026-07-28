@@ -2,18 +2,9 @@
 
 /**
  * Interface/base class cho AI Provider
- * Implement provider cụ thể như Groq kế thừa class này
+ * Các provider chẩn đoán cụ thể kế thừa class này.
  */
 class AIProvider {
-  /**
-   * Generate text từ prompt
-   * @param {string} prompt - Prompt cần xử lý
-   * @returns {Promise<{text: string, model: string}>}
-   */
-  async generateText(prompt) {
-    throw new Error('Method generateText() must be implemented');
-  }
-
   /**
    * Validate provider configuration
    * @returns {void}

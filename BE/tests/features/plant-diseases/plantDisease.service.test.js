@@ -170,4 +170,41 @@ describe('plantDiseaseService CRUD', () => {
     }));
     expect(PlantDisease.mock.calls[0][0]).not.toHaveProperty('plantId');
   });
+
+  test('lọc và chuẩn hóa bệnh dùng liên kết plantId cũ cho trang chi tiết cây', async () => {
+    const legacyDisease = {
+      _id: id,
+      plantId,
+      name: 'Legacy leaf spot',
+      symptoms: 'Lá có đốm nâu',
+      causes: 'Nấm',
+      treatment: 'Cắt bỏ lá bệnh',
+      prevention: 'Giữ cây thông thoáng',
+    };
+    const queryChain = {
+      populate: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([legacyDisease]),
+    };
+    PlantDisease.find.mockReturnValue(queryChain);
+    PlantDisease.countDocuments.mockResolvedValue(1);
+
+    const result = await service.getAllPlantDiseases({
+      affectedPlantId: plantId,
+      limit: 100,
+    });
+
+    const query = PlantDisease.find.mock.calls[0][0];
+    expect(String(query.$or[0].affectedPlantIds)).toBe(plantId);
+    expect(String(query.$or[1].plantId)).toBe(plantId);
+    expect(result.diseases[0]).toMatchObject({
+      affectedPlantIds: [plantId],
+      symptoms: ['Lá có đốm nâu'],
+      causes: ['Nấm'],
+      treatments: ['Cắt bỏ lá bệnh'],
+      preventions: ['Giữ cây thông thoáng'],
+    });
+  });
 });

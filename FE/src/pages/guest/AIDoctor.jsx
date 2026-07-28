@@ -1,16 +1,13 @@
 // AIDoctor.jsx - Trang AI Doctor chẩn đoán bệnh cây cảnh bằng hình ảnh
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
 import { useAIDoctorPage } from '@/features/ai';
 
-import { Sparkles, ArrowRight, Loader2, X } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { AIDoctorWorkspace } from "@/features/ai/components/ai-doctor/AIDoctorWorkspace";
 
 function AIDoctor() {
   const {
-    chat,
     diagnosis,
     diagnosisHistory,
     displayedImageUrl,
@@ -21,8 +18,6 @@ function AIDoctor() {
     handleNewDiagnosis,
     handleSelectHistory,
     historyId,
-    isChatOpen,
-    setIsChatOpen,
     isAuthenticated,
     authLoading
   } = useAIDoctorPage();
@@ -101,53 +96,6 @@ function AIDoctor() {
           </div>
         </div>
       </div>
-
-      {isChatOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-[calc(100vw-3rem)] max-w-sm">
-          <Card className="overflow-hidden border-primary/20 shadow-2xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b bg-white/95 px-4 py-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Sparkles className="h-4 w-4 text-primary" />
-                Chat AI
-              </CardTitle>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setIsChatOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-3 bg-white p-4">
-              <Textarea
-                placeholder="Ví dụ: Tại sao lá cây tôi bị vàng? Cách xử lý thế nào?"
-                rows={4}
-                className="resize-none"
-                value={chat.question}
-                onChange={(e) => chat.setQuestion(e.target.value)}
-              />
-              <Button className="w-full" onClick={chat.ask} disabled={chat.isLoading}>
-                {chat.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Gửi cho AI
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              {chat.error && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                  {chat.error}
-                </div>
-              )}
-              {chat.answer && (
-                <div className="max-h-56 overflow-y-auto rounded-xl border border-primary/20 bg-primary/5 px-4 py-4">
-                  <p className="mb-2 text-sm font-medium text-primary">Phản hồi từ AI</p>
-                  <p className="whitespace-pre-wrap text-sm text-foreground">{chat.answer}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
     </div>
   );

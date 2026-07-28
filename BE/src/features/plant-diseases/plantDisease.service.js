@@ -218,6 +218,56 @@ async function ensureRecommendedProductsExist(recommendedProductIds = []) {
   }
 }
 
+function normalizeKnowledgeList(value, legacyValue) {
+  const selectedValue = Array.isArray(value) && value.length === 0
+    ? legacyValue
+    : value ?? legacyValue;
+
+  if (Array.isArray(selectedValue)) {
+    return selectedValue.map((item) => String(item || '').trim()).filter(Boolean);
+  }
+
+  if (typeof selectedValue === 'string' && selectedValue.trim()) {
+    return [selectedValue.trim()];
+  }
+
+  return [];
+}
+
+function getReferenceId(reference) {
+  return String(reference?._id || reference || '');
+}
+
+/**
+ * Chuẩn hóa dữ liệu đọc để trang chi tiết vẫn hiện các bệnh được tạo trước khi
+ * quan hệ plantId được đổi thành affectedPlantIds[].
+ * @param {object} disease - PlantDisease lấy từ database
+ * @returns {object} PlantDisease theo contract hiện tại
+ */
+function normalizePlantDiseaseForRead(disease = {}) {
+  const affectedPlants = Array.isArray(disease.affectedPlantIds)
+    ? [...disease.affectedPlantIds]
+    : [];
+
+  if (
+    disease.plantId
+    && !affectedPlants.some(
+      (affectedPlant) => getReferenceId(affectedPlant) === getReferenceId(disease.plantId)
+    )
+  ) {
+    affectedPlants.push(disease.plantId);
+  }
+
+  return {
+    ...disease,
+    affectedPlantIds: affectedPlants,
+    symptoms: normalizeKnowledgeList(disease.symptoms),
+    causes: normalizeKnowledgeList(disease.causes),
+    treatments: normalizeKnowledgeList(disease.treatments, disease.treatment),
+    preventions: normalizeKnowledgeList(disease.preventions, disease.prevention),
+  };
+}
+
 /** Lấy bệnh cây theo search, severity, cây ảnh hưởng và phân trang. @param {Object} [filters={}] - Bộ lọc. @returns {Promise<Object>} Danh sách và metadata. */
 async function getAllPlantDiseases(filters = {}) {
   const { affectedPlantId, search, sort, page = 1, limit = 10 } = filters;
@@ -225,7 +275,11 @@ async function getAllPlantDiseases(filters = {}) {
 
   if (affectedPlantId) {
     ensureObjectId(affectedPlantId, 'Affected Plant ID không hợp lệ');
-    query.affectedPlantIds = affectedPlantId;
+    const plantObjectId = new mongoose.Types.ObjectId(affectedPlantId);
+    query.$or = [
+      { affectedPlantIds: plantObjectId },
+      { plantId: plantObjectId },
+    ];
   }
 
   const keyword = String(search || '').trim();
@@ -252,7 +306,7 @@ async function getAllPlantDiseases(filters = {}) {
       conditions.push({ affectedPlantIds: { $in: plantIds } });
     }
 
-    query.$or = conditions;
+    query.$and = [{ $or: conditions }];
   }
 
   const safePage = parsePositiveInteger(page, 'page', 1, Number.MAX_SAFE_INTEGER);
@@ -277,19 +331,25 @@ async function getAllPlantDiseases(filters = {}) {
     .limit(safeLimit)
     .lean();
 
-  return { diseases, total, pages, currentPage: safePage };
+  return {
+    diseases: diseases.map(normalizePlantDiseaseForRead),
+    total,
+    pages,
+    currentPage: safePage,
+  };
 }
 
 /** Lấy chi tiết bệnh cây đã populate liên kết. @param {string} id - ID bệnh cây. @returns {Promise<Object>} Bệnh cây. */
 async function getPlantDiseaseById(id) {
   ensureObjectId(id, 'PlantDisease ID không hợp lệ');
-  return PlantDisease.findById(id)
+  const disease = await PlantDisease.findById(id)
     .populate('affectedPlantIds', 'name scientificName thumbnail')
     .populate(
       'recommendedProducts',
       'name thumbnail images price stock ratingAverage ratingCount isActive'
     )
     .lean();
+  return disease ? normalizePlantDiseaseForRead(disease) : null;
 }
 
 /** Validate liên kết và tạo bệnh cây. @param {Object} [data={}] - Dữ liệu bệnh. @returns {Promise<Object>} Bệnh vừa tạo. */
