@@ -359,9 +359,7 @@
   margin-bottom: 0.25rem;
 }
 
-.plant-detail-card-label {
-  color: var(--muted-foreground);
-}
+
 
 .plant-detail-card-treatment {
   font-size: 0.875rem;
@@ -528,7 +526,18 @@
   grid-template-columns: 1fr;
   gap: 1rem;
 }
-
+.plant-detail-card-label-symptoms{
+  color: rgba(4, 0, 255, 0.651);
+}
+.plant-detail-card-label-causes{
+  color: rgb(255, 0, 0);
+}
+.plant-detail-card-treatment{
+  color: green;
+}
+.plant-detail-card-preventions{
+  color:orange ;
+}
 @media (min-width: 768px) {
   .care-guide-group-items {
     grid-template-columns: repeat(2, 1fr);

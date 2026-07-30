@@ -4,6 +4,14 @@ const ProductCategory = require('./product-category.model');
 
 const productSchema = new mongoose.Schema(
   {
+    seedKey: {
+      type: String,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+      trim: true,
+      select: false,
+    },
     categoryId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ProductCategory',

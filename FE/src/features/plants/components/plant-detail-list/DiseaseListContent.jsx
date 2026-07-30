@@ -37,13 +37,13 @@ function DiseaseListContent({ diseases, formatKnowledgeList, loading, openImageP
                 </div>
                 {formatKnowledgeList(disease.symptoms) && (
                   <div className="plant-detail-card-content">
-                    <span className="plant-detail-card-label">Triệu chứng: </span>
+                    <span className="plant-detail-card-label-symptoms" >Triệu chứng: </span>
                     {formatKnowledgeList(disease.symptoms)}
                   </div>
                 )}
                 {formatKnowledgeList(disease.causes) && (
                   <div className="plant-detail-card-content">
-                    <span className="plant-detail-card-label">Nguyên nhân: </span>
+                    <span className="plant-detail-card-label-causes">Nguyên nhân: </span>
                     {formatKnowledgeList(disease.causes)}
                   </div>
                 )}
@@ -55,7 +55,7 @@ function DiseaseListContent({ diseases, formatKnowledgeList, loading, openImageP
                 )}
                 {formatKnowledgeList(disease.preventions ?? disease.prevention) && (
                   <div className="plant-detail-card-content">
-                    <span className="plant-detail-card-label font-medium text-emerald-600">Phòng ngừa: </span>
+                    <span className="plant-detail-card-preventions">Phòng ngừa: </span>
                     {formatKnowledgeList(disease.preventions ?? disease.prevention)}
                   </div>
                 )}

@@ -8,6 +8,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "seed:plant-diseases": "node scripts/seed-plant-diseases.js",
+    "seed:plant-diseases:dry-run": "node scripts/seed-plant-diseases.js --dry-run",
+    "seed:products": "node scripts/seed-products.js",
+    "seed:products:dry-run": "node scripts/seed-products.js --dry-run",
     "start": "nodemon src/server.js",
     "dev": "nodemon src/server.js"
   },
