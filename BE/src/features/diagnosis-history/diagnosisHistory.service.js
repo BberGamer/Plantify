@@ -4,6 +4,9 @@
 const mongoose = require('mongoose');
 const DiagnosisHistory = require('./diagnosisHistory.model');
 const UserPlant = require('../my-garden/userPlant.model');
+const {
+  deleteDiagnosisImage,
+} = require('../ai/diagnosisImageStorage.service');
 
 const LIST_POPULATE_OPTIONS = [
   {
@@ -171,8 +174,28 @@ async function getMyDiagnosisHistoryById(userId, historyId) {
     .lean();
 }
 
+/** Xóa ảnh trước khi hard-delete một lịch sử chẩn đoán thuộc người dùng. @param {string} userId - ID người dùng. @param {string} historyId - ID lịch sử. @returns {Promise<Object|null>} Lịch sử đã xóa hoặc `null`. */
+async function deleteMyDiagnosisHistory(userId, historyId) {
+  ensureObjectId(userId, 'User ID không hợp lệ');
+  ensureObjectId(historyId, 'DiagnosisHistory ID không hợp lệ');
+
+  const ownerQuery = {
+    _id: historyId,
+    userId,
+  };
+  const history = await DiagnosisHistory.findOne(ownerQuery)
+    .select('image.storageKey')
+    .lean();
+  if (!history) return null;
+
+  await deleteDiagnosisImage(history.image?.storageKey);
+
+  return DiagnosisHistory.findOneAndDelete(ownerQuery).lean();
+}
+
 module.exports = {
   createDiagnosisHistory,
   getMyDiagnosisHistories,
   getMyDiagnosisHistoryById,
+  deleteMyDiagnosisHistory,
 };

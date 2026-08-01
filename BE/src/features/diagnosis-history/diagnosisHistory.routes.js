@@ -10,5 +10,6 @@ const router = express.Router();
 router.use(authenticate, authorizeCustomer);
 router.get('/', diagnosisHistoryController.getMyDiagnosisHistories);
 router.get('/:id', diagnosisHistoryController.getMyDiagnosisHistoryById);
+router.delete('/:id', diagnosisHistoryController.deleteMyDiagnosisHistory);
 
 module.exports = router;

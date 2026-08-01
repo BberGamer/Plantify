@@ -1,6 +1,7 @@
 // useDiagnosisHistory.js - Quản lý danh sách và chi tiết DiagnosisHistory từ backend
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  deleteMyDiagnosisHistoryById,
   getMyDiagnosisHistories,
   getMyDiagnosisHistoryById,
 } from "../api";
@@ -32,8 +33,10 @@ export function useDiagnosisHistory({
   const [detailLoading, setDetailLoading] = useState(false);
   const [listError, setListError] = useState("");
   const [detailError, setDetailError] = useState("");
+  const [deletingHistoryId, setDeletingHistoryId] = useState("");
   const [listRefreshKey, setListRefreshKey] = useState(0);
   const [detailRefreshKey, setDetailRefreshKey] = useState(0);
+  const listMutationVersionRef = useRef(0);
 
   const refreshHistories = useCallback(() => {
     setListRefreshKey((currentKey) => currentKey + 1);
@@ -41,6 +44,28 @@ export function useDiagnosisHistory({
 
   const refreshSelectedHistory = useCallback(() => {
     setDetailRefreshKey((currentKey) => currentKey + 1);
+  }, []);
+
+  const deleteHistory = useCallback(async (historyIdToDelete) => {
+    setDeletingHistoryId(historyIdToDelete);
+    try {
+      const deletedHistory = await deleteMyDiagnosisHistoryById(
+        historyIdToDelete
+      );
+      listMutationVersionRef.current += 1;
+      setHistories((currentHistories) => currentHistories.filter(
+        (history) => history._id !== historyIdToDelete
+      ));
+      setSelectedHistory((currentHistory) => (
+        currentHistory?._id === historyIdToDelete ? null : currentHistory
+      ));
+      setListRefreshKey((currentKey) => currentKey + 1);
+      return deletedHistory;
+    } finally {
+      setDeletingHistoryId((currentId) => (
+        currentId === historyIdToDelete ? "" : currentId
+      ));
+    }
   }, []);
 
   useEffect(() => {
@@ -55,6 +80,7 @@ export function useDiagnosisHistory({
     let cancelled = false;
 
     async function loadHistories() {
+      const mutationVersion = listMutationVersionRef.current;
       setListLoading(true);
       setListError("");
 
@@ -63,7 +89,10 @@ export function useDiagnosisHistory({
           { page: 1, limit, ...(userPlantId ? { userPlantId } : {}) },
           controller.signal
         );
-        if (!cancelled) {
+        if (
+          !cancelled
+          && mutationVersion === listMutationVersionRef.current
+        ) {
           setHistories(data?.histories || []);
         }
       } catch (error) {
@@ -139,6 +168,8 @@ export function useDiagnosisHistory({
     detailLoading,
     listError,
     detailError,
+    deletingHistoryId,
+    deleteHistory,
     refreshHistories,
     refreshSelectedHistory,
   };

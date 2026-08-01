@@ -15,6 +15,7 @@ function AIDoctor() {
     fileInputRef,
     handleAddToCart,
     handleDiagnose,
+    handleDeleteHistory,
     handleNewDiagnosis,
     handleSelectHistory,
     historyId,
@@ -48,6 +49,7 @@ function AIDoctor() {
           fileInputRef={fileInputRef}
           handleAddToCart={handleAddToCart}
           handleDiagnose={handleDiagnose}
+          handleDeleteHistory={handleDeleteHistory}
           handleNewDiagnosis={handleNewDiagnosis}
           handleSelectHistory={handleSelectHistory}
           historyId={historyId}

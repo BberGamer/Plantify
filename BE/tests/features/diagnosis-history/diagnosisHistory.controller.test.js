@@ -62,6 +62,41 @@ describe('diagnosisHistoryController', () => {
     );
   });
 
+  test('deletes history using the authenticated user id', async () => {
+    const history = { _id: req.params.id, userId: req.user.id };
+    service.deleteMyDiagnosisHistory.mockResolvedValue(history);
+
+    await controller.deleteMyDiagnosisHistory(req, res, next);
+
+    expect(service.deleteMyDiagnosisHistory).toHaveBeenCalledWith(
+      req.user.id,
+      req.params.id
+    );
+    expect(apiResponse.success).toHaveBeenCalledWith(
+      res,
+      expect.any(String),
+      history
+    );
+  });
+
+  test('returns not found when history to delete is absent', async () => {
+    service.deleteMyDiagnosisHistory.mockResolvedValue(null);
+
+    await controller.deleteMyDiagnosisHistory(req, res, next);
+
+    expect(apiResponse.notFound).toHaveBeenCalledWith(res, expect.any(String));
+    expect(apiResponse.success).not.toHaveBeenCalled();
+  });
+
+  test('passes delete errors to the error middleware', async () => {
+    const error = new Error('delete failure');
+    service.deleteMyDiagnosisHistory.mockRejectedValue(error);
+
+    await controller.deleteMyDiagnosisHistory(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(error);
+  });
+
   test('passes service errors to the error middleware', async () => {
     const error = new Error('failure');
     service.getMyDiagnosisHistories.mockRejectedValue(error);

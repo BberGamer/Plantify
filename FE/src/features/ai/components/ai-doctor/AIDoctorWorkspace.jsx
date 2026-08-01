@@ -13,6 +13,7 @@ function AIDoctorWorkspace({
   fileInputRef,
   handleAddToCart,
   handleDiagnose,
+  handleDeleteHistory,
   handleNewDiagnosis,
   handleSelectHistory,
   historyId,
@@ -113,6 +114,8 @@ function AIDoctorWorkspace({
               error={diagnosisHistory.listError}
               onSelect={handleSelectHistory}
               onRetry={diagnosisHistory.refreshHistories}
+              onDelete={handleDeleteHistory}
+              deletingHistoryId={diagnosisHistory.deletingHistoryId}
             />
 
             {/* Diagnosis Error */}

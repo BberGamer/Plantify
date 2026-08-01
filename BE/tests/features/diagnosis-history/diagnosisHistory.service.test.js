@@ -5,11 +5,17 @@ jest.mock('../../../src/features/diagnosis-history/diagnosisHistory.model', () =
 jest.mock('../../../src/features/my-garden/userPlant.model', () => ({
   exists: jest.fn(),
 }));
+jest.mock('../../../src/features/ai/diagnosisImageStorage.service', () => ({
+  deleteDiagnosisImage: jest.fn(),
+}));
 
 const DiagnosisHistory = require(
   '../../../src/features/diagnosis-history/diagnosisHistory.model'
 );
 const UserPlant = require('../../../src/features/my-garden/userPlant.model');
+const imageStorage = require(
+  '../../../src/features/ai/diagnosisImageStorage.service'
+);
 const service = require(
   '../../../src/features/diagnosis-history/diagnosisHistory.service'
 );
@@ -34,6 +40,7 @@ describe('diagnosisHistoryService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     UserPlant.exists.mockResolvedValue({ _id: userPlantId });
+    imageStorage.deleteDiagnosisImage.mockResolvedValue(true);
   });
 
   test('creates an owned history and ignores a supplied userId', async () => {
@@ -151,6 +158,80 @@ describe('diagnosisHistoryService', () => {
     expect(DiagnosisHistory.find).not.toHaveBeenCalled();
   });
 
+  test('deletes only an owned history and cleans up its stored image', async () => {
+    const history = {
+      _id: historyId,
+      userId,
+      image: { storageKey: `diagnoses/${userId}/history.jpg` },
+    };
+    const findQuery = {
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue(history),
+    };
+    const deleteQuery = { lean: jest.fn().mockResolvedValue(history) };
+    DiagnosisHistory.findOne.mockReturnValue(findQuery);
+    DiagnosisHistory.findOneAndDelete.mockReturnValue(deleteQuery);
+    imageStorage.deleteDiagnosisImage.mockResolvedValue(false);
+
+    const result = await service.deleteMyDiagnosisHistory(userId, historyId);
+
+    expect(DiagnosisHistory.findOne).toHaveBeenCalledWith({
+      _id: historyId,
+      userId,
+    });
+    expect(findQuery.select).toHaveBeenCalledWith('image.storageKey');
+    expect(DiagnosisHistory.findOneAndDelete).toHaveBeenCalledWith({
+      _id: historyId,
+      userId,
+    });
+    expect(deleteQuery.lean).toHaveBeenCalled();
+    expect(imageStorage.deleteDiagnosisImage).toHaveBeenCalledWith(
+      history.image.storageKey
+    );
+    expect(
+      imageStorage.deleteDiagnosisImage.mock.invocationCallOrder[0]
+    ).toBeLessThan(
+      DiagnosisHistory.findOneAndDelete.mock.invocationCallOrder[0]
+    );
+    expect(result).toBe(history);
+  });
+
+  test('returns null without image cleanup when owned history is absent', async () => {
+    const findQuery = {
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue(null),
+    };
+    DiagnosisHistory.findOne.mockReturnValue(findQuery);
+
+    await expect(
+      service.deleteMyDiagnosisHistory(userId, historyId)
+    ).resolves.toBeNull();
+
+    expect(imageStorage.deleteDiagnosisImage).not.toHaveBeenCalled();
+    expect(DiagnosisHistory.findOneAndDelete).not.toHaveBeenCalled();
+  });
+
+  test('does not hard-delete when stored image cleanup fails', async () => {
+    const history = {
+      _id: historyId,
+      userId,
+      image: { storageKey: `diagnoses/${userId}/history.jpg` },
+    };
+    const findQuery = {
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue(history),
+    };
+    const cleanupError = new Error('cleanup failed');
+    DiagnosisHistory.findOne.mockReturnValue(findQuery);
+    imageStorage.deleteDiagnosisImage.mockRejectedValue(cleanupError);
+
+    await expect(
+      service.deleteMyDiagnosisHistory(userId, historyId)
+    ).rejects.toBe(cleanupError);
+
+    expect(DiagnosisHistory.findOneAndDelete).not.toHaveBeenCalled();
+  });
+
   test('rejects invalid ids and pagination', async () => {
     await expect(
       service.getMyDiagnosisHistoryById(userId, 'invalid')
@@ -166,5 +247,13 @@ describe('diagnosisHistoryService', () => {
         recommendationSnapshot: { productIds: ['invalid'] },
       })
     ).rejects.toMatchObject({ statusCode: 400 });
+    await expect(
+      service.deleteMyDiagnosisHistory(userId, 'invalid')
+    ).rejects.toMatchObject({ statusCode: 400 });
+    await expect(
+      service.deleteMyDiagnosisHistory('invalid', historyId)
+    ).rejects.toMatchObject({ statusCode: 400 });
+    expect(DiagnosisHistory.findOne).not.toHaveBeenCalled();
+    expect(DiagnosisHistory.findOneAndDelete).not.toHaveBeenCalled();
   });
 });

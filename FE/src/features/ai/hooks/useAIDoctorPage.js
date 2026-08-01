@@ -1,5 +1,5 @@
 // useAIDoctorPage.js - Quản lý trạng thái trang, lịch sử và thao tác AI Doctor
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { usePlantDiagnosis } from "@/features/ai/hooks/usePlantDiagnosis";
@@ -13,10 +13,21 @@ import { useDiagnosisHistory } from "@/features/diagnosis-history";
  */
 export function useAIDoctorPage() {
   const fileInputRef = useRef(null);
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const currentSearchParamsRef = useRef(searchParams);
+  currentSearchParamsRef.current = searchParams;
   const { isAuthenticated, loading: authLoading } = useAuth();
   const historyId = searchParams.get("historyId") || "";
+  const currentHistoryIdRef = useRef(historyId);
+  currentHistoryIdRef.current = historyId;
   const userPlantId = searchParams.get("userPlantId") || "";
   const diagnosis = usePlantDiagnosis({ userPlantId });
   const diagnosisHistory = useDiagnosisHistory({
@@ -28,7 +39,7 @@ export function useAIDoctorPage() {
   const { addItem } = useCartMutations();
 
   const updateHistoryId = (nextHistoryId) => {
-    const nextSearchParams = new URLSearchParams(searchParams);
+    const nextSearchParams = new URLSearchParams(currentSearchParamsRef.current);
     if (nextHistoryId) {
       nextSearchParams.set("historyId", nextHistoryId);
     } else {
@@ -68,6 +79,19 @@ export function useAIDoctorPage() {
     updateHistoryId("");
   };
 
+  const handleDeleteHistory = async (historyIdToDelete) => {
+    const deletedHistory = await diagnosisHistory.deleteHistory(
+      historyIdToDelete
+    );
+    if (
+      isMountedRef.current
+      && historyIdToDelete === currentHistoryIdRef.current
+    ) {
+      handleNewDiagnosis();
+    }
+    return deletedHistory;
+  };
+
   const handleAddToCart = async (product) => {
     try {
       await addItem({
@@ -95,6 +119,7 @@ export function useAIDoctorPage() {
     fileInputRef,
     handleAddToCart,
     handleDiagnose,
+    handleDeleteHistory,
     handleNewDiagnosis,
     handleSelectHistory,
     historyId,

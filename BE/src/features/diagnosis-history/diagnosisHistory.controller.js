@@ -41,7 +41,28 @@ async function getMyDiagnosisHistoryById(req, res, next) {
   }
 }
 
+/** Xóa một lịch sử chẩn đoán thuộc người dùng hiện tại. @param {Object} req @param {Object} res @param {Function} next @returns {Promise<Object>} HTTP response. */
+async function deleteMyDiagnosisHistory(req, res, next) {
+  try {
+    const history = await diagnosisHistoryService.deleteMyDiagnosisHistory(
+      req.user.id,
+      req.params.id
+    );
+    if (!history) {
+      return apiResponse.notFound(res, 'Không tìm thấy lịch sử chẩn đoán');
+    }
+    return apiResponse.success(
+      res,
+      'Xóa lịch sử chẩn đoán thành công',
+      history
+    );
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   getMyDiagnosisHistories,
   getMyDiagnosisHistoryById,
+  deleteMyDiagnosisHistory,
 };

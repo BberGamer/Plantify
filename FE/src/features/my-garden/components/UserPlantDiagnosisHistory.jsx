@@ -15,6 +15,8 @@ export function UserPlantDiagnosisHistory({ userPlantId }) {
     histories,
     listLoading,
     listError,
+    deletingHistoryId,
+    deleteHistory,
     refreshHistories,
   } = useDiagnosisHistory({
     enabled: Boolean(userPlantId),
@@ -44,6 +46,8 @@ export function UserPlantDiagnosisHistory({ userPlantId }) {
         error={listError}
         onSelect={openAIDoctor}
         onRetry={refreshHistories}
+        onDelete={deleteHistory}
+        deletingHistoryId={deletingHistoryId}
       />
     </div>
   );

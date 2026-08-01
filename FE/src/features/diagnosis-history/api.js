@@ -24,3 +24,11 @@ export async function getMyDiagnosisHistoryById(historyId, signal) {
   );
   return response.data.data;
 }
+
+/**
+ * Xóa một lịch sử chẩn đoán thuộc user đang đăng nhập.
+ */
+export async function deleteMyDiagnosisHistoryById(historyId) {
+  const response = await api.delete(`${DIAGNOSIS_HISTORY_API}/${historyId}`);
+  return response.data.data;
+}
