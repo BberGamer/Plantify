@@ -4,23 +4,24 @@
     "slug": "plantify",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "plantify",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "plantify",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
       "package": "com.plantify.app"
     },
-    "web": {
-      "bundler": "metro"
-    },
     "plugins": [
-      "expo-router",
-      "expo-font"
-    ],
-    "experiments": {
-      "typedRoutes": true
-    }
+      "expo-router"
+    ]
   }
 }

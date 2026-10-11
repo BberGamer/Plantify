@@ -1,39 +1,33 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../src/theme';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { colors } from '../../src/theme/colors';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.textSecondary,
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: colors.primaryLight,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: theme.colors.card,
-          borderTopColor: theme.colors.border,
-          borderTopWidth: 0.5,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-          paddingTop: 6,
-          height: Platform.OS === 'ios' ? 85 : 65,
-          ...Platform.select({
-            ios: {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: -2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 6,
-            },
-            android: {
-              elevation: 8,
-            },
-          }),
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#ECEFEA',
+          borderTopWidth: 1,
+          height: Platform.OS === 'android' ? 68 : 84,
+          paddingBottom: Platform.OS === 'android' ? 8 : 24,
+          paddingTop: 8,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 6,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: 2,
         },
       }}
     >
@@ -41,8 +35,12 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Trang chủ',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'leaf' : 'leaf-outline'}
+              size={23}
+              color={focused ? colors.primaryLight : color}
+            />
           ),
         }}
       />
@@ -50,8 +48,12 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: 'Khám phá',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="compass-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'search' : 'search-outline'}
+              size={23}
+              color={color}
+            />
           ),
         }}
       />
@@ -59,22 +61,28 @@ export default function TabLayout() {
         name="scan"
         options={{
           title: 'Quét cây',
-          tabBarIcon: ({ focused }) => (
-            <View style={styles.scanButtonContainer}>
-              <View style={styles.scanButton}>
-                <Ionicons name="camera" size={26} color="#FFFFFF" />
-              </View>
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '700',
+            color: colors.primary,
+          },
+          tabBarIcon: () => (
+            <View style={styles.scanButton}>
+              <Ionicons name="camera-outline" size={20} color="#FFFFFF" />
             </View>
           ),
-          tabBarLabel: () => null,
         }}
       />
       <Tabs.Screen
         name="garden"
         options={{
           title: 'Vườn của tôi',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="leaf-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'sprout' : 'sprout-outline'}
+              size={24}
+              color={color}
+            />
           ),
         }}
       />
@@ -82,20 +90,23 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Cá nhân',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'person' : 'person-outline'}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
-      {/* Hide old tabs that still have files */}
       <Tabs.Screen
-        name="favorites"
+        name="cart"
         options={{
           href: null,
         }}
       />
       <Tabs.Screen
-        name="cart"
+        name="favorites"
         options={{
           href: null,
         }}
@@ -105,29 +116,13 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  scanButtonContainer: {
-    position: 'relative',
-    top: -14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   scanButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
+    width: 46,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#1B4332',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
+    marginBottom: 2,
   },
 });
