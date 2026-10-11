@@ -1,58 +1,53 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import Header from '../../src/components/Header';
-import { useAuthStore } from '../../store/authStore';
 import { theme } from '../../src/theme';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuthStore();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/login');
-  };
-
   const menuItems = [
-    { icon: 'time-outline', title: 'My Orders', onPress: () => {} },
-    { icon: 'location-outline', title: 'Shipping Address', onPress: () => {} },
-    { icon: 'card-outline', title: 'Payment Methods', onPress: () => {} },
-    { icon: 'settings-outline', title: 'Settings', onPress: () => {} },
-    { icon: 'help-circle-outline', title: 'Help Center', onPress: () => {} },
+    { icon: 'person-outline', title: 'Thông tin cá nhân' },
+    { icon: 'notifications-outline', title: 'Thông báo' },
+    { icon: 'shield-checkmark-outline', title: 'Quyền riêng tư' },
+    { icon: 'help-circle-outline', title: 'Trung tâm hỗ trợ' },
+    { icon: 'star-outline', title: 'Đánh giá ứng dụng' },
+    { icon: 'information-circle-outline', title: 'Về Plantify' },
   ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Header title="Profile" />
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Image
-            source={{ uri: user?.avatar || 'https://via.placeholder.com/100' }}
-            style={styles.avatar}
-          />
-          <Text style={styles.name}>{user?.name || 'User Name'}</Text>
-          <Text style={styles.email}>{user?.email || 'user@example.com'}</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <Text style={styles.screenTitle}>Cá nhân</Text>
+
+        {/* Profile Card */}
+        <View style={styles.profileCard}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>AN</Text>
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>Anh Nguyễn</Text>
+            <Text style={styles.profileEmail}>nguyen.anh@email.com</Text>
+          </View>
+          <TouchableOpacity activeOpacity={0.7}>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
         </View>
 
+        {/* Menu */}
         <View style={styles.menuSection}>
           {menuItems.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.menuItem} onPress={item.onPress}>
+            <TouchableOpacity key={index} style={styles.menuItem} activeOpacity={0.7}>
               <View style={styles.menuItemLeft}>
-                <Ionicons name={item.icon} size={24} color={theme.colors.primary} />
+                <View style={styles.menuIconCircle}>
+                  <Ionicons name={item.icon} size={20} color={theme.colors.primary} />
+                </View>
                 <Text style={styles.menuItemText}>{item.title}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+              <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
             </TouchableOpacity>
           ))}
         </View>
-
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -64,62 +59,98 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   content: {
-    padding: theme.spacing.md,
+    padding: 20,
+    paddingBottom: 40,
   },
-  header: {
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: theme.colors.text,
+    marginBottom: 20,
+  },
+  profileCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: theme.spacing.xl,
+    marginBottom: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+      },
+      android: { elevation: 2 },
+    }),
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: theme.spacing.md,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#1B4332',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
   },
-  name: {
-    ...theme.typography.h2,
+  avatarText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 18,
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 16,
+    fontWeight: '700',
     color: theme.colors.text,
+    marginBottom: 2,
   },
-  email: {
-    ...theme.typography.body1,
+  profileEmail: {
+    fontSize: 13,
     color: theme.colors.textSecondary,
-    marginTop: 4,
   },
   menuSection: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    paddingVertical: theme.spacing.sm,
-    marginBottom: theme.spacing.xl,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+      },
+      android: { elevation: 2 },
+    }),
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.light,
+    borderBottomColor: '#F1F3F5',
   },
   menuItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  menuItemText: {
-    ...theme.typography.body1,
-    color: theme.colors.text,
-    marginLeft: theme.spacing.md,
-  },
-  logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  menuIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#E8F5E9',
     justifyContent: 'center',
-    backgroundColor: '#FFE5E5',
-    paddingVertical: theme.spacing.md,
-    borderRadius: 12,
+    alignItems: 'center',
+    marginRight: 12,
   },
-  logoutText: {
-    ...theme.typography.subtitle,
-    color: theme.colors.error,
-    marginLeft: theme.spacing.sm,
+  menuItemText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: theme.colors.text,
   },
 });
