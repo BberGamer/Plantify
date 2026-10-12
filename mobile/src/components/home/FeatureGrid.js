@@ -3,7 +3,9 @@ import { View, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card, Text } from 'react-native-paper';
 
+// chieu rong cua cua so ung dung hien tai
 const { width } = Dimensions.get('window');
+
 
 const FEATURES = [
   {

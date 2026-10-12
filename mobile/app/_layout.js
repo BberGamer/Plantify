@@ -1,3 +1,5 @@
+// giao dien chung cho tat ca cac trang
+
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
