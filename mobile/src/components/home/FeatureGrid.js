@@ -1,8 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Card, Text } from 'react-native-paper';
 
+// chieu rong cua cua so ung dung hien tai
 const { width } = Dimensions.get('window');
+
 
 const FEATURES = [
   {
@@ -41,10 +44,10 @@ export default function FeatureGrid() {
       <Text style={styles.sectionTitle}>Khám phá Plantify</Text>
       <View style={styles.grid}>
         {FEATURES.map((item) => (
-          <TouchableOpacity
+          <Card
             key={item.id}
+            mode="contained"
             style={[styles.card, { backgroundColor: item.bgColor }]}
-            activeOpacity={0.8}
           >
             <View style={styles.cardTop}>
               <View style={styles.iconCircle}>{item.icon}</View>
@@ -52,7 +55,7 @@ export default function FeatureGrid() {
             </View>
             <Text style={styles.cardTitle}>{item.title}</Text>
             <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-          </TouchableOpacity>
+          </Card>
         ))}
       </View>
     </View>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Button, Card, ProgressBar, Text } from 'react-native-paper';
 
 export default function GardenSummary() {
   return (
@@ -11,7 +12,7 @@ export default function GardenSummary() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.card}>
+      <Card mode="contained" style={styles.card}>
         <View style={styles.statsRow}>
           <View style={styles.statCol}>
             <Text style={styles.statNumber}>12</Text>
@@ -34,15 +35,20 @@ export default function GardenSummary() {
             <Text style={styles.healthTitle}>Sức khỏe tổng quan</Text>
             <Text style={styles.healthValue}>75% tốt</Text>
           </View>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: '75%' }]} />
-          </View>
+          <ProgressBar progress={0.75} color="#2E8B57" style={styles.progressTrack} />
         </View>
 
-        <TouchableOpacity style={styles.cardButton} activeOpacity={0.8}>
-          <Text style={styles.buttonText}>Xem vườn của tôi</Text>
-        </TouchableOpacity>
-      </View>
+        <Button
+          mode="contained"
+          buttonColor="#EAF5EE"
+          textColor="#1A5B40"
+          contentStyle={styles.cardButtonContent}
+          labelStyle={styles.buttonText}
+          style={styles.cardButton}
+        >
+          Xem vườn của tôi
+        </Button>
+      </Card>
     </View>
   );
 }
@@ -124,21 +130,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5ECE1',
     overflow: 'hidden',
   },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#2E8B57',
-    borderRadius: 4,
-  },
   cardButton: {
     backgroundColor: '#EAF5EE',
     borderRadius: 14,
-    paddingVertical: 13,
-    alignItems: 'center',
     marginTop: 16,
+  },
+  cardButtonContent: {
+    height: 45,
   },
   buttonText: {
     fontSize: 14,
     fontWeight: '700',
     color: '#1A5B40',
+    marginVertical: 0,
   },
 });

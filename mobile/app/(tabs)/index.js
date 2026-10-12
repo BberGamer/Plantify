@@ -1,3 +1,6 @@
+// trang homepage
+
+
 import React from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,25 +12,28 @@ import GardenSummary from '../../src/components/home/GardenSummary';
 import TodayTasks from '../../src/components/home/TodayTasks';
 import WeatherCard from '../../src/components/home/WeatherCard';
 import PlantList from '../../src/components/home/PlantList';
-import DailyTip from '../../src/components/home/DailyTip';
+import Navbar from '../../src/components/home/Navbar';
+
 
 export default function HomeScreen() {
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <HomeHeader />
+        <WeatherCard />
         <HeroBanner />
         <FeatureGrid />
         <GardenSummary />
         <TodayTasks />
-        <WeatherCard />
+
         <PlantList />
-        <DailyTip />
+
       </ScrollView>
+      <Navbar />
     </SafeAreaView>
   );
 }

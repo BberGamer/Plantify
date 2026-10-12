@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Button, Card, Text } from 'react-native-paper';
 
 export default function TodayTasks() {
   return (
@@ -12,7 +13,7 @@ export default function TodayTasks() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.card}>
+      <Card mode="contained" style={styles.card}>
         {/* Task 1 */}
         <View style={styles.taskItem}>
           <View style={styles.taskIconBox}>
@@ -59,10 +60,16 @@ export default function TodayTasks() {
 
         <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.footerBtn} activeOpacity={0.7}>
-          <Text style={styles.footerBtnText}>Xem lịch chăm sóc</Text>
-        </TouchableOpacity>
-      </View>
+        <Button
+          mode="text"
+          compact
+          textColor="#1A5B40"
+          labelStyle={styles.footerBtnText}
+          style={styles.footerBtn}
+        >
+          Xem lịch chăm sóc
+        </Button>
+      </Card>
     </View>
   );
 }
@@ -148,12 +155,12 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   footerBtn: {
-    alignItems: 'center',
-    paddingTop: 6,
+    marginTop: 0,
   },
   footerBtnText: {
     fontSize: 14,
     fontWeight: '700',
     color: '#1A5B40',
+    marginVertical: 6,
   },
 });
