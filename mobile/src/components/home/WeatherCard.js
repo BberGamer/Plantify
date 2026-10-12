@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Card, Text } from 'react-native-paper';
 
 export default function WeatherCard() {
   return (
-    <View style={styles.card}>
+    <Card mode="contained" style={styles.card}>
       <View style={styles.topRow}>
         <Ionicons name="partly-sunny-outline" size={32} color="#183B2B" />
         <View style={styles.tempCol}>
@@ -21,7 +22,7 @@ export default function WeatherCard() {
       </View>
 
       <Text style={styles.note}>Dữ liệu minh họa trong bản mẫu</Text>
-    </View>
+    </Card>
   );
 }
 

@@ -1,20 +1,23 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { Button, Card, Chip, IconButton, Text } from 'react-native-paper';
 import { colors } from '../../theme/colors';
 
 export default function HeroBanner() {
   return (
-    <View style={styles.heroCard}>
+    <Card mode="contained" style={styles.heroCard}>
       <View style={styles.heroTopRow}>
-        <View style={styles.heroBadge}>
-          <Ionicons name="sparkles" size={13} color="#A7F3D0" />
-          <Text style={styles.heroBadgeText}>AI chăm cây thông minh</Text>
-        </View>
+        <Chip
+          icon="creation"
+          iconColor="#A7F3D0"
+          compact
+          textStyle={styles.heroBadgeText}
+          style={styles.heroBadge}
+        >
+          AI chăm cây thông minh
+        </Chip>
 
-        <TouchableOpacity style={styles.heroCameraBtn} activeOpacity={0.8}>
-          <Ionicons name="camera-outline" size={18} color="#FFFFFF" />
-        </TouchableOpacity>
+        <IconButton icon="camera-outline" iconColor="#FFFFFF" size={18} style={styles.heroCameraBtn} />
       </View>
 
       <View style={styles.heroBody}>
@@ -26,10 +29,18 @@ export default function HeroBanner() {
             Chụp ảnh để nhận diện cây và phát hiện dấu hiệu bệnh chỉ trong vài giây.
           </Text>
 
-          <TouchableOpacity style={styles.heroCtaButton} activeOpacity={0.85}>
-            <MaterialCommunityIcons name="crop-free" size={18} color={colors.primary} />
-            <Text style={styles.heroCtaText}>Quét cây ngay</Text>
-          </TouchableOpacity>
+          <Button
+            mode="contained"
+            icon="crop-free"
+            buttonColor="#FFFFFF"
+            textColor={colors.primary}
+            compact
+            contentStyle={styles.heroCtaContent}
+            labelStyle={styles.heroCtaText}
+            style={styles.heroCtaButton}
+          >
+            Quét cây ngay
+          </Button>
 
           <TouchableOpacity style={styles.heroLink} activeOpacity={0.7}>
             <Text style={styles.heroLinkText}>Tìm hiểu cách chăm cây ›</Text>
@@ -46,7 +57,7 @@ export default function HeroBanner() {
           />
         </View>
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -64,26 +75,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.16)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
     borderRadius: 16,
+    height: 28,
   },
   heroBadgeText: {
     color: '#FFFFFF',
     fontSize: 11.5,
     fontWeight: '600',
-    marginLeft: 5,
+    marginVertical: 0,
   },
   heroCameraBtn: {
     width: 36,
     height: 36,
     borderRadius: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.16)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    margin: 0,
   },
   heroBody: {
     flexDirection: 'row',
@@ -107,21 +114,21 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   heroCtaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
     borderRadius: 22,
     alignSelf: 'flex-start',
     marginTop: 16,
     elevation: 3,
   },
+  heroCtaContent: {
+    height: 39,
+    paddingHorizontal: 4,
+  },
   heroCtaText: {
     color: colors.primary,
     fontSize: 13.5,
     fontWeight: '700',
-    marginLeft: 6,
+    marginHorizontal: 2,
   },
   heroLink: {
     marginTop: 12,

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Card, Text } from 'react-native-paper';
 
 const PLANTS = [
   {
@@ -37,9 +38,9 @@ export default function PlantList() {
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollList}>
         {PLANTS.map((plant) => (
-          <View key={plant.id} style={styles.card}>
+          <Card key={plant.id} mode="contained" style={styles.card}>
             <View style={styles.imageWrapper}>
-              <Image source={{ uri: plant.image }} style={styles.image} resizeMode="cover" />
+              <Card.Cover source={{ uri: plant.image }} style={styles.image} resizeMode="cover" />
               <View style={[styles.statusDot, { backgroundColor: plant.statusColor }]} />
             </View>
             <View style={styles.cardContent}>
@@ -48,7 +49,7 @@ export default function PlantList() {
                 {plant.status}
               </Text>
             </View>
-          </View>
+          </Card>
         ))}
       </ScrollView>
     </View>
@@ -96,6 +97,7 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
+    borderRadius: 0,
   },
   statusDot: {
     position: 'absolute',

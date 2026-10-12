@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Avatar, IconButton, Text } from 'react-native-paper';
 import { colors } from '../../theme/colors';
 
 export default function HomeHeader() {
@@ -16,12 +17,14 @@ export default function HomeHeader() {
         </View>
 
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.bellButton} activeOpacity={0.8}>
-            <Ionicons name="notifications-outline" size={20} color="#183B2B" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.avatarButton} activeOpacity={0.8}>
-            <Text style={styles.avatarText}>AN</Text>
-          </TouchableOpacity>
+          <IconButton icon="bell-outline" iconColor="#183B2B" size={20} style={styles.bellButton} />
+          <Avatar.Text
+            size={38}
+            label="AN"
+            color="#FFFFFF"
+            style={styles.avatarButton}
+            labelStyle={styles.avatarText}
+          />
         </View>
       </View>
 
@@ -76,8 +79,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8E4',
     backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    margin: 0,
     marginRight: 10,
   },
   avatarButton: {
@@ -85,8 +87,6 @@ const styles = StyleSheet.create({
     height: 38,
     borderRadius: 19,
     backgroundColor: colors.avatarBg,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   avatarText: {
     color: '#FFFFFF',

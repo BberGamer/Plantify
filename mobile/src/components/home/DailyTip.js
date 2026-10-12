@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Button, Card, Text } from 'react-native-paper';
 
 export default function DailyTip() {
   return (
-    <View style={styles.card}>
+    <Card mode="contained" style={styles.card}>
       <View style={styles.iconBox}>
         <Ionicons name="bulb-outline" size={26} color="#EAB308" />
       </View>
@@ -14,11 +15,11 @@ export default function DailyTip() {
         <Text style={styles.desc}>
           Tránh tưới quá nhiều nước khi đất vẫn còn ẩm. Nhu cầu nước phụ thuộc vào từng loại cây và điều kiện môi trường.
         </Text>
-        <TouchableOpacity activeOpacity={0.7} style={styles.linkRow}>
-          <Text style={styles.linkText}>Đọc hướng dẫn ›</Text>
-        </TouchableOpacity>
+        <Button mode="text" compact textColor="#247855" labelStyle={styles.linkText} style={styles.linkRow}>
+          Đọc hướng dẫn ›
+        </Button>
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -63,10 +64,13 @@ const styles = StyleSheet.create({
   },
   linkRow: {
     marginTop: 10,
+    alignSelf: 'flex-start',
   },
   linkText: {
     fontSize: 13,
     fontWeight: '700',
     color: '#247855',
+    marginHorizontal: 0,
+    marginVertical: 0,
   },
 });
