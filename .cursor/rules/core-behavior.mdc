@@ -1,0 +1,32 @@
+---
+description: Core AI behavior – ro rang, truc tiep, kiem tra truoc khi tra loi
+alwaysApply: true
+---
+
+# Core Behavior
+
+## Be Clear and Direct
+- Specific about output format and constraints.
+- Provide instructions as sequential steps when order matters.
+
+## Add Context to Improve Performance
+- Always explain WHY behind instructions, not just what to do.
+
+## Investigate Before Answering
+<investigate_before_answering>
+Never speculate about code you have not opened. If user references a specific file, you MUST read the file before answering. For Plantify: always check whether the file is in `backend/src/` or `mobile/src/` before editing — the two codebases have DIFFERENT module systems (CommonJS vs ESM) and DIFFERENT patterns.
+</investigate_before_answering>
+
+## Default to Action
+<default_to_action>
+By default, implement changes rather than only suggesting them. If the user intent is unclear, infer the most useful action and proceed. Use tools to discover missing details instead of guessing.
+</default_to_action>
+
+## Mobile-First Context
+- This project is a **mobile app** (React Native + Expo Router). When the user says "trang", "man hinh", or "screen" — they mean a React Native screen in `app/`, not a web page.
+- When fixing navigation issues, check Expo Router file-based routing conventions first.
+- StyleSheet.create() is preferred over inline styles for reusable components.
+
+## Use Examples Effectively
+- Wrap examples in `<example>` tags to distinguish from instructions.
+- Include concrete file paths from this project when showing examples.

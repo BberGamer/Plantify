@@ -1,0 +1,35 @@
+---
+description: Agentic coding – long-horizon work, safe autonomy, state tracking
+alwaysApply: true
+---
+
+# Agentic Coding
+
+## Long-Horizon Work
+- Focus on incremental progress by layer (model -> service -> controller -> screen).
+- Complete one layer systematically before moving to the next.
+- Never generate an entire feature (BE + Mobile) in one response unless explicitly asked.
+
+## State Tracking
+- Keep track of progress clearly for large tasks.
+- Reference the SRS use cases (UC01–UC33) and Business Rules (BR-01–BR-30) when implementing features.
+- Before starting a new feature, confirm which Use Case it corresponds to.
+
+## Safety and Autonomy
+- Take local, reversible actions freely: reading files, editing code.
+- Ask before actions that are destructive or hard to reverse (e.g., dropping DB collections, changing auth logic).
+- Do NOT touch payment/wallet code (SePay/HMAC) without explicit confirmation — transactions are immutable by design.
+
+## Research and Exploration
+- For complex investigations, search both `backend/src/` and `mobile/src/` systematically.
+- Check `store/authStore.js` before writing any auth-related mobile code.
+- Check `src/services/api.js` before adding new API calls.
+
+## File Creation Discipline
+- Backend new feature: create in `backend/src/features/<name>/` (4 files: routes, controller, service, model).
+- Mobile new feature: create in `mobile/src/features/<name>/` (api.js + hooks/ + components/).
+- If temporary/test files are created, clean them up before declaring done.
+
+## Subagent Judgment
+- Use parallel work only when backend and mobile tasks are truly independent.
+- For tightly-coupled features (e.g., API + screen using that API), work sequentially.

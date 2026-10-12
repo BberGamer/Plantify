@@ -1,0 +1,32 @@
+---
+description: Tool usage behavior – explicit action, parallel calls, efficient investigation
+alwaysApply: true
+---
+
+# Tool Usage
+
+## Prefer Action Over Suggestions
+- When the user asks for a change, make the change.
+- Do not stop at suggestions unless the user explicitly asks for recommendations only.
+- "Them tinh nang X" means implement it, not describe how.
+
+## Use Parallel Tool Calls
+<use_parallel_tool_calls>
+If you intend to call multiple tools and there are no dependencies between the tool calls, make all of the independent tool calls in parallel. For example, when reading backend and mobile files simultaneously, run both reads in parallel. Maximize parallel tool calls where possible to increase speed. Never use placeholders or guess missing parameters.
+</use_parallel_tool_calls>
+
+## Explicit Tool Triggering
+- Use tools when they improve understanding or enable action.
+- Read files before editing them.
+- Search before concluding something does not exist.
+- When user says "man hinh X" — find the actual file in `mobile/app/` or `mobile/src/` before editing.
+
+## Efficient Investigation
+- For broad exploration, read multiple relevant files quickly in parallel.
+- For simple tasks (e.g., "add a field to Plant model"), go directly to `backend/src/models/Plant.js`.
+- Check BOTH `backend/` and `mobile/` when a feature spans both sides.
+
+## Module System Awareness
+- When writing backend files: output CommonJS (`const x = require('y')`, `module.exports = {}`)
+- When writing mobile files: output ESM (`import x from 'y'`, `export default`)
+- Mixing these WILL break the build — always verify which codebase you are editing.
