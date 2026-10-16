@@ -1,0 +1,163 @@
+---
+description: Plantify Capstone – Quy uoc cau truc, tech stack, business rules
+alwaysApply: true
+---
+
+# Plantify Capstone – Project Rules
+
+## Tong quan Du an
+- **Ten:** Plantify – He thong nhan dien thuc vat, chan doan benh & cham soc cay tich hop AI
+- **Nhom:** SEP490 / G126 | Mentor: TS. Bui Trung Hieu
+- **Platform:** Mobile App (React Native + Expo) + Backend REST API + Web CMS (React.js)
+- **Timeline:** 07/09/2026 – 24/12/2026 | 5 thanh vien
+
+## Tech Stack
+
+### Mobile (`mobile/`)
+- **Framework:** React Native + Expo (~51) + Expo Router (~3.5)
+- **State:** Zustand (`store/`)
+- **HTTP:** Axios (`src/services/api.js`)
+- **UI:** React Native Paper + @expo/vector-icons
+- **Storage:** AsyncStorage
+- **Ngon ngu:** JavaScript (.js / .jsx) — KHONG dung TypeScript
+
+### Backend (`backend/`)
+- **Runtime:** Node.js + Express
+- **DB:** MongoDB Atlas + Mongoose
+- **Auth:** JWT (Access Token 1h) + bcryptjs
+- **Module system:** CommonJS (`require` / `module.exports`)
+- **Tich hop:** OpenWeatherMap API, Google Gemini API, SePay Webhook (HMAC), FCM, SMTP OTP
+
+### Web CMS (tuong lai)
+- **Framework:** React.js – danh cho Admin & Manager
+
+## Cau truc Du an
+
+### Backend (`backend/src/`)
+```
+src/
+├── config/          # db.js, env
+├── features/        # <- TAT CA TINH NANG (muc tieu cuoi cung)
+│   └── <feature>/
+│       ├── <name>.routes.js
+│       ├── <name>.controller.js
+│       ├── <name>.service.js
+│       └── <name>.model.js
+├── controllers/     # (hien tai – se migrate vao features/)
+├── models/          # (hien tai – se migrate vao features/)
+├── routes/          # (hien tai – se migrate vao features/)
+├── middleware/      # auth, error, validate
+├── utils/           # apiResponse.js, constants.js, generateToken.js
+├── scripts/         # seed.js
+├── app.js
+└── server.js
+```
+
+### Mobile (`mobile/`)
+```
+mobile/
+├── app/             # Expo Router – file-based routing
+│   ├── _layout.js
+│   └── (tabs)/
+├── src/
+│   ├── components/  # Component dung chung + component theo domain
+│   │   └── home/    # Component dac thu HomeScreen
+│   ├── features/    # <- MUC TIEU: to chuc theo domain (api + hooks + components)
+│   │   └── <domain>/
+│   │       ├── api.js
+│   │       ├── hooks/
+│   │       └── components/
+│   ├── services/    # api.js (axios instance), authService, plantService, storageService
+│   ├── theme/       # colors, spacing, typography, index
+│   └── utils/       # constants, formatters, validators
+├── store/           # Zustand stores: authStore, cartStore, favoritesStore
+└── app.json
+```
+
+## Business Rules (Quan trong – Khong duoc vi pham)
+
+### Tai khoan & Auth
+- Tai khoan Free: toi da **3 cay** trong My Garden, toi da **5 cay** yeu thich
+- Chi tai khoan **Pro** moi duoc dung AI Scan benh cay
+- Sai mat khau **5 lan** → khoa tai khoan **15 phut**
+- Ma OTP het han sau **5 phut** (BR-06)
+- JWT Access Token song **1 gio** (BR-07)
+- Mat khau ma hoa bang **bcryptjs**
+
+### Lich cham soc & Dieu tri
+- Do am >= 85% hoac co mua → tu dong **hoan lich tuoi 24 gio** (BR-26, OpenWeatherMap)
+- Khi cay dang co phac do dieu tri → lich cham soc thuong bi `is_paused = true`
+- Phac do dieu tri: **14 ngay**, co reminder FCM hang ngay
+
+### Tai chinh (SePay / Wallet)
+- Giao dich da hoan tat la **bat bien** (khong sua, khong xoa)
+- Xac thuc SePay bang **HMAC signature**
+
+### Soft Delete
+- **Khong hard delete** tai khoan nguoi dung – chi deactivate/khoa
+
+### AI Disclaimer (LI-06 – Bat buoc hien thi)
+Man hinh ket qua chan doan PHAI hien thi:
+> "AI disease diagnosis results and treatment guides are for urban agriculture reference only. Actual plant recovery depends on specific plant varieties and real-world care conditions."
+
+## Response Format (Backend – Luon nhat quan)
+```json
+{
+  "success": true,
+  "message": "Thong bao ro rang",
+  "data": {}
+}
+```
+
+## Quy tac Code
+
+### Ten file & Thu muc
+| Loai | Quy uoc | Vi du |
+|------|---------|-------|
+| Folder | `kebab-case` | `my-garden`, `plant-disease` |
+| File BE | `camelCase` | `plant.controller.js` |
+| Component Mobile | `PascalCase` | `PlantCard.js` |
+| Logic Mobile | `camelCase` | `api.js`, `authService.js` |
+
+### Backend
+- `routes.js` → chi dinh nghia route + gan middleware
+- `controller.js` → nhan request, goi service, tra response
+- `service.js` → toan bo business logic + DB query
+- `model.js` → Mongoose schema
+- **KHONG** de logic DB truc tiep trong controller
+
+### Mobile
+- `store/` → chi Zustand global state (auth, cart, favorites)
+- `src/services/` → goi API, AsyncStorage
+- `src/components/` → UI thuan, khong chua business logic
+- Screen trong `app/` chi compose UI + goi hook/service
+
+## Workflow Phat trien
+Lam tung lat nho theo thu tu:
+```
+BE: model -> service -> controller -> routes -> dang ky app.js
+Mobile: service -> store/hook -> component -> screen
+```
+
+## Commit Convention
+```
+<type>(<scope>): <mo ta tieng Viet, thi hien tai>
+```
+| Type | Scope vi du |
+|------|------------|
+| `feat` | `auth`, `garden`, `scan`, `schedule`, `payment`, `cms` |
+| `fix` | `fcm`, `weather`, `jwt` |
+| `refactor` | ten module |
+| `chore` | `env`, `deps` |
+
+Vi du: `feat(scan): them man hinh chan doan benh la`
+
+**Sau moi lat code xong -> dung, nhac commit!**
+
+## Comment Style (Bat buoc)
+- Dau moi file: comment ten file + muc dich (tieng Viet)
+- Ham quan trong: dung JSDoc (@param, @returns)
+- Khoi logic lon: phan chia bang `// === PHAN X: ... ===`
+- Comment bang **tieng Viet**, ngan gon, ro rang
+
+📌 **Luon uu tien Plantify rules khi co xung dot voi rules chung.**
