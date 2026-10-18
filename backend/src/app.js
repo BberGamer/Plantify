@@ -1,8 +1,8 @@
-﻿// app.js - Khoi tao ung dung Express va cau hinh middlewares/routes
+// app.js - Khoi tao ung dung Express va cau hinh middlewares/routes
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-const errorHandler = require("./middlewares/errorHandler");
+const errorHandler = require("./middlewares/error.middleware");
 
 const app = express();
 
@@ -20,8 +20,8 @@ app.get("/health", (req, res) => {
   res.json({ success: true, message: "Plantify API dang hoat dong binh thuong" });
 });
 
-// === PHAN 3: Dang ky Routes cho cac Features ===
-app.use("/api/v1/auth", require("./features/auth/auth.routes"));
+// === PHAN 3: Dang ky Routes cho cac Modules ===
+app.use("/api/v1", require("./routes"));
 
 // === PHAN 4: 404 Handler ===
 app.use((req, res) => {

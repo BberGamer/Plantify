@@ -1,10 +1,10 @@
-﻿// server.js - Entry point cua he thong
+// server.js - Entry point cua he thong
 
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 require('dotenv').config();
-const connectDB = require('./config/db');
+const connectDB = require('./config/database');
 const app = require('./app');
 
 const PORT = process.env.PORT || 5000;
