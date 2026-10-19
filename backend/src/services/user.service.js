@@ -1,4 +1,5 @@
 // services/user.service.js - Logic nghiep vu Quan ly Nguoi dung (User Management)
+const mongoose = require("mongoose");
 const User = require("../models/user.model");
 
 /**
@@ -85,6 +86,12 @@ const getUsers = async (query = {}) => {
  * @returns {Promise<object>} Thong tin user khong kem password
  */
 const getUserById = async (userId) => {
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    const err = new Error("Định dạng ID người dùng không hợp lệ.");
+    err.statusCode = 400;
+    throw err;
+  }
+
   const user = await User.findById(userId)
     .select("-password -resetPasswordOTP -resetPasswordOTPExpires")
     .lean();

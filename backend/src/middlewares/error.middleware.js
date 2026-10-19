@@ -4,8 +4,15 @@ const { error } = require("../utils/api-response");
 const errorHandler = (err, req, res, next) => {
   console.error(`[Error Handler] ${req.method} ${req.url} ->`, err);
 
-  const statusCode = err.statusCode || (err.name === "ValidationError" ? 400 : 500);
-  const message = err.message || "Lỗi máy chủ nội bộ. Vui lòng thử lại sau";
+  let statusCode = err.statusCode || 500;
+  let message = err.message || "Lỗi máy chủ nội bộ. Vui lòng thử lại sau";
+
+  if (err.name === "CastError") {
+    statusCode = 400;
+    message = "Định dạng ID không hợp lệ.";
+  } else if (err.name === "ValidationError") {
+    statusCode = 400;
+  }
 
   return error(res, message, statusCode);
 };
