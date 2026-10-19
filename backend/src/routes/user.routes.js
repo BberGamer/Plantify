@@ -21,4 +21,26 @@ router.get("/", userController.getUsers);
  */
 router.get("/:id", userController.getUserById);
 
+/**
+ * @route   PUT /api/v1/users/:id  (or PATCH)
+ * @desc    1. Update user info & status (Active / Banned)
+ * @access  Private (Admin)
+ */
+router.put("/:id", userController.updateUser);
+router.patch("/:id", userController.updateUser);
+
+/**
+ * @route   PATCH /api/v1/users/:id/status
+ * @desc    2. Deactivate / Ban user account (status: true / false)
+ * @access  Private (Admin)
+ */
+router.patch("/:id/status", userController.updateUserStatus);
+
+/**
+ * @route   PATCH /api/v1/users/:id/role
+ * @desc    3. Manage System Roles (assign role: Customer / Manager / Admin)
+ * @access  Private (Admin)
+ */
+router.patch("/:id/role", userController.updateUserRole);
+
 module.exports = router;
