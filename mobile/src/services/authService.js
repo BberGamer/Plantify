@@ -2,6 +2,11 @@
 import api from "./api";
 
 export const authService = {
+  // Server tự xác định user từ token, không gửi id tài khoản cần sửa.
+  updateProfile: async (data) => {
+    const response = await api.patch("/auth/me", data);
+    return response.data;
+  },
   // Buoc 1: Gui ma OTP dang ky
   sendRegisterOTP: async ({ fullName, email, password, phone }) => {
     const response = await api.post("/auth/register/send-otp", {
@@ -30,7 +35,9 @@ export const authService = {
 
   // Dang xuat
   logout: async () => {
-    const response = await api.post("/auth/logout");
+    // Không để thao tác thoát bị treo theo timeout 30 giây của API chung.
+    // Store vẫn xóa phiên trên máy nếu server không phản hồi.
+    const response = await api.post("/auth/logout", undefined, { timeout: 3000 });
     return response.data;
   },
 

@@ -185,7 +185,15 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+const updateProfile = async (req, res, next) => {
+  try {
+    const user = await authService.updateProfile(req.user.id, req.body);
+    return success(res, "Đã lưu hồ sơ.", user);
+  } catch (error) { next(error); }
+};
+
 module.exports = {
+  updateProfile,
   sendRegisterOTP,
   verifyRegisterOTP,
   login,

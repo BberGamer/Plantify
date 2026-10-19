@@ -20,7 +20,7 @@ const generateJwtToken = (user) => {
       fullName: user.fullName,
     },
     process.env.JWT_SECRET || "plantify_secret_key",
-    { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
+    { expiresIn: process.env.JWT_EXPIRES_IN || "1h" },
   );
 };
 
@@ -40,7 +40,9 @@ const sendRegisterOTP = async (userData) => {
   if (phone && phone.trim() !== "") {
     const existingPhone = await User.findOne({ phone: phone.trim() });
     if (existingPhone) {
-      const err = new Error("Số điện thoại này đã được sử dụng bởi tài khoản khác.");
+      const err = new Error(
+        "Số điện thoại này đã được sử dụng bởi tài khoản khác.",
+      );
       err.statusCode = 400;
       throw err;
     }
@@ -70,19 +72,26 @@ const verifyRegisterOTP = async (email, otp) => {
   const pending = pendingRegistrations.get(normalizedEmail);
 
   if (!pending) {
-    const err = new Error("Không tìm thấy thông tin đăng ký cho email này hoặc đã hết hạn. Vui lòng đăng ký lại.");
+    const err = new Error(
+      "Không tìm thấy thông tin đăng ký cho email này hoặc đã hết hạn. Vui lòng đăng ký lại.",
+    );
     err.statusCode = 404;
     throw err;
   }
 
   if (pending.expires < Date.now()) {
     pendingRegistrations.delete(normalizedEmail);
-    const err = new Error("Mã OTP đã hết hạn (chỉ có hiệu lực trong 5 phút). Vui lòng yêu cầu mã mới.");
+    const err = new Error(
+      "Mã OTP đã hết hạn (chỉ có hiệu lực trong 5 phút). Vui lòng yêu cầu mã mới.",
+    );
     err.statusCode = 400;
     throw err;
   }
 
-  const hashedInputOTP = crypto.createHash("sha256").update(otp.trim()).digest("hex");
+  const hashedInputOTP = crypto
+    .createHash("sha256")
+    .update(otp.trim())
+    .digest("hex");
   if (pending.hashedOTP !== hashedInputOTP) {
     const err = new Error("Mã OTP không chính xác. Vui lòng kiểm tra lại.");
     err.statusCode = 400;
@@ -121,13 +130,17 @@ const login = async (email, password) => {
   }
 
   if (!user.status) {
-    const err = new Error("Tài khoản của bạn đã bị khóa hoặc tạm ngưng. Vui lòng liên hệ hỗ trợ.");
+    const err = new Error(
+      "Tài khoản của bạn đã bị khóa hoặc tạm ngưng. Vui lòng liên hệ hỗ trợ.",
+    );
     err.statusCode = 403;
     throw err;
   }
 
   if (user.isGoogleAccount && !user.password) {
-    const err = new Error("Tài khoản này được đăng ký bằng Google. Vui lòng chọn 'Tiếp tục với Google'.");
+    const err = new Error(
+      "Tài khoản này được đăng ký bằng Google. Vui lòng chọn 'Tiếp tục với Google'.",
+    );
     err.statusCode = 400;
     throw err;
   }
@@ -210,13 +223,21 @@ const resetPassword = async (email, otp, newPassword) => {
     throw err;
   }
 
-  if (!user.resetPasswordOTPExpires || user.resetPasswordOTPExpires < Date.now()) {
-    const err = new Error("Mã OTP đã hết hạn hoặc không tồn tại. Vui lòng yêu cầu mã mới.");
+  if (
+    !user.resetPasswordOTPExpires ||
+    user.resetPasswordOTPExpires < Date.now()
+  ) {
+    const err = new Error(
+      "Mã OTP đã hết hạn hoặc không tồn tại. Vui lòng yêu cầu mã mới.",
+    );
     err.statusCode = 400;
     throw err;
   }
 
-  const hashedOTP = crypto.createHash("sha256").update(otp.trim()).digest("hex");
+  const hashedOTP = crypto
+    .createHash("sha256")
+    .update(otp.trim())
+    .digest("hex");
   if (user.resetPasswordOTP !== hashedOTP) {
     const err = new Error("Mã OTP xác thực không chính xác.");
     err.statusCode = 400;
@@ -233,7 +254,95 @@ const resetPassword = async (email, otp, newPassword) => {
   await user.save();
 };
 
+// Chỉ sửa tài khoản của người đang đăng nhập; không nhận id/role/status từ client.
+const updateProfile = async (userId, input = {}) => {
+  const fail = (message, statusCode = 400) => {
+    throw Object.assign(new Error(message), { statusCode });
+  };
+  const { fullName, email, phone, currentPassword, newPassword } = input;
+  if (
+    typeof fullName !== "string" ||
+    !fullName.trim() ||
+    fullName.trim().length > 100
+  )
+    fail("Họ tên là bắt buộc và không quá 100 ký tự.");
+  if (
+    typeof email !== "string" ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
+    email.length > 254
+  )
+    fail("Email không hợp lệ.");
+  if (
+    typeof phone !== "string" ||
+    (phone.trim() && !/^0[35789]\d{8}$/.test(phone.trim()))
+  )
+    fail("Số điện thoại phải có 10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09.");
+  if (
+    newPassword !== undefined &&
+    (typeof newPassword !== "string" ||
+      newPassword.length < 8 ||
+      Buffer.byteLength(newPassword, "utf8") > 72)
+  )
+    fail("Mật khẩu mới cần ít nhất 8 ký tự và không quá 72 byte.");
+
+  const user = await User.findById(userId);
+  if (!user) fail("Không tìm thấy tài khoản.", 404);
+  if (!user.status) fail("Tài khoản đã bị khóa.", 403);
+  // Email là định danh đăng nhập: yêu cầu mật khẩu hiện tại khi đổi email/mật khẩu.
+  const normalizedEmail = email.trim().toLowerCase();
+  const sensitiveChange =
+    normalizedEmail !== user.email || newPassword !== undefined;
+  if (sensitiveChange) {
+    if (user.isGoogleAccount)
+      fail("Tài khoản Google không thể đổi email hoặc mật khẩu tại đây.");
+    if (
+      typeof currentPassword !== "string" ||
+      !currentPassword ||
+      !(await bcrypt.compare(currentPassword, user.password))
+    )
+      fail("Mật khẩu hiện tại không chính xác.");
+  }
+  const duplicate = await User.findOne({
+    _id: { $ne: userId },
+    $or: [
+      { email: normalizedEmail },
+      ...(phone.trim() ? [{ phone: phone.trim() }] : []),
+    ],
+  });
+  if (duplicate) fail("Email hoặc số điện thoại đã được sử dụng.", 409);
+
+  user.fullName = fullName.trim();
+  user.email = normalizedEmail;
+  user.phone = phone.trim();
+  if (sensitiveChange) {
+    // Hủy OTP cũ để không thể dùng lại sau khi thay đổi thông tin đăng nhập.
+    user.resetPasswordOTP = null;
+    user.resetPasswordOTPExpires = null;
+  }
+  if (newPassword !== undefined)
+    user.password = await bcrypt.hash(newPassword, 10);
+  try {
+    await user.save();
+  } catch (error) {
+    if (error.code === 11000) fail("Email đã được sử dụng.", 409);
+    throw error;
+  }
+  // Chỉ trả thông tin hồ sơ, tuyệt đối không trả hash mật khẩu hoặc OTP.
+  return {
+    id: user.id,
+    _id: user._id,
+    fullName: user.fullName,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    status: user.status,
+    isGoogleAccount: user.isGoogleAccount,
+    createdAt: user.createdAt,
+  };
+};
+
 module.exports = {
+  updateProfile,
   sendRegisterOTP,
   verifyRegisterOTP,
   login,

@@ -57,14 +57,28 @@ export const useAuthStore = create((set, get) => ({
     set({ user, token, isAuthenticated: true, isLoading: false });
   },
 
-  // Dang xuat
+  // Ghi store ngay sau khi server lưu thành công để Profile và Home cùng cập nhật.
+  // Chỉ lưu user trả về, không lưu các ô mật khẩu trên form.
+  updateProfile: async (data) => {
+    const response = await authService.updateProfile(data);
+    const user = response.data;
+    set({ user });
+    try {
+      await AsyncStorage.setItem("user", JSON.stringify(user));
+      return { cacheSaved: true };
+    } catch {
+      return { cacheSaved: false }; // MongoDB đã lưu; không báo nhầm là lưu thất bại.
+    }
+  },
+
+  // Đăng xuất và xóa phiên trên máy.
   logout: async () => {
     try {
       await authService.logout().catch(() => {});
     } finally {
-      await AsyncStorage.removeItem("token");
-      await AsyncStorage.removeItem("user");
-      set({ user: null, token: null, isAuthenticated: false });
+      await AsyncStorage.multiRemove(["token", "user"]);
+      // Xóa cả trạng thái chờ/lỗi cũ để AuthGuard có thể chuyển về Login.
+      set({ user: null, token: null, isAuthenticated: false, isLoading: false, error: null });
     }
   },
 

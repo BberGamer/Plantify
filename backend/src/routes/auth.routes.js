@@ -12,6 +12,7 @@ router.post("/register/verify-otp", authController.verifyRegisterOTP);
 router.post("/login", authController.login);
 router.post("/logout", authenticate, authController.logout);
 router.get("/me", authenticate, authController.getMe);
+router.patch("/me", authenticate, authController.updateProfile);
 
 // === QUEN & DAT LAI MAT KHAU BANG OTP ===
 router.post("/forgot-password", authController.forgotPassword);
