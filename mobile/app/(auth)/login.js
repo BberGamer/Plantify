@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -15,6 +15,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { colors } from "../../src/theme/colors";
 import useAuthStore from "../../store/authStore";
+
+// Dinh nghia route tuong ung voi tung role
+const ROLE_ROUTES = {
+  admin: '/admin',
+  manager: '/admin',
+  customer: '/(tabs)',
+};
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -41,12 +48,15 @@ export default function LoginScreen() {
 
     const res = await login(email.trim(), password);
     if (res.success) {
-      // Dang nhap thanh cong -> Chuyen huong ve trang chinh
-      router.replace("/(tabs)");
+      // === Dieu huong theo role sau khi dang nhap thanh cong ===
+      const role = res.user?.role || 'customer';
+      const destination = ROLE_ROUTES[role] || '/(tabs)';
+      router.replace(destination);
     } else {
       setLocalError(res.error || "Đăng nhập thất bại");
     }
   };
+
 
   const handleGoogleLogin = () => {
     // Tich hop Firebase Google Sign-In

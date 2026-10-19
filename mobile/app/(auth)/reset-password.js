@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -102,6 +102,9 @@ export default function ResetPasswordScreen() {
     }
   };
 
+  // State hien thi man hinh thanh cong truoc khi chuyen trang
+  const [resetSuccess, setResetSuccess] = useState(false);
+
   // Goi API that de doi mat khau bang OTP
   const handleConfirmReset = async () => {
     setErrorMsg("");
@@ -132,16 +135,11 @@ export default function ResetPasswordScreen() {
         newPassword,
       });
 
-      Alert.alert(
-        "Thành công",
-        "Mật khẩu của bạn đã được cập nhật thành công! Vui lòng đăng nhập lại.",
-        [
-          {
-            text: "Đăng nhập ngay",
-            onPress: () => router.replace("/(auth)/login"),
-          },
-        ]
-      );
+      // === Hien thi man hinh thanh cong roi tu dong chuyen ve login ===
+      setResetSuccess(true);
+      setTimeout(() => {
+        router.replace("/(auth)/login");
+      }, 2000);
     } catch (err) {
       const msg =
         err.response?.data?.message ||
@@ -152,6 +150,31 @@ export default function ResetPasswordScreen() {
       setUpdatingPassword(false);
     }
   };
+
+
+
+  // === Hien thi man hinh thanh cong (truoc khi tu dong chuyen ve login) ===
+  if (resetSuccess) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.successScreen}>
+          <View style={styles.successIconWrap}>
+            <Ionicons name="checkmark-circle" size={72} color="#16A34A" />
+          </View>
+          <Text style={styles.successTitle}>Đặt lại mật khẩu thành công!</Text>
+          <Text style={styles.successDesc}>
+            Mật khẩu mới của bạn đã được cập nhật.{"\n"}
+            Đang chuyển về trang đăng nhập...
+          </Text>
+          <ActivityIndicator
+            size="small"
+            color={colors.primary}
+            style={{ marginTop: 24 }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -682,4 +705,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-});
+  // === Man hinh thanh cong ===
+  successScreen: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+    backgroundColor: "#FFFFFF",
+  },
+  successIconWrap: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: "#F0FDF4",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 24,
+  },
+  successTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  successDesc: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+});
