@@ -36,18 +36,16 @@ alwaysApply: true
 ### Backend (`backend/src/`)
 ```
 src/
-├── config/          # db.js, env
-├── features/        # <- TAT CA TINH NANG (muc tieu cuoi cung)
-│   └── <feature>/
-│       ├── <name>.routes.js
-│       ├── <name>.controller.js
-│       ├── <name>.service.js
-│       └── <name>.model.js
-├── controllers/     # (hien tai – se migrate vao features/)
-├── models/          # (hien tai – se migrate vao features/)
-├── routes/          # (hien tai – se migrate vao features/)
-├── middleware/      # auth, error, validate
-├── utils/           # apiResponse.js, constants.js, generateToken.js
+├── config/          # database.js, env.js, cors.js
+├── models/          # *.model.js (Mongoose models)
+├── routes/          # *.routes.js & index.js (API routes)
+├── controllers/     # *.controller.js (Request/Response handling)
+├── services/        # *.service.js (Business logic & DB queries)
+├── middlewares/     # *.middleware.js (auth, error, validate)
+├── validators/      # *.validator.js (Zod schemas)
+├── integrations/    # External services (ai, email, payment, weather, push-notification)
+├── jobs/            # Background / Cron jobs
+├── utils/           # api-response.js, pagination.js
 ├── scripts/         # seed.js
 ├── app.js
 └── server.js

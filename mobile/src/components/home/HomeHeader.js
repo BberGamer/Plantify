@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Avatar, IconButton, Text } from "react-native-paper";
@@ -11,20 +11,32 @@ export default function HomeHeader() {
   const { user, logout } = useAuthStore();
 
   const handleAvatarPress = () => {
+    const alertButtons = [
+      { text: "Đóng", style: "cancel" },
+      ...(user?.role === "admin"
+        ? [
+            {
+              text: "Quản trị người dùng (Admin)",
+              onPress: () => router.push("/admin/users"),
+            },
+          ]
+        : []),
+      {
+        text: "Đăng xuất",
+        style: "destructive",
+        onPress: async () => {
+          await logout();
+          router.replace("/(auth)/login");
+        },
+      },
+    ];
+
     Alert.alert(
       user ? `Xin chào, ${user.fullName || "Người dùng"}!` : "Tài khoản",
-      user ? `Email: ${user.email}\nVai trò: ${user.role || "customer"}` : "Bạn chưa đăng nhập",
-      [
-        { text: "Đóng", style: "cancel" },
-        {
-          text: "Đăng xuất",
-          style: "destructive",
-          onPress: async () => {
-            await logout();
-            router.replace("/(auth)/login");
-          },
-        },
-      ]
+      user
+        ? `Email: ${user.email}\nVai trò: ${user.role || "customer"}`
+        : "Bạn chưa đăng nhập",
+      alertButtons
     );
   };
 
@@ -49,6 +61,16 @@ export default function HomeHeader() {
         </View>
 
         <View style={styles.headerRight}>
+          {user?.role === "admin" && (
+            <TouchableOpacity
+              style={styles.adminBadgeBtn}
+              onPress={() => router.push("/admin/users")}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="shield-checkmark" size={14} color="#FFFFFF" />
+              <Text style={styles.adminBadgeBtnText}>Admin</Text>
+            </TouchableOpacity>
+          )}
           <IconButton icon="bell-outline" iconColor="#183B2B" size={20} style={styles.bellButton} />
           <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.8}>
             <Avatar.Text
@@ -107,6 +129,21 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  adminBadgeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    marginRight: 8,
+  },
+  adminBadgeBtnText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+    marginLeft: 4,
   },
   bellButton: {
     width: 38,
