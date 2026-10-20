@@ -218,7 +218,7 @@ export default function RegisterScreen() {
           ) : null}
 
           {step === 1 ? (
-            /* =================== BUOC 1: FORM DANG KY =================== */
+            //Form đăng kí
             <View>
               <View style={styles.headerTitleContainer}>
                 <View style={styles.badge}>
@@ -389,7 +389,7 @@ export default function RegisterScreen() {
               </View>
             </View>
           ) : (
-            /* =================== BUOC 2: NHAP MA OTP (KHI DA GUI THANH CONG) =================== */
+            //Nhập mã OTP
             <View>
               <View style={styles.headerTitleContainer}>
                 <View style={styles.badge}>
