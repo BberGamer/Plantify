@@ -48,7 +48,7 @@ ios/
 *.ipa
 
 # ===== Documents (không commit tài liệu nội bộ) =====
-*.docx
+docs/
 *.doc
 *.xlsx
 *.xls

@@ -6,17 +6,17 @@ import { usePathname, useRouter } from "expo-router";
 
 const ITEMS = [
   {
-    label: "Home",
+    label: "Trang chủ",
     icon: "home-outline",
     activeIcon: "home",
     path: "/",
     href: "/(tabs)",
   },
-  { label: "Diagnose", icon: "camera-outline" },
-  { label: "My\nGarden", icon: "leaf-outline" },
-  { label: "AI Chat", icon: "chatbubble-outline" },
+  { label: "Danh sách\ncây", icon: "list-outline", activeIcon: "list", path: "/plants", href: "/plants" },
+  { label: "Chẩn đoán", icon: "camera-outline" },
+  { label: "Vườn\ncây", icon: "leaf-outline" },
   {
-    label: "Profile",
+    label: "Tài khoản",
     icon: "person-outline",
     activeIcon: "person",
     path: "/profile",
