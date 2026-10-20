@@ -60,7 +60,7 @@ export default function LoginScreen() {
 
   const handleGoogleLogin = () => {
     // Tich hop Firebase Google Sign-In
-    alert("Tính năng đăng nhập với Google đang sẵn sàng kết nối Firebase!");
+    alert("Tính năng đăng nhập bằng Google đang được phát triển.");
   };
 
   const displayError = localError || error;
@@ -86,8 +86,8 @@ export default function LoginScreen() {
 
           {/* Heading */}
           <View style={styles.headingContainer}>
-            <Text style={styles.title}>Welcome back</Text>
-            <Text style={styles.subtitle}>Sign in to continue to your account</Text>
+            <Text style={styles.title}>Chào mừng trở lại</Text>
+            <Text style={styles.subtitle}>Đăng nhập để tiếp tục sử dụng tài khoản</Text>
           </View>
 
           {/* Alert Error */}
@@ -106,7 +106,7 @@ export default function LoginScreen() {
               <View style={styles.inputWrapper}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your email"
+                  placeholder="Nhập địa chỉ email"
                   placeholderTextColor={colors.textMuted}
                   value={email}
                   onChangeText={(val) => {
@@ -121,11 +121,11 @@ export default function LoginScreen() {
 
             {/* Field: Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>Mật khẩu</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your password"
+                  placeholder="Nhập mật khẩu"
                   placeholderTextColor={colors.textMuted}
                   value={password}
                   onChangeText={(val) => {
@@ -158,14 +158,14 @@ export default function LoginScreen() {
                 <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
                   {rememberMe && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
                 </View>
-                <Text style={styles.rememberText}>Remember me</Text>
+                <Text style={styles.rememberText}>Ghi nhớ đăng nhập</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => router.push("/(auth)/reset-password")}
                 activeOpacity={0.7}
               >
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+                <Text style={styles.forgotText}>Quên mật khẩu?</Text>
               </TouchableOpacity>
             </View>
 
@@ -179,14 +179,14 @@ export default function LoginScreen() {
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={styles.primaryButtonText}>Sign In</Text>
+                <Text style={styles.primaryButtonText}>Đăng nhập</Text>
               )}
             </TouchableOpacity>
 
             {/* Divider */}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>Or continue with</Text>
+              <Text style={styles.dividerText}>Hoặc tiếp tục với</Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -197,19 +197,19 @@ export default function LoginScreen() {
               activeOpacity={0.8}
             >
               <Ionicons name="logo-google" size={18} color="#EA4335" style={{ marginRight: 8 }} />
-              <Text style={styles.googleButtonText}>Continue with Google</Text>
+              <Text style={styles.googleButtonText}>Tiếp tục với Google</Text>
             </TouchableOpacity>
           </View>
 
           {/* Footer: Register link */}
           <View style={styles.footerContainer}>
             <Text style={styles.footerText}>
-              Don't have an account?{" "}
+              Bạn chưa có tài khoản?{" "}
               <Text
                 style={styles.registerLink}
                 onPress={() => router.push("/(auth)/register")}
               >
-                Register now
+                Đăng ký ngay
               </Text>
             </Text>
           </View>
@@ -266,6 +266,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   subtitle: {
+    textAlign: "center",
     fontSize: 14,
     color: colors.textSecondary,
   },
@@ -322,6 +323,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 4,
     marginBottom: 22,
+    flexWrap: "wrap",
+    gap: 12,
   },
   rememberMeContainer: {
     flexDirection: "row",
@@ -406,6 +409,7 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
   footerText: {
+    textAlign: "center",
     fontSize: 14,
     color: colors.textSecondary,
   },
