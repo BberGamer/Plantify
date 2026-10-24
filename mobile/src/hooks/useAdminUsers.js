@@ -4,9 +4,12 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import userService from "../services/userService";
 import usePaginatedList from "./usePaginatedList";
 import useAuthStore from "../../store/authStore";
+import useDebouncedValue from "./useDebouncedValue";
+import useScreenScope from "./useScreenScope";
 
 export default function useAdminUsers() {
   const currentAdmin = useAuthStore((state) => state.user);
+  const sessionVersion = useAuthStore((state) => state.sessionVersion);
   const currentAdminId = currentAdmin?._id || currentAdmin?.id;
   const [detailLoading, setDetailLoading] = useState(false);
   const [search, updateSearch] = useState("");
@@ -34,14 +37,24 @@ export default function useAdminUsers() {
   const detailRequest = useRef(0);
   const mutationPending = useRef(false);
   const toastTimer = useRef(null);
-  const query = useRef({ search: "", role: "all", status: "all" });
-  const activeQuery = useRef({ ...query.current });
+  const debounced = useDebouncedValue(search.trim());
+  const { capture, isActive } = useScreenScope(undefined, () => {
+    ++detailRequest.current;
+    clearTimeout(toastTimer.current);
+    setToast({ visible: false, message: "", type: "success" });
+    setDetailLoading(false);
+  });
 
   const fetchPage = useCallback(
-    (params) => userService.getUsers({ ...params, ...activeQuery.current }),
-    [],
+    (params) => userService.getUsers({
+      ...params,
+      search: debounced.value,
+      role: selectedRole,
+      status: selectedStatus,
+    }),
+    [debounced.value, selectedRole, selectedStatus],
   );
-  const userList = usePaginatedList(fetchPage, { limit: 10, autoLoad: false });
+  const userList = usePaginatedList(fetchPage, { limit: 10, enabled: !debounced.pending });
   const {
     items: users,
     setItems: setUsers,
@@ -50,19 +63,19 @@ export default function useAdminUsers() {
     refreshing,
   } = userList;
   const fetchUsers = useCallback((page, refresh = false) => {
-    activeQuery.current = { ...query.current };
     return userList.load(page, refresh);
   }, [userList.load]);
 
   const showToast = useCallback((message, type = "success") => {
-    if (!mounted.current) return;
+    if (!isActive()) return;
+    const inScope = capture();
     clearTimeout(toastTimer.current);
     setToast({ visible: true, message, type });
     toastTimer.current = setTimeout(() => {
-      if (mounted.current)
+      if (inScope())
         setToast({ visible: false, message: "", type: "success" });
     }, 3500);
-  }, []);
+  }, [capture, isActive]);
 
   useEffect(() => {
     if (userList.error) showToast(userList.error, "error");
@@ -77,37 +90,54 @@ export default function useAdminUsers() {
     };
   }, []);
   useEffect(() => {
-    fetchUsers(1);
-  }, [selectedRole, selectedStatus, fetchUsers]);
-
-  const setSearch = (value) => {
-    query.current.search = value;
-    updateSearch(value);
-  };
-  const setSelectedRole = (value) => {
-    if (value === selectedRole) return;
+    ++detailRequest.current;
+    setDetailLoading(false);
+    setDetailModalVisible(false);
+    setRoleModalVisible(false);
+    setConfirmModalVisible(false);
+    setSelectedUser(null);
+    setTargetUserForRole(null);
+    setTargetUserForStatus(null);
+    setEditFullName("");
+    setEditPhone("");
+    setToast({ visible: false, message: "", type: "success" });
+  }, [sessionVersion]);
+  const changeSearch = (value) => {
     userList.invalidate();
-    query.current.role = value;
+    updateSearch(value);
+    if (value.trim() === debounced.value && !debounced.pending) fetchUsers(1);
+  };
+  const selectRole = (value) => {
+    if (value === selectedRole && !debounced.pending) return;
+    userList.invalidate();
+    debounced.flush();
     updateSelectedRole(value);
   };
-  const setSelectedStatus = (value) => {
-    if (value === selectedStatus) return;
+  const selectStatus = (value) => {
+    if (value === selectedStatus && !debounced.pending) return;
     userList.invalidate();
-    query.current.status = value;
+    debounced.flush();
     updateSelectedStatus(value);
   };
-  const handleSearchSubmit = () => fetchUsers(1);
+  const handleSearchSubmit = () => {
+    debounced.flush();
+    if (!debounced.pending) return fetchUsers(1);
+  };
   const handleSearchClear = () => {
-    setSearch("");
-    return fetchUsers(1);
+    changeSearch("");
+    debounced.flush("");
   };
   const handleRefresh = () => fetchUsers(undefined, true);
 
   const handleOpenDetail = async (item) => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || !isActive()) return;
+    closeDetail();
+    closeRole();
+    closeStatus();
+    const inScope = capture();
     const requestId = ++detailRequest.current;
     const isCurrent = () =>
-      mounted.current && requestId === detailRequest.current;
+      inScope() && requestId === detailRequest.current;
     setDetailLoading(true);
     try {
       const response = await userService.getUserById(item._id);
@@ -135,7 +165,8 @@ export default function useAdminUsers() {
   };
 
   const handleSaveUserInfo = async () => {
-    if (mutationPending.current || !selectedUser || !detailModalVisible) return;
+    if (mutationPending.current || !selectedUser || !detailModalVisible || !isActive()) return;
+    const isCurrent = capture();
     if (!editFullName.trim()) {
       showToast("Họ và tên không được để trống.", "error");
       return;
@@ -146,13 +177,13 @@ export default function useAdminUsers() {
       const payload = {
         fullName: editFullName.trim(),
         phone: editPhone.trim(),
-        role: editRole,
-        status: editStatus,
+        ...(editRole !== selectedUser.role ? { role: editRole } : {}),
+        ...(editStatus !== (selectedUser.status !== false) ? { status: editStatus } : {}),
       };
       const response = await userService.updateUser(selectedUser._id, payload);
       if (!response?.success)
         throw new Error(response?.message || "Cập nhật thông tin thất bại.");
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
       setUsers((previous) =>
         previous.map((user) =>
           user._id === selectedUser._id ? { ...user, ...payload } : user,
@@ -162,7 +193,7 @@ export default function useAdminUsers() {
       showToast(response.message || "Cập nhật thông tin thành công!");
       await userList.refresh();
     } catch (error) {
-      if (mounted.current)
+      if (isCurrent())
         showToast(
           getErrorMessage(error, "Cập nhật thông tin thất bại."),
           "error",
@@ -174,17 +205,20 @@ export default function useAdminUsers() {
   };
 
   const handleOpenStatusConfirm = (target) => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || !isActive()) return;
     if (target._id === currentAdminId && target.status !== false) {
       showToast("Bạn không thể tự khóa tài khoản của chính mình!", "error");
       return;
     }
+    closeDetail();
+    closeRole();
     setTargetUserForStatus(target);
     setConfirmModalVisible(true);
   };
   const handleConfirmStatusChange = async () => {
-    if (mutationPending.current || !targetUserForStatus || !confirmModalVisible)
+    if (mutationPending.current || !targetUserForStatus || !confirmModalVisible || !isActive())
       return;
+    const isCurrent = capture();
     mutationPending.current = true;
     setStatusLoading(true);
     const target = targetUserForStatus;
@@ -193,7 +227,7 @@ export default function useAdminUsers() {
       const response = await userService.updateUserStatus(target._id, status);
       if (!response?.success)
         throw new Error(response?.message || "Thao tác thất bại.");
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
       setUsers((previous) =>
         previous.map((user) =>
           user._id === target._id ? { ...user, status } : user,
@@ -204,7 +238,7 @@ export default function useAdminUsers() {
       showToast(response.message || "Cập nhật trạng thái thành công!");
       await userList.refresh();
     } catch (error) {
-      if (mounted.current)
+      if (isCurrent())
         showToast(getErrorMessage(error, "Thao tác thất bại."), "error");
     } finally {
       mutationPending.current = false;
@@ -213,14 +247,17 @@ export default function useAdminUsers() {
   };
 
   const handleOpenRoleModal = (target) => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || !isActive()) return;
+    closeDetail();
+    closeStatus();
     setTargetUserForRole(target);
     setNewRoleSelection(target.role || "customer");
     setRoleModalVisible(true);
   };
   const handleConfirmRoleChange = async () => {
-    if (mutationPending.current || !targetUserForRole || !roleModalVisible)
+    if (mutationPending.current || !targetUserForRole || !roleModalVisible || !isActive())
       return;
+    const isCurrent = capture();
     if (
       targetUserForRole._id === currentAdminId &&
       newRoleSelection !== "admin"
@@ -240,7 +277,7 @@ export default function useAdminUsers() {
       );
       if (!response?.success)
         throw new Error(response?.message || "Cập nhật vai trò thất bại.");
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
       setUsers((previous) =>
         previous.map((user) =>
           user._id === targetUserForRole._id
@@ -252,7 +289,7 @@ export default function useAdminUsers() {
       showToast(response.message || "Cập nhật vai trò thành công!");
       await userList.refresh();
     } catch (error) {
-      if (mounted.current)
+      if (isCurrent())
         showToast(
           getErrorMessage(error, "Cập nhật vai trò thất bại."),
           "error",
@@ -263,6 +300,34 @@ export default function useAdminUsers() {
     }
   };
 
+  const closeDetail = () => {
+    if (mutationPending.current) return;
+    ++detailRequest.current;
+    setDetailLoading(false);
+    setDetailModalVisible(false);
+    setSelectedUser(null);
+    setEditFullName("");
+    setEditPhone("");
+  };
+  const closeRole = () => {
+    if (mutationPending.current) return;
+    setRoleModalVisible(false);
+    setTargetUserForRole(null);
+  };
+  const closeStatus = () => {
+    if (mutationPending.current) return;
+    setConfirmModalVisible(false);
+    setTargetUserForStatus(null);
+  };
+  const changeField = (key, value) => {
+    if (mutationPending.current || !detailModalVisible) return;
+    const actions = { fullName: setEditFullName, phone: setEditPhone, role: setEditRole, status: setEditStatus };
+    if (Object.prototype.hasOwnProperty.call(actions, key)) actions[key](value);
+  };
+  const selectNewRole = (value) => {
+    if (!mutationPending.current && roleModalVisible) setNewRoleSelection(value);
+  };
+
   return {
     currentAdminId,
     users,
@@ -271,11 +336,11 @@ export default function useAdminUsers() {
     refreshing,
     listError: userList.error,
     search,
-    setSearch,
+    changeSearch,
     selectedRole,
-    setSelectedRole,
+    selectRole,
     selectedStatus,
-    setSelectedStatus,
+    selectStatus,
     toast,
     fetchUsers,
     handleRefresh,
@@ -283,48 +348,29 @@ export default function useAdminUsers() {
     handleSearchClear,
     // Detail modal
     detailModalVisible,
-    setDetailModalVisible: (value) => {
-      if (!mutationPending.current) setDetailModalVisible(value);
-    },
+    closeDetail,
+    changeField,
     selectedUser,
     editFullName,
-    setEditFullName: (value) => {
-      if (!mutationPending.current) setEditFullName(value);
-    },
     editPhone,
-    setEditPhone: (value) => {
-      if (!mutationPending.current) setEditPhone(value);
-    },
     editRole,
-    setEditRole: (value) => {
-      if (!mutationPending.current) setEditRole(value);
-    },
     editStatus,
-    setEditStatus: (value) => {
-      if (!mutationPending.current) setEditStatus(value);
-    },
     submitting,
     handleOpenDetail,
     handleSaveUserInfo,
     // Status modal
     confirmModalVisible,
-    setConfirmModalVisible: (value) => {
-      if (!mutationPending.current) setConfirmModalVisible(value);
-    },
+    closeStatus,
     targetUserForStatus,
     statusLoading,
     handleOpenStatusConfirm,
     handleConfirmStatusChange,
     // Role modal
     roleModalVisible,
-    setRoleModalVisible: (value) => {
-      if (!mutationPending.current) setRoleModalVisible(value);
-    },
+    closeRole,
     targetUserForRole,
     newRoleSelection,
-    setNewRoleSelection: (value) => {
-      if (!mutationPending.current) setNewRoleSelection(value);
-    },
+    selectNewRole,
     handleOpenRoleModal,
     handleConfirmRoleChange,
   };

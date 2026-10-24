@@ -33,11 +33,11 @@ export default function AdminUsersScreen() {
     refreshing,
     listError,
     search,
-    setSearch,
+    changeSearch,
     selectedRole,
-    setSelectedRole,
+    selectRole,
     selectedStatus,
-    setSelectedStatus,
+    selectStatus,
     toast,
     fetchUsers,
     handleRefresh,
@@ -45,32 +45,29 @@ export default function AdminUsersScreen() {
     handleSearchClear,
     // Detail modal
     detailModalVisible,
-    setDetailModalVisible,
+    closeDetail,
+    changeField,
     selectedUser,
     editFullName,
-    setEditFullName,
     editPhone,
-    setEditPhone,
     editRole,
-    setEditRole,
     editStatus,
-    setEditStatus,
     submitting,
     handleOpenDetail,
     handleSaveUserInfo,
     // Status modal
     confirmModalVisible,
-    setConfirmModalVisible,
+    closeStatus,
     targetUserForStatus,
     statusLoading,
     handleOpenStatusConfirm,
     handleConfirmStatusChange,
     // Role modal
     roleModalVisible,
-    setRoleModalVisible,
+    closeRole,
     targetUserForRole,
     newRoleSelection,
-    setNewRoleSelection,
+    selectNewRole,
     handleOpenRoleModal,
     handleConfirmRoleChange,
   } = useAdminUsers();
@@ -87,13 +84,13 @@ export default function AdminUsersScreen() {
         {/* SEARCH & FILTERS */}
         <UserFilterBar
           search={search}
-          onSearchChange={setSearch}
+          onSearchChange={changeSearch}
           onSearchSubmit={handleSearchSubmit}
           onSearchClear={handleSearchClear}
           selectedRole={selectedRole}
-          onSelectRole={setSelectedRole}
+          onSelectRole={selectRole}
           selectedStatus={selectedStatus}
-          onSelectStatus={setSelectedStatus}
+          onSelectStatus={selectStatus}
         />
 
         {!!listError && (
@@ -147,15 +144,15 @@ export default function AdminUsersScreen() {
         visible={detailModalVisible}
         user={selectedUser}
         fullName={editFullName}
-        onChangeFullName={setEditFullName}
+        onChangeFullName={(value) => changeField("fullName", value)}
         phone={editPhone}
-        onChangePhone={setEditPhone}
+        onChangePhone={(value) => changeField("phone", value)}
         role={editRole}
-        onChangeRole={setEditRole}
+        onChangeRole={(value) => changeField("role", value)}
         status={editStatus}
-        onChangeStatus={setEditStatus}
+        onChangeStatus={(value) => changeField("status", value)}
         submitting={submitting}
-        onClose={() => setDetailModalVisible(false)}
+        onClose={closeDetail}
         onSave={handleSaveUserInfo}
       />
 
@@ -164,9 +161,9 @@ export default function AdminUsersScreen() {
         visible={roleModalVisible}
         targetUser={targetUserForRole}
         selectedRole={newRoleSelection}
-        onSelectRole={setNewRoleSelection}
+        onSelectRole={selectNewRole}
         submitting={submitting}
-        onClose={() => setRoleModalVisible(false)}
+        onClose={closeRole}
         onConfirm={handleConfirmRoleChange}
       />
 
@@ -175,7 +172,7 @@ export default function AdminUsersScreen() {
         visible={confirmModalVisible}
         targetUser={targetUserForStatus}
         loading={statusLoading}
-        onClose={() => setConfirmModalVisible(false)}
+        onClose={closeStatus}
         onConfirm={handleConfirmStatusChange}
       />
     </SafeAreaView>

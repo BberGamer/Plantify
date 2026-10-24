@@ -5,7 +5,7 @@ import { colors } from "../../theme/colors";
 import { profileTheme } from "./profileTheme";
 
 // Hiển thị bản nháp; hook xử lý lưu/hủy.
-export default function ProfileEditForm({ form, setForm, saving, cancelEditing, saveProfile }) {
+export default function ProfileEditForm({ form, changeField, saving, cancelEditing, saveProfile }) {
   return (
             <View style={styles.editForm}>
               {/* Dùng cấu hình mảng để ba ô cơ bản có cùng giao diện, ít lặp code. */}
@@ -51,7 +51,7 @@ export default function ProfileEditForm({ form, setForm, saving, cancelEditing, 
                   autoCorrect={false}
                   style={styles.input}
                   onChangeText={(value) =>
-                    setForm((previous) => ({ ...previous, [key]: value }))
+                    changeField(key, value)
                   }
                 />
               ))}

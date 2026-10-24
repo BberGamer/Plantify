@@ -29,7 +29,7 @@ export const useAuthStore = create((set, get) => {
     return context();
   };
 
-  const establish = async (fetchSession, expected, loggingIn) => {
+  const establish = async (fetchSession, expected, loggingIn, canCommit = () => true) => {
     if (expected && !matches(expected)) return cancelled();
     if (authentication) return { success: false, error: getErrorMessage(sessionError("REQUEST_IN_PROGRESS")) };
     const attempt = { context: reset({ isLoggingIn: loggingIn }) };
@@ -37,12 +37,12 @@ export const useAuthStore = create((set, get) => {
     const cleanup = sessionStorage.clear();
     try {
       const response = await fetchSession();
-      if (!matches(attempt.context)) return cancelled();
+      if (!matches(attempt.context) || !canCommit()) return cancelled();
       if (response?.success === false) throw Object.assign(new Error("Đăng nhập thất bại."), { response: { data: response } });
       if (response?.success !== true) throw sessionError("INVALID_RESPONSE");
       const session = normalizeSession(response.data);
-      const saved = await sessionStorage.write(session, () => matches(attempt.context));
-      if (!saved || !matches(attempt.context)) return cancelled();
+      const saved = await sessionStorage.write(session, () => matches(attempt.context) && canCommit());
+      if (!saved || !matches(attempt.context) || !canCommit()) return cancelled();
       set({ ...session, isAuthenticated: true, isLoggingIn: false });
       return { success: true, user: session.user };
     } catch (error) {
@@ -52,6 +52,7 @@ export const useAuthStore = create((set, get) => {
       return { success: false, error: getErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại.") };
     } finally {
       if (authentication === attempt) authentication = null;
+      if (matches(attempt.context) && !get().isAuthenticated) set({ isLoggingIn: false });
     }
   };
 
@@ -85,11 +86,11 @@ export const useAuthStore = create((set, get) => {
       return hydration;
     },
 
-    login: (email, password) => establish(() => authService.login({ email, password }), null, true),
+    login: (email, password, canCommit) => establish(() => authService.login({ email, password }), null, true, canCommit),
 
-    setAuthSession: (user, token, expected) => {
+    setAuthSession: (user, token, expected, canCommit) => {
       if (get().isAuthenticated) return Promise.resolve(cancelled());
-      return establish(() => ({ success: true, data: { user, token } }), expected, false);
+      return establish(() => ({ success: true, data: { user, token } }), expected, false, canCommit);
     },
 
     updateProfile: async (data, expected) => {

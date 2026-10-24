@@ -6,6 +6,7 @@ import authService from "../services/authService";
 import useAuthStore from "../../store/authStore";
 import { getSessionContext, isSessionCurrent } from "../services/sessionAccess";
 import useOtpCountdown from "./useOtpCountdown";
+import useScreenScope from "./useScreenScope";
 
 export default function useRegister() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function useRegister() {
   const pending = useRef(false);
   const mounted = useRef(false);
   const countdown = useOtpCountdown(step === 2);
+  const { capture, isActive } = useScreenScope(undefined, undefined, undefined, false);
 
   useEffect(() => {
     mounted.current = true;
@@ -35,14 +37,15 @@ export default function useRegister() {
   }, []);
 
   const changeField = (key, value) => {
-    if (pending.current) return;
+    if (pending.current || step !== 1 || !Object.prototype.hasOwnProperty.call(form, key)) return;
     setForm((previous) => ({ ...previous, [key]: value }));
     setErrorMsg("");
     setSuccessMsg("");
   };
 
   const send = async (resend) => {
-    if (pending.current || (resend && !countdown.canResend())) return;
+    if (pending.current || !isActive() || (resend ? step !== 2 || !countdown.canResend() : step !== 1)) return;
+    const isCurrent = capture();
     let message = "";
     if (!form.fullName.trim()) message = "Vui lòng nhập họ và tên.";
     else if (!form.email.trim()) message = "Vui lòng nhập địa chỉ email.";
@@ -76,14 +79,14 @@ export default function useRegister() {
       });
       if (!response?.success)
         throw new Error(response?.message || "Không thể gửi mã xác thực.");
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
       setStep(2);
       setOtp("");
       countdown.startCountdown();
       if (resend)
         setSuccessMsg("Mã xác thực mới đã được gửi lại tới email của bạn.");
     } catch (error) {
-      if (mounted.current)
+      if (isCurrent())
         setErrorMsg(
           getErrorMessage(error, "Gửi mã xác thực thất bại."),
         );
@@ -94,7 +97,8 @@ export default function useRegister() {
   };
 
   const verifyOTP = async () => {
-    if (pending.current) return;
+    if (pending.current || step !== 2 || !isActive()) return;
+    const inScreen = capture(false);
     if (!/^\d{6}$/.test(otp)) {
       setErrorMsg("Vui lòng nhập đủ 6 chữ số mã xác thực.");
       return;
@@ -117,15 +121,15 @@ export default function useRegister() {
           response?.message || "Thông tin phiên đăng nhập không hợp lệ.",
         );
       }
-      if (!mounted.current || !isSessionCurrent(origin)) return;
-      const result = await setAuthSession(response.data.user, response.data.token, origin);
-      if (!mounted.current) return;
+      if (!inScreen() || !isSessionCurrent(origin)) return;
+      const result = await setAuthSession(response.data.user, response.data.token, origin, inScreen);
+      if (!inScreen()) return;
       if (result.success) {
         setForm((previous) => ({ ...previous, password: "", confirmPassword: "" }));
       } else if (!result.cancelled) setErrorMsg(result.error);
 
     } catch (error) {
-      if (mounted.current && isSessionCurrent(origin))
+      if (inScreen() && isSessionCurrent(origin))
         setErrorMsg(
           getErrorMessage(error, "Không thể xác thực mã."),
         );
@@ -158,7 +162,7 @@ export default function useRegister() {
     countdown: countdown.countdown,
     changeField,
     changeOtp: (value) => {
-      if (!pending.current) {
+      if (!pending.current && step === 2) {
         setOtp(value);
         setErrorMsg("");
       }

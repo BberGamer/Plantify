@@ -1,4 +1,5 @@
 const { loadMobile, React } = require("./loadMobile.cjs");
+const { createFocus } = require("./focusFixture.cjs");
 const A = {
   _id: "507f1f77bcf86cd799439011",
   fullName: "Nguyễn An",
@@ -29,6 +30,7 @@ function httpError(config, status = 401, code = "SESSION_INVALID") {
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 
 function authFixture(seed = {}, extraEntries = []) {
+  const focus = createFocus();
   const data = new Map(Object.entries(seed));
   const storageCalls = [];
   const storage = {
@@ -74,6 +76,7 @@ function authFixture(seed = {}, extraEntries = []) {
       "@react-native-async-storage/async-storage": storage,
       "react-native": { Platform: { OS: "android" } },
       "expo-router": {
+        useFocusEffect: focus.useFocusEffect,
         useRouter: () => router,
         useSegments: () => navigation.segments,
         useRootNavigationState: () =>
@@ -85,6 +88,7 @@ function authFixture(seed = {}, extraEntries = []) {
   );
   const [storeModule, apiModule, access, cache] = modules;
   const fixture = {
+    focus,
     store: storeModule.useAuthStore,
     api: apiModule.default,
     access,

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import useAuthStore from "../../store/authStore";
 import { isSessionCurrent } from "../services/sessionAccess";
+import useScreenScope from "./useScreenScope";
 
 export default function useLogout() {
   const logout = useAuthStore((state) => state.logout);
@@ -10,6 +11,7 @@ export default function useLogout() {
   const [logoutError, setLogoutError] = useState("");
   const pending = useRef(null);
   const mounted = useRef(false);
+  const { capture, isActive } = useScreenScope(undefined, undefined, undefined, false);
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -25,6 +27,8 @@ export default function useLogout() {
     }
   }, [sessionVersion]);
   const handleLogout = async () => {
+    if (!isActive()) return;
+    const inScreen = capture(false);
     if (pending.current?.version === useAuthStore.getState().sessionVersion) return;
     const attempt = {};
     pending.current = attempt;
@@ -34,11 +38,11 @@ export default function useLogout() {
       const request = logout();
       attempt.version = useAuthStore.getState().sessionVersion;
       const result = await request;
-      if (mounted.current && isSessionCurrent(result.context) && !result.cacheCleared) {
+      if (inScreen() && isSessionCurrent(result.context) && !result.cacheCleared) {
         setLogoutError("Đã kết thúc phiên, nhưng chưa xóa được toàn bộ cache trên thiết bị.");
       }
     } catch {
-      if (mounted.current && pending.current === attempt)
+      if (inScreen() && pending.current === attempt)
         setLogoutError("Chưa thể đăng xuất. Vui lòng thử lại.");
     } finally {
       if (pending.current === attempt) {
