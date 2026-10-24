@@ -1,20 +1,19 @@
-
 import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ProfileHeader from "../components/profile/ProfileHeader";
-import ProfileIdentity from "../components/profile/ProfileIdentity";
-import ProfileDetails from "../components/profile/ProfileDetails";
-import ProfileLogout from "../components/profile/ProfileLogout";
-import Navbar from "../components/navigation/Navbar";
-import useProfile from "../hooks/useProfile";
-import { colors } from "../theme/colors";
+import ProfileHeader from "./ProfileHeader";
+import ProfileIdentity from "./ProfileIdentity";
+import ProfileDetails from "./ProfileDetails";
+import ProfileLogout from "./ProfileLogout";
+import Navbar from "../navigation/Navbar";
+import useProfile from "../../hooks/useProfile";
+import { colors } from "../../theme/colors";
 
-export default function ProfileScreen({ showNavbar = false }) {
+export default function ProfileContent({ onBack, showNavbar = false }) {
   const profile = useProfile();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
-      <ProfileHeader />
+      <ProfileHeader onBack={onBack} />
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.content}
@@ -37,4 +36,3 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.white },
   content: { padding: 18, paddingBottom: 28, backgroundColor: "#FAFCFA" },
 });
-
