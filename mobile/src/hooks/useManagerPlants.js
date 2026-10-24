@@ -37,6 +37,7 @@ const createPlantPayload = (form, plant) => {
     else if (typeof careRequirements[key] === "string")
       delete careRequirements[key];
   });
+  // Quan hệ bệnh được sửa ở màn bệnh; không gửi lại snapshot từ form cây.
   return {
     category_id: form.category_id,
     common_name: form.common_name.trim(),
@@ -45,7 +46,6 @@ const createPlantPayload = (form, plant) => {
     description: form.description.trim(),
     plant_image: form.plant_image.trim(),
     care_requirements: careRequirements,
-    common_disease_ids: plant?.common_disease_ids || [],
     is_published: form.is_published,
   };
 };
@@ -118,7 +118,8 @@ export default function useManagerPlants() {
     setSearch(value);
     // Vô hiệu response cũ ngay khi gõ, kể cả trong thời gian chờ debounce.
     plantList.invalidate();
-    if (value.trim() === debounced.value && !debounced.pending) plantList.load(1);
+    if (value.trim() === debounced.value && !debounced.pending)
+      plantList.load(1);
   };
 
   const openCreate = () => {
@@ -147,15 +148,19 @@ export default function useManagerPlants() {
 
   const changeField = (key, value) => {
     if (
-      mutationPending.current || !visible ||
-      !Object.prototype.hasOwnProperty.call(form, key) || key === "care_requirements"
-    ) return;
+      mutationPending.current ||
+      !visible ||
+      !Object.prototype.hasOwnProperty.call(form, key) ||
+      key === "care_requirements"
+    )
+      return;
     setForm((previous) => ({ ...previous, [key]: value }));
     setFormError("");
   };
 
   const changeCareField = (key, value) => {
-    if (mutationPending.current || !visible || !CARE_FIELDS.includes(key)) return;
+    if (mutationPending.current || !visible || !CARE_FIELDS.includes(key))
+      return;
     setForm((previous) => ({
       ...previous,
       care_requirements: { ...previous.care_requirements, [key]: value },

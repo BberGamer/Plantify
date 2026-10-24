@@ -4,5 +4,7 @@ import ProfileContent from "../../src/components/profile/ProfileContent";
 
 export default function CustomerProfileRoute() {
   const router = useRouter();
-  return <ProfileContent onBack={() => router.navigate("/(tabs)")} showNavbar />;
+  return (
+    <ProfileContent onBack={() => router.navigate("/(tabs)")} showNavbar />
+  );
 }

@@ -25,7 +25,11 @@ export default function ManagerPlantsScreen() {
       <PlantHeader count={manager.plants.length} total={manager.total} />
       <PlantSearchBar value={manager.search} onChange={manager.changeSearch} />
       {!!manager.listError && (
-        <ListError message={manager.listError} onRetry={manager.retry} busy={manager.loading || manager.refreshing || busy} />
+        <ListError
+          message={manager.listError}
+          onRetry={manager.retry}
+          busy={manager.loading || manager.refreshing || busy}
+        />
       )}
       {manager.loading ? (
         <View style={styles.center}>

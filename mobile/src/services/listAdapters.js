@@ -26,7 +26,7 @@ function adaptList(envelope, domain) {
   if (envelope?.success !== true || !envelope.data) invalidResponse();
   const data = envelope.data;
   const users = domain === "users";
-  const items = users ? data.users : data.plants;
+  const items = data[domain];
   const meta = users ? data.pagination : data;
   if (!meta || !Array.isArray(items)) invalidResponse();
   const page = users ? meta.currentPage : meta.page;
@@ -40,7 +40,7 @@ function adaptList(envelope, domain) {
   )
     invalidResponse();
   const totalPages = Math.ceil(total / limit);
-  // Users v1 trả totalPages=1 khi rỗng; Plants v1 trả 0. Chỉ chuẩn hóa ở mobile.
+  // Users v1 trả totalPages=1 khi rỗng; Plants/Diseases trả 0.
   if (wireTotalPages !== (users ? Math.max(1, totalPages) : totalPages))
     invalidResponse();
   if (
@@ -82,6 +82,7 @@ function adaptList(envelope, domain) {
 
 export const adaptUsersList = (envelope) => adaptList(envelope, "users");
 export const adaptPlantsList = (envelope) => adaptList(envelope, "plants");
+export const adaptDiseasesList = (envelope) => adaptList(envelope, "diseases");
 
 export function mapUsersParams({
   page = 1,

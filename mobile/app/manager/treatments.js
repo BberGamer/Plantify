@@ -13,9 +13,7 @@ export default function ManagerTreatmentsScreen() {
           <Ionicons name="medkit-outline" size={29} color="#28744C" />
         </View>
         <Text style={styles.heading}>Quản lý điều trị</Text>
-        <Text style={styles.body}>
-          Chưa có dữ liệu điều trị.
-        </Text>
+        <Text style={styles.body}>Chưa có dữ liệu điều trị.</Text>
       </View>
     </SafeAreaView>
   );

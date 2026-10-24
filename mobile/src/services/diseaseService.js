@@ -1,5 +1,6 @@
 // src/services/diseaseService.js - Gọi API quản lý bệnh cây
 import api from "./api";
+import { adaptDiseasesList } from "./listAdapters";
 
 const diseaseService = {
   getDiseases: async ({ plantId, page = 1, limit = 100 } = {}) => {
@@ -22,7 +23,7 @@ const diseaseService = {
     if (plantId) params.plant_id = plantId;
 
     const response = await api.get("/diseases/manager", { params });
-    return response.data;
+    return adaptDiseasesList(response.data);
   },
 
   getManagerDiseaseById: async (id) => {

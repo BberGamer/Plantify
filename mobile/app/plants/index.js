@@ -46,7 +46,11 @@ export default function PlantDirectoryScreen() {
         </View>
       ) : directory.error ? (
         <View style={styles.centerBox}>
-          <ListError message={directory.error} onRetry={directory.refetch} busy={directory.refreshing} />
+          <ListError
+            message={directory.error}
+            onRetry={directory.refetch}
+            busy={directory.refreshing}
+          />
         </View>
       ) : (
         <FlatList
