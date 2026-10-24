@@ -37,8 +37,10 @@ Thumbs.db
 *.sublime-project
 *.sublime-workspace
 
-# ===== Rules =====
+# ===== Internal agent guidance (shared outside Git) =====
 rules/
+/[Aa][Gg][Ee][Nn][Tt].[Mm][Dd]
+/[Aa][Gg][Ee][Nn][Tt][Ss].[Mm][Dd]
 
 # ===== Native Builds (Android / iOS) =====
 android/
@@ -47,7 +49,7 @@ ios/
 *.aab
 *.ipa
 
-# ===== Documents (không commit tài liệu nội bộ) =====
+# ===== Internal documents (shared outside Git) =====
 docs/
 *.doc
 *.xlsx
