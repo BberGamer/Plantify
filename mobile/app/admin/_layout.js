@@ -29,10 +29,10 @@ export default function AdminLayout() {
   return (
     <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: '#144D37', tabBarInactiveTintColor: '#8A938D', tabBarStyle: { height: 64, paddingTop: 7, paddingBottom: 7, borderTopColor: '#E8ECE9', backgroundColor: '#FFFFFF' }, contentStyle: { backgroundColor: '#F9FAF9' } }}>
       <Tabs.Screen name="plants" options={{ title: 'Plant', tabBarLabel: 'Plant', tabBarIcon: ({ color, size }) => <Ionicons name="leaf-outline" color={color} size={size} /> }} />
-      <Tabs.Screen name="diseases" options={{ title: 'Disease', tabBarLabel: 'Disease', tabBarIcon: ({ color, size }) => <Ionicons name="bug-outline" color={color} size={size} /> }} />
-      <Tabs.Screen name="treatments" options={{ title: 'Treatment', tabBarLabel: 'Treatment', tabBarIcon: ({ color, size }) => <Ionicons name="medkit-outline" color={color} size={size} /> }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarLabel: 'Profile', tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" color={color} size={size} /> }} />
       <Tabs.Screen name="users" options={{ title: 'Users', tabBarLabel: 'Users', tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" color={color} size={size} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarLabel: 'Profile', tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" color={color} size={size} /> }} />
+      <Tabs.Screen name="diseases" options={{ href: null }} />
+      <Tabs.Screen name="treatments" options={{ href: null }} />
       <Tabs.Screen name="index" options={{ href: null }} />
     </Tabs>
   );
