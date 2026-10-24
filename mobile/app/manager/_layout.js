@@ -40,8 +40,8 @@ export default function ManagerLayout() {
       <Tabs.Screen
         name="plants"
         options={{
-          title: "Plant",
-          tabBarLabel: "Plant",
+          title: "Cây trồng",
+          tabBarLabel: "Cây trồng",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="leaf-outline" color={color} size={size} />
           ),
@@ -50,8 +50,8 @@ export default function ManagerLayout() {
       <Tabs.Screen
         name="diseases"
         options={{
-          title: "Disease",
-          tabBarLabel: "Disease",
+          title: "Bệnh cây",
+          tabBarLabel: "Bệnh cây",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="bug-outline" color={color} size={size} />
           ),
@@ -60,24 +60,16 @@ export default function ManagerLayout() {
       <Tabs.Screen
         name="treatments"
         options={{
-          title: "Treatment",
-          tabBarLabel: "Treatment",
+          title: "Điều trị",
+          tabBarLabel: "Điều trị",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="medkit-outline" color={color} size={size} />
           ),
         }}
       />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarLabel: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" color={color} size={size} />
-          ),
-        }}
-      />
+      <Tabs.Screen name="profile" options={{ title: 'Hồ sơ', tabBarLabel: 'Hồ sơ', tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" color={color} size={size} /> }} />
       <Tabs.Screen name="index" options={{ href: null }} />
     </Tabs>
   );
 }
+

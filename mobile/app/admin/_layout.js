@@ -28,11 +28,8 @@ export default function AdminLayout() {
 
   return (
     <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: '#144D37', tabBarInactiveTintColor: '#8A938D', tabBarStyle: { height: 64, paddingTop: 7, paddingBottom: 7, borderTopColor: '#E8ECE9', backgroundColor: '#FFFFFF' }, contentStyle: { backgroundColor: '#F9FAF9' } }}>
-      <Tabs.Screen name="plants" options={{ title: 'Plant', tabBarLabel: 'Plant', tabBarIcon: ({ color, size }) => <Ionicons name="leaf-outline" color={color} size={size} /> }} />
-      <Tabs.Screen name="users" options={{ title: 'Users', tabBarLabel: 'Users', tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" color={color} size={size} /> }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarLabel: 'Profile', tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" color={color} size={size} /> }} />
-      <Tabs.Screen name="diseases" options={{ href: null }} />
-      <Tabs.Screen name="treatments" options={{ href: null }} />
+      <Tabs.Screen name="users" options={{ title: 'Người dùng', tabBarLabel: 'Người dùng', tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" color={color} size={size} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Hồ sơ', tabBarLabel: 'Hồ sơ', tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" color={color} size={size} /> }} />
       <Tabs.Screen name="index" options={{ href: null }} />
     </Tabs>
   );
