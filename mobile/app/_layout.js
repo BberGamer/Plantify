@@ -10,7 +10,7 @@ import { useAuthStore } from '../store/authStore';
 // === Dinh nghia route tuong ung voi tung role ===
 const ROLE_ROUTES = {
   admin: '/admin',
-  manager: '/admin',
+  manager: '/manager',
   customer: '/(tabs)',
 };
 
@@ -38,6 +38,7 @@ function AuthGuard() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inAdminGroup = segments[0] === 'admin';
+    const inManagerGroup = segments[0] === 'manager';
 
     if (!isAuthenticated) {
       // Chua dang nhap -> chuyen ve login
@@ -52,9 +53,11 @@ function AuthGuard() {
         router.replace(destination);
       }
 
-      // Customer co gang vao khu admin -> kick ve trang chu
-      if (inAdminGroup && user?.role === 'customer') {
-        router.replace('/(tabs)');
+      // Moi role chi duoc o trong khu vuc route cua chinh minh.
+      if (inAdminGroup && user?.role !== 'admin') {
+        router.replace(ROLE_ROUTES[user?.role] || '/(tabs)');
+      } else if (inManagerGroup && user?.role !== 'manager') {
+        router.replace(ROLE_ROUTES[user?.role] || '/(tabs)');
       }
     }
   }, [navigationState?.key, isAuthenticated, isLoading, segments, user]);

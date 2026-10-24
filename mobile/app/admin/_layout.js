@@ -1,12 +1,9 @@
-// app/admin/_layout.js - Layout khu vuc Admin: chi cho phep role admin hoac manager
+// app/admin/_layout.js - Khu vuc rieng cua Admin
 
 import { useEffect } from 'react';
 import { Tabs, useRootNavigationState, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
-
-// Cac role duoc phep truy cap khu vuc admin
-const ALLOWED_ROLES = ['admin', 'manager'];
 
 export default function AdminLayout() {
   const router = useRouter();
@@ -24,8 +21,8 @@ export default function AdminLayout() {
     }
 
     // Dang nhap nhung khong co quyen -> ve trang chu
-    if (!ALLOWED_ROLES.includes(user?.role)) {
-      router.replace('/(tabs)');
+    if (user?.role !== 'admin') {
+      router.replace(user?.role === 'manager' ? '/manager' : '/(tabs)');
     }
   }, [navigationState?.key, isAuthenticated, isLoading, user]);
 
@@ -35,7 +32,7 @@ export default function AdminLayout() {
       <Tabs.Screen name="diseases" options={{ title: 'Disease', tabBarLabel: 'Disease', tabBarIcon: ({ color, size }) => <Ionicons name="bug-outline" color={color} size={size} /> }} />
       <Tabs.Screen name="treatments" options={{ title: 'Treatment', tabBarLabel: 'Treatment', tabBarIcon: ({ color, size }) => <Ionicons name="medkit-outline" color={color} size={size} /> }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarLabel: 'Profile', tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" color={color} size={size} /> }} />
-      <Tabs.Screen name="users" options={{ href: null }} />
+      <Tabs.Screen name="users" options={{ title: 'Users', tabBarLabel: 'Users', tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" color={color} size={size} /> }} />
       <Tabs.Screen name="index" options={{ href: null }} />
     </Tabs>
   );
