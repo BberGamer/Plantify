@@ -1,4 +1,4 @@
-// [id].js - Ghép giao diện và hành động màn chi tiết cây.
+// PlantList.js - Ghép giao diện và hành động màn chi tiết cây.
 
 import { View, StyleSheet, ScrollView } from "react-native";
 import { ActivityIndicator, Button, Text } from "react-native-paper";
@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { colors } from "../../src/theme/colors";
 import usePlantDetailScreen from "../../src/hooks/usePlantDetailScreen";
+import usePlantDiseases from "../../src/hooks/usePlantDiseases";
 import PlantDetailHeader from "../../src/components/plants/PlantDetailHeader";
 import PlantHero from "../../src/components/plants/PlantHero";
 import PlantInformation from "../../src/components/plants/PlantInformation";
@@ -16,6 +17,7 @@ export default function PlantDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const detail = usePlantDetailScreen(id);
+  const diseaseState = usePlantDiseases(typeof id === "string" ? id : null);
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <PlantDetailHeader
@@ -47,7 +49,12 @@ export default function PlantDetailScreen() {
             <PlantCareRequirements
               requirements={detail.plant.care_requirements}
             />
-            <PlantDiseases plant={detail.plant} />
+            <PlantDiseases
+              diseases={diseaseState.diseases}
+              loading={diseaseState.loading}
+              error={diseaseState.error}
+              onRetry={diseaseState.retry}
+            />
           </ScrollView>
           <PlantDetailActions onAdd={detail.addToGarden} />
         </>

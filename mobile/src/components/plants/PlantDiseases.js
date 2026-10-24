@@ -1,113 +1,56 @@
-// PlantDiseases.js - Khối giao diện PlantDiseases.
-
-import { View, StyleSheet, TouchableOpacity } from "react-native";
-
-import { Text } from "react-native-paper";
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import { ActivityIndicator, Button, Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
 
-export default function PlantDiseases(
-  {
-    plant,
-  },
-) {
-  return plant.common_disease_ids?.length > 0 && <View style={styles.section}>
-    <View style={styles.sectionHeader}>
-      <Ionicons name="medkit-outline" size={18} color={colors.statusWarning} />
-      <Text style={styles.sectionHeading}>Bệnh thường gặp</Text>
-      <TouchableOpacity style={styles.viewAllBtn}>
-        <Text style={styles.viewAllText}>Xem bệnh</Text>
-        <Ionicons name="chevron-forward" size={13} color={colors.primaryLight} />
-      </TouchableOpacity>
-    </View>
-    <View style={styles.diseaseList}>
-      {plant.common_disease_ids.map(
-        diseaseId => <TouchableOpacity key={diseaseId.toString()} style={styles.diseaseItem} activeOpacity={0.75}>
-          <View style={styles.diseaseIconBox}>
-            <Ionicons name="bug-outline" size={16} color={colors.statusWarning} />
-          </View>
-          <Text style={styles.diseaseName}>{diseaseId.toString()}</Text>
-          <Ionicons name="chevron-forward" size={15} color={colors.textMuted} />
-        </TouchableOpacity>,
+export default function PlantDiseases({ diseases, loading, error, onRetry }) {
+  return (
+    <View style={styles.section}>
+      <View style={styles.header}>
+        <Ionicons name="medkit-outline" size={18} color={colors.statusWarning} />
+        <Text style={styles.heading}>Bệnh thường gặp</Text>
+      </View>
+      {loading ? (
+        <View style={styles.loading}>
+          <ActivityIndicator color={colors.primary} />
+          <Text style={styles.body}>Đang tải bệnh thường gặp…</Text>
+        </View>
+      ) : error ? (
+        <View>
+          <Text style={styles.error} accessibilityRole="alert">{error}</Text>
+          <Button onPress={onRetry}>Thử lại</Button>
+        </View>
+      ) : diseases.length === 0 ? (
+        <Text style={styles.body}>Chưa có thông tin bệnh thường gặp cho cây này.</Text>
+      ) : (
+        <View style={styles.list}>
+          {diseases.map((disease) => (
+            <View key={disease._id} style={styles.item}>
+              <View style={styles.header}>
+                <Ionicons name="bug-outline" size={18} color={colors.statusWarning} />
+                <Text style={styles.name}>{disease.disease_name}</Text>
+              </View>
+              {!!disease.scientific_name && <Text style={styles.scientific}>{disease.scientific_name}</Text>}
+              <Text style={styles.body}>Triệu chứng: {disease.typical_symptoms}</Text>
+              {!!disease.environmental_cause && <Text style={styles.body}>Nguyên nhân môi trường: {disease.environmental_cause}</Text>}
+            </View>
+          ))}
+        </View>
       )}
     </View>
-  </View>;
+  );
 }
 
 const styles = StyleSheet.create({
-  // Section
-  section: {
-    backgroundColor: "#FFFFFF",
-    marginHorizontal: 14,
-    marginTop: 14,
-    borderRadius: 20,
-    padding: 18,
-    elevation: 2,
-    shadowColor: "#144D37",
-
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-
-    shadowOpacity: 0.06,
-    shadowRadius: 5,
-  },
-
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 16,
-  },
-
-  sectionHeading: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "800",
-    color: colors.textPrimary,
-  },
-
-  viewAllBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-
-  viewAllText: {
-    fontSize: 12,
-    color: colors.primaryLight,
-    fontWeight: "600",
-  },
-
-  // Disease
-  diseaseList: {
-    gap: 8,
-  },
-
-  diseaseItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.warmPeachBg,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 10,
-  },
-
-  diseaseIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  diseaseName: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textPrimary,
-  },
+  section: { backgroundColor: colors.white, marginHorizontal: 14, marginTop: 14, borderRadius: 20, padding: 18 },
+  header: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 },
+  heading: { flex: 1, fontSize: 15, fontWeight: "800", color: colors.textPrimary },
+  loading: { gap: 10, alignItems: "center", paddingVertical: 12 },
+  list: { gap: 10 },
+  item: { backgroundColor: colors.warmPeachBg, borderRadius: 14, padding: 14, gap: 6 },
+  name: { flex: 1, fontSize: 14, fontWeight: "700", color: colors.textPrimary },
+  body: { fontSize: 14, lineHeight: 22, color: colors.textSecondary },
+  scientific: { fontStyle: "italic", color: colors.textSecondary },
+  error: { color: colors.statusError, lineHeight: 22 },
 });
