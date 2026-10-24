@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "plantify-backend",
   "version": "1.0.0",
   "description": "Plantify REST API – Plant identification, disease diagnosis & care scheduling",
@@ -19,6 +19,8 @@
     "nodemailer": "^6.9.13"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "jest": "^30.5.2",
+    "nodemon": "^3.0.1",
+    "supertest": "^7.3.1"
   }
 }

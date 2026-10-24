@@ -191,7 +191,7 @@ export default function ResetPasswordScreen() {
           >
             <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Quên mật khẩu</Text>
+          <Text style={styles.headerTitle}>Reset Password</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -202,9 +202,9 @@ export default function ResetPasswordScreen() {
         >
           {/* Title & Subtitle */}
           <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>Tạo mật khẩu mới</Text>
+            <Text style={styles.pageTitle}>Create a new password</Text>
             <Text style={styles.pageSubtitle}>
-              Nhập email để nhận mã xác thực, sau đó tạo mật khẩu mới.
+              Enter your email to receive a verification code, then choose a new password.
             </Text>
           </View>
 
@@ -230,13 +230,13 @@ export default function ResetPasswordScreen() {
               <View style={styles.stepBadge}>
                 <Text style={styles.stepBadgeText}>1</Text>
               </View>
-              <Text style={styles.stepTitle}>Xác thực email</Text>
+              <Text style={styles.stepTitle}>Verify your email</Text>
             </View>
 
             <View style={styles.emailRow}>
               <TextInput
                 style={styles.emailInput}
-                placeholder="Địa chỉ email"
+                placeholder="Email address"
                 placeholderTextColor={colors.textMuted}
                 value={email}
                 onChangeText={(val) => {
@@ -259,7 +259,7 @@ export default function ResetPasswordScreen() {
                 {sendingCode ? (
                   <ActivityIndicator size="small" color="#111827" />
                 ) : (
-                  <Text style={styles.sendCodeText}>Gửi mã</Text>
+                  <Text style={styles.sendCodeText}>Send Code</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -276,7 +276,7 @@ export default function ResetPasswordScreen() {
               >
                 <Text style={styles.stepBadgeText}>2</Text>
               </View>
-              <Text style={styles.stepTitle}>Nhập mã xác thực</Text>
+              <Text style={styles.stepTitle}>Enter verification code</Text>
             </View>
 
             <View style={styles.otpRow}>
@@ -304,14 +304,14 @@ export default function ResetPasswordScreen() {
               <View style={styles.resendRow}>
                 {countdown > 0 ? (
                   <Text style={styles.resendTimer}>
-                    Gửi lại sau{" "}
+                    Resend in{" "}
                     <Text style={{ fontWeight: "700" }}>
                       00:{countdown < 10 ? `0${countdown}` : countdown}
                     </Text>
                   </Text>
                 ) : (
                   <TouchableOpacity onPress={handleSendCode} disabled={sendingCode}>
-                    <Text style={styles.resendAction}>Gửi lại mã</Text>
+                    <Text style={styles.resendAction}>Resend Code</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -336,7 +336,7 @@ export default function ResetPasswordScreen() {
                   !isOtpComplete && { color: colors.textMuted },
                 ]}
               >
-                Đặt mật khẩu mới
+                Set new password
               </Text>
             </View>
 
@@ -358,7 +358,7 @@ export default function ResetPasswordScreen() {
                   !isOtpComplete && { color: colors.textMuted },
                 ]}
               >
-                Mật khẩu mới
+                New Password
               </Text>
               <View
                 style={[
@@ -371,7 +371,7 @@ export default function ResetPasswordScreen() {
                     styles.passwordInput,
                     !isOtpComplete && { color: colors.textMuted },
                   ]}
-                  placeholder="Nhập mật khẩu mới"
+                  placeholder="Enter new password"
                   placeholderTextColor={colors.textMuted}
                   value={newPassword}
                   onChangeText={setNewPassword}
@@ -400,7 +400,7 @@ export default function ResetPasswordScreen() {
                   !isOtpComplete && { color: colors.textMuted },
                 ]}
               >
-                Xác nhận mật khẩu mới
+                Confirm New Password
               </Text>
               <View
                 style={[
@@ -413,7 +413,7 @@ export default function ResetPasswordScreen() {
                     styles.passwordInput,
                     !isOtpComplete && { color: colors.textMuted },
                   ]}
-                  placeholder="Nhập lại mật khẩu mới"
+                  placeholder="Enter confirm new password"
                   placeholderTextColor={colors.textMuted}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
@@ -448,7 +448,7 @@ export default function ResetPasswordScreen() {
             {updatingPassword ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text style={styles.confirmButtonText}>Cập nhật mật khẩu</Text>
+              <Text style={styles.confirmButtonText}>Confirm & Update Password</Text>
             )}
           </TouchableOpacity>
         </ScrollView>
@@ -651,7 +651,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   lockHintText: {
-    flex: 1,
     fontSize: 12,
     color: colors.textMuted,
   },
@@ -736,4 +735,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
   },
-});
+});
