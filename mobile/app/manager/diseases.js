@@ -1,56 +1,85 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Button, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { colors } from "../../src/theme/colors";
+import useManagerDiseases from "../../src/hooks/useManagerDiseases";
+import {
+  DiseaseCard,
+  DiseaseEmptyState,
+  DiseaseFilterBar,
+  DiseaseHeader,
+} from "../../src/components/manager/diseases";
 
 export default function ManagerDiseasesScreen() {
+  const manager = useManagerDiseases();
   return (
-    <SafeAreaView style={styles.safe}>
-      <Text style={styles.eyebrow}>QUẢN LÝ</Text>
-      <Text style={styles.title}>Bệnh cây</Text>
-      <View style={styles.empty}>
-        <View style={styles.icon}>
-          <Ionicons name="bug-outline" size={29} color="#28744C" />
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <DiseaseHeader count={manager.diseases.length} total={manager.total} />
+      <DiseaseFilterBar
+        search={manager.search}
+        status={manager.statusFilter}
+        onSearchChange={manager.changeSearch}
+        onStatusChange={manager.changeStatusFilter}
+      />
+      {!!manager.listError && (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorText} accessibilityRole="alert">
+            {manager.listError}
+          </Text>
+          <Button textColor={colors.primary} onPress={manager.retry}>
+            Thử lại
+          </Button>
         </View>
-        <Text style={styles.heading}>Quản lý bệnh cây</Text>
-        <Text style={styles.body}>
-          Chưa có dữ liệu bệnh cây.
-        </Text>
-      </View>
+      )}
+      {manager.loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Đang tải danh sách bệnh cây…</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={manager.diseases}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => <DiseaseCard item={item} />}
+          contentContainerStyle={[
+            styles.list,
+            manager.diseases.length === 0 && styles.emptyList,
+          ]}
+          refreshControl={
+            <RefreshControl
+              refreshing={manager.refreshing}
+              onRefresh={manager.refresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
+          ListEmptyComponent={
+            !manager.listError && (
+              <DiseaseEmptyState
+                search={manager.search}
+                filtered={Boolean(manager.statusFilter)}
+              />
+            )
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, padding: 22, paddingTop: 24, backgroundColor: "#F7F9F7" },
-  eyebrow: {
-    color: "#7D8B80",
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.4,
+  safe: { flex: 1, backgroundColor: colors.background },
+  list: { paddingHorizontal: 18, paddingBottom: 18, gap: 12 },
+  emptyList: { flexGrow: 1 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { color: colors.textSecondary, marginTop: 12 },
+  errorBox: {
+    marginHorizontal: 18,
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: colors.warmPeachBg,
+    borderRadius: 12,
   },
-  title: { color: "#183B2B", fontSize: 29, fontWeight: "800", marginTop: 4 },
-  empty: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 28,
-  },
-  icon: {
-    height: 58,
-    width: 58,
-    borderRadius: 19,
-    backgroundColor: "#E7F3EA",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-  },
-  heading: { color: "#26372B", fontWeight: "800", fontSize: 17 },
-  body: {
-    color: "#849087",
-    textAlign: "center",
-    lineHeight: 21,
-    fontSize: 13,
-    marginTop: 8,
-  },
+  errorText: { color: colors.statusError },
 });
