@@ -13,6 +13,7 @@ router.get("/manager", diseaseController.getManagerDiseases);
 router.post("/manager", diseaseController.createDisease);
 router.get("/manager/:id", diseaseController.getManagerDiseaseById);
 router.put("/manager/:id", diseaseController.updateDisease);
+router.delete("/manager/:id", diseaseController.deleteDisease);
 
 router.get("/", diseaseController.getDiseases);
 router.get("/:id", diseaseController.getDiseaseById);

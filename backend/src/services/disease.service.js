@@ -302,6 +302,35 @@ const updateDisease = async (id, input) => {
   return getDiseaseById(id, true);
 };
 
+const deleteDisease = async (id) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw createError("Định dạng ID bệnh không hợp lệ.", 400);
+  }
+
+  let deletedDisease;
+  await runDiseaseMutation(async (session) => {
+    const disease = await Disease.findById(id)
+      .select("disease_name")
+      .session(session)
+      .lean();
+    if (!disease) throw createError("Không tìm thấy bệnh cây này.", 404);
+
+    await Disease.deleteOne({ _id: disease._id }, { session });
+    await Plant.updateMany(
+      { common_disease_ids: disease._id },
+      { $pull: { common_disease_ids: disease._id } },
+      { session },
+    );
+
+    deletedDisease = {
+      _id: disease._id,
+      disease_name: disease.disease_name,
+    };
+  });
+
+  return deletedDisease;
+};
+
 module.exports = {
   getPublicDiseases: (query) => getDiseases(query, false),
   getManagerDiseases: (query) => getDiseases(query, true),
@@ -309,4 +338,5 @@ module.exports = {
   getManagerDiseaseById: (id) => getDiseaseById(id, true),
   createDisease,
   updateDisease,
+  deleteDisease,
 };

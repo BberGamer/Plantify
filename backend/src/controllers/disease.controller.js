@@ -56,6 +56,15 @@ const updateDisease = async (req, res, next) => {
   }
 };
 
+const deleteDisease = async (req, res, next) => {
+  try {
+    const disease = await diseaseService.deleteDisease(req.params.id);
+    return success(res, "Xóa bệnh cây thành công.", disease);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDiseases,
   getDiseaseById,
@@ -63,4 +72,5 @@ module.exports = {
   getManagerDiseaseById,
   createDisease,
   updateDisease,
+  deleteDisease,
 };
