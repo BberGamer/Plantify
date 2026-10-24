@@ -9,6 +9,8 @@ import {
   DiseaseEmptyState,
   DiseaseFilterBar,
   DiseaseHeader,
+  DiseaseFormModal,
+  DiseaseDeleteModal,
 } from "../../src/components/manager/diseases";
 
 export default function ManagerDiseasesScreen() {
@@ -16,6 +18,7 @@ export default function ManagerDiseasesScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <DiseaseHeader count={manager.diseases.length} total={manager.total} />
+      <Button icon="plus" mode="contained" style={{ marginHorizontal: 18, marginBottom: 12 }} onPress={manager.openCreate} disabled={manager.saving || manager.deleting}>Thêm bệnh cây</Button>
       <DiseaseFilterBar
         search={manager.search}
         status={manager.statusFilter}
@@ -41,7 +44,7 @@ export default function ManagerDiseasesScreen() {
         <FlatList
           data={manager.diseases}
           keyExtractor={(item) => item._id}
-          renderItem={({ item }) => <DiseaseCard item={item} />}
+          renderItem={({ item }) => <DiseaseCard item={item} onEdit={manager.openEdit} onDelete={manager.requestDelete} disabled={manager.saving || manager.deleting} />}
           contentContainerStyle={[
             styles.list,
             manager.diseases.length === 0 && styles.emptyList,
@@ -64,6 +67,8 @@ export default function ManagerDiseasesScreen() {
           }
         />
       )}
+      <DiseaseFormModal visible={manager.visible} editing={manager.editing} form={manager.form} loading={manager.formLoading} ready={manager.formReady} saving={manager.saving} error={manager.formError} plants={manager.plantOptions} plantsLoading={manager.plantsLoading} plantsError={manager.plantsError} onClose={manager.closeForm} onSave={manager.save} onChange={manager.changeField} onTogglePlant={manager.togglePlant} onRetryPlants={manager.retryPlants} onRetryDetail={manager.retryEdit} />
+      <DiseaseDeleteModal disease={manager.deleteTarget} deleting={manager.deleting} error={manager.deleteError} onClose={manager.closeDelete} onConfirm={manager.confirmDelete} />
     </SafeAreaView>
   );
 }

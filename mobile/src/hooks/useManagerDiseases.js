@@ -106,13 +106,25 @@ export default function useManagerDiseases() {
     setPlantsLoading(true);
     setPlantsError("");
     try {
-      const response = await plantService.getManagerPlants({ limit: 100 });
-      if (!response?.success || !Array.isArray(response.data?.plants)) {
-        throw new Error(
-          response?.message || "Dữ liệu danh sách cây không hợp lệ.",
-        );
-      }
-      if (isCurrent()) setPlantOptions(response.data.plants);
+      const plants = [];
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const response = await plantService.getManagerPlants({
+          page,
+          limit: 100,
+        });
+        if (!response?.success || !Array.isArray(response.data?.plants)) {
+          throw new Error(
+            response?.message || "Dữ liệu danh sách cây không hợp lệ.",
+          );
+        }
+        if (!isCurrent()) return;
+        plants.push(...response.data.plants);
+        totalPages = response.data.totalPages ?? 1;
+        page += 1;
+      } while (page <= totalPages);
+      if (isCurrent()) setPlantOptions(plants);
     } catch (error) {
       if (isCurrent()) {
         setPlantsError(getErrorMessage(error, "Không tải được danh sách cây."));
@@ -155,7 +167,7 @@ export default function useManagerDiseases() {
   };
 
   const openCreate = () => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || deleteTarget) return;
     ++detailRequest.current;
     setEditing(null);
     setForm(createDiseaseForm());
@@ -196,7 +208,7 @@ export default function useManagerDiseases() {
   };
 
   const openEdit = (disease) => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || deleteTarget) return;
     loadDiseaseForEdit(disease);
   };
 
@@ -218,7 +230,7 @@ export default function useManagerDiseases() {
   };
 
   const changeField = (key, value) => {
-    if (mutationPending.current || formLoading) return;
+    if (mutationPending.current || formLoading || !formReady) return;
     setForm((previous) => ({ ...previous, [key]: value }));
     setFormError("");
   };
@@ -246,6 +258,28 @@ export default function useManagerDiseases() {
   const save = async () => {
     if (mutationPending.current || !visible || formLoading || !formReady)
       return;
+    const limits = {
+      disease_name: 150,
+      scientific_name: 200,
+      typical_symptoms: 5000,
+      environmental_cause: 5000,
+      disease_image_url: 2048,
+    };
+    if (
+      Object.entries(limits).some(
+        ([key, limit]) => form[key].trim().length > limit,
+      )
+    ) {
+      setFormError("Nội dung vượt quá độ dài cho phép. Vui lòng kiểm tra lại.");
+      return;
+    }
+    if (
+      form.disease_image_url.trim() &&
+      !/^https?:\/\/\S+$/i.test(form.disease_image_url.trim())
+    ) {
+      setFormError("URL ảnh bệnh phải là đường dẫn http hoặc https hợp lệ.");
+      return;
+    }
     if (!form.disease_name.trim() || !form.typical_symptoms.trim()) {
       setFormError("Vui lòng nhập tên bệnh và triệu chứng điển hình.");
       return;
@@ -283,7 +317,7 @@ export default function useManagerDiseases() {
   };
 
   const requestDelete = (disease) => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || visible) return;
     setDeleteTarget(disease);
     setDeleteError("");
   };
