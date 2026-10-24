@@ -1,13 +1,20 @@
-const dotenv = require('dotenv');
-const connectDB = require('./config/db');
+// server.js - Entry point cua he thong
+
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+
+require('dotenv').config();
+const connectDB = require('./config/database');
 const app = require('./app');
-
-dotenv.config();
-
-connectDB();
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-});
+const startServer = async () => {
+  await connectDB();
+  app.listen(PORT, () => {
+    console.log(`[Server] Plantify API dang chay tai port ${PORT}`);
+    console.log(`[Server] Moi truong: ${process.env.NODE_ENV || 'development'}`);
+  });
+};
+
+startServer();

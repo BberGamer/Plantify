@@ -1,11 +1,3 @@
-import { colors } from './colors';
-import { typography } from './typography';
-import { spacing } from './spacing';
-
-export const theme = {
-  colors,
-  typography,
-  spacing,
-};
-
-export default theme;
+export { colors } from './colors';
+export { spacing, radius, typography, control } from './tokens';
+export { paperTheme } from './paperTheme';

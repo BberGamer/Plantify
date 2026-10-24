@@ -1,129 +1,154 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Image } from 'react-native';
-import { useRouter } from 'expo-router';
-import CustomInput from '../../src/components/CustomInput';
-import CustomButton from '../../src/components/CustomButton';
-import ErrorMessage from '../../src/components/ErrorMessage';
-import { authService } from '../../src/services/authService';
-import { useAuthStore } from '../../store/authStore';
-import { theme } from '../../src/theme';
+// login.js - Ghép giao diện đăng nhập và hook điều phối.
 
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { Text } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { colors } from "../../src/theme/colors";
+import useLogin from "../../src/hooks/useLogin";
+import LoginForm from "../../src/components/auth/LoginForm";
 export default function LoginScreen() {
-  const router = useRouter();
-  const { login } = useAuthStore();
-  
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-    
-    setLoading(true);
-    setError('');
-    
-    try {
-      const data = await authService.login(email, password);
-      // Assuming response is { token, user: {...} }
-      login(data.user || { email }, data.token || 'mock_token_123');
-      router.replace('/');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const login = useLogin();
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <View style={styles.content}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>Plantify</Text>
-          <Text style={styles.subtitle}>Welcome back!</Text>
-        </View>
-
-        <ErrorMessage message={error} />
-
-        <CustomInput
-          label="Email"
-          placeholder="Enter your email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <CustomInput
-          label="Password"
-          placeholder="Enter your password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <CustomButton
-          title="Login"
-          onPress={handleLogin}
-          loading={loading}
-          style={styles.button}
-        />
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => router.push('/register')}>
-            <Text style={styles.footerLink}>Register</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.logoContainer}>
+            <View style={styles.logoCircle}>
+              <Ionicons name="leaf" size={28} color={colors.primary} />
+            </View>
+            <Text style={styles.brandTitle}>Plantify</Text>
+          </View>
+          <View style={styles.headingContainer}>
+            <Text style={styles.title}>Chào mừng trở lại</Text>
+            <Text style={styles.subtitle}>
+              Đăng nhập để tiếp tục sử dụng tài khoản
+            </Text>
+          </View>
+          {!!login.error && (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText} accessibilityRole="alert">
+                {login.error}
+              </Text>
+            </View>
+          )}
+          <LoginForm
+            email={login.email}
+            password={login.password}
+            isLoading={login.isLoading}
+            fieldErrors={login.fieldErrors}
+            onEmailChange={login.changeEmail}
+            onPasswordChange={login.changePassword}
+            onSubmit={login.submit}
+            onForgotPassword={login.forgotPassword}
+            onGoogleLogin={login.googleLogin}
+          />
+          <View style={styles.footerContainer}>
+            <Text style={styles.footerText}>
+              Bạn chưa có tài khoản?{" "}
+              <Text style={styles.registerLink} onPress={login.register}>
+                Đăng ký ngay
+              </Text>
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: "#FFFFFF",
   },
-  content: {
+  keyboardView: {
     flex: 1,
-    padding: theme.spacing.xl,
-    justifyContent: 'center',
   },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: theme.spacing.xxl,
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 28,
+    paddingBottom: 32,
+    justifyContent: "center",
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginTop: 16,
+    marginBottom: 20,
+  },
+  logoCircle: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    borderWidth: 1.5,
+    borderColor: "#E8ECE9",
+    backgroundColor: "#F4FBF7",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  brandTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.primary,
+    letterSpacing: -0.3,
+  },
+  headingContainer: {
+    alignItems: "center",
+    marginBottom: 26,
   },
   title: {
-    ...theme.typography.h1,
-    color: theme.colors.primary,
-    marginBottom: theme.spacing.sm,
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    marginBottom: 6,
   },
   subtitle: {
-    ...theme.typography.body1,
-    color: theme.colors.textSecondary,
+    textAlign: "center",
+    fontSize: 14,
+    color: colors.textSecondary,
   },
-  button: {
-    marginTop: theme.spacing.lg,
+  errorBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    marginBottom: 16,
+    gap: 8,
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: theme.spacing.xl,
+  errorText: {
+    color: "#B91C1C",
+    fontSize: 13,
+    flex: 1,
+  },
+  footerContainer: {
+    alignItems: "center",
+    marginTop: 28,
   },
   footerText: {
-    ...theme.typography.body1,
-    color: theme.colors.textSecondary,
+    textAlign: "center",
+    fontSize: 14,
+    color: colors.textSecondary,
   },
-  footerLink: {
-    ...theme.typography.body1,
-    color: theme.colors.primary,
-    fontWeight: 'bold',
+  registerLink: {
+    color: colors.primary,
+    fontWeight: "700",
+    textDecorationLine: "underline",
   },
 });

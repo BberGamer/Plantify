@@ -1,137 +1,122 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import CustomInput from '../../src/components/CustomInput';
-import CustomButton from '../../src/components/CustomButton';
-import ErrorMessage from '../../src/components/ErrorMessage';
-import { authService } from '../../src/services/authService';
-import { useAuthStore } from '../../store/authStore';
-import { theme } from '../../src/theme';
-
+// register.js - Ghép giao diện đăng ký và xác thực email.
+import React from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { Text } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { colors } from "../../src/theme/colors";
+import { useRouter } from "expo-router";
+import useRegister from "../../src/hooks/useRegister";
+import useFormBack from "../../src/hooks/useFormBack";
+import RegisterForm from "../../src/components/auth/RegisterForm";
+import RegisterOtpForm from "../../src/components/auth/RegisterOtpForm";
 export default function RegisterScreen() {
+  const registration = useRegister();
+  useFormBack(registration.goBack, registration.loading);
   const router = useRouter();
-  const { login } = useAuthStore();
-  
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleRegister = async () => {
-    if (!name || !email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-    
-    setLoading(true);
-    setError('');
-    
-    try {
-      const data = await authService.register(name, email, password);
-      // Auto login after register or route to login
-      login(data.user || { name, email }, data.token || 'mock_token_123');
-      router.replace('/');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <View style={styles.content}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Sign up to get started</Text>
-        </View>
-
-        <ErrorMessage message={error} />
-
-        <CustomInput
-          label="Name"
-          placeholder="Enter your name"
-          value={name}
-          onChangeText={setName}
-        />
-
-        <CustomInput
-          label="Email"
-          placeholder="Enter your email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <CustomInput
-          label="Password"
-          placeholder="Create a password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <CustomButton
-          title="Register"
-          onPress={handleRegister}
-          loading={loading}
-          style={styles.button}
-        />
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.footerLink}>Login</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.topBar}>
+            <TouchableOpacity
+              onPress={registration.goBack}
+              disabled={registration.loading}
+              style={styles.backButton}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={colors.textPrimary}
+              />
+            </TouchableOpacity>
+          </View>
+          {!!registration.errorMsg && (
+            <View style={styles.errorBox}>
+              <Text accessibilityRole="alert" style={styles.errorText}>
+                {registration.errorMsg}
+              </Text>
+            </View>
+          )}
+          {!!registration.successMsg && (
+            <Text accessibilityRole="alert">{registration.successMsg}</Text>
+          )}
+          {registration.step === 1 ? (
+            <RegisterForm
+              form={registration.form}
+              loading={registration.loading}
+              onChange={registration.changeField}
+              onSubmit={registration.sendOTP}
+              onLogin={() => router.push("/(auth)/login")}
+            />
+          ) : (
+            <RegisterOtpForm
+              email={registration.form.email}
+              otp={registration.otp}
+              countdown={registration.countdown}
+              loading={registration.loading}
+              onOtpChange={registration.changeOtp}
+              onResend={registration.resendOTP}
+              onVerify={registration.verifyOTP}
+            />
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: "#FFFFFF",
   },
-  content: {
+  keyboardView: {
     flex: 1,
-    padding: theme.spacing.xl,
-    justifyContent: 'center',
   },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: theme.spacing.xxl,
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 28,
+    paddingBottom: 32,
   },
-  title: {
-    ...theme.typography.h1,
-    color: theme.colors.primary,
-    marginBottom: theme.spacing.sm,
+  topBar: {
+    paddingVertical: 12,
   },
-  subtitle: {
-    ...theme.typography.body1,
-    color: theme.colors.textSecondary,
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  button: {
-    marginTop: theme.spacing.lg,
+  errorBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    marginBottom: 16,
+    gap: 8,
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: theme.spacing.xl,
-  },
-  footerText: {
-    ...theme.typography.body1,
-    color: theme.colors.textSecondary,
-  },
-  footerLink: {
-    ...theme.typography.body1,
-    color: theme.colors.primary,
-    fontWeight: 'bold',
+  errorText: {
+    color: "#B91C1C",
+    fontSize: 13,
+    flex: 1,
   },
 });

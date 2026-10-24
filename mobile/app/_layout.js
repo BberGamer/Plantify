@@ -1,38 +1,25 @@
-import { useEffect } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
-import { useAuthStore } from '../store/authStore';
-import LoadingSpinner from '../src/components/LoadingSpinner';
+// app/_layout.js - Root layout: kiem tra auth va dieu huong theo role
+
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { PaperProvider } from "react-native-paper";
+import { paperTheme } from "../src/theme/paperTheme";
+import useAuthNavigation from "../src/hooks/useAuthNavigation";
+
+function AuthGuard() {
+  useAuthNavigation();
+  return null;
+}
 
 export default function RootLayout() {
-  const { isLoading, isAuthenticated, initializeAuth } = useAuthStore();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    initializeAuth();
-  }, []);
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (!isAuthenticated && !inAuthGroup) {
-      router.replace('/login');
-    } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/');
-    }
-  }, [isLoading, isAuthenticated, segments]);
-
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="plant/[id]" options={{ headerShown: false, presentation: 'modal' }} />
-    </Stack>
+    <SafeAreaProvider>
+      <PaperProvider theme={paperTheme}>
+        <StatusBar style="dark" />
+        <AuthGuard />
+        <Stack screenOptions={{ headerShown: false }} />
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }
