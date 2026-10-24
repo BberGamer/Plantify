@@ -2,6 +2,13 @@
 import api from "./api";
 
 const diseaseService = {
+  getDiseases: async ({ plantId, page = 1, limit = 100 } = {}) => {
+    const params = { page, limit };
+    if (plantId) params.plant_id = plantId;
+    const response = await api.get("/diseases", { params });
+    return response.data;
+  },
+
   getManagerDiseases: async ({
     search,
     status,
