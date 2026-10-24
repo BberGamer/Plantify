@@ -1,6 +1,6 @@
 // controllers/plant.controller.js - Dieu phoi request & response cho Plants
 const plantService = require('../services/plant.service');
-const { success, notFound } = require('../utils/api-response');
+const { success } = require('../utils/api-response');
 
 /**
  * [GET] /plants/categories

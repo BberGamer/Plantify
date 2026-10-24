@@ -30,5 +30,3 @@ export const colors = {
 
   avatarBg: '#9E6740',
 };
-
-export default colors;

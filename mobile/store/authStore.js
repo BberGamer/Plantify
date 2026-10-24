@@ -7,7 +7,7 @@ import { bindSessionAccess, sessionError } from "../src/services/sessionAccess";
 const emptySession = { user: null, token: null, isAuthenticated: false };
 const cancelled = () => ({ success: false, cancelled: true });
 
-export const useAuthStore = create((set, get) => {
+const useAuthStore = create((set, get) => {
   let hydration = null;
   let authentication = null;
   let profileMutation = null;
