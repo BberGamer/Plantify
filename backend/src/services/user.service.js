@@ -1,5 +1,7 @@
+const AppError = require("../utils/app-error");
+const v = require("../validators/common");
 // services/user.service.js - Logic nghiep vu Quan ly Nguoi dung (User Management)
-const mongoose = require("mongoose");
+const validate = require("../validators/user.validator");
 const User = require("../models/user.model");
 
 /**
@@ -17,6 +19,7 @@ const User = require("../models/user.model");
  * @returns {Promise<object>} Danh sach user va thong tin phan trang
  */
 const getUsers = async (query = {}) => {
+  query = validate.query(query);
   const page = Math.max(1, parseInt(query.page, 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 10));
   const skip = (page - 1) * limit;
@@ -26,7 +29,7 @@ const getUsers = async (query = {}) => {
 
   // Tim kiem gan dung khong phan biet hoa thuong (fullName, email, phone)
   if (query.search && query.search.trim()) {
-    const searchRegex = new RegExp(query.search.trim(), "i");
+    const searchRegex = new RegExp(v.escapeRegex(query.search.trim()), "i");
     filter.$or = [
       { fullName: searchRegex },
       { email: searchRegex },
@@ -35,7 +38,10 @@ const getUsers = async (query = {}) => {
   }
 
   // Loc theo vai tro (role)
-  if (query.role && ["customer", "admin", "manager"].includes(query.role.trim())) {
+  if (
+    query.role &&
+    ["customer", "admin", "manager"].includes(query.role.trim())
+  ) {
     filter.role = query.role.trim();
   }
 
@@ -49,8 +55,16 @@ const getUsers = async (query = {}) => {
   }
 
   // Sap xep (sort)
-  const allowedSortFields = ["createdAt", "fullName", "email", "role", "status"];
-  const sortBy = allowedSortFields.includes(query.sortBy) ? query.sortBy : "createdAt";
+  const allowedSortFields = [
+    "createdAt",
+    "fullName",
+    "email",
+    "role",
+    "status",
+  ];
+  const sortBy = allowedSortFields.includes(query.sortBy)
+    ? query.sortBy
+    : "createdAt";
   const sortOrder = query.sortOrder === "asc" ? 1 : -1;
   const sortOptions = { [sortBy]: sortOrder };
 
@@ -86,20 +100,18 @@ const getUsers = async (query = {}) => {
  * @returns {Promise<object>} Thong tin user khong kem password
  */
 const getUserById = async (userId) => {
-  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-    const err = new Error("Định dạng ID người dùng không hợp lệ.");
-    err.statusCode = 400;
-    throw err;
-  }
+  v.id(userId);
 
   const user = await User.findById(userId)
     .select("-password -resetPasswordOTP -resetPasswordOTPExpires")
     .lean();
 
   if (!user) {
-    const err = new Error("Không tìm thấy người dùng với ID này.");
-    err.statusCode = 404;
-    throw err;
+    throw new AppError(
+      "USER_NOT_FOUND",
+      404,
+      "Không tìm thấy người dùng với ID này.",
+    );
   }
 
   return user;
@@ -112,29 +124,27 @@ const getUserById = async (userId) => {
  * @param {string} currentAdminId - ID cua Admin dang thao tac
  * @returns {Promise<object>} Thong tin user sau khi cap nhat
  */
-const updateUserInfoAndStatus = async (userId, updateData = {}, currentAdminId) => {
-  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-    const err = new Error("Định dạng ID người dùng không hợp lệ.");
-    err.statusCode = 400;
-    throw err;
-  }
+const updateUserInfoAndStatus = async (
+  userId,
+  updateData = {},
+  currentAdminId,
+) => {
+  updateData = validate.update(updateData);
+  v.id(userId);
 
   const user = await User.findById(userId);
   if (!user) {
-    const err = new Error("Không tìm thấy người dùng với ID này.");
-    err.statusCode = 404;
-    throw err;
+    throw new AppError(
+      "USER_NOT_FOUND",
+      404,
+      "Không tìm thấy người dùng với ID này.",
+    );
   }
 
   const { fullName, phone, status, role } = updateData;
 
   // Cap nhat ho ten
   if (fullName !== undefined) {
-    if (!fullName || !fullName.trim()) {
-      const err = new Error("Họ và tên không được để trống.");
-      err.statusCode = 400;
-      throw err;
-    }
     user.fullName = fullName.trim();
   }
 
@@ -142,17 +152,16 @@ const updateUserInfoAndStatus = async (userId, updateData = {}, currentAdminId) 
   if (phone !== undefined) {
     const trimmedPhone = phone.trim();
     if (trimmedPhone !== "") {
-      const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
-      if (!phoneRegex.test(trimmedPhone)) {
-        const err = new Error("Số điện thoại không hợp lệ (10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09).");
-        err.statusCode = 400;
-        throw err;
-      }
-      const existingPhone = await User.findOne({ phone: trimmedPhone, _id: { $ne: userId } });
+      const existingPhone = await User.findOne({
+        phone: trimmedPhone,
+        _id: { $ne: userId },
+      });
       if (existingPhone) {
-        const err = new Error("Số điện thoại này đã được sử dụng bởi tài khoản khác.");
-        err.statusCode = 400;
-        throw err;
+        throw new AppError(
+          "PHONE_IN_USE",
+          400,
+          "Số điện thoại này đã được sử dụng bởi tài khoản khác.",
+        );
       }
     }
     user.phone = trimmedPhone;
@@ -160,35 +169,39 @@ const updateUserInfoAndStatus = async (userId, updateData = {}, currentAdminId) 
 
   // Cap nhat trang thai (Active / Banned)
   if (status !== undefined) {
-    const parsedStatus = status === "true" || status === true ? true : (status === "false" || status === false ? false : null);
-    if (parsedStatus === null) {
-      const err = new Error("Trạng thái không hợp lệ. Vui lòng chọn hoạt động hoặc bị khóa.");
-      err.statusCode = 400;
-      throw err;
-    }
+    const parsedStatus =
+      status === "true" || status === true
+        ? true
+        : status === "false" || status === false
+          ? false
+          : null;
 
-    if (userId.toString() === currentAdminId?.toString() && parsedStatus === false) {
-      const err = new Error("Bạn không thể tự khóa tài khoản của chính mình.");
-      err.statusCode = 400;
-      throw err;
+    if (
+      userId.toString() === currentAdminId?.toString() &&
+      parsedStatus === false
+    ) {
+      throw new AppError(
+        "SELF_LOCK_FORBIDDEN",
+        400,
+        "Bạn không thể tự khóa tài khoản của chính mình.",
+      );
     }
     user.status = parsedStatus;
   }
 
   // Cap nhat vai tro (Role: customer / manager / admin)
   if (role !== undefined) {
-    const allowedRoles = ["customer", "manager", "admin"];
-    const normalizedRole = role.toLowerCase().trim();
-    if (!allowedRoles.includes(normalizedRole)) {
-      const err = new Error("Vai trò không hợp lệ. Vui lòng chọn khách hàng, quản lý hoặc quản trị viên.");
-      err.statusCode = 400;
-      throw err;
-    }
+    const normalizedRole = role;
 
-    if (userId.toString() === currentAdminId?.toString() && normalizedRole !== "admin") {
-      const err = new Error("Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình.");
-      err.statusCode = 400;
-      throw err;
+    if (
+      userId.toString() === currentAdminId?.toString() &&
+      normalizedRole !== "admin"
+    ) {
+      throw new AppError(
+        "SELF_ROLE_CHANGE_FORBIDDEN",
+        400,
+        "Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình.",
+      );
     }
     user.role = normalizedRole;
   }
@@ -211,30 +224,34 @@ const updateUserInfoAndStatus = async (userId, updateData = {}, currentAdminId) 
  * @returns {Promise<object>} Thong tin user sau cap nhat
  */
 const updateUserStatus = async (userId, status, currentAdminId) => {
-  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-    const err = new Error("Định dạng ID người dùng không hợp lệ.");
-    err.statusCode = 400;
-    throw err;
-  }
+  status = v.boolean(status, "status");
+  v.id(userId);
 
-  const parsedStatus = status === "true" || status === true ? true : (status === "false" || status === false ? false : null);
-  if (parsedStatus === null) {
-    const err = new Error("Vui lòng chọn trạng thái tài khoản: hoạt động hoặc bị khóa.");
-    err.statusCode = 400;
-    throw err;
-  }
+  const parsedStatus =
+    status === "true" || status === true
+      ? true
+      : status === "false" || status === false
+        ? false
+        : null;
 
-  if (userId.toString() === currentAdminId?.toString() && parsedStatus === false) {
-    const err = new Error("Bạn không thể tự khóa tài khoản của chính mình.");
-    err.statusCode = 400;
-    throw err;
+  if (
+    userId.toString() === currentAdminId?.toString() &&
+    parsedStatus === false
+  ) {
+    throw new AppError(
+      "SELF_LOCK_FORBIDDEN",
+      400,
+      "Bạn không thể tự khóa tài khoản của chính mình.",
+    );
   }
 
   const user = await User.findById(userId);
   if (!user) {
-    const err = new Error("Không tìm thấy người dùng với ID này.");
-    err.statusCode = 404;
-    throw err;
+    throw new AppError(
+      "USER_NOT_FOUND",
+      404,
+      "Không tìm thấy người dùng với ID này.",
+    );
   }
 
   user.status = parsedStatus;
@@ -256,37 +273,29 @@ const updateUserStatus = async (userId, status, currentAdminId) => {
  * @returns {Promise<object>} Thong tin user sau cap nhat
  */
 const updateUserRole = async (userId, role, currentAdminId) => {
-  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-    const err = new Error("Định dạng ID người dùng không hợp lệ.");
-    err.statusCode = 400;
-    throw err;
-  }
+  role = validate.role(role);
+  v.id(userId);
 
-  if (!role || typeof role !== "string") {
-    const err = new Error("Vui lòng chọn vai trò: khách hàng, quản lý hoặc quản trị viên.");
-    err.statusCode = 400;
-    throw err;
-  }
+  const normalizedRole = role;
 
-  const normalizedRole = role.toLowerCase().trim();
-  const allowedRoles = ["customer", "manager", "admin"];
-  if (!allowedRoles.includes(normalizedRole)) {
-    const err = new Error("Vai trò không hợp lệ. Vui lòng chọn khách hàng, quản lý hoặc quản trị viên.");
-    err.statusCode = 400;
-    throw err;
-  }
-
-  if (userId.toString() === currentAdminId?.toString() && normalizedRole !== "admin") {
-    const err = new Error("Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình.");
-    err.statusCode = 400;
-    throw err;
+  if (
+    userId.toString() === currentAdminId?.toString() &&
+    normalizedRole !== "admin"
+  ) {
+    throw new AppError(
+      "SELF_ROLE_CHANGE_FORBIDDEN",
+      400,
+      "Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình.",
+    );
   }
 
   const user = await User.findById(userId);
   if (!user) {
-    const err = new Error("Không tìm thấy người dùng với ID này.");
-    err.statusCode = 404;
-    throw err;
+    throw new AppError(
+      "USER_NOT_FOUND",
+      404,
+      "Không tìm thấy người dùng với ID này.",
+    );
   }
 
   user.role = normalizedRole;

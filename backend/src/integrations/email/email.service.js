@@ -138,16 +138,11 @@ const sendOTPEmail = async (toEmail, otp, type = 'register') => {
     `,
   };
 
-  console.log('\n==================================================');
-  console.log(`[EMAIL SENDING] Gửi mã OTP ${isReset ? 'đặt lại mật khẩu' : 'đăng ký tài khoản'} cho: ${toEmail}`);
-  console.log(`[OTP CODE] Mã OTP: ${otp}`);
-  console.log('==================================================\n');
-
   try {
     await sendMailWithTimeout(transporter, mailOptions);
     console.log(`✅ Gửi email OTP tới ${toEmail} thành công.`);
   } catch (error) {
-    console.error(`❌ Lỗi kết nối SMTP hoặc gửi email tới ${toEmail}:`, error.message);
+    console.error("Không gửi được email OTP.");
     throw error;
   }
 };
