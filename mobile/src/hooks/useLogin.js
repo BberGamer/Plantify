@@ -1,22 +1,21 @@
 import getErrorMessage from "../utils/getErrorMessage";
-// useLogin.js - Quản lý form đăng nhập và điều hướng theo vai trò.
+// useLogin.js - Quản lý form đăng nhập; root guard điều hướng theo phiên.
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import useAuthStore from "../../store/authStore";
 
-const ROLE_ROUTES = {
-  admin: "/admin",
-  manager: "/manager",
-  customer: "/(tabs)",
-};
-
 export default function useLogin() {
   const router = useRouter();
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
+  const isLoading = useAuthStore((state) => state.isLoggingIn);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState("");
-  const pending = useRef(false);
+  const pending = useRef(null);
+  const isPending = () => {
+    const state = useAuthStore.getState();
+    return state.isLoggingIn || pending.current?.version === state.sessionVersion;
+  };
   const mounted = useRef(false);
   useEffect(() => {
     mounted.current = true;
@@ -26,8 +25,7 @@ export default function useLogin() {
   }, []);
 
   const submit = async () => {
-    if (pending.current) return;
-    clearError();
+    if (isPending()) return;
     if (!email.trim() || !password) {
       setLocalError(
         !email.trim()
@@ -36,19 +34,21 @@ export default function useLogin() {
       );
       return;
     }
-    pending.current = true;
+    const attempt = {};
+    pending.current = attempt;
     setLocalError("");
     try {
-      const response = await login(email.trim(), password);
-      if (!mounted.current) return;
-      if (response.success)
-        router.replace(ROLE_ROUTES[response.user?.role] || "/(tabs)");
-      else setLocalError(getErrorMessage(response.error, "Đăng nhập thất bại"));
+      const request = login(email.trim(), password);
+      attempt.version = useAuthStore.getState().sessionVersion;
+      const response = await request;
+      if (!mounted.current || pending.current !== attempt) return;
+      if (response.success) setPassword("");
+      else if (!response.cancelled) setLocalError(response.error || "Đăng nhập thất bại.");
     } catch (failure) {
-      if (mounted.current)
+      if (mounted.current && pending.current === attempt)
         setLocalError(getErrorMessage(failure, "Đăng nhập thất bại"));
     } finally {
-      pending.current = false;
+      if (pending.current === attempt) pending.current = null;
     }
   };
 
@@ -56,20 +56,18 @@ export default function useLogin() {
     email,
     password,
     isLoading,
-    error: localError || error,
+    error: localError,
     submit,
     changeEmail: (value) => {
-      if (!pending.current) {
+      if (!isPending()) {
         setEmail(value);
         setLocalError("");
-        clearError();
       }
     },
     changePassword: (value) => {
-      if (!pending.current) {
+      if (!isPending()) {
         setPassword(value);
         setLocalError("");
-        clearError();
       }
     },
     forgotPassword: () => router.push("/(auth)/reset-password"),

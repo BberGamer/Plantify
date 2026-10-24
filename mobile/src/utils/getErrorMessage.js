@@ -1,5 +1,8 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  SESSION_CHANGED: "Phiên đăng nhập đã thay đổi. Vui lòng thử lại.",
+  SESSION_STORAGE_ERROR: "Không thể lưu phiên đăng nhập trên thiết bị. Vui lòng thử lại.",
+  REQUEST_IN_PROGRESS: "Thao tác đang được xử lý. Vui lòng chờ.",
   INVALID_RESPONSE: "Dữ liệu máy chủ trả về không hợp lệ. Vui lòng thử lại.",
   VALIDATION_ERROR: "Thông tin nhập chưa hợp lệ. Vui lòng kiểm tra lại.",
   INVALID_ID: "Định dạng ID không hợp lệ.",
