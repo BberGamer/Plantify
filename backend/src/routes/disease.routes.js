@@ -10,7 +10,9 @@ const router = express.Router();
 
 router.use("/manager", authenticate, authorizeManager);
 router.get("/manager", diseaseController.getManagerDiseases);
+router.post("/manager", diseaseController.createDisease);
 router.get("/manager/:id", diseaseController.getManagerDiseaseById);
+router.put("/manager/:id", diseaseController.updateDisease);
 
 router.get("/", diseaseController.getDiseases);
 router.get("/:id", diseaseController.getDiseaseById);

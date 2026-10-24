@@ -38,9 +38,29 @@ const getManagerDiseaseById = async (req, res, next) => {
   }
 };
 
+const createDisease = async (req, res, next) => {
+  try {
+    const disease = await diseaseService.createDisease(req.body);
+    return success(res, "Tạo bệnh cây thành công.", disease, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateDisease = async (req, res, next) => {
+  try {
+    const disease = await diseaseService.updateDisease(req.params.id, req.body);
+    return success(res, "Cập nhật bệnh cây thành công.", disease);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDiseases,
   getDiseaseById,
   getManagerDiseases,
   getManagerDiseaseById,
+  createDisease,
+  updateDisease,
 };

@@ -4,8 +4,27 @@ const Disease = require("../models/disease.model");
 const Plant = require("../models/plant.model");
 
 const DISEASE_STATUSES = ["active", "inactive"];
+const PATHOGEN_TYPES = [
+  "fungus",
+  "bacteria",
+  "virus",
+  "pest",
+  "nematode",
+  "physiological",
+  "other",
+];
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
+const DISEASE_FIELDS = [
+  "disease_name",
+  "scientific_name",
+  "pathogen_type",
+  "typical_symptoms",
+  "environmental_cause",
+  "disease_image_url",
+  "status",
+  "treatment_protocol",
+];
 
 const createError = (message, statusCode) =>
   Object.assign(new Error(message), { statusCode });
@@ -127,9 +146,167 @@ const getDiseaseById = async (id, managerView = false) => {
   return { ...disease, plants };
 };
 
+const normalizeDiseaseInput = (input = {}) => {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    throw createError("Dữ liệu bệnh cây không hợp lệ.", 400);
+  }
+
+  const requiredFields = ["disease_name", "typical_symptoms"];
+  for (const field of requiredFields) {
+    if (typeof input[field] !== "string" || !input[field].trim()) {
+      const label = field === "disease_name" ? "Tên bệnh" : "Triệu chứng điển hình";
+      throw createError(`${label} là bắt buộc.`, 400);
+    }
+  }
+
+  if (!Array.isArray(input.plant_ids) || input.plant_ids.length === 0) {
+    throw createError("Vui lòng chọn ít nhất một cây liên quan.", 400);
+  }
+
+  const plantIds = input.plant_ids.map((id) => {
+    if (typeof id !== "string" || !mongoose.Types.ObjectId.isValid(id)) {
+      throw createError("Danh sách cây chứa ID không hợp lệ.", 400);
+    }
+    return id;
+  });
+
+  if (new Set(plantIds).size !== plantIds.length) {
+    throw createError("Danh sách cây không được chứa ID trùng nhau.", 400);
+  }
+
+  const optionalStringFields = [
+    "scientific_name",
+    "environmental_cause",
+    "disease_image_url",
+  ];
+  for (const field of optionalStringFields) {
+    if (input[field] !== undefined && typeof input[field] !== "string") {
+      throw createError(`Trường ${field} phải là chuỗi.`, 400);
+    }
+  }
+
+  if (
+    input.pathogen_type !== undefined &&
+    !PATHOGEN_TYPES.includes(input.pathogen_type)
+  ) {
+    throw createError("Loại tác nhân gây bệnh không hợp lệ.", 400);
+  }
+  if (input.status !== undefined && !DISEASE_STATUSES.includes(input.status)) {
+    throw createError("Trạng thái bệnh không hợp lệ.", 400);
+  }
+  if (
+    input.treatment_protocol !== undefined &&
+    (input.treatment_protocol === null ||
+      typeof input.treatment_protocol !== "object" ||
+      Array.isArray(input.treatment_protocol))
+  ) {
+    throw createError("Phác đồ điều trị phải là một đối tượng JSON.", 400);
+  }
+
+  const diseaseData = {};
+  for (const field of DISEASE_FIELDS) {
+    if (input[field] !== undefined) diseaseData[field] = input[field];
+  }
+  diseaseData.disease_name = input.disease_name.trim();
+  diseaseData.typical_symptoms = input.typical_symptoms.trim();
+  for (const field of optionalStringFields) {
+    if (diseaseData[field] !== undefined) {
+      diseaseData[field] = diseaseData[field].trim();
+    }
+  }
+
+  return { diseaseData, plantIds };
+};
+
+const assertPlantsExist = async (plantIds, session) => {
+  const plants = await Plant.find({ _id: { $in: plantIds } })
+    .select("_id")
+    .session(session)
+    .lean();
+
+  if (plants.length !== plantIds.length) {
+    throw createError("Một hoặc nhiều cây được chọn không tồn tại.", 400);
+  }
+};
+
+const assertDiseaseNameAvailable = async (name, excludedId, session) => {
+  const filter = { disease_name: name };
+  if (excludedId) filter._id = { $ne: excludedId };
+
+  const duplicate = await Disease.findOne(filter)
+    .collation({ locale: "vi", strength: 2 })
+    .session(session)
+    .select("_id")
+    .lean();
+  if (duplicate) throw createError("Tên bệnh đã tồn tại.", 409);
+};
+
+const synchronizeDiseasePlants = async (diseaseId, plantIds, session) => {
+  await Plant.updateMany(
+    { common_disease_ids: diseaseId },
+    { $pull: { common_disease_ids: diseaseId } },
+    { session },
+  );
+  await Plant.updateMany(
+    { _id: { $in: plantIds } },
+    { $addToSet: { common_disease_ids: diseaseId } },
+    { session },
+  );
+};
+
+const runDiseaseMutation = async (operation) => {
+  try {
+    return await mongoose.connection.transaction(operation);
+  } catch (error) {
+    if (error?.code === 11000) {
+      throw createError("Tên bệnh đã tồn tại.", 409);
+    }
+    throw error;
+  }
+};
+
+const createDisease = async (input) => {
+  const { diseaseData, plantIds } = normalizeDiseaseInput(input);
+  let diseaseId;
+
+  await runDiseaseMutation(async (session) => {
+    await assertDiseaseNameAvailable(diseaseData.disease_name, null, session);
+    await assertPlantsExist(plantIds, session);
+
+    const [disease] = await Disease.create([diseaseData], { session });
+    diseaseId = disease._id;
+    await synchronizeDiseasePlants(diseaseId, plantIds, session);
+  });
+
+  return getDiseaseById(diseaseId, true);
+};
+
+const updateDisease = async (id, input) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw createError("Định dạng ID bệnh không hợp lệ.", 400);
+  }
+  const { diseaseData, plantIds } = normalizeDiseaseInput(input);
+
+  await runDiseaseMutation(async (session) => {
+    const disease = await Disease.findById(id).session(session);
+    if (!disease) throw createError("Không tìm thấy bệnh cây này.", 404);
+
+    await assertDiseaseNameAvailable(diseaseData.disease_name, id, session);
+    await assertPlantsExist(plantIds, session);
+
+    Object.assign(disease, diseaseData);
+    await disease.save({ session });
+    await synchronizeDiseasePlants(disease._id, plantIds, session);
+  });
+
+  return getDiseaseById(id, true);
+};
+
 module.exports = {
   getPublicDiseases: (query) => getDiseases(query, false),
   getManagerDiseases: (query) => getDiseases(query, true),
   getPublicDiseaseById: (id) => getDiseaseById(id, false),
   getManagerDiseaseById: (id) => getDiseaseById(id, true),
+  createDisease,
+  updateDisease,
 };
