@@ -4,10 +4,12 @@ const router = express.Router();
 const authRoutes = require("./auth.routes");
 const userRoutes = require("./user.routes");
 const plantRoutes = require("./plant.routes");
+const diseaseRoutes = require("./disease.routes");
 
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 router.use("/admin/users", userRoutes);
 router.use("/plants", plantRoutes);
+router.use("/diseases", diseaseRoutes);
 
 module.exports = router;
