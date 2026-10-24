@@ -4,5 +4,10 @@ import ProfileContent from "../../src/components/profile/ProfileContent";
 
 export default function ManagerProfileRoute() {
   const router = useRouter();
-  return <ProfileContent onBack={() => router.navigate("/manager")} showNavbar={false} />;
+  return (
+    <ProfileContent
+      onBack={() => router.navigate("/manager")}
+      showNavbar={false}
+    />
+  );
 }

@@ -1,10 +1,11 @@
 // useManagerDiseases.js - Quản lý danh sách và thao tác CRUD bệnh cây.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import diseaseService from "../services/diseaseService";
 import plantService from "../services/plantService";
 import getErrorMessage from "../utils/getErrorMessage";
 import useDebouncedValue from "./useDebouncedValue";
 import useScreenScope from "./useScreenScope";
+import usePaginatedList from "./usePaginatedList";
 import useAuthStore from "../../store/authStore";
 
 const createDiseaseForm = (disease = {}) => ({
@@ -38,13 +39,8 @@ const createDiseasePayload = (form) => ({
 
 export default function useManagerDiseases() {
   const sessionVersion = useAuthStore((state) => state.sessionVersion);
-  const [diseases, setDiseases] = useState([]);
-  const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [listError, setListError] = useState("");
   const [plantOptions, setPlantOptions] = useState([]);
   const [plantsLoading, setPlantsLoading] = useState(true);
   const [plantsError, setPlantsError] = useState("");
@@ -59,68 +55,48 @@ export default function useManagerDiseases() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const mounted = useRef(false);
-  const listRequest = useRef(0);
   const plantRequest = useRef(0);
   const detailRequest = useRef(0);
   const mutationPending = useRef(false);
   const debounced = useDebouncedValue(search.trim());
-  const listContext = useMemo(() => ({
-    search: debounced.value, status: statusFilter, enabled: !debounced.pending,
-  }), [debounced.value, statusFilter, debounced.pending]);
-  const queryRef = useRef(listContext);
-  queryRef.current = listContext;
-  const { capture: captureList, isActive: isListActive } = useScreenScope(
-    () => loadDiseases(), undefined, listContext,
+  const fetchPage = useCallback(
+    (params) =>
+      diseaseService.getManagerDiseases({
+        ...params,
+        search: debounced.value,
+        status: statusFilter,
+      }),
+    [debounced.value, statusFilter],
   );
-  const { capture, isActive } = useScreenScope(() => loadPlantOptions(), () => {
-    ++detailRequest.current;
-    setFormLoading(false);
+  const diseaseList = usePaginatedList(fetchPage, {
+    limit: 100,
+    enabled: !debounced.pending,
   });
-
-  const loadDiseases = useCallback(async (refresh = false) => {
-    const query = queryRef.current;
-    if (!isListActive() || !query.enabled) return;
-    const inScope = captureList();
-    const requestId = ++listRequest.current;
-    const isCurrent = () =>
-      inScope() && query === queryRef.current && requestId === listRequest.current;
-    setLoading(!refresh);
-    setRefreshing(refresh);
-    setListError("");
-    try {
-      const response = await diseaseService.getManagerDiseases({
-        search: query.search,
-        status: query.status,
-        limit: 100,
-      });
-      if (!response?.success || !Array.isArray(response.data?.diseases)) {
-        throw new Error(
-          response?.message || "Dữ liệu danh sách bệnh cây không hợp lệ.",
-        );
-      }
-      if (!isCurrent()) return;
-      setDiseases(response.data.diseases);
-      setTotal(response.data.total ?? response.data.diseases.length);
-    } catch (error) {
-      if (isCurrent()) {
-        setListError(
-          getErrorMessage(error, "Không tải được danh sách bệnh cây."),
-        );
-      }
-    } finally {
-      if (isCurrent()) {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    }
-  }, [captureList, isListActive]);
+  const {
+    items: diseases,
+    setItems: setDiseases,
+    pagination,
+    loading,
+    refreshing,
+    error: listError,
+  } = diseaseList;
+  const loadDiseases = useCallback(
+    (refresh = false) => diseaseList.load(undefined, refresh),
+    [diseaseList.load],
+  );
+  const { capture, isActive } = useScreenScope(
+    () => loadPlantOptions(),
+    () => {
+      ++detailRequest.current;
+      setFormLoading(false);
+    },
+  );
 
   const loadPlantOptions = useCallback(async () => {
     if (!isActive()) return;
     const inScope = capture();
     const requestId = ++plantRequest.current;
-    const isCurrent = () =>
-      inScope() && requestId === plantRequest.current;
+    const isCurrent = () => inScope() && requestId === plantRequest.current;
     setPlantsLoading(true);
     setPlantsError("");
     try {
@@ -157,15 +133,12 @@ export default function useManagerDiseases() {
     mounted.current = true;
     return () => {
       mounted.current = false;
-      ++listRequest.current;
       ++plantRequest.current;
       ++detailRequest.current;
     };
   }, []);
 
   useEffect(() => {
-    setDiseases([]);
-    setTotal(0);
     setPlantOptions([]);
     setVisible(false);
     setEditing(null);
@@ -178,17 +151,15 @@ export default function useManagerDiseases() {
 
   const changeSearch = (value) => {
     setSearch(value);
-    ++listRequest.current;
-    setLoading(true);
-    setRefreshing(false);
-    setListError("");
-    if (value.trim() === debounced.value && !debounced.pending) loadDiseases();
+    diseaseList.invalidate();
+    if (value.trim() === debounced.value && !debounced.pending)
+      diseaseList.load(1);
   };
 
   const changeStatusFilter = (value) => {
     if (value === statusFilter && !debounced.pending) return;
     setStatusFilter(value);
-    ++listRequest.current;
+    diseaseList.invalidate();
     debounced.flush();
   };
 
@@ -259,15 +230,22 @@ export default function useManagerDiseases() {
   };
 
   const changeField = (key, value) => {
-    if (mutationPending.current || !visible || formLoading || !formReady ||
-        !Object.prototype.hasOwnProperty.call(form, key) ||
-        ["plant_ids", "treatment_protocol"].includes(key)) return;
+    if (
+      mutationPending.current ||
+      !visible ||
+      formLoading ||
+      !formReady ||
+      !Object.prototype.hasOwnProperty.call(form, key) ||
+      ["plant_ids", "treatment_protocol"].includes(key)
+    )
+      return;
     setForm((previous) => ({ ...previous, [key]: value }));
     setFormError("");
   };
 
   const changeTreatmentField = (key, value) => {
-    if (mutationPending.current || !visible || formLoading || !formReady) return;
+    if (mutationPending.current || !visible || formLoading || !formReady)
+      return;
     setForm((previous) => ({
       ...previous,
       treatment_protocol: { ...previous.treatment_protocol, [key]: value },
@@ -276,7 +254,8 @@ export default function useManagerDiseases() {
   };
 
   const togglePlant = (plantId) => {
-    if (mutationPending.current || !visible || formLoading || !formReady) return;
+    if (mutationPending.current || !visible || formLoading || !formReady)
+      return;
     setForm((previous) => ({
       ...previous,
       plant_ids: previous.plant_ids.includes(plantId)
@@ -287,7 +266,13 @@ export default function useManagerDiseases() {
   };
 
   const save = async () => {
-    if (mutationPending.current || !visible || formLoading || !formReady || !isActive())
+    if (
+      mutationPending.current ||
+      !visible ||
+      formLoading ||
+      !formReady ||
+      !isActive()
+    )
       return;
     const isCurrent = capture();
     const limits = {
@@ -377,7 +362,6 @@ export default function useManagerDiseases() {
       setDiseases((previous) =>
         previous.filter((disease) => disease._id !== targetId),
       );
-      setTotal((previous) => Math.max(0, previous - 1));
       await loadDiseases(true);
     } catch (error) {
       if (isCurrent()) {
@@ -391,7 +375,9 @@ export default function useManagerDiseases() {
 
   return {
     diseases,
-    total,
+    total: pagination.total,
+    pagination,
+    changePage: (page) => diseaseList.load(page),
     search,
     statusFilter,
     loading,

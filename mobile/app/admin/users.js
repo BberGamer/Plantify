@@ -1,5 +1,3 @@
-
-
 import {
   StyleSheet,
   View,
@@ -95,7 +93,11 @@ export default function AdminUsersScreen() {
         />
 
         {!!listError && (
-          <ListError message={listError} onRetry={handleRefresh} busy={loading || refreshing} />
+          <ListError
+            message={listError}
+            onRetry={handleRefresh}
+            busy={loading || refreshing}
+          />
         )}
         {/* USER LIST */}
         {loading && !refreshing ? (
