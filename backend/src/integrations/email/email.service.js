@@ -43,16 +43,16 @@ const sendOTPEmail = async (toEmail, otp, type = 'register') => {
   const isReset = type === 'reset';
 
   const subject = isReset
-    ? '🔐 Mã OTP đặt lại mật khẩu Plantify của bạn'
-    : '🌱 Mã OTP đăng ký tài khoản Plantify của bạn';
+    ? "🔐 Mã xác thực đặt lại mật khẩu Plantify của bạn"
+    : "🌱 Mã xác thực đăng ký tài khoản Plantify của bạn";
 
   const heading = isReset
     ? 'Mã xác thực đặt lại mật khẩu'
     : 'Mã xác thực đăng ký tài khoản';
 
   const bodyText = isReset
-    ? 'Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Plantify của bạn. Vui lòng sử dụng mã OTP dưới đây để hoàn tất việc xác thực.'
-    : 'Chào mừng bạn đến với Plantify! Bạn vừa tạo một tài khoản mới với địa chỉ email này. Vui lòng sử dụng mã OTP dưới đây để hoàn tất việc xác thực và kích hoạt tài khoản.';
+    ? "Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Plantify của bạn. Vui lòng sử dụng mã xác thực dưới đây để hoàn tất việc xác thực."
+    : "Chào mừng bạn đến với Plantify! Bạn vừa tạo một tài khoản mới với địa chỉ email này. Vui lòng sử dụng mã xác thực dưới đây để hoàn tất việc xác thực và kích hoạt tài khoản.";
 
   const warningText = isReset
     ? 'Nếu bạn không thực hiện yêu cầu này, hãy bỏ qua email này.'
@@ -112,7 +112,7 @@ const sendOTPEmail = async (toEmail, otp, type = 'register') => {
                     <!-- Warning box -->
                     <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
                       <p style="margin:0;color:#92400e;font-size:13px;line-height:1.5;">
-                        ⚠️ <strong>Lưu ý bảo mật:</strong> Tuyệt đối không chia sẻ mã OTP này với bất kỳ ai để tránh mất tài khoản.
+                        ⚠️ <strong>Lưu ý bảo mật:</strong> Tuyệt đối không chia sẻ mã xác thực này với bất kỳ ai để tránh mất tài khoản.
                         ${warningText}
                       </p>
                     </div>

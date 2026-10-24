@@ -74,14 +74,14 @@ export default function UserDetailModal({
               <>
                 <View style={styles.infoCard}>
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Mã User (ID):</Text>
+                  <Text style={styles.infoLabel}>Mã người dùng:</Text>
                   <Text style={styles.infoValue} numberOfLines={1}>
                     {user._id}
                   </Text>
                 </View>
 
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Email:</Text>
+                  <Text style={styles.infoLabel}>Địa chỉ email:</Text>
                   <Text style={styles.infoValueBold}>{user.email}</Text>
                 </View>
 
@@ -138,7 +138,7 @@ export default function UserDetailModal({
                               isActive && styles.roleChoiceTextActive,
                             ]}
                           >
-                            {r.toUpperCase()}
+                            {getRoleMeta(r).label}
                           </Text>
                         </TouchableOpacity>
                       );

@@ -82,7 +82,7 @@ const verifyRegisterOTP = async (email, otp) => {
   if (pending.expires < Date.now()) {
     pendingRegistrations.delete(normalizedEmail);
     const err = new Error(
-      "Mã OTP đã hết hạn (chỉ có hiệu lực trong 5 phút). Vui lòng yêu cầu mã mới.",
+      "Mã xác thực đã hết hạn (chỉ có hiệu lực trong 5 phút). Vui lòng yêu cầu mã mới.",
     );
     err.statusCode = 400;
     throw err;
@@ -93,7 +93,7 @@ const verifyRegisterOTP = async (email, otp) => {
     .update(otp.trim())
     .digest("hex");
   if (pending.hashedOTP !== hashedInputOTP) {
-    const err = new Error("Mã OTP không chính xác. Vui lòng kiểm tra lại.");
+    const err = new Error("Mã xác thực không chính xác. Vui lòng kiểm tra lại.");
     err.statusCode = 400;
     throw err;
   }
@@ -228,7 +228,7 @@ const resetPassword = async (email, otp, newPassword) => {
     user.resetPasswordOTPExpires < Date.now()
   ) {
     const err = new Error(
-      "Mã OTP đã hết hạn hoặc không tồn tại. Vui lòng yêu cầu mã mới.",
+      "Mã xác thực đã hết hạn hoặc không tồn tại. Vui lòng yêu cầu mã mới.",
     );
     err.statusCode = 400;
     throw err;
@@ -239,7 +239,7 @@ const resetPassword = async (email, otp, newPassword) => {
     .update(otp.trim())
     .digest("hex");
   if (user.resetPasswordOTP !== hashedOTP) {
-    const err = new Error("Mã OTP xác thực không chính xác.");
+    const err = new Error("Mã xác thực không chính xác.");
     err.statusCode = 400;
     throw err;
   }

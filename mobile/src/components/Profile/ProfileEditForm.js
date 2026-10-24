@@ -13,7 +13,7 @@ export default function ProfileEditForm({ form, setForm, saving, cancelEditing, 
                 { key: "fullName", label: "Họ và tên", maxLength: 100 },
                 {
                   key: "email",
-                  label: "Email",
+                  label: "Địa chỉ email",
                   keyboardType: "email-address",
                   maxLength: 254,
                 },

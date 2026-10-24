@@ -1,44 +1,12 @@
 import React from "react";
-import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Avatar, IconButton, Text } from "react-native-paper";
-import { useRouter } from "expo-router";
+import useHomeHeader from "../../hooks/useHomeHeader";
 import { colors } from "../../theme/colors";
-import useAuthStore from "../../../store/authStore";
 
 export default function HomeHeader() {
-  const router = useRouter();
-  const { user, logout } = useAuthStore();
-
-  const handleAvatarPress = () => {
-    const alertButtons = [
-      { text: "Đóng", style: "cancel" },
-      ...(user?.role === "admin"
-        ? [
-            {
-              text: "Quản trị người dùng (Admin)",
-              onPress: () => router.push("/admin/users"),
-            },
-          ]
-        : []),
-      {
-        text: "Đăng xuất",
-        style: "destructive",
-        onPress: async () => {
-          await logout();
-          router.replace("/(auth)/login");
-        },
-      },
-    ];
-
-    Alert.alert(
-      user ? `Xin chào, ${user.fullName || "Người dùng"}!` : "Tài khoản",
-      user
-        ? `Email: ${user.email}\nVai trò: ${user.role || "customer"}`
-        : "Bạn chưa đăng nhập",
-      alertButtons
-    );
-  };
+  const { user, openAdmin, openAccountMenu, isLoggingOut, logoutError, roleLabel } = useHomeHeader();
 
   const initials = user?.fullName
     ? user.fullName
@@ -64,15 +32,15 @@ export default function HomeHeader() {
           {user?.role === "admin" && (
             <TouchableOpacity
               style={styles.adminBadgeBtn}
-              onPress={() => router.push("/admin/users")}
+              onPress={openAdmin}
               activeOpacity={0.8}
             >
               <Ionicons name="shield-checkmark" size={14} color="#FFFFFF" />
-              <Text style={styles.adminBadgeBtnText}>Admin</Text>
+              <Text style={styles.adminBadgeBtnText}>{roleLabel}</Text>
             </TouchableOpacity>
           )}
           <IconButton icon="bell-outline" iconColor="#183B2B" size={20} style={styles.bellButton} />
-          <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.8}>
+          <TouchableOpacity onPress={openAccountMenu} disabled={isLoggingOut} activeOpacity={0.8}>
             <Avatar.Text
               size={38}
               label={initials}
@@ -84,6 +52,7 @@ export default function HomeHeader() {
         </View>
       </View>
 
+      {!!logoutError && <Text accessibilityRole="alert">{logoutError}</Text>}
       {/* GREETING */}
       <View style={styles.greetingSection}>
         <Text style={styles.greetingSub}>
@@ -103,6 +72,8 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 12,

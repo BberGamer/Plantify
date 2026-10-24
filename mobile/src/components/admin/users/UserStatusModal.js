@@ -69,7 +69,7 @@ export default function UserStatusModal({
             <Text style={styles.confirmPromptText}>
               Bạn có chắc chắn muốn{" "}
               <Text style={{ fontWeight: "700" }}>
-                {isCurrentlyActive ? "KHÓA (BAN)" : "KÍCH HOẠT LẠI"}
+                {isCurrentlyActive ? "KHÓA TÀI KHOẢN" : "KÍCH HOẠT LẠI"}
               </Text>{" "}
               tài khoản:
             </Text>

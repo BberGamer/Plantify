@@ -162,7 +162,7 @@ const updateUserInfoAndStatus = async (userId, updateData = {}, currentAdminId) 
   if (status !== undefined) {
     const parsedStatus = status === "true" || status === true ? true : (status === "false" || status === false ? false : null);
     if (parsedStatus === null) {
-      const err = new Error("Trạng thái không hợp lệ (chỉ chấp nhận true: Hoạt động, false: Khóa/Banned).");
+      const err = new Error("Trạng thái không hợp lệ. Vui lòng chọn hoạt động hoặc bị khóa.");
       err.statusCode = 400;
       throw err;
     }
@@ -180,13 +180,13 @@ const updateUserInfoAndStatus = async (userId, updateData = {}, currentAdminId) 
     const allowedRoles = ["customer", "manager", "admin"];
     const normalizedRole = role.toLowerCase().trim();
     if (!allowedRoles.includes(normalizedRole)) {
-      const err = new Error("Vai trò không hợp lệ (chỉ chấp nhận: customer, manager, admin).");
+      const err = new Error("Vai trò không hợp lệ. Vui lòng chọn khách hàng, quản lý hoặc quản trị viên.");
       err.statusCode = 400;
       throw err;
     }
 
     if (userId.toString() === currentAdminId?.toString() && normalizedRole !== "admin") {
-      const err = new Error("Bạn không thể tự hạ quyền vai trò admin của chính mình.");
+      const err = new Error("Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình.");
       err.statusCode = 400;
       throw err;
     }
@@ -219,7 +219,7 @@ const updateUserStatus = async (userId, status, currentAdminId) => {
 
   const parsedStatus = status === "true" || status === true ? true : (status === "false" || status === false ? false : null);
   if (parsedStatus === null) {
-    const err = new Error("Trạng thái tài khoản là bắt buộc (true: Hoạt động, false: Khóa/Banned).");
+    const err = new Error("Vui lòng chọn trạng thái tài khoản: hoạt động hoặc bị khóa.");
     err.statusCode = 400;
     throw err;
   }
@@ -263,7 +263,7 @@ const updateUserRole = async (userId, role, currentAdminId) => {
   }
 
   if (!role || typeof role !== "string") {
-    const err = new Error("Vai trò là bắt buộc (customer, manager, admin).");
+    const err = new Error("Vui lòng chọn vai trò: khách hàng, quản lý hoặc quản trị viên.");
     err.statusCode = 400;
     throw err;
   }
@@ -271,13 +271,13 @@ const updateUserRole = async (userId, role, currentAdminId) => {
   const normalizedRole = role.toLowerCase().trim();
   const allowedRoles = ["customer", "manager", "admin"];
   if (!allowedRoles.includes(normalizedRole)) {
-    const err = new Error("Vai trò không hợp lệ. Chỉ chấp nhận: customer, manager, admin.");
+    const err = new Error("Vai trò không hợp lệ. Vui lòng chọn khách hàng, quản lý hoặc quản trị viên.");
     err.statusCode = 400;
     throw err;
   }
 
   if (userId.toString() === currentAdminId?.toString() && normalizedRole !== "admin") {
-    const err = new Error("Bạn không thể tự hạ quyền vai trò admin của chính mình.");
+    const err = new Error("Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình.");
     err.statusCode = 400;
     throw err;
   }

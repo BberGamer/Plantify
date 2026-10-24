@@ -50,7 +50,7 @@ const sendRegisterOTP = async (req, res, next) => {
     await authService.sendRegisterOTP(req.body);
     return success(
       res,
-      "Mã xác thực OTP đã được gửi về email của bạn. Vui lòng kiểm tra hộp thư.",
+      "Mã xác thực đã được gửi về email của bạn. Vui lòng kiểm tra hộp thư.",
       null,
       200
     );
@@ -73,7 +73,7 @@ const verifyRegisterOTP = async (req, res, next) => {
     }
 
     if (!otp || otp.toString().trim().length !== 6) {
-      const err = new Error("Mã OTP không hợp lệ (phải gồm 6 chữ số).");
+      const err = new Error("Mã xác thực không hợp lệ (phải gồm 6 chữ số).");
       err.statusCode = 400;
       throw err;
     }
@@ -162,7 +162,7 @@ const resetPassword = async (req, res, next) => {
     const { email, otp, newPassword } = req.body;
 
     if (!email || !otp || !newPassword) {
-      const err = new Error("Vui lòng nhập đầy đủ email, mã OTP và mật khẩu mới.");
+      const err = new Error("Vui lòng nhập đầy đủ email, mã xác thực và mật khẩu mới.");
       err.statusCode = 400;
       throw err;
     }

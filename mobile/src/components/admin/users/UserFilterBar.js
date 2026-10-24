@@ -12,9 +12,9 @@ import { garden, ROLE_META } from "./theme";
 
 export const USER_ROLES = [
   { key: "all", label: "Tất cả", icon: "grid-outline" },
-  { key: "customer", label: "Customer", icon: ROLE_META.customer.icon },
-  { key: "manager", label: "Manager", icon: ROLE_META.manager.icon },
-  { key: "admin", label: "Admin", icon: ROLE_META.admin.icon },
+  { key: "customer", label: ROLE_META.customer.label, icon: ROLE_META.customer.icon },
+  { key: "manager", label: ROLE_META.manager.label, icon: ROLE_META.manager.icon },
+  { key: "admin", label: ROLE_META.admin.label, icon: ROLE_META.admin.icon },
 ];
 
 export const USER_STATUSES = [

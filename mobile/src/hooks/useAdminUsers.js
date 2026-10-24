@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import getErrorMessage from "../utils/getErrorMessage";
+// useAdminUsers.js - Quản lý danh sách, bộ lọc và thao tác tài khoản của Admin.
+import { useState, useEffect, useCallback, useRef } from "react";
 import userService from "../services/userService";
 import useAuthStore from "../../store/authStore";
 
 export default function useAdminUsers() {
-  const { user: currentAdmin } = useAuthStore();
+  const currentAdmin = useAuthStore((state) => state.user);
   const currentAdminId = currentAdmin?._id || currentAdmin?.id;
-
-  // Danh sach & phan trang
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState({
     totalUsers: 0,
@@ -17,24 +17,16 @@ export default function useAdminUsers() {
     hasPrevPage: false,
   });
   const [loading, setLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  // Filter & search
-  const [search, setSearch] = useState("");
-  const [selectedRole, setSelectedRole] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
-
-  // Toast notification
-  const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
-
-  const showToast = useCallback((message, type = "success") => {
-    setToast({ visible: true, message, type });
-    setTimeout(() => {
-      setToast({ visible: false, message: "", type: "success" });
-    }, 3500);
-  }, []);
-
-  // Modal Chi tiet & Cap nhat User
+  const [search, updateSearch] = useState("");
+  const [selectedRole, updateSelectedRole] = useState("all");
+  const [selectedStatus, updateSelectedStatus] = useState("all");
+  const [toast, setToast] = useState({
+    visible: false,
+    message: "",
+    type: "success",
+  });
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [editFullName, setEditFullName] = useState("");
@@ -42,219 +34,265 @@ export default function useAdminUsers() {
   const [editRole, setEditRole] = useState("customer");
   const [editStatus, setEditStatus] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
-  // Modal Doi Role
   const [roleModalVisible, setRoleModalVisible] = useState(false);
   const [targetUserForRole, setTargetUserForRole] = useState(null);
   const [newRoleSelection, setNewRoleSelection] = useState("customer");
-
-  // Modal Xac nhan Khoa / Kich hoat
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [targetUserForStatus, setTargetUserForStatus] = useState(null);
   const [statusLoading, setStatusLoading] = useState(false);
+  const mounted = useRef(false);
+  const listRequest = useRef(0);
+  const detailRequest = useRef(0);
+  const mutationPending = useRef(false);
+  const toastTimer = useRef(null);
+  const query = useRef({ search: "", role: "all", status: "all" });
+  const pageRef = useRef(1);
 
-  // Goi API lay danh sach user
+  const showToast = useCallback((message, type = "success") => {
+    if (!mounted.current) return;
+    clearTimeout(toastTimer.current);
+    setToast({ visible: true, message, type });
+    toastTimer.current = setTimeout(() => {
+      if (mounted.current)
+        setToast({ visible: false, message: "", type: "success" });
+    }, 3500);
+  }, []);
+
   const fetchUsers = useCallback(
     async (page = 1, isRefresh = false) => {
+      const requestId = ++listRequest.current;
+      const isCurrent = () =>
+        mounted.current && requestId === listRequest.current;
+      pageRef.current = page;
+      setLoading(!isRefresh);
+      setRefreshing(isRefresh);
+      const current = query.current;
+      const params = { page, limit: 10 };
+      if (current.search.trim()) params.search = current.search.trim();
+      if (current.role !== "all") params.role = current.role;
+      if (current.status !== "all") params.status = current.status;
       try {
-        if (isRefresh) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
+        const response = await userService.getUsers(params);
+        if (
+          !response?.success ||
+          !Array.isArray(response.data?.users) ||
+          !response.data?.pagination
+        ) {
+          throw new Error(
+            response?.message || "Dữ liệu người dùng không hợp lệ.",
+          );
         }
-
-        const params = {
-          page,
-          limit: 10,
-        };
-
-        if (search.trim()) {
-          params.search = search.trim();
-        }
-        if (selectedRole !== "all") {
-          params.role = selectedRole;
-        }
-        if (selectedStatus !== "all") {
-          params.status = selectedStatus;
-        }
-
-        const res = await userService.getUsers(params);
-        if (res.success && res.data) {
-          setUsers(res.data.users || []);
-          if (res.data.pagination) {
-            setPagination(res.data.pagination);
-          }
-        }
-      } catch (err) {
-        const errorMsg =
-          err.response?.data?.message || err.message || "Không thể tải danh sách người dùng";
-        showToast(errorMsg, "error");
+        if (!isCurrent()) return;
+        setUsers(response.data.users);
+        setPagination(response.data.pagination);
+      } catch (error) {
+        if (isCurrent())
+          showToast(
+            getErrorMessage(error, "Không tải được danh sách người dùng."),
+            "error",
+          );
       } finally {
-        setLoading(false);
-        setRefreshing(false);
+        if (isCurrent()) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     },
-    [search, selectedRole, selectedStatus, showToast]
+    [showToast],
   );
 
   useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      ++listRequest.current;
+      ++detailRequest.current;
+      clearTimeout(toastTimer.current);
+    };
+  }, []);
+  useEffect(() => {
     fetchUsers(1);
-  }, [selectedRole, selectedStatus]);
+  }, [selectedRole, selectedStatus, fetchUsers]);
 
-  const handleSearchSubmit = () => {
-    fetchUsers(1);
+  const setSearch = (value) => {
+    query.current.search = value;
+    updateSearch(value);
   };
-
+  const setSelectedRole = (value) => {
+    query.current.role = value;
+    updateSelectedRole(value);
+  };
+  const setSelectedStatus = (value) => {
+    query.current.status = value;
+    updateSelectedStatus(value);
+  };
+  const handleSearchSubmit = () => fetchUsers(1);
   const handleSearchClear = () => {
     setSearch("");
-    fetchUsers(1);
+    return fetchUsers(1);
   };
+  const handleRefresh = () => fetchUsers(pageRef.current, true);
 
-  const handleRefresh = () => {
-    fetchUsers(pagination.currentPage, true);
-  };
-
-  // 1. Xem chi tiet user
   const handleOpenDetail = async (item) => {
+    if (mutationPending.current) return;
+    const requestId = ++detailRequest.current;
+    const isCurrent = () =>
+      mounted.current && requestId === detailRequest.current;
+    setDetailLoading(true);
     try {
-      setLoading(true);
-      const res = await userService.getUserById(item._id);
-      const userData = res.data || item;
-      setSelectedUser(userData);
-      setEditFullName(userData.fullName || "");
-      setEditPhone(userData.phone || "");
-      setEditRole(userData.role || "customer");
-      setEditStatus(userData.status !== undefined ? userData.status : true);
+      const response = await userService.getUserById(item._id);
+      if (!response?.success || !response.data?._id)
+        throw new Error(
+          response?.message || "Không lấy được thông tin tài khoản.",
+        );
+      if (!isCurrent()) return;
+      const user = response.data;
+      setSelectedUser(user);
+      setEditFullName(user.fullName || "");
+      setEditPhone(user.phone || "");
+      setEditRole(user.role || "customer");
+      setEditStatus(user.status !== false);
       setDetailModalVisible(true);
-    } catch (err) {
-      const errorMsg =
-        err.response?.data?.message || err.message || "Không thể lấy thông tin chi tiết";
-      showToast(errorMsg, "error");
+    } catch (error) {
+      if (isCurrent())
+        showToast(
+          getErrorMessage(error, "Không lấy được thông tin tài khoản."),
+          "error",
+        );
     } finally {
-      setLoading(false);
+      if (isCurrent()) setDetailLoading(false);
     }
   };
 
-  // 2. Cap nhat thong tin & trang thai user
   const handleSaveUserInfo = async () => {
-    if (!selectedUser) return;
+    if (mutationPending.current || !selectedUser || !detailModalVisible) return;
     if (!editFullName.trim()) {
       showToast("Họ và tên không được để trống.", "error");
       return;
     }
-
+    mutationPending.current = true;
+    setSubmitting(true);
     try {
-      setSubmitting(true);
       const payload = {
         fullName: editFullName.trim(),
         phone: editPhone.trim(),
         role: editRole,
         status: editStatus,
       };
-
-      const res = await userService.updateUser(selectedUser._id, payload);
-      showToast(res.message || "Cập nhật thông tin thành công!");
-      setDetailModalVisible(false);
-
-      // Optimistic update
-      setUsers((prev) =>
-        prev.map((u) => (u._id === selectedUser._id ? { ...u, ...payload } : u))
+      const response = await userService.updateUser(selectedUser._id, payload);
+      if (!response?.success)
+        throw new Error(response?.message || "Cập nhật thông tin thất bại.");
+      if (!mounted.current) return;
+      setUsers((previous) =>
+        previous.map((user) =>
+          user._id === selectedUser._id ? { ...user, ...payload } : user,
+        ),
       );
-      fetchUsers(pagination.currentPage);
-    } catch (err) {
-      const errorMsg =
-        err.response?.data?.message || err.message || "Cập nhật thông tin thất bại";
-      showToast(errorMsg, "error");
+      setDetailModalVisible(false);
+      showToast(response.message || "Cập nhật thông tin thành công!");
+      await fetchUsers(pageRef.current, true);
+    } catch (error) {
+      if (mounted.current)
+        showToast(
+          getErrorMessage(error, "Cập nhật thông tin thất bại."),
+          "error",
+        );
     } finally {
-      setSubmitting(false);
+      mutationPending.current = false;
+      if (mounted.current) setSubmitting(false);
     }
   };
 
-  // 3. Mo Modal Xac nhan Khoa / Kich hoat
   const handleOpenStatusConfirm = (target) => {
-    const isCurrentlyActive = target.status !== false;
-
-    // Chan admin tu khoa chinh minh
-    if (target._id === currentAdminId && isCurrentlyActive) {
+    if (mutationPending.current) return;
+    if (target._id === currentAdminId && target.status !== false) {
       showToast("Bạn không thể tự khóa tài khoản của chính mình!", "error");
       return;
     }
-
     setTargetUserForStatus(target);
     setConfirmModalVisible(true);
   };
-
-  // Thuc thi Khoa / Kich hoat khi bam xac nhan trong Modal
   const handleConfirmStatusChange = async () => {
-    if (!targetUserForStatus) return;
-
+    if (mutationPending.current || !targetUserForStatus || !confirmModalVisible)
+      return;
+    mutationPending.current = true;
+    setStatusLoading(true);
     const target = targetUserForStatus;
-    const isCurrentlyActive = target.status !== false;
-    const newStatus = !isCurrentlyActive;
-
+    const status = target.status === false;
     try {
-      setStatusLoading(true);
-
-      // Optimistic update
-      setUsers((prev) =>
-        prev.map((u) => (u._id === target._id ? { ...u, status: newStatus } : u))
+      const response = await userService.updateUserStatus(target._id, status);
+      if (!response?.success)
+        throw new Error(response?.message || "Thao tác thất bại.");
+      if (!mounted.current) return;
+      setUsers((previous) =>
+        previous.map((user) =>
+          user._id === target._id ? { ...user, status } : user,
+        ),
       );
-
-      const res = await userService.updateUserStatus(target._id, newStatus);
-      showToast(res.message || (newStatus ? "Kích hoạt thành công!" : "Khóa tài khoản thành công!"));
-
       setConfirmModalVisible(false);
       setTargetUserForStatus(null);
-
-      fetchUsers(pagination.currentPage);
-    } catch (err) {
-      // Rollback neu loi
-      setUsers((prev) =>
-        prev.map((u) => (u._id === target._id ? { ...u, status: isCurrentlyActive } : u))
-      );
-      const errorMsg =
-        err.response?.data?.message || err.message || "Thao tác thất bại";
-      showToast(errorMsg, "error");
+      showToast(response.message || "Cập nhật trạng thái thành công!");
+      await fetchUsers(pageRef.current, true);
+    } catch (error) {
+      if (mounted.current)
+        showToast(
+          getErrorMessage(error, "Thao tác thất bại."),
+          "error",
+        );
     } finally {
-      setStatusLoading(false);
+      mutationPending.current = false;
+      if (mounted.current) setStatusLoading(false);
     }
   };
 
-  // 4. Mo Modal doi vai tro
   const handleOpenRoleModal = (target) => {
+    if (mutationPending.current) return;
     setTargetUserForRole(target);
     setNewRoleSelection(target.role || "customer");
     setRoleModalVisible(true);
   };
-
   const handleConfirmRoleChange = async () => {
-    if (!targetUserForRole) return;
-
-    if (targetUserForRole._id === currentAdminId && newRoleSelection !== "admin") {
-      showToast("Bạn không thể tự hạ quyền vai trò admin của chính mình!", "error");
+    if (mutationPending.current || !targetUserForRole || !roleModalVisible)
+      return;
+    if (
+      targetUserForRole._id === currentAdminId &&
+      newRoleSelection !== "admin"
+    ) {
+      showToast(
+        "Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình!",
+        "error",
+      );
       return;
     }
-
+    mutationPending.current = true;
+    setSubmitting(true);
     try {
-      setSubmitting(true);
-      const res = await userService.updateUserRole(targetUserForRole._id, newRoleSelection);
-      showToast(res.message || "Cập nhật vai trò thành công!");
-
-      // Optimistic update
-      setUsers((prev) =>
-        prev.map((u) =>
-          u._id === targetUserForRole._id ? { ...u, role: newRoleSelection } : u
-        )
+      const response = await userService.updateUserRole(
+        targetUserForRole._id,
+        newRoleSelection,
       );
-
+      if (!response?.success)
+        throw new Error(response?.message || "Cập nhật vai trò thất bại.");
+      if (!mounted.current) return;
+      setUsers((previous) =>
+        previous.map((user) =>
+          user._id === targetUserForRole._id
+            ? { ...user, role: newRoleSelection }
+            : user,
+        ),
+      );
       setRoleModalVisible(false);
-      fetchUsers(pagination.currentPage);
-    } catch (err) {
-      const errorMsg =
-        err.response?.data?.message || err.message || "Không thể cập nhật vai trò";
-      showToast(errorMsg, "error");
+      showToast(response.message || "Cập nhật vai trò thành công!");
+      await fetchUsers(pageRef.current, true);
+    } catch (error) {
+      if (mounted.current)
+        showToast(
+          getErrorMessage(error, "Cập nhật vai trò thất bại."),
+          "error",
+        );
     } finally {
-      setSubmitting(false);
+      mutationPending.current = false;
+      if (mounted.current) setSubmitting(false);
     }
   };
 
@@ -262,7 +300,7 @@ export default function useAdminUsers() {
     currentAdminId,
     users,
     pagination,
-    loading,
+    loading: loading || detailLoading,
     refreshing,
     search,
     setSearch,
@@ -277,32 +315,48 @@ export default function useAdminUsers() {
     handleSearchClear,
     // Detail modal
     detailModalVisible,
-    setDetailModalVisible,
+    setDetailModalVisible: (value) => {
+      if (!mutationPending.current) setDetailModalVisible(value);
+    },
     selectedUser,
     editFullName,
-    setEditFullName,
+    setEditFullName: (value) => {
+      if (!mutationPending.current) setEditFullName(value);
+    },
     editPhone,
-    setEditPhone,
+    setEditPhone: (value) => {
+      if (!mutationPending.current) setEditPhone(value);
+    },
     editRole,
-    setEditRole,
+    setEditRole: (value) => {
+      if (!mutationPending.current) setEditRole(value);
+    },
     editStatus,
-    setEditStatus,
+    setEditStatus: (value) => {
+      if (!mutationPending.current) setEditStatus(value);
+    },
     submitting,
     handleOpenDetail,
     handleSaveUserInfo,
     // Status modal
     confirmModalVisible,
-    setConfirmModalVisible,
+    setConfirmModalVisible: (value) => {
+      if (!mutationPending.current) setConfirmModalVisible(value);
+    },
     targetUserForStatus,
     statusLoading,
     handleOpenStatusConfirm,
     handleConfirmStatusChange,
     // Role modal
     roleModalVisible,
-    setRoleModalVisible,
+    setRoleModalVisible: (value) => {
+      if (!mutationPending.current) setRoleModalVisible(value);
+    },
     targetUserForRole,
     newRoleSelection,
-    setNewRoleSelection,
+    setNewRoleSelection: (value) => {
+      if (!mutationPending.current) setNewRoleSelection(value);
+    },
     handleOpenRoleModal,
     handleConfirmRoleChange,
   };

@@ -14,17 +14,17 @@ import { garden, getRoleMeta, leafShape } from "./theme";
 const ROLE_OPTIONS = [
   {
     key: "customer",
-    title: "CUSTOMER",
-    description: "Người trồng cây · khách hàng sử dụng app",
+    title: getRoleMeta("customer").label,
+    description: "Người trồng cây · khách hàng sử dụng ứng dụng",
   },
   {
     key: "manager",
-    title: "MANAGER",
+    title: getRoleMeta("manager").label,
     description: "Người chăm vườn · quản lý nội dung & cây cảnh",
   },
   {
     key: "admin",
-    title: "ADMIN",
+    title: getRoleMeta("admin").label,
     description: "Người giữ rừng · toàn quyền quản trị hệ thống",
   },
 ];

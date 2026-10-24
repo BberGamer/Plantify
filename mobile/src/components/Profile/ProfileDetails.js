@@ -37,7 +37,7 @@ export default function ProfileDetails({ user, ...actions }) {
               />
               <ProfileInfoRow
                 icon="mail-outline"
-                label="Email"
+                label="Địa chỉ email"
                 value={email || "Chưa cập nhật email"}
               />
               <ProfileInfoRow
