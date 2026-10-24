@@ -14,10 +14,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../src/theme/colors";
 import { useRouter } from "expo-router";
 import useRegister from "../../src/hooks/useRegister";
+import useFormBack from "../../src/hooks/useFormBack";
 import RegisterForm from "../../src/components/auth/RegisterForm";
 import RegisterOtpForm from "../../src/components/auth/RegisterOtpForm";
 export default function RegisterScreen() {
   const registration = useRegister();
+  useFormBack(registration.goBack, registration.loading);
   const router = useRouter();
   return (
     <SafeAreaView style={styles.safeArea}>

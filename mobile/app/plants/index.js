@@ -5,12 +5,13 @@ import { ActivityIndicator, Button, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors } from "../../src/theme/colors";
-import Navbar from "../../src/components/home/Navbar";
+import Navbar from "../../src/components/navigation/Navbar";
 import usePlantDirectory from "../../src/hooks/usePlantDirectory";
 import PlantDirectoryHeader from "../../src/components/plants/PlantDirectoryHeader";
 import PlantDirectoryFilters from "../../src/components/plants/PlantDirectoryFilters";
 import PlantDirectoryCard from "../../src/components/plants/PlantDirectoryCard";
 import ListPagination from "../../src/components/common/ListPagination";
+import ListError from "../../src/components/common/ListError";
 export default function PlantDirectoryScreen() {
   const directory = usePlantDirectory();
   const router = useRouter();
@@ -45,10 +46,7 @@ export default function PlantDirectoryScreen() {
         </View>
       ) : directory.error ? (
         <View style={styles.centerBox}>
-          <Text style={styles.errorText} accessibilityRole="alert">
-            {directory.error}
-          </Text>
-          <Button onPress={directory.refetch}>Thử lại</Button>
+          <ListError message={directory.error} onRetry={directory.refetch} busy={directory.refreshing} />
         </View>
       ) : (
         <FlatList
@@ -130,12 +128,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     color: colors.textMuted,
-  },
-  errorText: {
-    fontSize: 14,
-    color: colors.statusError,
-    textAlign: "center",
-    paddingHorizontal: 32,
   },
   emptyBox: {
     alignItems: "center",

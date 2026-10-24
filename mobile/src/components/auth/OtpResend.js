@@ -1,5 +1,6 @@
+import { control, spacing } from "../../theme/tokens";
 // OtpResend.js - Hiển thị thời gian chờ và nút gửi lại OTP.
-import React from "react";
+
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "react-native-paper";
 import { colors } from "../../theme/colors";
@@ -16,6 +17,8 @@ export default function OtpResend({ countdown, disabled, onResend }) {
           onPress={onResend}
           disabled={disabled}
           accessibilityRole="button"
+          accessibilityState={{ disabled: Boolean(disabled) }}
+          style={styles.touch}
         >
           <Text style={[styles.action, disabled && styles.disabled]}>
             Gửi lại mã
@@ -27,7 +30,8 @@ export default function OtpResend({ countdown, disabled, onResend }) {
 }
 
 const styles = StyleSheet.create({
-  row: { alignItems: "center", marginVertical: 12 },
+  touch: { minHeight: control.touchSize, justifyContent: "center" },
+  row: { alignItems: "center", marginVertical: spacing.md },
   timer: { color: colors.textSecondary, fontSize: 13 },
   action: {
     color: colors.primary,

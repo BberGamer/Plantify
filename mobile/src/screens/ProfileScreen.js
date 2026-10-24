@@ -1,11 +1,11 @@
-import React from "react";
+
 import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ProfileHeader from "../components/Profile/ProfileHeader";
-import ProfileIdentity from "../components/Profile/ProfileIdentity";
-import ProfileDetails from "../components/Profile/ProfileDetails";
-import ProfileLogout from "../components/Profile/ProfileLogout";
-import Navbar from "../components/home/Navbar";
+import ProfileHeader from "../components/profile/ProfileHeader";
+import ProfileIdentity from "../components/profile/ProfileIdentity";
+import ProfileDetails from "../components/profile/ProfileDetails";
+import ProfileLogout from "../components/profile/ProfileLogout";
+import Navbar from "../components/navigation/Navbar";
 import useProfile from "../hooks/useProfile";
 import { colors } from "../theme/colors";
 

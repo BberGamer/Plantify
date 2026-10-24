@@ -1,10 +1,10 @@
-import React from "react";
+import { spacing } from "../../theme/tokens";
+
 import { View, StyleSheet } from "react-native";
 import { Text, Button } from "react-native-paper";
 import ProfileInfoRow from "./ProfileInfoRow";
 import ProfileEditForm from "./ProfileEditForm";
 import { colors } from "../../theme/colors";
-import { profileTheme } from "./profileTheme";
 
 export default function ProfileDetails({ user, editing, isLoggingOut, startEditing, message,
   form, changeField, saving, cancelEditing, saveProfile }) {
@@ -16,7 +16,7 @@ export default function ProfileDetails({ user, editing, isLoggingOut, startEditi
           <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
           {!editing && (
             <Button
-              theme={profileTheme}
+
               icon="pencil-outline"
               onPress={startEditing}
               disabled={isLoggingOut}
@@ -65,9 +65,9 @@ sectionHeading: {
     alignItems: "center",
     justifyContent: "space-between",
     marginTop: 18,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
-formMessage: { marginTop: 12, color: colors.primaryText, fontSize: 13 },
+formMessage: { marginTop: spacing.md, color: colors.primaryText, fontSize: 13 },
 sectionTitle: {
     fontSize: 18,
     fontWeight: "800",

@@ -1,5 +1,5 @@
-import React from "react";
-import { Button } from "react-native-paper";
+
+
 import {
   StyleSheet,
   View,
@@ -9,8 +9,9 @@ import {
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "../../src/theme/colors";
+
 import { garden } from "../../src/components/admin/users/theme";
+import ListError from "../../src/components/common/ListError";
 import useAdminUsers from "../../src/hooks/useAdminUsers";
 import {
   UserToastBanner,
@@ -94,10 +95,7 @@ export default function AdminUsersScreen() {
         />
 
         {!!listError && (
-          <View style={styles.errorBox}>
-            <Text accessibilityRole="alert">{listError}</Text>
-            <Button onPress={handleRefresh}>Thử lại</Button>
-          </View>
+          <ListError message={listError} onRetry={handleRefresh} busy={loading || refreshing} />
         )}
         {/* USER LIST */}
         {loading && !refreshing ? (
@@ -180,7 +178,6 @@ export default function AdminUsersScreen() {
 }
 
 const styles = StyleSheet.create({
-  errorBox: { padding: 16 },
   safeArea: {
     flex: 1,
     backgroundColor: garden.forest,

@@ -9,23 +9,25 @@ export const colors = {
   warmPeachBg: '#FFF8EE',
   softSproutBg: '#F4FBF7',
   softPurpleBg: '#F6F4FC',
-  
+
   white: '#FFFFFF',
   background: '#F9FAF9',
   cardBackground: '#FFFFFF',
-  
+
   textPrimary: '#183B2B',
   textSecondary: '#6B7280',
   textMuted: '#9CA3AF',
   textWhite: '#FFFFFF',
-  
+
   border: '#E8ECE9',
   borderLight: '#F0F3F1',
-  
+  inputBorder: '#D1D5DB',
+
   statusSuccess: '#22C55E',
   statusWarning: '#F59E0B',
   statusError: '#EF4444',
-  
+  errorBackground: '#FEF2F2',
+
   avatarBg: '#9E6740',
 };
 

@@ -1,15 +1,18 @@
-import React from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { spacing, radius, typography } from "../../../theme/tokens";
+
 import {
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
   Modal,
-  ActivityIndicator,
+  ScrollView,
 } from "react-native";
+import { Button } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../theme/colors";
-import { garden, getRoleMeta, leafShape } from "./theme";
+import { garden, leafShape } from "./theme";
 
 export default function UserStatusModal({
   visible,
@@ -20,15 +23,16 @@ export default function UserStatusModal({
 }) {
   const isCurrentlyActive = targetUser?.status !== false;
 
+  const close = () => { if (!loading) onClose(); };
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={close}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
+        <SafeAreaView edges={["bottom", "left", "right"]} style={styles.modalCard}>
           {/* HEADER */}
           <View style={styles.modalHeader}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -55,7 +59,7 @@ export default function UserStatusModal({
             </View>
 
             <TouchableOpacity
-              onPress={onClose}
+              disabled={loading} onPress={close}
               style={styles.closeBtn}
               accessibilityRole="button"
               accessibilityLabel="Đóng"
@@ -65,7 +69,7 @@ export default function UserStatusModal({
           </View>
 
           {/* BODY */}
-          <View style={styles.modalBody}>
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalBody}>
             <Text style={styles.confirmPromptText}>
               Bạn có chắc chắn muốn{" "}
               <Text style={{ fontWeight: "700" }}>
@@ -100,38 +104,16 @@ export default function UserStatusModal({
                   : "Sau khi kích hoạt, tài khoản này có thể đăng nhập và sử dụng ứng dụng bình thường."}
               </Text>
             </View>
-          </View>
+          </ScrollView>
 
           {/* FOOTER */}
           <View style={styles.modalFooter}>
-            <TouchableOpacity
-              style={styles.cancelBtn}
-              onPress={onClose}
-              disabled={loading}
-            >
-              <Text style={styles.cancelBtnText}>Hủy bỏ</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.saveBtn,
-                isCurrentlyActive
-                  ? { backgroundColor: garden.terracotta }
-                  : { backgroundColor: garden.moss },
-              ]}
-              onPress={onConfirm}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.saveBtnText}>
-                  {isCurrentlyActive ? "Xác nhận Khóa" : "Xác nhận Kích hoạt"}
-                </Text>
-              )}
-            </TouchableOpacity>
+            <Button onPress={close} disabled={loading}>Hủy</Button>
+            <Button mode="contained" onPress={onConfirm} disabled={loading} loading={loading} buttonColor={isCurrentlyActive ? garden.terracotta : garden.moss}>
+              {isCurrentlyActive ? "Xác nhận khóa" : "Xác nhận kích hoạt"}
+            </Button>
           </View>
-        </View>
+        </SafeAreaView>
       </View>
     </Modal>
   );
@@ -145,8 +127,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalCard: {
+    maxHeight: "90%",
     width: "100%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.white,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     overflow: "hidden",
@@ -161,7 +144,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 18,
-    paddingTop: 20,
+    paddingTop: spacing.xl,
     paddingBottom: 14,
     backgroundColor: garden.cream,
     borderBottomWidth: 1,
@@ -178,8 +161,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   modalSubtitle: {
-    fontSize: 12,
-    color: colors.textSecondary,
+    ...typography.caption, color: colors.textSecondary,
     marginTop: 2,
   },
   closeBtn: {
@@ -202,9 +184,9 @@ const styles = StyleSheet.create({
     backgroundColor: garden.cream,
     borderWidth: 1,
     borderColor: garden.line,
-    borderRadius: 16,
-    padding: 12,
-    marginVertical: 12,
+    borderRadius: radius.card,
+    padding: spacing.md,
+    marginVertical: spacing.md,
   },
   confirmUserName: {
     fontSize: 15,
@@ -219,9 +201,9 @@ const styles = StyleSheet.create({
   noteBox: {
     flexDirection: "row",
     alignItems: "flex-start",
-    padding: 12,
+    padding: spacing.md,
     borderRadius: 14,
-    gap: 8,
+    gap: spacing.sm,
   },
   confirmNoteText: {
     flex: 1,
@@ -230,39 +212,15 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   modalFooter: {
+    flexWrap: "wrap",
     flexDirection: "row",
     justifyContent: "flex-end",
     paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
     borderTopWidth: 1,
     borderTopColor: garden.line,
     gap: 10,
   },
-  cancelBtn: {
-    paddingHorizontal: 16,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: garden.mint,
-  },
-  cancelBtnText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: "600",
-  },
-  saveBtn: {
-    flex: 1,
-    paddingHorizontal: 20,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  saveBtnText: {
-    fontSize: 14,
-    color: "#FFFFFF",
-    fontWeight: "700",
-  },
+
 });

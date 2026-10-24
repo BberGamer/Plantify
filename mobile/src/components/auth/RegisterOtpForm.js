@@ -3,10 +3,9 @@
 import {
   View,
   StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
-import { Text } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
+import { control, spacing } from "../../theme/tokens";
 import { colors } from "../../theme/colors";
 import OtpInput from "./OtpInput";
 import OtpResend from "./OtpResend";
@@ -47,46 +46,24 @@ export default function RegisterOtpForm({
       <OtpResend countdown={countdown} disabled={loading} onResend={onResend} />
 
       {/* Verify Button */}
-      <TouchableOpacity
-        style={[styles.primaryButton, loading && styles.buttonDisabled]}
-        onPress={onVerify}
-        disabled={loading}
-        activeOpacity={0.85}
-      >
-        {loading ? (
-          <View style={styles.buttonLoadingRow}>
-            <ActivityIndicator color="#FFFFFF" size="small" />
-            <Text
-              style={[
-                styles.primaryButtonText,
-                {
-                  marginLeft: 10,
-                },
-              ]}
-            >
-              Đang xác thực...
-            </Text>
-          </View>
-        ) : (
-          <Text style={styles.primaryButtonText}>
-            Xác nhận và kích hoạt tài khoản
-          </Text>
-        )}
-      </TouchableOpacity>
+      <Button mode="contained" style={styles.submit} contentStyle={{ minHeight: control.minHeight }} onPress={onVerify} disabled={loading} loading={loading}>
+          Xác nhận và kích hoạt tài khoản
+      </Button>
     </View>
   );
 }
 const styles = StyleSheet.create({
+  submit: { marginTop: spacing.md, marginBottom: spacing.xl },
   headerTitleContainer: {
-    marginBottom: 24,
+    marginBottom: spacing.xxl,
   },
   badge: {
     alignSelf: "flex-start",
-    backgroundColor: "#EDF7F1",
+    backgroundColor: colors.lightMint,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
     borderRadius: 6,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   badgeText: {
     fontSize: 11,
@@ -105,26 +82,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
   },
-  primaryButton: {
-    backgroundColor: "#0D3827",
-    height: 52,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonLoadingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+
 });

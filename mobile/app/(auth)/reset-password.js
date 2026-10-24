@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../src/theme/colors";
 import useResetPassword from "../../src/hooks/useResetPassword";
+import useFormBack from "../../src/hooks/useFormBack";
 import ResetEmailForm from "../../src/components/auth/ResetEmailForm";
 import ResetOtpForm from "../../src/components/auth/ResetOtpForm";
 import ResetPasswordForm from "../../src/components/auth/ResetPasswordForm";
@@ -20,6 +21,7 @@ import ResetSuccess from "../../src/components/auth/ResetSuccess";
 export default function ResetPasswordScreen() {
   const reset = useResetPassword();
   const busy = reset.sendingCode || reset.updatingPassword;
+  useFormBack(reset.goBack, busy);
   if (reset.resetSuccess)
     return (
       <SafeAreaView style={styles.safeArea}>

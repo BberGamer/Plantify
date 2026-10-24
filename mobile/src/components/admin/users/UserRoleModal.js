@@ -1,12 +1,15 @@
-import React from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { spacing, typography } from "../../../theme/tokens";
+
 import {
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
   Modal,
-  ActivityIndicator,
+  ScrollView,
 } from "react-native";
+import { Button } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../theme/colors";
 import { garden, getRoleMeta, leafShape } from "./theme";
@@ -38,15 +41,16 @@ export default function UserRoleModal({
   onClose,
   onConfirm,
 }) {
+  const close = () => { if (!submitting) onClose(); };
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={close}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
+        <SafeAreaView edges={["bottom", "left", "right"]} style={styles.modalCard}>
           {/* HEADER */}
           <View style={styles.modalHeader}>
             <View>
@@ -56,7 +60,7 @@ export default function UserRoleModal({
               </Text>
             </View>
             <TouchableOpacity
-              onPress={onClose}
+              disabled={submitting} onPress={close}
               style={styles.closeBtn}
               accessibilityRole="button"
               accessibilityLabel="Đóng"
@@ -66,7 +70,7 @@ export default function UserRoleModal({
           </View>
 
           {/* BODY */}
-          <View style={styles.modalBody}>
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalBody}>
             {ROLE_OPTIONS.map((item) => {
               const isSelected = selectedRole === item.key;
               return (
@@ -76,7 +80,7 @@ export default function UserRoleModal({
                     styles.roleOptionCard,
                     isSelected && styles.roleOptionCardSelected,
                   ]}
-                  onPress={() => onSelectRole(item.key)}
+                  disabled={submitting} onPress={() => onSelectRole(item.key)}
                   activeOpacity={0.7}
                 >
                   <View style={styles.roleOptionLeft}>
@@ -92,7 +96,7 @@ export default function UserRoleModal({
                         color={getRoleMeta(item.key).color}
                       />
                     </View>
-                    <View style={{ marginLeft: 12, flexShrink: 1 }}>
+                    <View style={{ marginLeft: spacing.md, flexShrink: 1 }}>
                       <Text
                         style={[
                           styles.roleOptionTitle,
@@ -113,27 +117,16 @@ export default function UserRoleModal({
                 </TouchableOpacity>
               );
             })}
-          </View>
+          </ScrollView>
 
           {/* FOOTER */}
           <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelBtnText}>Hủy</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.saveBtn}
-              onPress={onConfirm}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.saveBtnText}>Lưu vai trò</Text>
-              )}
-            </TouchableOpacity>
+            <Button onPress={close} disabled={submitting}>Hủy</Button>
+            <Button mode="contained" onPress={onConfirm} disabled={submitting} loading={submitting}>
+              Lưu vai trò
+            </Button>
           </View>
-        </View>
+        </SafeAreaView>
       </View>
     </Modal>
   );
@@ -147,8 +140,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalCard: {
+    maxHeight: "90%",
     width: "100%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.white,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     overflow: "hidden",
@@ -163,7 +157,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 18,
-    paddingTop: 20,
+    paddingTop: spacing.xl,
     paddingBottom: 14,
     backgroundColor: garden.cream,
     borderBottomWidth: 1,
@@ -175,8 +169,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   modalSubtitle: {
-    fontSize: 12,
-    color: colors.textSecondary,
+    ...typography.caption, color: colors.textSecondary,
     marginTop: 2,
   },
   closeBtn: {
@@ -222,45 +215,19 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   roleOptionSub: {
-    fontSize: 12,
-    color: colors.textSecondary,
+    ...typography.caption, color: colors.textSecondary,
     marginTop: 2,
   },
   modalFooter: {
+    flexWrap: "wrap",
     flexDirection: "row",
     justifyContent: "flex-end",
     paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
     borderTopWidth: 1,
     borderTopColor: garden.line,
     gap: 10,
   },
-  cancelBtn: {
-    paddingHorizontal: 16,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: garden.mint,
-  },
-  cancelBtnText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: "600",
-  },
-  saveBtn: {
-    flex: 1,
-    paddingHorizontal: 20,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.primary,
-  },
-  saveBtnText: {
-    fontSize: 14,
-    color: "#FFFFFF",
-    fontWeight: "700",
-  },
+
 });

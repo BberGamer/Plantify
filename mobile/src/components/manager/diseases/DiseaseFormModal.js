@@ -1,4 +1,5 @@
-import React from "react";
+import { spacing } from "../../../theme/tokens";
+
 import {
   KeyboardAvoidingView,
   Modal,
@@ -13,10 +14,10 @@ import {
   RadioButton,
   Switch,
   Text,
-  TextInput,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../../../theme/colors";
+import FormField from "../../common/FormField";
 import DiseasePlantPicker from "./DiseasePlantPicker";
 
 const PATHOGENS = [
@@ -55,12 +56,13 @@ export default function DiseaseFormModal({
   onRetryDetail,
 }) {
   const locked = saving || loading || !ready;
+  const close = () => { if (!saving) onClose(); };
   return (
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      presentationStyle="fullScreen"
+      onRequestClose={close}
     >
       <SafeAreaView style={styles.safe}>
         <KeyboardAvoidingView
@@ -68,7 +70,7 @@ export default function DiseaseFormModal({
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           <View style={styles.header}>
-            <Button onPress={onClose} disabled={saving}>
+            <Button onPress={close} disabled={saving}>
               Hủy
             </Button>
             <Text variant="titleMedium">
@@ -94,8 +96,9 @@ export default function DiseaseFormModal({
               <Button onPress={onRetryDetail}>Thử tải lại chi tiết</Button>
             )}
             {FIELDS.map(([key, label, maxLength, multiline]) => (
-              <TextInput
+              <FormField
                 key={key}
+                containerStyle={styles.field}
                 mode="outlined"
                 label={label}
                 value={form[key]}
@@ -155,14 +158,15 @@ export default function DiseaseFormModal({
 }
 
 const styles = StyleSheet.create({
+  field: { marginBottom: 0 },
   safe: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 8,
+    padding: spacing.sm,
     flexWrap: "wrap",
   },
-  form: { padding: 18, gap: 14, paddingBottom: 32 },
+  form: { padding: 18, gap: 14, paddingBottom: spacing.xxxl },
   error: { color: colors.statusError },
 });

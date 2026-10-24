@@ -20,7 +20,7 @@ export const garden = {
   inkSoft: "#4B6357",
   muted: "#7C8B83",
   line: "#E1EAE3",
-  white: "#FFFFFF",
+  white: colors.white,
   overlay: "rgba(13, 56, 39, 0.55)",
 };
 

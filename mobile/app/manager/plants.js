@@ -1,11 +1,12 @@
 // plants.js - Ghép giao diện quản lý cây từ hook và các component.
-import React from "react";
+
 import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../../src/theme/colors";
 import useManagerPlants from "../../src/hooks/useManagerPlants";
 import ListPagination from "../../src/components/common/ListPagination";
+import ListError from "../../src/components/common/ListError";
 import {
   PlantCard,
   PlantDeleteModal,
@@ -24,14 +25,7 @@ export default function ManagerPlantsScreen() {
       <PlantHeader count={manager.plants.length} total={manager.total} />
       <PlantSearchBar value={manager.search} onChange={manager.changeSearch} />
       {!!manager.listError && (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText} accessibilityRole="alert">
-            {manager.listError}
-          </Text>
-          <Button textColor={colors.primary} onPress={manager.retry}>
-            Thử lại
-          </Button>
-        </View>
+        <ListError message={manager.listError} onRetry={manager.retry} busy={manager.loading || manager.refreshing || busy} />
       )}
       {manager.loading ? (
         <View style={styles.center}>
@@ -118,13 +112,6 @@ const styles = StyleSheet.create({
   emptyList: { flexGrow: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { color: colors.textSecondary, marginTop: 12 },
-  errorBox: {
-    marginHorizontal: 18,
-    padding: 12,
-    backgroundColor: colors.warmPeachBg,
-    borderRadius: 12,
-  },
-  errorText: { color: colors.statusError },
   addButton: {
     marginHorizontal: 18,
     marginTop: 6,

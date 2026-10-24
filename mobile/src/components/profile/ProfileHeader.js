@@ -1,4 +1,5 @@
-import React from "react";
+import { spacing } from "../../theme/tokens";
+
 import { View, Pressable, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
@@ -44,7 +45,7 @@ header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
   },
 backButton: {
     width: 44,

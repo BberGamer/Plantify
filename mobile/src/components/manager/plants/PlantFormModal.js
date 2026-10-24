@@ -1,5 +1,6 @@
+import { spacing } from "../../../theme/tokens";
 // PlantFormModal.js - Giao diện PlantFormModal của màn hình quản lý cây.
-import React from "react";
+
 import {
   KeyboardAvoidingView,
   Modal,
@@ -7,11 +8,11 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { Button, Text } from "react-native-paper";
+import FormField from "../../common/FormField";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PlantCareFields from "./PlantCareFields";
 import { colors } from "../../../theme/colors";
@@ -31,30 +32,25 @@ export default function PlantFormModal({
   onCareChange,
   onRetryCategories,
 }) {
+  const close = () => { if (!saving) onClose(); };
   return (
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      presentationStyle="fullScreen"
+      onRequestClose={close}
     >
       <SafeAreaView style={styles.modalSafe}>
         <KeyboardAvoidingView
           style={styles.modalSafe}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={onClose} disabled={saving}>
-              <Text style={styles.cancelText}>Hủy</Text>
-            </TouchableOpacity>
+            <Button onPress={close} disabled={saving}>Hủy</Button>
             <Text style={styles.modalTitle}>
               {editing ? "Cập nhật cây" : "Thêm cây mới"}
             </Text>
-            <TouchableOpacity onPress={onSave} disabled={saving}>
-              <Text style={[styles.saveText, saving && styles.disabled]}>
-                {saving ? "Đang lưu…" : "Lưu"}
-              </Text>
-            </TouchableOpacity>
+            <Button onPress={onSave} disabled={saving} loading={saving}>Lưu</Button>
           </View>
           <ScrollView
             keyboardShouldPersistTaps="handled"
@@ -125,19 +121,19 @@ export default function PlantFormModal({
             ].map(([key, label]) => {
               const multiline = key === "description";
               return (
-                <View key={key} style={styles.field}>
-                  <Text style={styles.fieldLabel}>{label}</Text>
-                  <TextInput
+                <View key={key}>
+                  <FormField
+                    label={label}
                     value={form[key]}
                     onChangeText={(value) => onFieldChange(key, value)}
-                    editable={!saving}
+                    disabled={saving}
                     accessibilityLabel={label}
                     placeholder={label.replace(" *", "")}
                     placeholderTextColor={colors.textMuted}
                     multiline={multiline}
                     numberOfLines={multiline ? 4 : 1}
                     autoCapitalize="none"
-                    style={[styles.input, multiline && styles.multilineInput]}
+                    contentStyle={multiline && styles.multilineInput}
                   />
                 </View>
               );
@@ -172,7 +168,7 @@ export default function PlantFormModal({
 const styles = StyleSheet.create({
   modalSafe: { flex: 1, backgroundColor: colors.background },
   modalHeader: {
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.xl,
     paddingVertical: 14,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -181,27 +177,12 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   modalTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "800" },
-  cancelText: { color: colors.textSecondary, fontSize: 14 },
-  saveText: { color: colors.primary, fontSize: 14, fontWeight: "800" },
   form: { padding: 19, paddingBottom: 45 },
-  field: { marginBottom: 15 },
   fieldLabel: {
     color: colors.textPrimary,
     fontSize: 12,
     fontWeight: "700",
     marginBottom: 7,
-  },
-  input: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    color: colors.textPrimary,
-    fontSize: 14,
-    minHeight: 44,
-    textAlignVertical: "top",
   },
   multilineInput: { minHeight: 78 },
   categoryScroll: { flexGrow: 0, marginBottom: 19 },
@@ -210,8 +191,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 20,
     paddingHorizontal: 13,
-    paddingVertical: 8,
-    marginRight: 8,
+    paddingVertical: spacing.sm,
+    marginRight: spacing.sm,
     backgroundColor: colors.white,
   },
   categoryChipActive: {
@@ -229,13 +210,12 @@ const styles = StyleSheet.create({
   publishRow: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    marginTop: 4,
+    marginTop: spacing.xs,
     paddingTop: 15,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   publishHint: { color: colors.textSecondary, fontSize: 11, marginTop: -3 },
-  disabled: { opacity: 0.5 },
-  error: { color: colors.statusError, marginBottom: 12 },
+  error: { color: colors.statusError, marginBottom: spacing.md },
 });

@@ -12,6 +12,7 @@ export default function useLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const pending = useRef(null);
   const { capture, isActive } = useScreenScope(undefined, undefined, undefined, false);
   const isPending = () => {
@@ -22,6 +23,10 @@ export default function useLogin() {
     if (isPending() || !isActive()) return;
     const inScreen = capture(false);
     if (!email.trim() || !password) {
+      setFieldErrors({
+        ...(!email.trim() && { email: "Vui lòng nhập địa chỉ email." }),
+        ...(!password && { password: "Vui lòng nhập mật khẩu." }),
+      });
       setLocalError(
         !email.trim()
           ? "Vui lòng nhập địa chỉ email"
@@ -32,6 +37,7 @@ export default function useLogin() {
     const attempt = {};
     pending.current = attempt;
     setLocalError("");
+    setFieldErrors({});
     try {
       const request = login(email.trim(), password, inScreen);
       attempt.version = useAuthStore.getState().sessionVersion;
@@ -52,16 +58,19 @@ export default function useLogin() {
     password,
     isLoading,
     error: localError,
+    fieldErrors,
     submit,
     changeEmail: (value) => {
       if (!isPending()) {
         setEmail(value);
+        setFieldErrors((previous) => ({ ...previous, email: undefined }));
         setLocalError("");
       }
     },
     changePassword: (value) => {
       if (!isPending()) {
         setPassword(value);
+        setFieldErrors((previous) => ({ ...previous, password: undefined }));
         setLocalError("");
       }
     },

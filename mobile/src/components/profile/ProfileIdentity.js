@@ -1,4 +1,5 @@
-import React from "react";
+import { spacing } from "../../theme/tokens";
+
 import { View, StyleSheet } from "react-native";
 import { Text, Avatar } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
@@ -50,7 +51,7 @@ export default function ProfileIdentity({ user }) {
 const styles = StyleSheet.create({
 identityCard: {
     alignItems: "center",
-    padding: 24,
+    padding: spacing.xxl,
     borderRadius: 24,
     backgroundColor: colors.lightMint,
     overflow: "hidden",
