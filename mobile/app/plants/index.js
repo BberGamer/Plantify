@@ -58,7 +58,7 @@ export default function PlantDirectoryScreen() {
               item={item}
               onOpen={(id) =>
                 router.push({
-                  pathname: "/plants/[id]",
+                  pathname: "/plants/PlantList",
                   params: {
                     id,
                   },

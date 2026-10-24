@@ -1,4 +1,4 @@
-// [id].js - Ghép giao diện và hành động màn chi tiết cây.
+// PlantList.js - Ghép giao diện và hành động màn chi tiết cây.
 
 import { View, StyleSheet, ScrollView } from "react-native";
 import { ActivityIndicator, Button, Text } from "react-native-paper";
