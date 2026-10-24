@@ -5,7 +5,7 @@ import { colors } from "../../theme/colors";
 import { profileTheme } from "./profileTheme";
 
 // Hiển thị bản nháp; hook xử lý lưu/hủy.
-export default function ProfileEditForm({ form, setForm, saving, googleAccount, cancelEditing, saveProfile }) {
+export default function ProfileEditForm({ form, setForm, saving, cancelEditing, saveProfile }) {
   return (
             <View style={styles.editForm}>
               {/* Dùng cấu hình mảng để ba ô cơ bản có cùng giao diện, ít lặp code. */}
@@ -15,7 +15,6 @@ export default function ProfileEditForm({ form, setForm, saving, googleAccount, 
                   key: "email",
                   label: "Email",
                   keyboardType: "email-address",
-                  disabled: googleAccount,
                   maxLength: 254,
                 },
                 {
@@ -24,8 +23,7 @@ export default function ProfileEditForm({ form, setForm, saving, googleAccount, 
                   keyboardType: "phone-pad",
                   maxLength: 10,
                 },
-                ...(!googleAccount
-                  ? [
+                
                       {
                         key: "currentPassword",
                         label: "Mật khẩu hiện tại",
@@ -41,8 +39,6 @@ export default function ProfileEditForm({ form, setForm, saving, googleAccount, 
                         label: "Nhập lại mật khẩu mới",
                         secureTextEntry: true,
                       },
-                    ]
-                  : []),
               ].map(({ key, ...props }) => (
                 <TextInput
                   key={key}
@@ -60,9 +56,8 @@ export default function ProfileEditForm({ form, setForm, saving, googleAccount, 
                 />
               ))}
               <Text style={styles.fieldLabel}>
-                {googleAccount
-                  ? "Email và mật khẩu được quản lý bằng tài khoản Google."
-                  : "Nhập mật khẩu hiện tại nếu đổi email hoặc mật khẩu. Mật khẩu mới tối thiểu 8 ký tự."}
+                
+                  Nhập mật khẩu hiện tại nếu đổi email hoặc mật khẩu. Mật khẩu mới tối thiểu 8 ký tự.
               </Text>
               <View style={styles.formActions}>
                 <Button theme={profileTheme} disabled={saving} onPress={cancelEditing}>

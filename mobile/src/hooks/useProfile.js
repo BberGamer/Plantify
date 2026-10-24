@@ -14,8 +14,9 @@ export default function useProfile() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({});
   const [message, setMessage] = useState("");
+  //dùng useRef chống gọi API nhiều lần tránh người dùng spam
   const savePending = useRef(false);
-  const googleAccount = Boolean(user?.isGoogleAccount || user?.isAccountGoogle);
+  
   // Form là bản nháp riêng: gõ/Hủy không thay đổi thông tin thật trong store.
   const startEditing = () => {
     setForm({
@@ -95,6 +96,6 @@ export default function useProfile() {
     }
   };
 
-  return { user, editing, saving, form, setForm, message, googleAccount,
+  return { user, editing, saving, form, setForm, message,
     startEditing, cancelEditing, saveProfile, isLoggingOut, logoutError, handleLogout };
 }
