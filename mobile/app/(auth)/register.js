@@ -218,24 +218,24 @@ export default function RegisterScreen() {
           ) : null}
 
           {step === 1 ? (
-            /* =================== BUOC 1: FORM DANG KY =================== */
+            //Form đăng kí
             <View>
               <View style={styles.headerTitleContainer}>
                 <View style={styles.badge}>
-                  <Text style={styles.badgeText}>JOIN PLANTIFY</Text>
+                  <Text style={styles.badgeText}>THAM GIA PLANTIFY</Text>
                 </View>
-                <Text style={styles.title}>Create New Account</Text>
-                <Text style={styles.subtitle}>Fill in your details to get started.</Text>
+                <Text style={styles.title}>Tạo tài khoản mới</Text>
+                <Text style={styles.subtitle}>Điền thông tin của bạn để bắt đầu.</Text>
               </View>
 
               <View style={styles.form}>
                 {/* Full Name */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Full Name</Text>
+                  <Text style={styles.label}>Họ và tên</Text>
                   <View style={styles.inputWrapper}>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your full name"
+                      placeholder="Nhập họ và tên"
                       placeholderTextColor={colors.textMuted}
                       value={fullName}
                       onChangeText={(val) => {
@@ -248,11 +248,11 @@ export default function RegisterScreen() {
 
                 {/* Email Address */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Email Address</Text>
+                  <Text style={styles.label}>Địa chỉ email</Text>
                   <View style={styles.inputWrapper}>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your email address"
+                      placeholder="Nhập địa chỉ email"
                       placeholderTextColor={colors.textMuted}
                       value={email}
                       onChangeText={(val) => {
@@ -265,15 +265,15 @@ export default function RegisterScreen() {
                   </View>
                 </View>
 
-                {/* Phone Number (Optional) */}
+                {/* Phone Number (Không bắt buộc) */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>
-                    Phone Number <Text style={styles.optionalText}>(Optional)</Text>
+                    Số điện thoại <Text style={styles.optionalText}>(Không bắt buộc)</Text>
                   </Text>
                   <View style={styles.inputWrapper}>
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your phone number"
+                      placeholder="Nhập số điện thoại"
                       placeholderTextColor={colors.textMuted}
                       value={phone}
                       onChangeText={(val) => {
@@ -287,11 +287,11 @@ export default function RegisterScreen() {
 
                 {/* Password */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Password</Text>
+                  <Text style={styles.label}>Mật khẩu</Text>
                   <View style={styles.inputWrapper}>
                     <TextInput
                       style={styles.input}
-                      placeholder="Create a password"
+                      placeholder="Tạo mật khẩu"
                       placeholderTextColor={colors.textMuted}
                       value={password}
                       onChangeText={(val) => {
@@ -311,16 +311,16 @@ export default function RegisterScreen() {
                       />
                     </TouchableOpacity>
                   </View>
-                  <Text style={styles.helperText}>Use 8+ characters</Text>
+                  <Text style={styles.helperText}>Sử dụng ít nhất 8 ký tự</Text>
                 </View>
 
                 {/* Confirm Password */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Confirm Password</Text>
+                  <Text style={styles.label}>Xác nhận mật khẩu</Text>
                   <View style={styles.inputWrapper}>
                     <TextInput
                       style={styles.input}
-                      placeholder="Re-enter your password"
+                      placeholder="Nhập lại mật khẩu"
                       placeholderTextColor={colors.textMuted}
                       value={confirmPassword}
                       onChangeText={(val) => {
@@ -352,8 +352,8 @@ export default function RegisterScreen() {
                     {agreeTerms && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
                   </View>
                   <Text style={styles.termsText}>
-                    I agree to the <Text style={styles.termsHighlight}>Terms of Service</Text> and{" "}
-                    <Text style={styles.termsHighlight}>Privacy Policy</Text>.
+                    Tôi đồng ý với <Text style={styles.termsHighlight}>Điều khoản dịch vụ</Text> và{" "}
+                    <Text style={styles.termsHighlight}>Chính sách bảo mật</Text>.
                   </Text>
                 </TouchableOpacity>
 
@@ -370,34 +370,34 @@ export default function RegisterScreen() {
                       <Text style={[styles.primaryButtonText, { marginLeft: 10 }]}>Đang gửi OTP...</Text>
                     </View>
                   ) : (
-                    <Text style={styles.primaryButtonText}>Create Account</Text>
+                    <Text style={styles.primaryButtonText}>Đăng ký</Text>
                   )}
                 </TouchableOpacity>
 
                 {/* Footer Link */}
                 <View style={styles.footerContainer}>
                   <Text style={styles.footerText}>
-                    Already have an account?{" "}
+                    Bạn đã có tài khoản?{" "}
                     <Text
                       style={styles.linkText}
                       onPress={() => router.push("/(auth)/login")}
                     >
-                      Sign in
+                      Đăng nhập
                     </Text>
                   </Text>
                 </View>
               </View>
             </View>
           ) : (
-            /* =================== BUOC 2: NHAP MA OTP (KHI DA GUI THANH CONG) =================== */
+            //Nhập mã OTP
             <View>
               <View style={styles.headerTitleContainer}>
                 <View style={styles.badge}>
-                  <Text style={styles.badgeText}>STEP 2: VERIFICATION</Text>
+                  <Text style={styles.badgeText}>BƯỚC 2: XÁC THỰC</Text>
                 </View>
-                <Text style={styles.title}>Verify Your Email</Text>
+                <Text style={styles.title}>Xác thực email</Text>
                 <Text style={styles.subtitle}>
-                  We've sent a 6-digit verification code to{"\n"}
+                  Mã xác thực gồm 6 chữ số đã được gửi đến{"\n"}
                   <Text style={{ fontWeight: "700", color: colors.textPrimary }}>{email}</Text>
                 </Text>
               </View>
@@ -423,11 +423,11 @@ export default function RegisterScreen() {
               <View style={styles.resendContainer}>
                 {countdown > 0 ? (
                   <Text style={styles.resendTimerText}>
-                    Resend in <Text style={{ fontWeight: "700" }}>00:{countdown < 10 ? `0${countdown}` : countdown}</Text>
+                    Gửi lại sau <Text style={{ fontWeight: "700" }}>00:{countdown < 10 ? `0${countdown}` : countdown}</Text>
                   </Text>
                 ) : (
                   <TouchableOpacity onPress={handleResendOTP} disabled={loading}>
-                    <Text style={styles.resendActionText}>Resend Code</Text>
+                    <Text style={styles.resendActionText}>Gửi lại mã</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -445,7 +445,7 @@ export default function RegisterScreen() {
                     <Text style={[styles.primaryButtonText, { marginLeft: 10 }]}>Đang xác thực...</Text>
                   </View>
                 ) : (
-                  <Text style={styles.primaryButtonText}>Confirm & Activate Account</Text>
+                  <Text style={styles.primaryButtonText}>Xác nhận và kích hoạt tài khoản</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -620,6 +620,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   footerText: {
+    textAlign: "center",
     fontSize: 14,
     color: colors.textSecondary,
   },

@@ -30,9 +30,9 @@ export default function PlantList() {
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Cây của bạn</Text>
+        <Text style={styles.title}>Danh sách cây</Text>
         <TouchableOpacity activeOpacity={0.7}>
-          <Text style={styles.linkText}>Tất cả</Text>
+          <Text style={styles.linkText}>Xem thêm</Text>
         </TouchableOpacity>
       </View>
 
