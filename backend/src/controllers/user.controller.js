@@ -1,3 +1,4 @@
+const v = require("../validators/common");
 // controllers/user.controller.js - Dieu phoi HTTP request & response cho User Management
 const userService = require("../services/user.service");
 const { success } = require("../utils/api-response");
@@ -37,8 +38,17 @@ const updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
     const currentAdminId = req.user?.id;
-    const updatedUser = await userService.updateUserInfoAndStatus(id, req.body, currentAdminId);
-    return success(res, "Cập nhật thông tin và trạng thái người dùng thành công", updatedUser, 200);
+    const updatedUser = await userService.updateUserInfoAndStatus(
+      id,
+      req.body,
+      currentAdminId,
+    );
+    return success(
+      res,
+      "Cập nhật thông tin và trạng thái người dùng thành công",
+      updatedUser,
+      200,
+    );
   } catch (error) {
     next(error);
   }
@@ -51,10 +61,16 @@ const updateUser = async (req, res, next) => {
 const updateUserStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status } = v.object(req.body);
     const currentAdminId = req.user?.id;
-    const updatedUser = await userService.updateUserStatus(id, status, currentAdminId);
-    const msg = updatedUser.status ? "Kích hoạt tài khoản thành công" : "Khóa tài khoản người dùng thành công";
+    const updatedUser = await userService.updateUserStatus(
+      id,
+      status,
+      currentAdminId,
+    );
+    const msg = updatedUser.status
+      ? "Kích hoạt tài khoản thành công"
+      : "Khóa tài khoản người dùng thành công";
     return success(res, msg, updatedUser, 200);
   } catch (error) {
     next(error);
@@ -68,10 +84,19 @@ const updateUserStatus = async (req, res, next) => {
 const updateUserRole = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { role } = req.body;
+    const { role } = v.object(req.body);
     const currentAdminId = req.user?.id;
-    const updatedUser = await userService.updateUserRole(id, role, currentAdminId);
-    return success(res, "Cập nhật vai trò người dùng thành công", updatedUser, 200);
+    const updatedUser = await userService.updateUserRole(
+      id,
+      role,
+      currentAdminId,
+    );
+    return success(
+      res,
+      "Cập nhật vai trò người dùng thành công",
+      updatedUser,
+      200,
+    );
   } catch (error) {
     next(error);
   }

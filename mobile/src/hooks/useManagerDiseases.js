@@ -114,14 +114,15 @@ export default function useManagerDiseases() {
           page,
           limit: 100,
         });
-        if (!response?.success || !Array.isArray(response.data?.plants)) {
-          throw new Error(
-            response?.message || "Dữ liệu danh sách cây không hợp lệ.",
+        if (!isCurrent()) return;
+        if (response.data.pagination.page !== page) {
+          throw Object.assign(
+            new Error("Dữ liệu phân trang cây không hợp lệ."),
+            { code: "INVALID_RESPONSE" },
           );
         }
-        if (!isCurrent()) return;
-        plants.push(...response.data.plants);
-        totalPages = response.data.totalPages ?? 1;
+        plants.push(...response.data.items);
+        totalPages = response.data.pagination.totalPages;
         page += 1;
       } while (page <= totalPages);
       if (isCurrent()) setPlantOptions(plants);

@@ -1,3 +1,4 @@
+const AppError = require("../utils/app-error");
 // services/disease.service.js - Nghiệp vụ đọc danh mục bệnh cây
 const mongoose = require("mongoose");
 const Disease = require("../models/disease.model");
@@ -27,7 +28,15 @@ const DISEASE_FIELDS = [
 ];
 
 const createError = (message, statusCode) =>
-  Object.assign(new Error(message), { statusCode });
+  new AppError(
+    statusCode === 404
+      ? "RESOURCE_NOT_FOUND"
+      : statusCode === 409
+        ? "DUPLICATE_RESOURCE"
+        : "VALIDATION_ERROR",
+    statusCode,
+    message,
+  );
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -154,7 +163,8 @@ const normalizeDiseaseInput = (input = {}) => {
   const requiredFields = ["disease_name", "typical_symptoms"];
   for (const field of requiredFields) {
     if (typeof input[field] !== "string" || !input[field].trim()) {
-      const label = field === "disease_name" ? "Tên bệnh" : "Triệu chứng điển hình";
+      const label =
+        field === "disease_name" ? "Tên bệnh" : "Triệu chứng điển hình";
       throw createError(`${label} là bắt buộc.`, 400);
     }
   }

@@ -1,3 +1,6 @@
+const validate = require("../validators/auth.validator");
+const AppError = require("../utils/app-error");
+const v = require("../validators/common");
 // services/auth.service.js - Logic nghiep vu Xac thuc & Quan ly tai khoan
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -27,24 +30,26 @@ const generateJwtToken = (user) => {
 // === PHAN 1: DANG KY TAI KHOAN CO OTP ===
 
 const sendRegisterOTP = async (userData) => {
-  const { fullName, email, password, phone } = userData;
+  const { fullName, email, password, phone } = validate.register(userData);
   const normalizedEmail = email.toLowerCase().trim();
 
   const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
-    const err = new Error("Email này đã được sử dụng bởi một tài khoản khác.");
-    err.statusCode = 400;
-    throw err;
+    throw new AppError(
+      "EMAIL_IN_USE",
+      400,
+      "Email này đã được sử dụng bởi một tài khoản khác.",
+    );
   }
 
   if (phone && phone.trim() !== "") {
     const existingPhone = await User.findOne({ phone: phone.trim() });
     if (existingPhone) {
-      const err = new Error(
+      throw new AppError(
+        "PHONE_IN_USE",
+        400,
         "Số điện thoại này đã được sử dụng bởi tài khoản khác.",
       );
-      err.statusCode = 400;
-      throw err;
     }
   }
 
@@ -68,24 +73,25 @@ const sendRegisterOTP = async (userData) => {
 };
 
 const verifyRegisterOTP = async (email, otp) => {
+  ({ email, otp } = validate.verify({ email, otp }));
   const normalizedEmail = email.toLowerCase().trim();
   const pending = pendingRegistrations.get(normalizedEmail);
 
   if (!pending) {
-    const err = new Error(
+    throw new AppError(
+      "REGISTRATION_NOT_FOUND",
+      404,
       "Không tìm thấy thông tin đăng ký cho email này hoặc đã hết hạn. Vui lòng đăng ký lại.",
     );
-    err.statusCode = 404;
-    throw err;
   }
 
   if (pending.expires < Date.now()) {
     pendingRegistrations.delete(normalizedEmail);
-    const err = new Error(
+    throw new AppError(
+      "OTP_EXPIRED",
+      400,
       "Mã xác thực đã hết hạn (chỉ có hiệu lực trong 5 phút). Vui lòng yêu cầu mã mới.",
     );
-    err.statusCode = 400;
-    throw err;
   }
 
   const hashedInputOTP = crypto
@@ -93,9 +99,11 @@ const verifyRegisterOTP = async (email, otp) => {
     .update(otp.trim())
     .digest("hex");
   if (pending.hashedOTP !== hashedInputOTP) {
-    const err = new Error("Mã xác thực không chính xác. Vui lòng kiểm tra lại.");
-    err.statusCode = 400;
-    throw err;
+    throw new AppError(
+      "OTP_INVALID",
+      400,
+      "Mã xác thực không chính xác. Vui lòng kiểm tra lại.",
+    );
   }
 
   const newUser = await User.create({
@@ -113,6 +121,8 @@ const verifyRegisterOTP = async (email, otp) => {
   const token = generateJwtToken(newUser);
   const userObj = newUser.toObject();
   delete userObj.password;
+  delete userObj.resetPasswordOTP;
+  delete userObj.resetPasswordOTPExpires;
 
   return { user: userObj, token };
 };
@@ -120,41 +130,48 @@ const verifyRegisterOTP = async (email, otp) => {
 // === PHAN 2: DANG NHAP & DANG XUAT ===
 
 const login = async (email, password) => {
+  ({ email, password } = validate.login({ email, password }));
   const normalizedEmail = email.toLowerCase().trim();
   const user = await User.findOne({ email: normalizedEmail });
 
   if (!user) {
-    const err = new Error("Email chưa được đăng ký trong hệ thống.");
-    err.statusCode = 401;
-    throw err;
+    throw new AppError(
+      "INVALID_CREDENTIALS",
+      401,
+      "Email chưa được đăng ký trong hệ thống.",
+    );
   }
 
   if (!user.status) {
-    const err = new Error(
+    throw new AppError(
+      "ACCOUNT_LOCKED",
+      403,
       "Tài khoản của bạn đã bị khóa hoặc tạm ngưng. Vui lòng liên hệ hỗ trợ.",
     );
-    err.statusCode = 403;
-    throw err;
   }
 
   if (user.isGoogleAccount && !user.password) {
-    const err = new Error(
+    throw new AppError(
+      "GOOGLE_ACCOUNT",
+      400,
       "Tài khoản này được đăng ký bằng Google. Vui lòng chọn 'Tiếp tục với Google'.",
     );
-    err.statusCode = 400;
-    throw err;
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    const err = new Error("Mật khẩu không chính xác. Vui lòng thử lại.");
-    err.statusCode = 401;
-    throw err;
+    throw new AppError(
+      "INVALID_CREDENTIALS",
+      401,
+      "Mật khẩu không chính xác. Vui lòng thử lại.",
+    );
   }
 
   const token = generateJwtToken(user);
   const userObj = user.toObject();
   delete userObj.password;
+  delete userObj.resetPasswordOTP;
+  delete userObj.resetPasswordOTPExpires;
 
   return { user: userObj, token };
 };
@@ -164,11 +181,16 @@ const logout = async (userId) => {
 };
 
 const getMe = async (userId) => {
-  const user = await User.findById(userId).select("-password");
+  v.id(userId);
+  const user = await User.findById(userId).select(
+    "-password -resetPasswordOTP -resetPasswordOTPExpires",
+  );
   if (!user) {
-    const err = new Error("Không tìm thấy thông tin người dùng.");
-    err.statusCode = 404;
-    throw err;
+    throw new AppError(
+      "USER_NOT_FOUND",
+      404,
+      "Không tìm thấy thông tin người dùng.",
+    );
   }
   return user;
 };
@@ -180,19 +202,24 @@ const getMe = async (userId) => {
  * @param {string} email
  */
 const forgotPassword = async (email) => {
+  email = v.email(email);
   const normalizedEmail = email.toLowerCase().trim();
   const user = await User.findOne({ email: normalizedEmail });
 
   if (!user) {
-    const err = new Error("Không tìm thấy tài khoản với email này.");
-    err.statusCode = 404;
-    throw err;
+    throw new AppError(
+      "USER_NOT_FOUND",
+      404,
+      "Không tìm thấy tài khoản với email này.",
+    );
   }
 
   if (!user.status) {
-    const err = new Error("Tài khoản đã bị khóa, không thể đặt lại mật khẩu.");
-    err.statusCode = 403;
-    throw err;
+    throw new AppError(
+      "ACCOUNT_LOCKED",
+      403,
+      "Tài khoản đã bị khóa, không thể đặt lại mật khẩu.",
+    );
   }
 
   // Tao OTP 6 chu so
@@ -214,24 +241,27 @@ const forgotPassword = async (email) => {
  * @param {string} newPassword
  */
 const resetPassword = async (email, otp, newPassword) => {
+  ({ email, otp, newPassword } = validate.reset({ email, otp, newPassword }));
   const normalizedEmail = email.toLowerCase().trim();
   const user = await User.findOne({ email: normalizedEmail });
 
   if (!user) {
-    const err = new Error("Không tìm thấy tài khoản với email này.");
-    err.statusCode = 404;
-    throw err;
+    throw new AppError(
+      "USER_NOT_FOUND",
+      404,
+      "Không tìm thấy tài khoản với email này.",
+    );
   }
 
   if (
     !user.resetPasswordOTPExpires ||
     user.resetPasswordOTPExpires < Date.now()
   ) {
-    const err = new Error(
+    throw new AppError(
+      "OTP_EXPIRED",
+      400,
       "Mã xác thực đã hết hạn hoặc không tồn tại. Vui lòng yêu cầu mã mới.",
     );
-    err.statusCode = 400;
-    throw err;
   }
 
   const hashedOTP = crypto
@@ -239,9 +269,7 @@ const resetPassword = async (email, otp, newPassword) => {
     .update(otp.trim())
     .digest("hex");
   if (user.resetPasswordOTP !== hashedOTP) {
-    const err = new Error("Mã xác thực không chính xác.");
-    err.statusCode = 400;
-    throw err;
+    throw new AppError("OTP_INVALID", 400, "Mã xác thực không chính xác.");
   }
 
   // Hash va cap nhat mat khau moi
@@ -256,51 +284,35 @@ const resetPassword = async (email, otp, newPassword) => {
 
 // Chỉ sửa tài khoản của người đang đăng nhập; không nhận id/role/status từ client.
 const updateProfile = async (userId, input = {}) => {
-  const fail = (message, statusCode = 400) => {
-    throw Object.assign(new Error(message), { statusCode });
-  };
-  const { fullName, email, phone, currentPassword, newPassword } = input;
-  if (
-    typeof fullName !== "string" ||
-    !fullName.trim() ||
-    fullName.trim().length > 100
-  )
-    fail("Họ tên là bắt buộc và không quá 100 ký tự.");
-  if (
-    typeof email !== "string" ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
-    email.length > 254
-  )
-    fail("Email không hợp lệ.");
-  if (
-    typeof phone !== "string" ||
-    (phone.trim() && !/^0[35789]\d{8}$/.test(phone.trim()))
-  )
-    fail("Số điện thoại phải có 10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09.");
-  if (
-    newPassword !== undefined &&
-    (typeof newPassword !== "string" ||
-      newPassword.length < 8 ||
-      Buffer.byteLength(newPassword, "utf8") > 72)
-  )
-    fail("Mật khẩu mới cần ít nhất 8 ký tự và không quá 72 byte.");
-
+  v.id(userId);
+  const { fullName, email, phone, currentPassword, newPassword } =
+    validate.profile(input);
   const user = await User.findById(userId);
-  if (!user) fail("Không tìm thấy tài khoản.", 404);
-  if (!user.status) fail("Tài khoản đã bị khóa.", 403);
+  if (!user)
+    throw new AppError("USER_NOT_FOUND", 404, "Không tìm thấy tài khoản.");
+  if (!user.status)
+    throw new AppError("ACCOUNT_LOCKED", 403, "Tài khoản đã bị khóa.");
   // Email là định danh đăng nhập: yêu cầu mật khẩu hiện tại khi đổi email/mật khẩu.
   const normalizedEmail = email.trim().toLowerCase();
   const sensitiveChange =
     normalizedEmail !== user.email || newPassword !== undefined;
   if (sensitiveChange) {
     if (user.isGoogleAccount)
-      fail("Tài khoản Google không thể đổi email hoặc mật khẩu tại đây.");
+      throw new AppError(
+        "GOOGLE_ACCOUNT",
+        400,
+        "Tài khoản Google không thể đổi email hoặc mật khẩu tại đây.",
+      );
     if (
       typeof currentPassword !== "string" ||
       !currentPassword ||
       !(await bcrypt.compare(currentPassword, user.password))
     )
-      fail("Mật khẩu hiện tại không chính xác.");
+      throw new AppError(
+        "CURRENT_PASSWORD_INVALID",
+        400,
+        "Mật khẩu hiện tại không chính xác.",
+      );
   }
   const duplicate = await User.findOne({
     _id: { $ne: userId },
@@ -309,7 +321,12 @@ const updateProfile = async (userId, input = {}) => {
       ...(phone.trim() ? [{ phone: phone.trim() }] : []),
     ],
   });
-  if (duplicate) fail("Email hoặc số điện thoại đã được sử dụng.", 409);
+  if (duplicate)
+    throw new AppError(
+      "CONTACT_IN_USE",
+      409,
+      "Email hoặc số điện thoại đã được sử dụng.",
+    );
 
   user.fullName = fullName.trim();
   user.email = normalizedEmail;
@@ -324,7 +341,8 @@ const updateProfile = async (userId, input = {}) => {
   try {
     await user.save();
   } catch (error) {
-    if (error.code === 11000) fail("Email đã được sử dụng.", 409);
+    if (error.code === 11000)
+      throw new AppError("EMAIL_IN_USE", 409, "Email đã được sử dụng.");
     throw error;
   }
   // Chỉ trả thông tin hồ sơ, tuyệt đối không trả hash mật khẩu hoặc OTP.

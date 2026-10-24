@@ -1,7 +1,7 @@
-import getErrorMessage from "../utils/getErrorMessage";
-﻿// usePlants.js - Tải dữ liệu cây với bảo vệ response cũ và cleanup khi rời màn hình.
+import getErrorMessage from "../utils/getErrorMessage"; // usePlants.js - Tải dữ liệu cây với bảo vệ response cũ và cleanup khi rời màn hình.
 import { useCallback, useEffect, useRef, useState } from "react";
 import plantService from "../services/plantService";
+import usePaginatedList from "./usePaginatedList";
 
 // Ba tài nguyên dùng chung vòng đời tải, thử lại và bỏ qua request đã hết hiệu lực.
 function usePlantResource(fetchResource, initialData) {
@@ -20,9 +20,7 @@ function usePlantResource(fetchResource, initialData) {
       if (isCurrent()) setData(result);
     } catch (failure) {
       if (isCurrent())
-        setError(
-          getErrorMessage(failure, "Không thể tải dữ liệu cây."),
-        );
+        setError(getErrorMessage(failure, "Không thể tải dữ liệu cây."));
     } finally {
       if (isCurrent()) setLoading(false);
     }
@@ -39,22 +37,23 @@ function usePlantResource(fetchResource, initialData) {
 }
 
 export function usePlants(categoryId = "", search = "") {
-  const fetchResource = useCallback(async () => {
-    const response = await plantService.getPlants({
-      categoryId,
-      search,
-      limit: 50,
-    });
-    if (!response?.success || !Array.isArray(response.data?.plants)) {
-      throw new Error(response?.message || "Không thể tải danh sách cây.");
-    }
-    return response.data;
-  }, [categoryId, search]);
-  const { data, ...state } = usePlantResource(fetchResource, {
-    plants: [],
-    total: 0,
-  });
-  return { ...state, plants: data.plants, total: data.total };
+  const fetchPage = useCallback(
+    (params) => plantService.getPlants({ ...params, categoryId, search }),
+    [categoryId, search],
+  );
+  const list = usePaginatedList(fetchPage, { limit: 50 });
+  return {
+    plants: list.items,
+    total: list.pagination.total,
+    pagination: list.pagination,
+    loading: list.loading,
+    refreshing: list.refreshing,
+    error: list.error,
+    refetch: list.retry,
+    refresh: list.refresh,
+    changePage: list.load,
+    invalidate: list.invalidate,
+  };
 }
 
 export function usePlantCategories() {

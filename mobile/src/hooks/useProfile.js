@@ -1,7 +1,8 @@
 import getErrorMessage from "../utils/getErrorMessage";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useLogout from "./useLogout";
 import { useAuthStore } from "../../store/authStore";
+import { getSessionContext, isSessionCurrent } from "../services/sessionAccess";
 
 // State và thao tác lưu/đăng xuất tách khỏi giao diện.
 export default function useProfile() {
@@ -10,12 +11,25 @@ export default function useProfile() {
   // Không gọi loadUser/login ở đây; root layout đã chịu trách nhiệm nạp phiên.
   const user = useAuthStore((state) => state.user);
   const updateProfile = useAuthStore((state) => state.updateProfile);
+  const sessionVersion = useAuthStore((state) => state.sessionVersion);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({});
   const [message, setMessage] = useState("");
   //dùng useRef chống gọi API nhiều lần tránh người dùng spam
   const savePending = useRef(false);
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+  useEffect(() => {
+    savePending.current = false;
+    setEditing(false);
+    setForm({});
+    setMessage("");
+    setSaving(false);
+  }, [sessionVersion]);
 
   // Form là bản nháp riêng: gõ/Hủy không thay đổi thông tin thật trong store.
   const startEditing = () => {
@@ -37,11 +51,14 @@ export default function useProfile() {
   };
   const saveProfile = async () => {
     if (savePending.current) return;
+    const origin = getSessionContext();
+    if (origin.version !== sessionVersion || !origin.token) return;
     if (form.newPassword !== form.confirmPassword) {
       setMessage("Mật khẩu xác nhận không khớp.");
       return;
     }
-    savePending.current = true;
+    const attempt = {};
+    savePending.current = attempt;
     setSaving(true);
     setMessage("");
     try {
@@ -50,9 +67,10 @@ export default function useProfile() {
         fullName: form.fullName,
         email: form.email,
         phone: form.phone,
-        currentPassword: form.currentPassword,
+        ...(form.currentPassword ? { currentPassword: form.currentPassword } : {}),
         ...(form.newPassword ? { newPassword: form.newPassword } : {}),
-      });
+      }, origin);
+      if (!mounted.current || !isSessionCurrent(origin) || result.cancelled) return;
       setEditing(false);
       setForm({}); // Xóa mật khẩu khỏi state sau khi lưu.
       setMessage(
@@ -61,12 +79,13 @@ export default function useProfile() {
           : "Đã lưu trên máy chủ, nhưng chưa lưu được bộ nhớ trên thiết bị.",
       );
     } catch (error) {
+      if (!mounted.current || !isSessionCurrent(origin)) return;
       setMessage(
         getErrorMessage(error, "Không thể lưu hồ sơ. Vui lòng thử lại."),
       );
     } finally {
-      savePending.current = false;
-      setSaving(false);
+      if (savePending.current === attempt) savePending.current = false;
+      if (mounted.current && isSessionCurrent(origin)) setSaving(false);
     }
   };
 

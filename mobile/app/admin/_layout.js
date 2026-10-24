@@ -1,30 +1,15 @@
 // app/admin/_layout.js - Khu vuc rieng cua Admin
 
-import { useEffect } from "react";
-import { Tabs, useRootNavigationState, useRouter } from "expo-router";
+import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/authStore";
 
 export default function AdminLayout() {
-  const router = useRouter();
-  const navigationState = useRootNavigationState();
-  const { user, isAuthenticated, isLoading } = useAuthStore();
-
-  useEffect(() => {
-    // Wait for the root Stack and persisted session before redirecting.
-    if (!navigationState?.key || isLoading) return;
-
-    // Chua dang nhap -> ve login
-    if (!isAuthenticated) {
-      router.replace("/(auth)/login");
-      return;
-    }
-
-    // Dang nhap nhung khong co quyen -> ve trang chu
-    if (user?.role !== "admin") {
-      router.replace(user?.role === "manager" ? "/manager" : "/(tabs)");
-    }
-  }, [navigationState?.key, isAuthenticated, isLoading, user]);
+  const user = useAuthStore((state) => state.user);
+  const ready = useAuthStore(
+    (state) => state.hasHydrated && !state.isRestoring && state.isAuthenticated,
+  );
+  if (!ready || user?.role !== "admin") return null;
 
   return (
     <Tabs

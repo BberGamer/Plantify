@@ -2,6 +2,7 @@ import getErrorMessage from "../utils/getErrorMessage";
 // useManagerPlants.js - Quản lý danh sách, tìm kiếm và form cây của Manager.
 import { useCallback, useEffect, useRef, useState } from "react";
 import plantService from "../services/plantService";
+import usePaginatedList from "./usePaginatedList";
 
 const CARE_FIELDS = ["light", "water", "temperature", "humidity"];
 
@@ -47,12 +48,7 @@ const createPlantPayload = (form, plant) => {
 
 /** Quản lý state và các thao tác CRUD; component chỉ nhận dữ liệu và callback. */
 export default function useManagerPlants() {
-  const [plants, setPlants] = useState([]);
-  const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [listError, setListError] = useState("");
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState("");
@@ -65,46 +61,35 @@ export default function useManagerPlants() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const mounted = useRef(false);
-  const listRequest = useRef(0);
   const categoryRequest = useRef(0);
   const searchValue = useRef("");
   const searchTimer = useRef(null);
   const mutationPending = useRef(false);
 
-  const loadPlants = useCallback(async (refresh = false) => {
-    clearTimeout(searchTimer.current);
-    const requestId = ++listRequest.current;
-    const isCurrent = () =>
-      mounted.current && requestId === listRequest.current;
-    setLoading(!refresh);
-    setRefreshing(refresh);
-    setListError("");
-    try {
-      const response = await plantService.getManagerPlants({
-        search: searchValue.current.trim(),
-        limit: 100,
-      });
-      if (!response?.success || !Array.isArray(response.data?.plants)) {
-        throw new Error(
-          response?.message || "Dữ liệu danh sách cây không hợp lệ.",
-        );
-      }
-      if (!isCurrent()) return;
-      setPlants(response.data.plants);
-      setTotal(response.data.total ?? response.data.plants.length);
-    } catch (error) {
-      if (isCurrent()) {
-        setListError(
-          getErrorMessage(error, "Không tải được danh sách cây."),
-        );
-      }
-    } finally {
-      if (isCurrent()) {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    }
-  }, []);
+  const fetchPage = useCallback(
+    (params) =>
+      plantService.getManagerPlants({
+        ...params,
+        search: searchValue.current,
+      }),
+    [],
+  );
+  const plantList = usePaginatedList(fetchPage, {
+    limit: 100,
+    autoLoad: false,
+  });
+  const {
+    items: plants,
+    setItems: setPlants,
+    pagination,
+    loading,
+    refreshing,
+    error: listError,
+  } = plantList;
+  const loadPlants = useCallback(
+    (refresh = false) => plantList.load(undefined, refresh),
+    [plantList.load],
+  );
 
   const loadCategories = useCallback(async () => {
     const requestId = ++categoryRequest.current;
@@ -135,7 +120,6 @@ export default function useManagerPlants() {
     loadCategories();
     return () => {
       mounted.current = false;
-      ++listRequest.current;
       ++categoryRequest.current;
       clearTimeout(searchTimer.current);
     };
@@ -145,12 +129,9 @@ export default function useManagerPlants() {
     setSearch(value);
     searchValue.current = value;
     // Vô hiệu response cũ ngay khi gõ, kể cả trong thời gian chờ debounce.
-    ++listRequest.current;
+    plantList.invalidate();
     clearTimeout(searchTimer.current);
-    setLoading(true);
-    setRefreshing(false);
-    setListError("");
-    searchTimer.current = setTimeout(() => loadPlants(), 400);
+    searchTimer.current = setTimeout(() => plantList.load(1), 400);
   };
 
   const openCreate = () => {
@@ -221,9 +202,7 @@ export default function useManagerPlants() {
       await loadPlants(true);
     } catch (error) {
       if (mounted.current) {
-        setFormError(
-          getErrorMessage(error, "Không lưu được cây."),
-        );
+        setFormError(getErrorMessage(error, "Không lưu được cây."));
       }
     } finally {
       mutationPending.current = false;
@@ -258,13 +237,10 @@ export default function useManagerPlants() {
       setPlants((previous) =>
         previous.filter((plant) => plant._id !== deleteTarget._id),
       );
-      setTotal((previous) => Math.max(0, previous - 1));
       await loadPlants(true);
     } catch (error) {
       if (mounted.current) {
-        setDeleteError(
-          getErrorMessage(error, "Không xóa được cây."),
-        );
+        setDeleteError(getErrorMessage(error, "Không xóa được cây."));
       }
     } finally {
       mutationPending.current = false;
@@ -274,7 +250,9 @@ export default function useManagerPlants() {
 
   return {
     plants,
-    total,
+    total: pagination.total,
+    pagination,
+    changePage: (page) => plantList.load(page),
     search,
     loading,
     refreshing,

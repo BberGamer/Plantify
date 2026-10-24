@@ -10,6 +10,7 @@ import usePlantDirectory from "../../src/hooks/usePlantDirectory";
 import PlantDirectoryHeader from "../../src/components/plants/PlantDirectoryHeader";
 import PlantDirectoryFilters from "../../src/components/plants/PlantDirectoryFilters";
 import PlantDirectoryCard from "../../src/components/plants/PlantDirectoryCard";
+import ListPagination from "../../src/components/common/ListPagination";
 export default function PlantDirectoryScreen() {
   const directory = usePlantDirectory();
   const router = useRouter();
@@ -52,6 +53,8 @@ export default function PlantDirectoryScreen() {
       ) : (
         <FlatList
           data={directory.plants}
+          refreshing={directory.refreshing}
+          onRefresh={directory.refresh}
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => (
             <PlantDirectoryCard
@@ -70,6 +73,13 @@ export default function PlantDirectoryScreen() {
           columnWrapperStyle={styles.columnWrapper}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.grid}
+          ListFooterComponent={
+            <ListPagination
+              pagination={directory.pagination}
+              onPageChange={directory.changePage}
+              disabled={directory.refreshing}
+            />
+          }
           ListEmptyComponent={
             <View style={styles.emptyBox}>
               <Text style={styles.emptyText}>Không tìm thấy cây nào</Text>

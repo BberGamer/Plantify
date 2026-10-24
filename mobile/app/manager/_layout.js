@@ -1,25 +1,13 @@
-import { useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs, useRootNavigationState, useRouter } from "expo-router";
+import { Tabs } from "expo-router";
 import { useAuthStore } from "../../store/authStore";
 
 export default function ManagerLayout() {
-  const router = useRouter();
-  const navigationState = useRootNavigationState();
-  const { user, isAuthenticated, isLoading } = useAuthStore();
-
-  useEffect(() => {
-    if (!navigationState?.key || isLoading) return;
-
-    if (!isAuthenticated) {
-      router.replace("/(auth)/login");
-      return;
-    }
-
-    if (user?.role !== "manager") {
-      router.replace(user?.role === "admin" ? "/admin" : "/(tabs)");
-    }
-  }, [navigationState?.key, isAuthenticated, isLoading, user?.role]);
+  const user = useAuthStore((state) => state.user);
+  const ready = useAuthStore(
+    (state) => state.hasHydrated && !state.isRestoring && state.isAuthenticated,
+  );
+  if (!ready || user?.role !== "manager") return null;
 
   return (
     <Tabs
@@ -67,9 +55,17 @@ export default function ManagerLayout() {
           ),
         }}
       />
-      <Tabs.Screen name="profile" options={{ title: 'Hồ sơ', tabBarLabel: 'Hồ sơ', tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" color={color} size={size} /> }} />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Hồ sơ",
+          tabBarLabel: "Hồ sơ",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" color={color} size={size} />
+          ),
+        }}
+      />
       <Tabs.Screen name="index" options={{ href: null }} />
     </Tabs>
   );
 }
-

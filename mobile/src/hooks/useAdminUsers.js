@@ -2,23 +2,13 @@ import getErrorMessage from "../utils/getErrorMessage";
 // useAdminUsers.js - Quản lý danh sách, bộ lọc và thao tác tài khoản của Admin.
 import { useState, useEffect, useCallback, useRef } from "react";
 import userService from "../services/userService";
+import usePaginatedList from "./usePaginatedList";
 import useAuthStore from "../../store/authStore";
 
 export default function useAdminUsers() {
   const currentAdmin = useAuthStore((state) => state.user);
   const currentAdminId = currentAdmin?._id || currentAdmin?.id;
-  const [users, setUsers] = useState([]);
-  const [pagination, setPagination] = useState({
-    totalUsers: 0,
-    totalPages: 1,
-    currentPage: 1,
-    limit: 10,
-    hasNextPage: false,
-    hasPrevPage: false,
-  });
-  const [loading, setLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [search, updateSearch] = useState("");
   const [selectedRole, updateSelectedRole] = useState("all");
   const [selectedStatus, updateSelectedStatus] = useState("all");
@@ -41,12 +31,28 @@ export default function useAdminUsers() {
   const [targetUserForStatus, setTargetUserForStatus] = useState(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const mounted = useRef(false);
-  const listRequest = useRef(0);
   const detailRequest = useRef(0);
   const mutationPending = useRef(false);
   const toastTimer = useRef(null);
   const query = useRef({ search: "", role: "all", status: "all" });
-  const pageRef = useRef(1);
+  const activeQuery = useRef({ ...query.current });
+
+  const fetchPage = useCallback(
+    (params) => userService.getUsers({ ...params, ...activeQuery.current }),
+    [],
+  );
+  const userList = usePaginatedList(fetchPage, { limit: 10, autoLoad: false });
+  const {
+    items: users,
+    setItems: setUsers,
+    pagination,
+    loading,
+    refreshing,
+  } = userList;
+  const fetchUsers = useCallback((page, refresh = false) => {
+    activeQuery.current = { ...query.current };
+    return userList.load(page, refresh);
+  }, [userList.load]);
 
   const showToast = useCallback((message, type = "success") => {
     if (!mounted.current) return;
@@ -58,54 +64,14 @@ export default function useAdminUsers() {
     }, 3500);
   }, []);
 
-  const fetchUsers = useCallback(
-    async (page = 1, isRefresh = false) => {
-      const requestId = ++listRequest.current;
-      const isCurrent = () =>
-        mounted.current && requestId === listRequest.current;
-      pageRef.current = page;
-      setLoading(!isRefresh);
-      setRefreshing(isRefresh);
-      const current = query.current;
-      const params = { page, limit: 10 };
-      if (current.search.trim()) params.search = current.search.trim();
-      if (current.role !== "all") params.role = current.role;
-      if (current.status !== "all") params.status = current.status;
-      try {
-        const response = await userService.getUsers(params);
-        if (
-          !response?.success ||
-          !Array.isArray(response.data?.users) ||
-          !response.data?.pagination
-        ) {
-          throw new Error(
-            response?.message || "Dữ liệu người dùng không hợp lệ.",
-          );
-        }
-        if (!isCurrent()) return;
-        setUsers(response.data.users);
-        setPagination(response.data.pagination);
-      } catch (error) {
-        if (isCurrent())
-          showToast(
-            getErrorMessage(error, "Không tải được danh sách người dùng."),
-            "error",
-          );
-      } finally {
-        if (isCurrent()) {
-          setLoading(false);
-          setRefreshing(false);
-        }
-      }
-    },
-    [showToast],
-  );
+  useEffect(() => {
+    if (userList.error) showToast(userList.error, "error");
+  }, [userList.error, showToast]);
 
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
-      ++listRequest.current;
       ++detailRequest.current;
       clearTimeout(toastTimer.current);
     };
@@ -119,10 +85,14 @@ export default function useAdminUsers() {
     updateSearch(value);
   };
   const setSelectedRole = (value) => {
+    if (value === selectedRole) return;
+    userList.invalidate();
     query.current.role = value;
     updateSelectedRole(value);
   };
   const setSelectedStatus = (value) => {
+    if (value === selectedStatus) return;
+    userList.invalidate();
     query.current.status = value;
     updateSelectedStatus(value);
   };
@@ -131,7 +101,7 @@ export default function useAdminUsers() {
     setSearch("");
     return fetchUsers(1);
   };
-  const handleRefresh = () => fetchUsers(pageRef.current, true);
+  const handleRefresh = () => fetchUsers(undefined, true);
 
   const handleOpenDetail = async (item) => {
     if (mutationPending.current) return;
@@ -190,7 +160,7 @@ export default function useAdminUsers() {
       );
       setDetailModalVisible(false);
       showToast(response.message || "Cập nhật thông tin thành công!");
-      await fetchUsers(pageRef.current, true);
+      await userList.refresh();
     } catch (error) {
       if (mounted.current)
         showToast(
@@ -232,13 +202,10 @@ export default function useAdminUsers() {
       setConfirmModalVisible(false);
       setTargetUserForStatus(null);
       showToast(response.message || "Cập nhật trạng thái thành công!");
-      await fetchUsers(pageRef.current, true);
+      await userList.refresh();
     } catch (error) {
       if (mounted.current)
-        showToast(
-          getErrorMessage(error, "Thao tác thất bại."),
-          "error",
-        );
+        showToast(getErrorMessage(error, "Thao tác thất bại."), "error");
     } finally {
       mutationPending.current = false;
       if (mounted.current) setStatusLoading(false);
@@ -283,7 +250,7 @@ export default function useAdminUsers() {
       );
       setRoleModalVisible(false);
       showToast(response.message || "Cập nhật vai trò thành công!");
-      await fetchUsers(pageRef.current, true);
+      await userList.refresh();
     } catch (error) {
       if (mounted.current)
         showToast(
@@ -302,6 +269,7 @@ export default function useAdminUsers() {
     pagination,
     loading: loading || detailLoading,
     refreshing,
+    listError: userList.error,
     search,
     setSearch,
     selectedRole,

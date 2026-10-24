@@ -24,21 +24,20 @@ const created = (res, message, data = null) => {
  * @param {object} res - Express response
  * @param {string} message - Thong bao loi
  * @param {number} statusCode - HTTP status code (mac dinh 500)
+ * @param {object} options - code/errors tùy chọn; giữ nguyên ba tham số cũ
  */
-const error = (res, message, statusCode = 500) => {
+const error = (res, message, statusCode = 500, options = {}) => {
   return res.status(statusCode).json({
     success: false,
     message,
     data: null,
+    ...(options.code ? { code: options.code } : {}),
+    ...(options.errors ? { errors: options.errors } : {}),
   });
 };
 
-const notFound = (res, message = "Khong tim thay tai nguyen") => {
-  return res.status(404).json({
-    success: false,
-    message,
-    data: null,
-  });
+const notFound = (res, message = "Khong tim thay tai nguyen", options = {}) => {
+  return error(res, message, 404, options);
 };
 
 module.exports = { success, created, error, notFound };

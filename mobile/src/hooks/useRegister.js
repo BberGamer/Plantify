@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import authService from "../services/authService";
 import useAuthStore from "../../store/authStore";
+import { getSessionContext, isSessionCurrent } from "../services/sessionAccess";
 import useOtpCountdown from "./useOtpCountdown";
 
 export default function useRegister() {
@@ -101,6 +102,7 @@ export default function useRegister() {
     pending.current = true;
     setLoading(true);
     setErrorMsg("");
+    const origin = getSessionContext();
     try {
       const response = await authService.verifyRegisterOTP({
         email: form.email.trim(),
@@ -115,11 +117,15 @@ export default function useRegister() {
           response?.message || "Thông tin phiên đăng nhập không hợp lệ.",
         );
       }
+      if (!mounted.current || !isSessionCurrent(origin)) return;
+      const result = await setAuthSession(response.data.user, response.data.token, origin);
       if (!mounted.current) return;
-      await setAuthSession(response.data.user, response.data.token);
-      if (mounted.current) router.replace("/(tabs)");
+      if (result.success) {
+        setForm((previous) => ({ ...previous, password: "", confirmPassword: "" }));
+      } else if (!result.cancelled) setErrorMsg(result.error);
+
     } catch (error) {
-      if (mounted.current)
+      if (mounted.current && isSessionCurrent(origin))
         setErrorMsg(
           getErrorMessage(error, "Không thể xác thực mã."),
         );

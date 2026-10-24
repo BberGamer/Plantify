@@ -1,10 +1,11 @@
-﻿// plants.js - Ghép giao diện quản lý cây từ hook và các component.
+// plants.js - Ghép giao diện quản lý cây từ hook và các component.
 import React from "react";
 import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../../src/theme/colors";
 import useManagerPlants from "../../src/hooks/useManagerPlants";
+import ListPagination from "../../src/components/common/ListPagination";
 import {
   PlantCard,
   PlantDeleteModal,
@@ -59,6 +60,13 @@ export default function ManagerPlantsScreen() {
               onRefresh={manager.refresh}
               tintColor={colors.primary}
               colors={[colors.primary]}
+            />
+          }
+          ListFooterComponent={
+            <ListPagination
+              pagination={manager.pagination}
+              onPageChange={manager.changePage}
+              disabled={manager.refreshing || busy || !!manager.listError}
             />
           }
           ListEmptyComponent={
