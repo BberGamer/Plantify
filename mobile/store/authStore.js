@@ -1,3 +1,4 @@
+import getErrorMessage from "../src/utils/getErrorMessage";
 ﻿// store/authStore.js - Quan ly state xac thuc toan cuc bang Zustand
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -44,7 +45,7 @@ export const useAuthStore = create((set, get) => ({
       set({ user, token, isAuthenticated: true, isLoading: false });
       return { success: true, user };
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Đăng nhập thất bại";
+      const msg = getErrorMessage(err, "Đăng nhập thất bại");
       set({ isLoading: false, error: msg });
       return { success: false, error: msg };
     }

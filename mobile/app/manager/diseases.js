@@ -6,15 +6,15 @@ import { Ionicons } from "@expo/vector-icons";
 export default function ManagerDiseasesScreen() {
   return (
     <SafeAreaView style={styles.safe}>
-      <Text style={styles.eyebrow}>MANAGEMENT</Text>
-      <Text style={styles.title}>Diseases</Text>
+      <Text style={styles.eyebrow}>QUẢN LÝ</Text>
+      <Text style={styles.title}>Bệnh cây</Text>
       <View style={styles.empty}>
         <View style={styles.icon}>
           <Ionicons name="bug-outline" size={29} color="#28744C" />
         </View>
-        <Text style={styles.heading}>Disease management</Text>
+        <Text style={styles.heading}>Quản lý bệnh cây</Text>
         <Text style={styles.body}>
-          Disease records are not available in the current database yet.
+          Chưa có dữ liệu bệnh cây.
         </Text>
       </View>
     </SafeAreaView>

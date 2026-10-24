@@ -20,7 +20,7 @@ const authenticate = (req, res, next) => {
     if (err.name === "TokenExpiredError") {
       return error(res, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại", 401);
     }
-    return error(res, "Token không hợp lệ", 401);
+    return error(res, "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.", 401);
   }
 };
 
@@ -29,7 +29,7 @@ const authenticate = (req, res, next) => {
  */
 const authorizeAdmin = (req, res, next) => {
   if (req.user?.role !== "admin") {
-    return error(res, "Bạn không có quyền truy cập chức năng này (Yêu cầu Admin)", 403);
+    return error(res, "Bạn không có quyền truy cập chức năng này (yêu cầu quyền quản trị viên)", 403);
   }
   next();
 };

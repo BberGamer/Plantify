@@ -1,3 +1,4 @@
+import getErrorMessage from "../utils/getErrorMessage";
 // useManagerPlants.js - Quản lý danh sách, tìm kiếm và form cây của Manager.
 import { useCallback, useEffect, useRef, useState } from "react";
 import plantService from "../services/plantService";
@@ -94,9 +95,7 @@ export default function useManagerPlants() {
     } catch (error) {
       if (isCurrent()) {
         setListError(
-          error.response?.data?.message ||
-            error.message ||
-            "Không tải được danh sách cây.",
+          getErrorMessage(error, "Không tải được danh sách cây."),
         );
       }
     } finally {
@@ -122,9 +121,7 @@ export default function useManagerPlants() {
     } catch (error) {
       if (isCurrent()) {
         setCategoriesError(
-          error.response?.data?.message ||
-            error.message ||
-            "Không tải được danh mục cây.",
+          getErrorMessage(error, "Không tải được danh mục cây."),
         );
       }
     } finally {
@@ -225,9 +222,7 @@ export default function useManagerPlants() {
     } catch (error) {
       if (mounted.current) {
         setFormError(
-          error.response?.data?.message ||
-            error.message ||
-            "Không lưu được cây.",
+          getErrorMessage(error, "Không lưu được cây."),
         );
       }
     } finally {
@@ -268,9 +263,7 @@ export default function useManagerPlants() {
     } catch (error) {
       if (mounted.current) {
         setDeleteError(
-          error.response?.data?.message ||
-            error.message ||
-            "Không xóa được cây.",
+          getErrorMessage(error, "Không xóa được cây."),
         );
       }
     } finally {

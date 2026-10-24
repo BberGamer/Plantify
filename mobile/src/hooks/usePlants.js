@@ -1,95 +1,83 @@
-// src/hooks/usePlants.js - Hook quan ly trang thai danh sach cay & danh muc
-import { useState, useEffect, useCallback } from 'react';
-import plantService from '../services/plantService';
+import getErrorMessage from "../utils/getErrorMessage";
+﻿// usePlants.js - Tải dữ liệu cây với bảo vệ response cũ và cleanup khi rời màn hình.
+import { useCallback, useEffect, useRef, useState } from "react";
+import plantService from "../services/plantService";
 
-/**
- * Hook lay danh sach cay voi filter + search
- * @param {string} categoryId - ID danh muc ('' = tat ca)
- * @param {string} search     - Tu khoa tim kiem
- */
-export function usePlants(categoryId = '', search = '') {
-  const [plants, setPlants] = useState([]);
+// Ba tài nguyên dùng chung vòng đời tải, thử lại và bỏ qua request đã hết hiệu lực.
+function usePlantResource(fetchResource, initialData) {
+  const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [total, setTotal] = useState(0);
-
-  const fetchPlants = useCallback(async () => {
+  const [error, setError] = useState("");
+  const request = useRef(0);
+  const mounted = useRef(false);
+  const refetch = useCallback(async () => {
+    const requestId = ++request.current;
+    const isCurrent = () => mounted.current && requestId === request.current;
     setLoading(true);
-    setError(null);
+    setError("");
     try {
-      const res = await plantService.getPlants({ categoryId, search, limit: 50 });
-      if (res.success) {
-        setPlants(res.data.plants || []);
-        setTotal(res.data.total || 0);
-      }
-    } catch (err) {
-      setError(err?.response?.data?.message || 'Không thể tải danh sách cây.');
+      const result = await fetchResource();
+      if (isCurrent()) setData(result);
+    } catch (failure) {
+      if (isCurrent())
+        setError(
+          getErrorMessage(failure, "Không thể tải dữ liệu cây."),
+        );
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
+  }, [fetchResource]);
+  useEffect(() => {
+    mounted.current = true;
+    refetch();
+    return () => {
+      mounted.current = false;
+      ++request.current;
+    };
+  }, [refetch]);
+  return { data, loading, error, refetch };
+}
+
+export function usePlants(categoryId = "", search = "") {
+  const fetchResource = useCallback(async () => {
+    const response = await plantService.getPlants({
+      categoryId,
+      search,
+      limit: 50,
+    });
+    if (!response?.success || !Array.isArray(response.data?.plants)) {
+      throw new Error(response?.message || "Không thể tải danh sách cây.");
+    }
+    return response.data;
   }, [categoryId, search]);
-
-  useEffect(() => {
-    fetchPlants();
-  }, [fetchPlants]);
-
-  return { plants, loading, error, total, refetch: fetchPlants };
+  const { data, ...state } = usePlantResource(fetchResource, {
+    plants: [],
+    total: 0,
+  });
+  return { ...state, plants: data.plants, total: data.total };
 }
 
-/**
- * Hook lay danh sach danh muc cay
- */
 export function usePlantCategories() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await plantService.getCategories();
-        if (res.success) {
-          // Them "Tat ca" vao dau danh sach
-          setCategories([
-            { _id: '', category_name: 'Tất cả' },
-            ...(res.data || []),
-          ]);
-        }
-      } catch (err) {
-        setError(err?.response?.data?.message || 'Không thể tải danh mục.');
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const fetchResource = useCallback(async () => {
+    const response = await plantService.getCategories();
+    if (!response?.success || !Array.isArray(response.data)) {
+      throw new Error(response?.message || "Không thể tải danh mục cây.");
+    }
+    return [{ _id: "", category_name: "Tất cả" }, ...response.data];
   }, []);
-
-  return { categories, loading, error };
+  const { data, ...state } = usePlantResource(fetchResource, []);
+  return { ...state, categories: data };
 }
 
-/**
- * Hook lay chi tiet mot cay
- * @param {string} id - ObjectId cua cay
- */
 export function usePlantDetail(id) {
-  const [plant, setPlant] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (!id) return;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await plantService.getPlantById(id);
-        if (res.success) setPlant(res.data);
-      } catch (err) {
-        setError(err?.response?.data?.message || 'Không thể tải thông tin cây.');
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const fetchResource = useCallback(async () => {
+    if (!id) throw new Error("Không tìm thấy mã cây.");
+    const response = await plantService.getPlantById(id);
+    if (!response?.success || !response.data?._id) {
+      throw new Error(response?.message || "Không tìm thấy cây này.");
+    }
+    return response.data;
   }, [id]);
-
-  return { plant, loading, error };
+  const { data, ...state } = usePlantResource(fetchResource, null);
+  return { ...state, plant: data };
 }

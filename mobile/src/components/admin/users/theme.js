@@ -1,3 +1,4 @@
+import { getRoleLabel } from "../../../constants/roles";
 import { colors } from "../../../theme/colors";
 
 // Bang mau "khu vuon" dung chung cho man hinh quan ly nguoi dung
@@ -26,21 +27,21 @@ export const garden = {
 // Moi vai tro gan voi mot hinh anh cay: mam non - cay hoa - cay co thu
 export const ROLE_META = {
   customer: {
-    label: "Customer",
+    label: getRoleLabel("customer"),
     hint: "Người trồng cây",
     icon: "leaf",
     color: garden.moss,
     bg: garden.mint,
   },
   manager: {
-    label: "Manager",
+    label: getRoleLabel("manager"),
     hint: "Người chăm vườn",
     icon: "flower",
     color: garden.sun,
     bg: garden.sunBg,
   },
   admin: {
-    label: "Admin",
+    label: getRoleLabel("admin"),
     hint: "Người giữ rừng",
     icon: "shield-checkmark",
     color: garden.forest,
