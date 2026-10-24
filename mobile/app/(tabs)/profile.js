@@ -1,6 +1,8 @@
 import React from "react";
-import ProfileScreen from "../../src/screens/ProfileScreen";
+import { useRouter } from "expo-router";
+import ProfileContent from "../../src/components/profile/ProfileContent";
 
 export default function CustomerProfileRoute() {
-  return <ProfileScreen showNavbar />;
+  const router = useRouter();
+  return <ProfileContent onBack={() => router.navigate("/(tabs)")} showNavbar />;
 }

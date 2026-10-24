@@ -1,10 +1,9 @@
 // login.js - Ghép giao diện đăng nhập và hook điều phối.
-import React from "react";
+
 import {
   View,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -50,6 +49,7 @@ export default function LoginScreen() {
             email={login.email}
             password={login.password}
             isLoading={login.isLoading}
+            fieldErrors={login.fieldErrors}
             onEmailChange={login.changeEmail}
             onPasswordChange={login.changePassword}
             onSubmit={login.submit}

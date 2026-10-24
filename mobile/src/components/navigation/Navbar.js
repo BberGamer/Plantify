@@ -1,4 +1,6 @@
-import React from "react";
+import { spacing } from "../../theme/tokens";
+import { colors } from "../../theme/colors";
+
 import { View, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "react-native-paper";
@@ -50,7 +52,7 @@ export default function Navbar() {
             <Ionicons
               name={isActive ? item.activeIcon : item.icon}
               size={21}
-              color={isActive ? "#183B2B" : "#9AA3A5"}
+              color={isActive ? colors.textPrimary : "#9AA3A5"}
             />
             <Text style={[styles.label, isActive && styles.activeLabel]}>
               {item.label}
@@ -68,10 +70,10 @@ const styles = StyleSheet.create({
     minHeight: 70,
     flexDirection: "row",
     alignItems: "stretch",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: "#E8ECEA",
-    shadowColor: "#183B2B",
+    borderTopColor: colors.border,
+    shadowColor: colors.textPrimary,
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.06,
     shadowRadius: 5,
@@ -81,7 +83,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 8,
+    paddingTop: spacing.sm,
     paddingBottom: 10,
     position: "relative",
   },
@@ -90,22 +92,22 @@ const styles = StyleSheet.create({
     top: -1,
     width: 28,
     height: 2,
-    backgroundColor: "#183B2B",
+    backgroundColor: colors.textPrimary,
   },
   label: {
-    marginTop: 4,
+    marginTop: spacing.xs,
     color: "#9AA3A5",
     fontSize: 12,
     lineHeight: 15,
     textAlign: "center",
   },
-  activeLabel: { color: "#183B2B", fontWeight: "600" },
+  activeLabel: { color: colors.textPrimary, fontWeight: "600" },
   activeDot: {
     position: "absolute",
     bottom: 2,
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#183B2B",
+    backgroundColor: colors.textPrimary,
   },
 });

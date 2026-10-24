@@ -1,29 +1,16 @@
-import React from "react";
+import { spacing } from "../../theme/tokens";
+
 import { View, Pressable, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter, useSegments } from "expo-router";
 import { colors } from "../../theme/colors";
 
-export default function ProfileHeader() {
-  const router = useRouter();
-  const segments = useSegments();
-
-  const handleBack = () => {
-    if (segments[0] === "admin") {
-      router.navigate("/admin");
-    } else if (segments[0] === "manager") {
-      router.navigate("/manager");
-    } else {
-      router.navigate("/(tabs)");
-    }
-  };
-
+export default function ProfileHeader({ onBack }) {
   return (
       <View style={styles.header}>
         {/* Về đúng Home kể cả khi mở thẳng đường dẫn profile, không cần lịch sử back. */}
         <Pressable
-          onPress={handleBack}
+          onPress={onBack}
           style={styles.backButton}
           accessibilityRole="button"
           accessibilityLabel="Về trang chủ"
@@ -44,7 +31,7 @@ header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
   },
 backButton: {
     width: 44,

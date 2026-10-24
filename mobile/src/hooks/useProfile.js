@@ -1,7 +1,7 @@
 import getErrorMessage from "../utils/getErrorMessage";
 import { useEffect, useRef, useState } from "react";
 import useLogout from "./useLogout";
-import { useAuthStore } from "../../store/authStore";
+import useAuthStore from "../../store/authStore";
 import { getSessionContext, isSessionCurrent } from "../services/sessionAccess";
 import useScreenScope from "./useScreenScope";
 

@@ -1,7 +1,7 @@
 // src/services/authService.js - Goi API lien quan toi Auth
 import api from "./api";
 
-export const authService = {
+const authService = {
   // Server tự xác định user từ token, không gửi id tài khoản cần sửa.
   updateProfile: async (data, sessionContext) => {
     const response = await api.patch("/auth/me", data, { sessionContext });

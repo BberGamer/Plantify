@@ -1,4 +1,5 @@
-import React from "react";
+import { spacing, radius, typography } from "../../theme/tokens";
+
 import { View, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,18 +26,17 @@ divider: { borderBottomWidth: 1, borderBottomColor: colors.borderLight },
 iconBox: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.lightMint,
-    marginRight: 12,
+    marginRight: spacing.md,
   },
 rowContent: { flex: 1, minWidth: 0 },
-fieldLabel: { fontSize: 12, color: colors.primaryText },
+fieldLabel: { ...typography.caption, color: colors.primaryText },
 fieldValue: {
-    marginTop: 4,
-    fontSize: 14,
-    fontWeight: "600",
+    marginTop: spacing.xs,
+    ...typography.label,
     color: colors.primaryText,
   }
 });

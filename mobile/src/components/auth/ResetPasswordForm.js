@@ -3,13 +3,12 @@
 import {
   View,
   StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
-import { Text } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
+import { control, spacing, radius, typography } from "../../theme/tokens";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
-import PasswordField from "./PasswordField";
+import PasswordField from "../common/PasswordField";
 export default function ResetPasswordForm({
   newPassword,
   confirmPassword,
@@ -76,49 +75,36 @@ export default function ResetPasswordForm({
           disabled={!isOtpComplete || busy}
         />
       </View>
-      <TouchableOpacity
-        style={[
-          styles.confirmButton,
-          (!isOtpComplete || busy) && styles.confirmButtonDisabled,
-        ]}
-        onPress={onSubmit}
-        disabled={!isOtpComplete || busy}
-        activeOpacity={0.85}
-      >
-        {updatingPassword ? (
-          <ActivityIndicator color="#FFFFFF" size="small" />
-        ) : (
-          <Text style={styles.confirmButtonText}>
-            Xác nhận đổi mật khẩu
-          </Text>
-        )}
-      </TouchableOpacity>
+      <Button mode="contained" style={styles.submit} contentStyle={{ minHeight: control.minHeight }} onPress={onSubmit} disabled={!isOtpComplete || busy} loading={updatingPassword}>
+          Xác nhận đổi mật khẩu
+      </Button>
     </>
   );
 }
 const styles = StyleSheet.create({
+  submit: { marginTop: spacing.md, marginBottom: spacing.xl },
   section: {
     marginBottom: 22,
   },
   stepHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: spacing.md,
     gap: 10,
   },
   stepBadge: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: radius.md,
     backgroundColor: "#111827",
     alignItems: "center",
     justifyContent: "center",
   },
   stepBadgeDisabled: {
-    backgroundColor: "#9CA3AF",
+    backgroundColor: colors.textMuted,
   },
   stepBadgeText: {
-    color: "#FFFFFF",
+    color: colors.white,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -131,32 +117,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F9FAFB",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderRadius: 6,
-    marginBottom: 12,
+    marginBottom: spacing.md,
     gap: 6,
   },
   lockHintText: {
-    fontSize: 12,
-    color: colors.textMuted,
+    ...typography.caption, color: colors.textMuted,
   },
-  confirmButton: {
-    backgroundColor: "#0D3827",
-    height: 52,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 12,
-    marginBottom: 20,
-  },
-  confirmButtonDisabled: {
-    backgroundColor: "#9CA3AF",
-    opacity: 0.7,
-  },
-  confirmButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+
 });

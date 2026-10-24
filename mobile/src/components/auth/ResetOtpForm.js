@@ -1,3 +1,4 @@
+import { spacing, radius } from "../../theme/tokens";
 // ResetOtpForm.js - Khối giao diện ResetOtpForm.
 
 import { View, StyleSheet } from "react-native";
@@ -20,7 +21,7 @@ export default function ResetOtpForm({
           style={[
             styles.stepBadge,
             !codeSent && {
-              backgroundColor: "#9CA3AF",
+              backgroundColor: colors.textMuted,
             },
           ]}
         >
@@ -48,19 +49,19 @@ const styles = StyleSheet.create({
   stepHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: spacing.md,
     gap: 10,
   },
   stepBadge: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: radius.md,
     backgroundColor: "#111827",
     alignItems: "center",
     justifyContent: "center",
   },
   stepBadgeText: {
-    color: "#FFFFFF",
+    color: colors.white,
     fontSize: 12,
     fontWeight: "700",
   },

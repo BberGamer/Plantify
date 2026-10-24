@@ -1,16 +1,18 @@
-import React from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { spacing, radius, typography } from "../../../theme/tokens";
+
 import {
   StyleSheet,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Modal,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from "react-native";
+import FormField from "../../common/FormField";
+import { Button } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../theme/colors";
 import { garden, getRoleMeta, leafShape } from "./theme";
@@ -32,18 +34,19 @@ export default function UserDetailModal({
   onClose,
   onSave,
 }) {
+  const close = () => { if (!submitting) onClose(); };
   return (
     <Modal
       visible={visible}
       transparent
       animationType="slide"
-      onRequestClose={onClose}
+      onRequestClose={close}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.modalOverlay}
       >
-        <View style={styles.modalCard}>
+        <SafeAreaView edges={["bottom", "left", "right"]} style={styles.modalCard}>
           {/* MODAL HEADER */}
           <View style={styles.modalHeader}>
             <View style={styles.headerLeft}>
@@ -56,7 +59,7 @@ export default function UserDetailModal({
               </View>
             </View>
             <TouchableOpacity
-              onPress={onClose}
+              disabled={submitting} onPress={close}
               style={styles.closeBtn}
               accessibilityRole="button"
               accessibilityLabel="Đóng"
@@ -66,7 +69,7 @@ export default function UserDetailModal({
           </View>
 
           {/* MODAL BODY */}
-          <ScrollView
+          <ScrollView keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.modalBody}
           >
@@ -95,28 +98,22 @@ export default function UserDetailModal({
                 </View>
                 </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Họ và tên *</Text>
-                  <TextInput
-                    style={styles.formInput}
+                <FormField label="Họ và tên *" disabled={submitting}
+
                     value={fullName}
                     onChangeText={onChangeFullName}
                     placeholder="Nhập họ và tên"
                     placeholderTextColor={garden.muted}
                   />
-                </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Số điện thoại</Text>
-                  <TextInput
-                    style={styles.formInput}
+                <FormField label="Số điện thoại" disabled={submitting}
+
                     value={phone}
                     onChangeText={onChangePhone}
                     placeholder="Nhập số điện thoại (10 chữ số)"
                     placeholderTextColor={garden.muted}
                     keyboardType="phone-pad"
                   />
-                </View>
 
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>Vai trò hệ thống</Text>
@@ -130,7 +127,7 @@ export default function UserDetailModal({
                             styles.roleChoiceBtn,
                             isActive && styles.roleChoiceBtnActive,
                           ]}
-                          onPress={() => onChangeRole(r)}
+                          disabled={submitting} onPress={() => onChangeRole(r)}
                         >
                           <Text
                             style={[
@@ -154,7 +151,7 @@ export default function UserDetailModal({
                         styles.roleChoiceBtn,
                         status === true && styles.statusChoiceActive,
                       ]}
-                      onPress={() => onChangeStatus(true)}
+                      disabled={submitting} onPress={() => onChangeStatus(true)}
                     >
                       <Text
                         style={[
@@ -171,7 +168,7 @@ export default function UserDetailModal({
                         styles.roleChoiceBtn,
                         status === false && styles.statusChoiceBanned,
                       ]}
-                      onPress={() => onChangeStatus(false)}
+                      disabled={submitting} onPress={() => onChangeStatus(false)}
                     >
                       <Text
                         style={[
@@ -190,23 +187,12 @@ export default function UserDetailModal({
 
           {/* MODAL FOOTER */}
           <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelBtnText}>Đóng</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.saveBtn}
-              onPress={onSave}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.saveBtnText}>Lưu thay đổi</Text>
-              )}
-            </TouchableOpacity>
+            <Button onPress={close} disabled={submitting}>Hủy</Button>
+            <Button mode="contained" onPress={onSave} disabled={submitting} loading={submitting}>
+              Lưu thay đổi
+            </Button>
           </View>
-        </View>
+        </SafeAreaView>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -222,7 +208,7 @@ const styles = StyleSheet.create({
   modalCard: {
     width: "100%",
     maxHeight: "90%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.white,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     overflow: "hidden",
@@ -237,7 +223,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 18,
-    paddingTop: 20,
+    paddingTop: spacing.xl,
     paddingBottom: 14,
     backgroundColor: garden.cream,
     borderBottomWidth: 1,
@@ -247,7 +233,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    gap: 12,
+    gap: spacing.md,
   },
   headerLeaf: {
     ...leafShape(42),
@@ -257,7 +243,7 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     backgroundColor: garden.cream,
-    borderRadius: 16,
+    borderRadius: radius.card,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderWidth: 1,
@@ -269,8 +255,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   modalSubtitle: {
-    fontSize: 12,
-    color: colors.textSecondary,
+    ...typography.caption, color: colors.textSecondary,
     marginTop: 2,
   },
   closeBtn: {
@@ -287,7 +272,7 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
   },
   infoLabel: {
     fontSize: 13,
@@ -313,19 +298,9 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: 6,
   },
-  formInput: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: garden.line,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    fontSize: 15,
-    color: colors.textPrimary,
-    backgroundColor: garden.cream,
-  },
   rolePickerRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: spacing.sm,
   },
   roleChoiceBtn: {
     flex: 1,
@@ -347,7 +322,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   roleChoiceTextActive: {
-    color: "#FFFFFF",
+    color: colors.white,
     fontWeight: "700",
   },
   statusChoiceActive: {
@@ -359,44 +334,19 @@ const styles = StyleSheet.create({
     borderColor: garden.terracotta,
   },
   statusChoiceTextActive: {
-    color: "#FFFFFF",
+    color: colors.white,
     fontWeight: "700",
   },
   modalFooter: {
+    flexWrap: "wrap",
     flexDirection: "row",
     justifyContent: "flex-end",
     paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
     borderTopWidth: 1,
     borderTopColor: garden.line,
     gap: 10,
   },
-  cancelBtn: {
-    paddingHorizontal: 16,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: garden.mint,
-  },
-  cancelBtnText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: "600",
-  },
-  saveBtn: {
-    flex: 1,
-    paddingHorizontal: 20,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.primary,
-  },
-  saveBtnText: {
-    fontSize: 14,
-    color: "#FFFFFF",
-    fontWeight: "700",
-  },
+
 });

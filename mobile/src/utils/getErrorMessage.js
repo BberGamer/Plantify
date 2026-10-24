@@ -33,7 +33,9 @@ const ERROR_MESSAGES = {
   INTERNAL_ERROR: "Máy chủ đang gặp sự cố. Vui lòng thử lại sau.",
 };
 
-// Chỉ dành cho endpoint cũ chưa trả code. Bỏ danh sách sau khi mọi endpoint được chuyển đổi.
+// Giữ allowlist hữu hạn cho backend đã triển khai nhưng chưa xác nhận rollout code.
+// Chỉ bỏ sau khi endpoint có test code/status VÀ consumer xác nhận server đang dùng hợp đồng mới.
+// Không dùng dấu tiếng Việt để quyết định message nào an toàn.
 const LEGACY_MESSAGES = new Set([
   "Bạn không có quyền quản lý",
   "Bạn không có quyền truy cập chức năng này (yêu cầu quyền quản trị viên)",

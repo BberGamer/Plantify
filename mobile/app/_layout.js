@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PaperProvider } from "react-native-paper";
+import { paperTheme } from "../src/theme/paperTheme";
 import useAuthNavigation from "../src/hooks/useAuthNavigation";
 
 function AuthGuard() {
@@ -14,7 +15,7 @@ function AuthGuard() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <PaperProvider>
+      <PaperProvider theme={paperTheme}>
         <StatusBar style="dark" />
         <AuthGuard />
         <Stack screenOptions={{ headerShown: false }} />

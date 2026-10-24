@@ -89,7 +89,7 @@ function authFixture(seed = {}, extraEntries = []) {
   const [storeModule, apiModule, access, cache] = modules;
   const fixture = {
     focus,
-    store: storeModule.useAuthStore,
+    store: storeModule.default,
     api: apiModule.default,
     access,
     cache,

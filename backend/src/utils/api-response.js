@@ -15,10 +15,6 @@ const success = (res, message, data = null, statusCode = 200) => {
   });
 };
 
-const created = (res, message, data = null) => {
-  return success(res, message, data, 201);
-};
-
 /**
  * Tra ve response that bai / loi
  * @param {object} res - Express response
@@ -40,4 +36,4 @@ const notFound = (res, message = "Khong tim thay tai nguyen", options = {}) => {
   return error(res, message, 404, options);
 };
 
-module.exports = { success, created, error, notFound };
+module.exports = { success, error, notFound };

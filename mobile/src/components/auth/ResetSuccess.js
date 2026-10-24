@@ -1,3 +1,4 @@
+import { spacing } from "../../theme/tokens";
 // ResetSuccess.js - Khối giao diện ResetSuccess.
 
 import { View, StyleSheet, ActivityIndicator } from "react-native";
@@ -19,7 +20,7 @@ export default function ResetSuccess({}) {
         size="small"
         color={colors.primary}
         style={{
-          marginTop: 24,
+          marginTop: spacing.xxl,
         }}
       />
     </View>
@@ -31,8 +32,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 32,
-    backgroundColor: "#FFFFFF",
+    paddingHorizontal: spacing.xxxl,
+    backgroundColor: colors.white,
   },
   successIconWrap: {
     width: 110,
@@ -41,14 +42,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0FDF4",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 24,
+    marginBottom: spacing.xxl,
   },
   successTitle: {
     fontSize: 22,
     fontWeight: "700",
     color: colors.textPrimary,
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   successDesc: {
     fontSize: 14,

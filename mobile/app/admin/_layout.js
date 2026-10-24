@@ -2,7 +2,7 @@
 
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuthStore } from "../../store/authStore";
+import useAuthStore from "../../store/authStore";
 
 export default function AdminLayout() {
   const user = useAuthStore((state) => state.user);

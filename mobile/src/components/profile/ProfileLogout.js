@@ -1,8 +1,8 @@
-import React from "react";
+import { spacing } from "../../theme/tokens";
+
 import { StyleSheet } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { colors } from "../../theme/colors";
-import { profileTheme } from "./profileTheme";
 
 export default function ProfileLogout({ saving, isLoggingOut, logoutError, handleLogout }) {
   return (<>
@@ -10,7 +10,7 @@ export default function ProfileLogout({ saving, isLoggingOut, logoutError, handl
         <Button
           mode="outlined"
           icon="logout"
-          theme={profileTheme}
+
           style={styles.logoutButton}
           contentStyle={styles.logoutContent}
           labelStyle={styles.logoutLabel}
@@ -32,7 +32,7 @@ export default function ProfileLogout({ saving, isLoggingOut, logoutError, handl
 // Style riêng của component.
 const styles = StyleSheet.create({
 logoutButton: {
-    marginTop: 24,
+    marginTop: spacing.xxl,
     borderRadius: 14,
     borderColor: colors.primary,
     backgroundColor: colors.lightMint,

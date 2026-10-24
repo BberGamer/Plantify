@@ -3,11 +3,10 @@
 import {
   View,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
-import { Text } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
+import FormField from "../common/FormField";
+import { control, spacing, radius } from "../../theme/tokens";
 import { colors } from "../../theme/colors";
 export default function ResetEmailForm({
   email,
@@ -28,57 +27,57 @@ export default function ResetEmailForm({
       </View>
 
       <View style={styles.emailRow}>
-        <TextInput
-          style={styles.emailInput}
+        <View style={styles.emailField}>
+        <FormField
+          label="Địa chỉ email"
+          containerStyle={styles.emailGroup}
           placeholder="Địa chỉ email"
           placeholderTextColor={colors.textMuted}
           value={email}
-          editable={!busy}
+          disabled={busy}
           onChangeText={(val) => {
             onEmailChange(val);
           }}
           autoCapitalize="none"
+          autoCorrect={false}
           keyboardType="email-address"
         />
-        <TouchableOpacity
-          style={[
-            styles.sendCodeButton,
-            sendingCode && styles.sendCodeButtonDisabled,
-          ]}
+        </View>
+        <Button
+          mode="outlined"
+          contentStyle={{ minHeight: control.minHeight }}
           onPress={onSend}
           disabled={busy || (codeSent && countdown > 0)}
-          activeOpacity={0.8}
+          loading={sendingCode}
         >
-          {sendingCode ? (
-            <ActivityIndicator size="small" color="#111827" />
-          ) : (
-            <Text style={styles.sendCodeText}>Gửi mã</Text>
-          )}
-        </TouchableOpacity>
+          Gửi mã
+        </Button>
       </View>
     </View>
   );
 }
 const styles = StyleSheet.create({
+  emailGroup: { marginBottom: 0 },
+  emailField: { flex: 1 },
   section: {
     marginBottom: 22,
   },
   stepHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: spacing.md,
     gap: 10,
   },
   stepBadge: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: radius.md,
     backgroundColor: "#111827",
     alignItems: "center",
     justifyContent: "center",
   },
   stepBadgeText: {
-    color: "#FFFFFF",
+    color: colors.white,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -89,35 +88,9 @@ const styles = StyleSheet.create({
   },
   emailRow: {
     flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
     gap: 10,
   },
-  emailInput: {
-    flex: 1,
-    height: 48,
-    borderWidth: 1.2,
-    borderColor: "#D1D5DB",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    fontSize: 15,
-    color: colors.textPrimary,
-    backgroundColor: "#FFFFFF",
-  },
-  sendCodeButton: {
-    height: 48,
-    paddingHorizontal: 16,
-    borderWidth: 1.2,
-    borderColor: "#111827",
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-  },
-  sendCodeButtonDisabled: {
-    opacity: 0.6,
-  },
-  sendCodeText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#111827",
-  },
+
 });
