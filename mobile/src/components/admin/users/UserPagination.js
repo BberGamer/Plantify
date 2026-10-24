@@ -3,19 +3,26 @@ import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { garden } from "./theme";
 
-export default function UserPagination({ pagination, onPageChange }) {
+export default function UserPagination({
+  pagination,
+  onPageChange,
+  disabled = false,
+}) {
   if (!pagination || pagination.totalPages <= 1) {
     return null;
   }
 
-  const { currentPage, totalPages, hasPrevPage, hasNextPage } = pagination;
+  const { page, totalPages, hasPrevPage, hasNextPage } = pagination;
 
   return (
     <View style={styles.paginationBar}>
       <TouchableOpacity
-        style={[styles.pageBtn, !hasPrevPage && styles.pageBtnDisabled]}
-        disabled={!hasPrevPage}
-        onPress={() => onPageChange(currentPage - 1)}
+        style={[
+          styles.pageBtn,
+          (disabled || !hasPrevPage) && styles.pageBtnDisabled,
+        ]}
+        disabled={disabled || !hasPrevPage}
+        onPress={() => onPageChange(page - 1)}
         accessibilityRole="button"
         accessibilityLabel="Trang trước"
       >
@@ -25,14 +32,17 @@ export default function UserPagination({ pagination, onPageChange }) {
       <View style={styles.pageInfo}>
         <Ionicons name="leaf" size={14} color={garden.sprout} />
         <Text style={styles.pageInfoText}>
-          Trang <Text style={styles.pageInfoStrong}>{currentPage}</Text> / {totalPages}
+          Trang <Text style={styles.pageInfoStrong}>{page}</Text> / {totalPages}
         </Text>
       </View>
 
       <TouchableOpacity
-        style={[styles.pageBtn, !hasNextPage && styles.pageBtnDisabled]}
-        disabled={!hasNextPage}
-        onPress={() => onPageChange(currentPage + 1)}
+        style={[
+          styles.pageBtn,
+          (disabled || !hasNextPage) && styles.pageBtnDisabled,
+        ]}
+        disabled={disabled || !hasNextPage}
+        onPress={() => onPageChange(page + 1)}
         accessibilityRole="button"
         accessibilityLabel="Trang sau"
       >

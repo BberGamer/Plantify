@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "react-native-paper";
 import {
   StyleSheet,
   View,
@@ -30,6 +31,7 @@ export default function AdminUsersScreen() {
     pagination,
     loading,
     refreshing,
+    listError,
     search,
     setSearch,
     selectedRole,
@@ -80,23 +82,26 @@ export default function AdminUsersScreen() {
         <UserToastBanner toast={toast} />
 
         {/* HEADER */}
-        <UserHeader
-          totalUsers={pagination.totalUsers}
-          onRefresh={handleRefresh}
-        />
+        <UserHeader totalUsers={pagination.total} onRefresh={handleRefresh} />
 
         {/* SEARCH & FILTERS */}
         <UserFilterBar
-        search={search}
-        onSearchChange={setSearch}
-        onSearchSubmit={handleSearchSubmit}
-        onSearchClear={handleSearchClear}
-        selectedRole={selectedRole}
-        onSelectRole={setSelectedRole}
-        selectedStatus={selectedStatus}
-        onSelectStatus={setSelectedStatus}
+          search={search}
+          onSearchChange={setSearch}
+          onSearchSubmit={handleSearchSubmit}
+          onSearchClear={handleSearchClear}
+          selectedRole={selectedRole}
+          onSelectRole={setSelectedRole}
+          selectedStatus={selectedStatus}
+          onSelectStatus={setSelectedStatus}
         />
 
+        {!!listError && (
+          <View style={styles.errorBox}>
+            <Text accessibilityRole="alert">{listError}</Text>
+            <Button onPress={handleRefresh}>Thử lại</Button>
+          </View>
+        )}
         {/* USER LIST */}
         {loading && !refreshing ? (
           <View style={styles.loadingContainer}>
@@ -125,10 +130,11 @@ export default function AdminUsersScreen() {
                 colors={[garden.forest]}
               />
             }
-            ListEmptyComponent={<UserEmptyState />}
+            ListEmptyComponent={!listError && <UserEmptyState />}
             ListFooterComponent={
               <UserPagination
                 pagination={pagination}
+                disabled={loading || refreshing || !!listError}
                 onPageChange={(page) => fetchUsers(page)}
               />
             }
@@ -177,6 +183,7 @@ export default function AdminUsersScreen() {
 }
 
 const styles = StyleSheet.create({
+  errorBox: { padding: 16 },
   safeArea: {
     flex: 1,
     backgroundColor: garden.forest,

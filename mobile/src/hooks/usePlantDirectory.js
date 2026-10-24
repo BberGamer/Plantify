@@ -14,7 +14,17 @@ export default function usePlantDirectory() {
   }, [inputValue]);
   const clearSearch = () => {
     setInputValue("");
+    if (search === "") list.changePage(1);
     setSearch("");
+  };
+  const changeSearch = (value) => {
+    setInputValue(value);
+    if (value.trim() !== search) list.invalidate();
+    else if (inputValue.trim() !== search) list.changePage(1);
+  };
+  const selectCategory = (id) => {
+    if (id !== activeCatId) list.invalidate();
+    setActiveCatId(id);
   };
   return {
     ...list,
@@ -25,8 +35,8 @@ export default function usePlantDirectory() {
     retryCategories: categories.refetch,
     inputValue,
     activeCatId,
-    changeSearch: setInputValue,
+    changeSearch,
     clearSearch,
-    selectCategory: setActiveCatId,
+    selectCategory,
   };
 }

@@ -1,29 +1,33 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
-  "VALIDATION_ERROR": "Thông tin nhập chưa hợp lệ. Vui lòng kiểm tra lại.",
-  "INVALID_ID": "Định dạng ID không hợp lệ.",
-  "INVALID_CREDENTIALS": "Email hoặc mật khẩu không chính xác.",
-  "ACCOUNT_LOCKED": "Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.",
-  "GOOGLE_ACCOUNT": "Vui lòng sử dụng tài khoản Google để tiếp tục.",
-  "CURRENT_PASSWORD_INVALID": "Mật khẩu hiện tại không chính xác.",
-  "EMAIL_IN_USE": "Email đã được sử dụng.",
-  "PHONE_IN_USE": "Số điện thoại đã được sử dụng.",
-  "CONTACT_IN_USE": "Email hoặc số điện thoại đã được sử dụng.",
-  "OTP_INVALID": "Mã xác thực không chính xác. Vui lòng kiểm tra lại.",
-  "OTP_EXPIRED": "Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.",
-  "REGISTRATION_NOT_FOUND": "Thông tin đăng ký không tồn tại hoặc đã hết hạn. Vui lòng đăng ký lại.",
-  "USER_NOT_FOUND": "Không tìm thấy tài khoản.",
-  "PLANT_NOT_FOUND": "Không tìm thấy cây này.",
-  "CATEGORY_NOT_FOUND": "Không tìm thấy danh mục cây.",
-  "RESOURCE_NOT_FOUND": "Không tìm thấy tài nguyên.",
-  "DUPLICATE_RESOURCE": "Dữ liệu đã được sử dụng.",
-  "SELF_LOCK_FORBIDDEN": "Bạn không thể tự khóa tài khoản của chính mình.",
-  "SELF_ROLE_CHANGE_FORBIDDEN": "Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình.",
-  "AUTH_REQUIRED": "Vui lòng đăng nhập để tiếp tục.",
-  "SESSION_INVALID": "Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.",
-  "FORBIDDEN": "Bạn không có quyền thực hiện thao tác này.",
-  "PAYLOAD_TOO_LARGE": "Dữ liệu gửi lên quá lớn.",
-  "INTERNAL_ERROR": "Máy chủ đang gặp sự cố. Vui lòng thử lại sau."
+  INVALID_RESPONSE: "Dữ liệu máy chủ trả về không hợp lệ. Vui lòng thử lại.",
+  VALIDATION_ERROR: "Thông tin nhập chưa hợp lệ. Vui lòng kiểm tra lại.",
+  INVALID_ID: "Định dạng ID không hợp lệ.",
+  INVALID_CREDENTIALS: "Email hoặc mật khẩu không chính xác.",
+  ACCOUNT_LOCKED: "Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.",
+  GOOGLE_ACCOUNT: "Vui lòng sử dụng tài khoản Google để tiếp tục.",
+  CURRENT_PASSWORD_INVALID: "Mật khẩu hiện tại không chính xác.",
+  EMAIL_IN_USE: "Email đã được sử dụng.",
+  PHONE_IN_USE: "Số điện thoại đã được sử dụng.",
+  CONTACT_IN_USE: "Email hoặc số điện thoại đã được sử dụng.",
+  OTP_INVALID: "Mã xác thực không chính xác. Vui lòng kiểm tra lại.",
+  OTP_EXPIRED: "Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.",
+  REGISTRATION_NOT_FOUND:
+    "Thông tin đăng ký không tồn tại hoặc đã hết hạn. Vui lòng đăng ký lại.",
+  USER_NOT_FOUND: "Không tìm thấy tài khoản.",
+  PLANT_NOT_FOUND: "Không tìm thấy cây này.",
+  CATEGORY_NOT_FOUND: "Không tìm thấy danh mục cây.",
+  RESOURCE_NOT_FOUND: "Không tìm thấy tài nguyên.",
+  DUPLICATE_RESOURCE: "Dữ liệu đã được sử dụng.",
+  SELF_LOCK_FORBIDDEN: "Bạn không thể tự khóa tài khoản của chính mình.",
+  SELF_ROLE_CHANGE_FORBIDDEN:
+    "Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình.",
+  AUTH_REQUIRED: "Vui lòng đăng nhập để tiếp tục.",
+  SESSION_INVALID:
+    "Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.",
+  FORBIDDEN: "Bạn không có quyền thực hiện thao tác này.",
+  PAYLOAD_TOO_LARGE: "Dữ liệu gửi lên quá lớn.",
+  INTERNAL_ERROR: "Máy chủ đang gặp sự cố. Vui lòng thử lại sau.",
 };
 
 // Chỉ dành cho endpoint cũ chưa trả code. Bỏ danh sách sau khi mọi endpoint được chuyển đổi.
@@ -90,19 +94,32 @@ const LEGACY_MESSAGES = new Set([
   "Địa chỉ email là bắt buộc.",
   "Định dạng ID bệnh không hợp lệ.",
   "Định dạng ID cây không hợp lệ.",
-  "Định dạng ID người dùng không hợp lệ."
+  "Định dạng ID người dùng không hợp lệ.",
 ]);
 
-export default function getErrorMessage(error, fallback = "Đã xảy ra lỗi. Vui lòng thử lại.") {
+export default function getErrorMessage(
+  error,
+  fallback = "Đã xảy ra lỗi. Vui lòng thử lại.",
+) {
   if (error?.code === "ECONNABORTED" || error?.code === "ETIMEDOUT") {
     return "Yêu cầu đã hết thời gian chờ. Vui lòng thử lại.";
   }
   const data = error?.response?.data;
   const code = data?.code || error?.code;
-  if (typeof code === "string" && Object.prototype.hasOwnProperty.call(ERROR_MESSAGES, code)) return ERROR_MESSAGES[code];
-  const rawMessage = typeof error === "string" ? error : data?.message || error?.message;
+  if (
+    typeof code === "string" &&
+    Object.prototype.hasOwnProperty.call(ERROR_MESSAGES, code)
+  )
+    return ERROR_MESSAGES[code];
+  const rawMessage =
+    typeof error === "string" ? error : data?.message || error?.message;
   const message = typeof rawMessage === "string" ? rawMessage : "";
-  if (error?.code === "ERR_NETWORK" || /^(Network Error|Network request failed|Failed to fetch)$/i.test(message || "")) {
+  if (
+    error?.code === "ERR_NETWORK" ||
+    /^(Network Error|Network request failed|Failed to fetch)$/i.test(
+      message || "",
+    )
+  ) {
     return "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.";
   }
   if (/^timeout of \d+ms exceeded$/i.test(message || "")) {
@@ -111,7 +128,11 @@ export default function getErrorMessage(error, fallback = "Đã xảy ra lỗi. 
   if (error?.response?.status >= 500) return ERROR_MESSAGES.INTERNAL_ERROR;
   // Một code mới chưa được client hỗ trợ dùng fallback, không dùng raw message.
   if (data?.code) return fallback;
-  if (typeof message === "string" && (LEGACY_MESSAGES.has(message.trim()) || Object.values(ERROR_MESSAGES).includes(message.trim()))) {
+  if (
+    typeof message === "string" &&
+    (LEGACY_MESSAGES.has(message.trim()) ||
+      Object.values(ERROR_MESSAGES).includes(message.trim()))
+  ) {
     return message.trim();
   }
   return fallback;

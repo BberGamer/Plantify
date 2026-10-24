@@ -1,14 +1,17 @@
 // src/services/userService.js - Goi API Quan ly Nguoi dung (Admin User Management)
 import api from "./api";
+import { adaptUsersList, mapUsersParams } from "./listAdapters";
 
-export const userService = {
+const userService = {
   /**
    * Lay danh sach nguoi dung (phan trang, tim kiem, loc)
    * @param {object} params - { page, limit, search, role, status, sortBy, sortOrder }
    */
   getUsers: async (params = {}) => {
-    const response = await api.get("/users", { params });
-    return response.data;
+    const response = await api.get("/users", {
+      params: mapUsersParams(params),
+    });
+    return adaptUsersList(response.data);
   },
 
   /**

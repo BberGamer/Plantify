@@ -1,5 +1,6 @@
 // src/services/plantService.js - Goi API Plants tu backend
-import api from './api';
+import api from "./api";
+import { adaptPlantsList, mapPlantsParams } from "./listAdapters";
 
 const plantService = {
   /**
@@ -7,7 +8,7 @@ const plantService = {
    * GET /api/v1/plants/categories
    */
   getCategories: async () => {
-    const response = await api.get('/plants/categories');
+    const response = await api.get("/plants/categories");
     return response.data; // { success, message, data: [...] }
   },
 
@@ -16,12 +17,10 @@ const plantService = {
    * GET /api/v1/plants?category_id=...&search=...&page=1&limit=20
    */
   getPlants: async ({ categoryId, search, page = 1, limit = 20 } = {}) => {
-    const params = { page, limit };
-    if (categoryId) params.category_id = categoryId;
-    if (search && search.trim()) params.search = search.trim();
+    const params = mapPlantsParams({ categoryId, search, page, limit });
 
-    const response = await api.get('/plants', { params });
-    return response.data; // { success, message, data: { plants, total, page, ... } }
+    const response = await api.get("/plants", { params });
+    return adaptPlantsList(response.data);
   },
 
   /**
@@ -34,12 +33,15 @@ const plantService = {
   },
 
   getManagerPlants: async ({ search, page = 1, limit = 50 } = {}) => {
-    const response = await api.get('/plants/manager', { params: { search, page, limit } });
-    return response.data;
+    const response = await api.get("/plants/manager", {
+      params: mapPlantsParams({ search, page, limit }),
+    });
+    return adaptPlantsList(response.data);
   },
 
-  createPlant: async (plant) => (await api.post('/plants/manager', plant)).data,
-  updatePlant: async (id, plant) => (await api.put(`/plants/manager/${id}`, plant)).data,
+  createPlant: async (plant) => (await api.post("/plants/manager", plant)).data,
+  updatePlant: async (id, plant) =>
+    (await api.put(`/plants/manager/${id}`, plant)).data,
   deletePlant: async (id) => (await api.delete(`/plants/manager/${id}`)).data,
 };
 
