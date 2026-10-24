@@ -19,7 +19,7 @@ import useAuthStore from "../../store/authStore";
 // Dinh nghia route tuong ung voi tung role
 const ROLE_ROUTES = {
   admin: '/admin',
-  manager: '/admin',
+  manager: '/manager',
   customer: '/(tabs)',
 };
 

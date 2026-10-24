@@ -2,16 +2,28 @@ import React from "react";
 import { View, Pressable, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useSegments } from "expo-router";
 import { colors } from "../../theme/colors";
 
 export default function ProfileHeader() {
   const router = useRouter();
+  const segments = useSegments();
+
+  const handleBack = () => {
+    if (segments[0] === "admin") {
+      router.navigate("/admin");
+    } else if (segments[0] === "manager") {
+      router.navigate("/manager");
+    } else {
+      router.navigate("/(tabs)");
+    }
+  };
+
   return (
       <View style={styles.header}>
         {/* Về đúng Home kể cả khi mở thẳng đường dẫn profile, không cần lịch sử back. */}
         <Pressable
-          onPress={() => router.navigate("/(tabs)")}
+          onPress={handleBack}
           style={styles.backButton}
           accessibilityRole="button"
           accessibilityLabel="Về trang chủ"
