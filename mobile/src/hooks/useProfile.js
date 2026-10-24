@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import useLogout from "./useLogout";
 import { useAuthStore } from "../../store/authStore";
 import { getSessionContext, isSessionCurrent } from "../services/sessionAccess";
+import useScreenScope from "./useScreenScope";
 
 // State và thao tác lưu/đăng xuất tách khỏi giao diện.
 export default function useProfile() {
@@ -19,6 +20,7 @@ export default function useProfile() {
   //dùng useRef chống gọi API nhiều lần tránh người dùng spam
   const savePending = useRef(false);
   const mounted = useRef(false);
+  const { capture, isActive } = useScreenScope();
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; };
@@ -33,6 +35,7 @@ export default function useProfile() {
 
   // Form là bản nháp riêng: gõ/Hủy không thay đổi thông tin thật trong store.
   const startEditing = () => {
+    if (savePending.current || isLoggingOut || !isActive()) return;
     setForm({
       fullName: user?.fullName || "",
       email: user?.email || "",
@@ -45,12 +48,20 @@ export default function useProfile() {
     setEditing(true);
   };
   const cancelEditing = () => {
+    if (savePending.current) return;
     setEditing(false);
     setForm({});
     setMessage("");
   };
+  const changeField = (key, value) => {
+    if (savePending.current || isLoggingOut || !editing ||
+        !Object.prototype.hasOwnProperty.call(form, key)) return;
+    setForm((previous) => ({ ...previous, [key]: value }));
+    setMessage("");
+  };
   const saveProfile = async () => {
-    if (savePending.current) return;
+    if (savePending.current || isLoggingOut || !editing || !isActive()) return;
+    const inScope = capture();
     const origin = getSessionContext();
     if (origin.version !== sessionVersion || !origin.token) return;
     if (form.newPassword !== form.confirmPassword) {
@@ -70,7 +81,7 @@ export default function useProfile() {
         ...(form.currentPassword ? { currentPassword: form.currentPassword } : {}),
         ...(form.newPassword ? { newPassword: form.newPassword } : {}),
       }, origin);
-      if (!mounted.current || !isSessionCurrent(origin) || result.cancelled) return;
+      if (!inScope() || result.cancelled) return;
       setEditing(false);
       setForm({}); // Xóa mật khẩu khỏi state sau khi lưu.
       setMessage(
@@ -79,7 +90,7 @@ export default function useProfile() {
           : "Đã lưu trên máy chủ, nhưng chưa lưu được bộ nhớ trên thiết bị.",
       );
     } catch (error) {
-      if (!mounted.current || !isSessionCurrent(origin)) return;
+      if (!inScope()) return;
       setMessage(
         getErrorMessage(error, "Không thể lưu hồ sơ. Vui lòng thử lại."),
       );
@@ -94,13 +105,15 @@ export default function useProfile() {
     editing,
     saving,
     form,
-    setForm,
+    changeField,
     message,
     startEditing,
     cancelEditing,
     saveProfile,
     isLoggingOut,
     logoutError,
-    handleLogout,
+    handleLogout: () => {
+      if (!savePending.current) handleLogout();
+    },
   };
 }

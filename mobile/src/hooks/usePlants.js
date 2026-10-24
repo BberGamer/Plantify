@@ -1,47 +1,42 @@
 import getErrorMessage from "../utils/getErrorMessage"; // usePlants.js - Tải dữ liệu cây với bảo vệ response cũ và cleanup khi rời màn hình.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import plantService from "../services/plantService";
 import usePaginatedList from "./usePaginatedList";
+import useScreenScope from "./useScreenScope";
 
 // Ba tài nguyên dùng chung vòng đời tải, thử lại và bỏ qua request đã hết hiệu lực.
 function usePlantResource(fetchResource, initialData) {
-  const [data, setData] = useState(initialData);
+  const [result, setResult] = useState({ source: null, data: initialData });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const request = useRef(0);
-  const mounted = useRef(false);
+  const { capture, isActive } = useScreenScope(() => refetch(), undefined, fetchResource);
   const refetch = useCallback(async () => {
+    if (!isActive()) return;
     const requestId = ++request.current;
-    const isCurrent = () => mounted.current && requestId === request.current;
+    const inScope = capture();
+    const isCurrent = () => inScope() && requestId === request.current;
     setLoading(true);
     setError("");
     try {
       const result = await fetchResource();
-      if (isCurrent()) setData(result);
+      if (isCurrent()) setResult({ source: fetchResource, data: result });
     } catch (failure) {
       if (isCurrent())
         setError(getErrorMessage(failure, "Không thể tải dữ liệu cây."));
     } finally {
       if (isCurrent()) setLoading(false);
     }
-  }, [fetchResource]);
-  useEffect(() => {
-    mounted.current = true;
-    refetch();
-    return () => {
-      mounted.current = false;
-      ++request.current;
-    };
-  }, [refetch]);
-  return { data, loading, error, refetch };
+  }, [fetchResource, capture, isActive]);
+  return { data: result.source === fetchResource ? result.data : initialData, loading, error, refetch };
 }
 
-export function usePlants(categoryId = "", search = "") {
+export function usePlants(categoryId = "", search = "", enabled = true) {
   const fetchPage = useCallback(
     (params) => plantService.getPlants({ ...params, categoryId, search }),
     [categoryId, search],
   );
-  const list = usePaginatedList(fetchPage, { limit: 50 });
+  const list = usePaginatedList(fetchPage, { limit: 50, enabled });
   return {
     plants: list.items,
     total: list.pagination.total,
@@ -62,7 +57,7 @@ export function usePlantCategories() {
     if (!response?.success || !Array.isArray(response.data)) {
       throw new Error(response?.message || "Không thể tải danh mục cây.");
     }
-    return [{ _id: "", category_name: "Tất cả" }, ...response.data];
+    return response.data;
   }, []);
   const { data, ...state } = usePlantResource(fetchResource, []);
   return { ...state, categories: data };

@@ -2,15 +2,18 @@
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { usePlantDetail } from "./usePlants";
+import useScreenScope from "./useScreenScope";
 
 export default function usePlantDetailScreen(id) {
   const detail = usePlantDetail(id);
+  const { capture, isActive } = useScreenScope(undefined, undefined, id);
   const [saved, setSaved] = useState(false);
   useEffect(() => {
     setSaved(false);
   }, [id]);
   const addToGarden = () => {
-    if (!detail.plant) return;
+    if (!detail.plant || !isActive()) return;
+    const isCurrent = capture();
     Alert.alert(
       "Thêm vào vườn",
       `Bạn muốn thêm "${detail.plant.common_name}" vào vườn cây của mình?`,
@@ -18,8 +21,9 @@ export default function usePlantDetailScreen(id) {
         { text: "Hủy", style: "cancel" },
         {
           text: "Thêm",
-          onPress: () =>
-            Alert.alert("Thành công", "Cây đã được thêm vào vườn!"),
+          onPress: () => {
+            if (isCurrent()) Alert.alert("Chưa hỗ trợ", "Tính năng lưu cây vào vườn chưa được kết nối.");
+          },
         },
       ],
     );

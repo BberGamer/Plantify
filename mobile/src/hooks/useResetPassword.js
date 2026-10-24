@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import authService from "../services/authService";
 import useOtpCountdown from "./useOtpCountdown";
+import useScreenScope from "./useScreenScope";
 
 export default function useResetPassword() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function useResetPassword() {
   const mounted = useRef(false);
   const redirectTimer = useRef(null);
   const countdown = useOtpCountdown(codeSent);
+  const { capture, isActive } = useScreenScope(undefined, () => clearTimeout(redirectTimer.current));
 
   useEffect(() => {
     mounted.current = true;
@@ -31,17 +33,20 @@ export default function useResetPassword() {
   }, []);
 
   const changeEmail = (value) => {
-    if (pending.current) return;
+    if (pending.current || resetSuccess) return;
     setEmail(value);
     setCodeSent(false);
     setOtp("");
+    setNewPassword("");
+    setConfirmPassword("");
     setErrorMsg("");
     setSuccessMsg("");
     countdown.resetCountdown();
   };
 
   const sendCode = async () => {
-    if (pending.current || (codeSent && !countdown.canResend())) return;
+    if (pending.current || resetSuccess || !isActive() || (codeSent && !countdown.canResend())) return;
+    const isCurrent = capture();
     if (
       !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.trim())
     ) {
@@ -56,7 +61,7 @@ export default function useResetPassword() {
       const response = await authService.forgotPassword(email.trim());
       if (!response?.success)
         throw new Error(response?.message || "Không thể gửi mã xác thực.");
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
       setCodeSent(true);
       setOtp("");
       countdown.startCountdown();
@@ -64,7 +69,7 @@ export default function useResetPassword() {
         response.message || "Mã xác thực đã được gửi đến email của bạn.",
       );
     } catch (error) {
-      if (mounted.current)
+      if (isCurrent())
         setErrorMsg(
           getErrorMessage(error, "Gửi mã xác thực thất bại."),
         );
@@ -75,7 +80,8 @@ export default function useResetPassword() {
   };
 
   const confirmReset = async () => {
-    if (pending.current || resetSuccess) return;
+    if (pending.current || resetSuccess || !isActive()) return;
+    const isCurrent = capture();
     let message = "";
     if (!codeSent || !/^\d{6}$/.test(otp))
       message = "Vui lòng nhập đủ 6 chữ số mã xác thực.";
@@ -99,15 +105,15 @@ export default function useResetPassword() {
       });
       if (!response?.success)
         throw new Error(response?.message || "Không thể đặt lại mật khẩu.");
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
       setResetSuccess(true);
       setNewPassword("");
       setConfirmPassword("");
       redirectTimer.current = setTimeout(() => {
-        if (mounted.current) router.replace("/(auth)/login");
+        if (isCurrent()) router.replace("/(auth)/login");
       }, 2000);
     } catch (error) {
-      if (mounted.current)
+      if (isCurrent())
         setErrorMsg(
           getErrorMessage(error, "Đặt lại mật khẩu thất bại."),
         );
@@ -134,19 +140,19 @@ export default function useResetPassword() {
     sendCode,
     confirmReset,
     changeOtp: (value) => {
-      if (!pending.current) {
+      if (!pending.current && codeSent && !resetSuccess) {
         setOtp(value);
         setErrorMsg("");
       }
     },
     changeNewPassword: (value) => {
-      if (!pending.current) {
+      if (!pending.current && codeSent && !resetSuccess) {
         setNewPassword(value);
         setErrorMsg("");
       }
     },
     changeConfirmPassword: (value) => {
-      if (!pending.current) {
+      if (!pending.current && codeSent && !resetSuccess) {
         setConfirmPassword(value);
         setErrorMsg("");
       }

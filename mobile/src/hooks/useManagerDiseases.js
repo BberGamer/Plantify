@@ -1,8 +1,11 @@
 // useManagerDiseases.js - Quản lý danh sách và thao tác CRUD bệnh cây.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import diseaseService from "../services/diseaseService";
 import plantService from "../services/plantService";
 import getErrorMessage from "../utils/getErrorMessage";
+import useDebouncedValue from "./useDebouncedValue";
+import useScreenScope from "./useScreenScope";
+import useAuthStore from "../../store/authStore";
 
 const createDiseaseForm = (disease = {}) => ({
   disease_name: disease.disease_name || "",
@@ -34,6 +37,7 @@ const createDiseasePayload = (form) => ({
 });
 
 export default function useManagerDiseases() {
+  const sessionVersion = useAuthStore((state) => state.sessionVersion);
   const [diseases, setDiseases] = useState([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -58,23 +62,35 @@ export default function useManagerDiseases() {
   const listRequest = useRef(0);
   const plantRequest = useRef(0);
   const detailRequest = useRef(0);
-  const searchValue = useRef("");
-  const statusValue = useRef("");
-  const searchTimer = useRef(null);
   const mutationPending = useRef(false);
+  const debounced = useDebouncedValue(search.trim());
+  const listContext = useMemo(() => ({
+    search: debounced.value, status: statusFilter, enabled: !debounced.pending,
+  }), [debounced.value, statusFilter, debounced.pending]);
+  const queryRef = useRef(listContext);
+  queryRef.current = listContext;
+  const { capture: captureList, isActive: isListActive } = useScreenScope(
+    () => loadDiseases(), undefined, listContext,
+  );
+  const { capture, isActive } = useScreenScope(() => loadPlantOptions(), () => {
+    ++detailRequest.current;
+    setFormLoading(false);
+  });
 
   const loadDiseases = useCallback(async (refresh = false) => {
-    clearTimeout(searchTimer.current);
+    const query = queryRef.current;
+    if (!isListActive() || !query.enabled) return;
+    const inScope = captureList();
     const requestId = ++listRequest.current;
     const isCurrent = () =>
-      mounted.current && requestId === listRequest.current;
+      inScope() && query === queryRef.current && requestId === listRequest.current;
     setLoading(!refresh);
     setRefreshing(refresh);
     setListError("");
     try {
       const response = await diseaseService.getManagerDiseases({
-        search: searchValue.current.trim(),
-        status: statusValue.current,
+        search: query.search,
+        status: query.status,
         limit: 100,
       });
       if (!response?.success || !Array.isArray(response.data?.diseases)) {
@@ -97,12 +113,14 @@ export default function useManagerDiseases() {
         setRefreshing(false);
       }
     }
-  }, []);
+  }, [captureList, isListActive]);
 
   const loadPlantOptions = useCallback(async () => {
+    if (!isActive()) return;
+    const inScope = capture();
     const requestId = ++plantRequest.current;
     const isCurrent = () =>
-      mounted.current && requestId === plantRequest.current;
+      inScope() && requestId === plantRequest.current;
     setPlantsLoading(true);
     setPlantsError("");
     try {
@@ -133,42 +151,49 @@ export default function useManagerDiseases() {
     } finally {
       if (isCurrent()) setPlantsLoading(false);
     }
-  }, []);
+  }, [capture, isActive]);
 
   useEffect(() => {
     mounted.current = true;
-    loadDiseases();
-    loadPlantOptions();
     return () => {
       mounted.current = false;
       ++listRequest.current;
       ++plantRequest.current;
       ++detailRequest.current;
-      clearTimeout(searchTimer.current);
     };
-  }, [loadDiseases, loadPlantOptions]);
+  }, []);
+
+  useEffect(() => {
+    setDiseases([]);
+    setTotal(0);
+    setPlantOptions([]);
+    setVisible(false);
+    setEditing(null);
+    setForm(createDiseaseForm());
+    setFormReady(false);
+    setFormError("");
+    setDeleteTarget(null);
+    setDeleteError("");
+  }, [sessionVersion]);
 
   const changeSearch = (value) => {
     setSearch(value);
-    searchValue.current = value;
     ++listRequest.current;
-    clearTimeout(searchTimer.current);
     setLoading(true);
     setRefreshing(false);
     setListError("");
-    searchTimer.current = setTimeout(() => loadDiseases(), 400);
+    if (value.trim() === debounced.value && !debounced.pending) loadDiseases();
   };
 
   const changeStatusFilter = (value) => {
-    statusValue.current = value;
+    if (value === statusFilter && !debounced.pending) return;
     setStatusFilter(value);
     ++listRequest.current;
-    clearTimeout(searchTimer.current);
-    loadDiseases();
+    debounced.flush();
   };
 
   const openCreate = () => {
-    if (mutationPending.current || deleteTarget) return;
+    if (mutationPending.current || deleteTarget || !isActive()) return;
     ++detailRequest.current;
     setEditing(null);
     setForm(createDiseaseForm());
@@ -179,7 +204,10 @@ export default function useManagerDiseases() {
   };
 
   const loadDiseaseForEdit = async (disease) => {
+    if (!isActive()) return;
+    const inScope = capture();
     const requestId = ++detailRequest.current;
+    const isCurrent = () => inScope() && requestId === detailRequest.current;
     setEditing(disease);
     setForm(createDiseaseForm(disease));
     setFormLoading(true);
@@ -191,25 +219,25 @@ export default function useManagerDiseases() {
       if (!response?.success || !response.data) {
         throw new Error(response?.message || "Dữ liệu bệnh cây không hợp lệ.");
       }
-      if (!mounted.current || requestId !== detailRequest.current) return;
+      if (!isCurrent()) return;
       setEditing(response.data);
       setForm(createDiseaseForm(response.data));
       setFormReady(true);
     } catch (error) {
-      if (mounted.current && requestId === detailRequest.current) {
+      if (isCurrent()) {
         setFormError(
           getErrorMessage(error, "Không tải được thông tin bệnh cây."),
         );
       }
     } finally {
-      if (mounted.current && requestId === detailRequest.current) {
+      if (isCurrent()) {
         setFormLoading(false);
       }
     }
   };
 
   const openEdit = (disease) => {
-    if (mutationPending.current || deleteTarget) return;
+    if (mutationPending.current || deleteTarget || !isActive()) return;
     loadDiseaseForEdit(disease);
   };
 
@@ -231,13 +259,15 @@ export default function useManagerDiseases() {
   };
 
   const changeField = (key, value) => {
-    if (mutationPending.current || formLoading || !formReady) return;
+    if (mutationPending.current || !visible || formLoading || !formReady ||
+        !Object.prototype.hasOwnProperty.call(form, key) ||
+        ["plant_ids", "treatment_protocol"].includes(key)) return;
     setForm((previous) => ({ ...previous, [key]: value }));
     setFormError("");
   };
 
   const changeTreatmentField = (key, value) => {
-    if (mutationPending.current || formLoading) return;
+    if (mutationPending.current || !visible || formLoading || !formReady) return;
     setForm((previous) => ({
       ...previous,
       treatment_protocol: { ...previous.treatment_protocol, [key]: value },
@@ -246,7 +276,7 @@ export default function useManagerDiseases() {
   };
 
   const togglePlant = (plantId) => {
-    if (mutationPending.current || formLoading) return;
+    if (mutationPending.current || !visible || formLoading || !formReady) return;
     setForm((previous) => ({
       ...previous,
       plant_ids: previous.plant_ids.includes(plantId)
@@ -257,8 +287,9 @@ export default function useManagerDiseases() {
   };
 
   const save = async () => {
-    if (mutationPending.current || !visible || formLoading || !formReady)
+    if (mutationPending.current || !visible || formLoading || !formReady || !isActive())
       return;
+    const isCurrent = capture();
     const limits = {
       disease_name: 150,
       scientific_name: 200,
@@ -301,14 +332,14 @@ export default function useManagerDiseases() {
       if (!response?.success) {
         throw new Error(response?.message || "Không lưu được bệnh cây.");
       }
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
       setVisible(false);
       setEditing(null);
       setForm(createDiseaseForm());
       setFormReady(false);
       await loadDiseases(true);
     } catch (error) {
-      if (mounted.current) {
+      if (isCurrent()) {
         setFormError(getErrorMessage(error, "Không lưu được bệnh cây."));
       }
     } finally {
@@ -318,7 +349,7 @@ export default function useManagerDiseases() {
   };
 
   const requestDelete = (disease) => {
-    if (mutationPending.current || visible) return;
+    if (mutationPending.current || visible || !isActive()) return;
     setDeleteTarget(disease);
     setDeleteError("");
   };
@@ -330,7 +361,8 @@ export default function useManagerDiseases() {
   };
 
   const confirmDelete = async () => {
-    if (mutationPending.current || !deleteTarget) return;
+    if (mutationPending.current || !deleteTarget || !isActive()) return;
+    const isCurrent = capture();
     const targetId = deleteTarget._id;
     mutationPending.current = true;
     setDeleting(true);
@@ -340,7 +372,7 @@ export default function useManagerDiseases() {
       if (!response?.success) {
         throw new Error(response?.message || "Không xóa được bệnh cây.");
       }
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
       setDeleteTarget(null);
       setDiseases((previous) =>
         previous.filter((disease) => disease._id !== targetId),
@@ -348,7 +380,7 @@ export default function useManagerDiseases() {
       setTotal((previous) => Math.max(0, previous - 1));
       await loadDiseases(true);
     } catch (error) {
-      if (mounted.current) {
+      if (isCurrent()) {
         setDeleteError(getErrorMessage(error, "Không xóa được bệnh cây."));
       }
     } finally {

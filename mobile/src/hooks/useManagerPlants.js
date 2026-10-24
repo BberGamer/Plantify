@@ -3,6 +3,10 @@ import getErrorMessage from "../utils/getErrorMessage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import plantService from "../services/plantService";
 import usePaginatedList from "./usePaginatedList";
+import useDebouncedValue from "./useDebouncedValue";
+import useScreenScope from "./useScreenScope";
+import useAuthStore from "../../store/authStore";
+import { usePlantCategories } from "./usePlants";
 
 const CARE_FIELDS = ["light", "water", "temperature", "humidity"];
 
@@ -48,10 +52,14 @@ const createPlantPayload = (form, plant) => {
 
 /** Quản lý state và các thao tác CRUD; component chỉ nhận dữ liệu và callback. */
 export default function useManagerPlants() {
+  const sessionVersion = useAuthStore((state) => state.sessionVersion);
   const [search, setSearch] = useState("");
-  const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [categoriesError, setCategoriesError] = useState("");
+  const {
+    categories,
+    loading: categoriesLoading,
+    error: categoriesError,
+    refetch: loadCategories,
+  } = usePlantCategories();
   const [visible, setVisible] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(createPlantForm);
@@ -61,22 +69,21 @@ export default function useManagerPlants() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const mounted = useRef(false);
-  const categoryRequest = useRef(0);
-  const searchValue = useRef("");
-  const searchTimer = useRef(null);
   const mutationPending = useRef(false);
+  const debounced = useDebouncedValue(search.trim());
+  const { capture, isActive } = useScreenScope();
 
   const fetchPage = useCallback(
     (params) =>
       plantService.getManagerPlants({
         ...params,
-        search: searchValue.current,
+        search: debounced.value,
       }),
-    [],
+    [debounced.value],
   );
   const plantList = usePaginatedList(fetchPage, {
     limit: 100,
-    autoLoad: false,
+    enabled: !debounced.pending,
   });
   const {
     items: plants,
@@ -91,51 +98,31 @@ export default function useManagerPlants() {
     [plantList.load],
   );
 
-  const loadCategories = useCallback(async () => {
-    const requestId = ++categoryRequest.current;
-    const isCurrent = () =>
-      mounted.current && requestId === categoryRequest.current;
-    setCategoriesLoading(true);
-    setCategoriesError("");
-    try {
-      const response = await plantService.getCategories();
-      if (!response?.success || !Array.isArray(response.data)) {
-        throw new Error(response?.message || "Dữ liệu danh mục không hợp lệ.");
-      }
-      if (isCurrent()) setCategories(response.data);
-    } catch (error) {
-      if (isCurrent()) {
-        setCategoriesError(
-          getErrorMessage(error, "Không tải được danh mục cây."),
-        );
-      }
-    } finally {
-      if (isCurrent()) setCategoriesLoading(false);
-    }
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
   useEffect(() => {
-    mounted.current = true;
-    loadPlants();
-    loadCategories();
-    return () => {
-      mounted.current = false;
-      ++categoryRequest.current;
-      clearTimeout(searchTimer.current);
-    };
-  }, [loadPlants, loadCategories]);
+    setVisible(false);
+    setEditing(null);
+    setForm(createPlantForm());
+    setFormError("");
+    setDeleteTarget(null);
+    setDeleteError("");
+  }, [sessionVersion]);
 
   const changeSearch = (value) => {
     setSearch(value);
-    searchValue.current = value;
     // Vô hiệu response cũ ngay khi gõ, kể cả trong thời gian chờ debounce.
     plantList.invalidate();
-    clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => plantList.load(1), 400);
+    if (value.trim() === debounced.value && !debounced.pending) plantList.load(1);
   };
 
   const openCreate = () => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || deleteTarget || !isActive()) return;
     setEditing(null);
     setForm(createPlantForm({ category_id: categories[0]?._id || "" }));
     setFormError("");
@@ -143,7 +130,7 @@ export default function useManagerPlants() {
   };
 
   const openEdit = (plant) => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || deleteTarget || !isActive()) return;
     setEditing(plant);
     setForm(createPlantForm(plant));
     setFormError("");
@@ -159,13 +146,16 @@ export default function useManagerPlants() {
   };
 
   const changeField = (key, value) => {
-    if (mutationPending.current) return;
+    if (
+      mutationPending.current || !visible ||
+      !Object.prototype.hasOwnProperty.call(form, key) || key === "care_requirements"
+    ) return;
     setForm((previous) => ({ ...previous, [key]: value }));
     setFormError("");
   };
 
   const changeCareField = (key, value) => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || !visible || !CARE_FIELDS.includes(key)) return;
     setForm((previous) => ({
       ...previous,
       care_requirements: { ...previous.care_requirements, [key]: value },
@@ -174,7 +164,8 @@ export default function useManagerPlants() {
   };
 
   const save = async () => {
-    if (mutationPending.current || !visible) return;
+    if (mutationPending.current || !visible || !isActive()) return;
+    const isCurrent = capture();
     if (
       !form.common_name.trim() ||
       !form.scientific_name.trim() ||
@@ -195,13 +186,13 @@ export default function useManagerPlants() {
         : await plantService.createPlant(payload);
       if (!response?.success)
         throw new Error(response?.message || "Không lưu được cây.");
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
       setVisible(false);
       setEditing(null);
       setForm(createPlantForm());
       await loadPlants(true);
     } catch (error) {
-      if (mounted.current) {
+      if (isCurrent()) {
         setFormError(getErrorMessage(error, "Không lưu được cây."));
       }
     } finally {
@@ -211,7 +202,7 @@ export default function useManagerPlants() {
   };
 
   const requestDelete = (plant) => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || visible || !isActive()) return;
     setDeleteTarget(plant);
     setDeleteError("");
   };
@@ -223,7 +214,8 @@ export default function useManagerPlants() {
   };
 
   const confirmDelete = async () => {
-    if (mutationPending.current || !deleteTarget) return;
+    if (mutationPending.current || !deleteTarget || !isActive()) return;
+    const isCurrent = capture();
     mutationPending.current = true;
     setDeleting(true);
     setDeleteError("");
@@ -231,7 +223,7 @@ export default function useManagerPlants() {
       const response = await plantService.deletePlant(deleteTarget._id);
       if (!response?.success)
         throw new Error(response?.message || "Không xóa được cây.");
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
       setDeleteTarget(null);
       // Loại ngay cây đã xóa để không còn xuất hiện nếu tải lại gặp lỗi.
       setPlants((previous) =>
@@ -239,7 +231,7 @@ export default function useManagerPlants() {
       );
       await loadPlants(true);
     } catch (error) {
-      if (mounted.current) {
+      if (isCurrent()) {
         setDeleteError(getErrorMessage(error, "Không xóa được cây."));
       }
     } finally {

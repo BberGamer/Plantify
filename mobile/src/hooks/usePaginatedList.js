@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createEmptyPagination } from "../services/listAdapters";
 import getErrorMessage from "../utils/getErrorMessage";
+import useScreenScope from "./useScreenScope";
 
 // Chỉ sở hữu vòng đời danh sách; form, bộ lọc và mutation vẫn ở hook domain.
 export default function usePaginatedList(
   fetchPage,
-  { limit, autoLoad = true } = {},
+  { limit, autoLoad = true, enabled = true } = {},
 ) {
   const [items, setItems] = useState([]);
   const [pagination, setPagination] = useState(() =>
@@ -14,11 +15,26 @@ export default function usePaginatedList(
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-  const mounted = useRef(false);
   const request = useRef(0);
   const pageRef = useRef(1);
   const fetchRef = useRef(fetchPage);
   fetchRef.current = fetchPage;
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
+  const context = useMemo(
+    () => ({ fetchPage, enabled, autoLoad, limit }),
+    [fetchPage, enabled, autoLoad, limit],
+  );
+  const { capture, isActive } = useScreenScope(
+    () => {
+      if (autoLoad) {
+        setItems([]);
+        load(1);
+      }
+    },
+    undefined,
+    context,
+  );
 
   const invalidate = useCallback(() => {
     ++request.current;
@@ -29,10 +45,13 @@ export default function usePaginatedList(
 
   const load = useCallback(
     async (page = pageRef.current, refresh = false) => {
-      if (!Number.isSafeInteger(page) || page < 1) return;
+      if (!enabledRef.current || !isActive() || !Number.isSafeInteger(page) || page < 1) return;
       const requestId = ++request.current;
-      const isCurrent = () => mounted.current && requestId === request.current;
       const fetch = fetchRef.current;
+      const inScope = capture();
+      const isCurrent = () =>
+        inScope() && enabledRef.current &&
+        fetch === fetchRef.current && requestId === request.current;
       pageRef.current = page;
       setLoading(!refresh);
       setRefreshing(refresh);
@@ -80,22 +99,8 @@ export default function usePaginatedList(
         }
       }
     },
-    [limit],
+    [limit, capture, isActive],
   );
-
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-      ++request.current;
-    };
-  }, []);
-  useEffect(() => {
-    if (autoLoad) load(1);
-    return () => {
-      ++request.current;
-    };
-  }, [fetchPage, autoLoad, load]);
 
   const refresh = useCallback(() => load(undefined, true), [load]);
   const retry = useCallback(() => load(), [load]);

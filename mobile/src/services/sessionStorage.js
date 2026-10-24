@@ -136,6 +136,11 @@ const sessionStorage = {
         );
         // Dữ liệu legacy không còn là nguồn phiên sau khi có record mới.
         await AsyncStorage.multiRemove(LEGACY_KEYS).catch(() => {});
+        if (!isCurrent()) {
+          // Hủy ngay trong queue để không xóa nhầm record của lần đăng nhập sau.
+          await clearRaw();
+          return false;
+        }
         return true;
       } catch {
         await clearRaw();

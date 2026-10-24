@@ -1,8 +1,9 @@
 import getErrorMessage from "../utils/getErrorMessage";
 // useLogin.js - Quản lý form đăng nhập; root guard điều hướng theo phiên.
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import useAuthStore from "../../store/authStore";
+import useScreenScope from "./useScreenScope";
 
 export default function useLogin() {
   const router = useRouter();
@@ -12,20 +13,14 @@ export default function useLogin() {
   const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState("");
   const pending = useRef(null);
+  const { capture, isActive } = useScreenScope(undefined, undefined, undefined, false);
   const isPending = () => {
     const state = useAuthStore.getState();
     return state.isLoggingIn || pending.current?.version === state.sessionVersion;
   };
-  const mounted = useRef(false);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
   const submit = async () => {
-    if (isPending()) return;
+    if (isPending() || !isActive()) return;
+    const inScreen = capture(false);
     if (!email.trim() || !password) {
       setLocalError(
         !email.trim()
@@ -38,14 +33,14 @@ export default function useLogin() {
     pending.current = attempt;
     setLocalError("");
     try {
-      const request = login(email.trim(), password);
+      const request = login(email.trim(), password, inScreen);
       attempt.version = useAuthStore.getState().sessionVersion;
       const response = await request;
-      if (!mounted.current || pending.current !== attempt) return;
+      if (!inScreen() || pending.current !== attempt) return;
       if (response.success) setPassword("");
       else if (!response.cancelled) setLocalError(response.error || "Đăng nhập thất bại.");
     } catch (failure) {
-      if (mounted.current && pending.current === attempt)
+      if (inScreen() && pending.current === attempt)
         setLocalError(getErrorMessage(failure, "Đăng nhập thất bại"));
     } finally {
       if (pending.current === attempt) pending.current = null;
@@ -70,8 +65,8 @@ export default function useLogin() {
         setLocalError("");
       }
     },
-    forgotPassword: () => router.push("/(auth)/reset-password"),
-    register: () => router.push("/(auth)/register"),
+    forgotPassword: () => { if (!isPending()) router.push("/(auth)/reset-password"); },
+    register: () => { if (!isPending()) router.push("/(auth)/register"); },
     googleLogin: () =>
       setLocalError("Tính năng đăng nhập bằng Google đang được phát triển."),
   };

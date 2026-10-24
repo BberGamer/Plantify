@@ -6,8 +6,8 @@ import ProfileEditForm from "./ProfileEditForm";
 import { colors } from "../../theme/colors";
 import { profileTheme } from "./profileTheme";
 
-export default function ProfileDetails({ user, ...actions }) {
-  const { editing, isLoggingOut, startEditing, message } = actions;
+export default function ProfileDetails({ user, editing, isLoggingOut, startEditing, message,
+  form, changeField, saving, cancelEditing, saveProfile }) {
   const fullName = user?.fullName?.trim() || "";
   const email = user?.email?.trim() || "";
   const phone = user?.phone?.trim() || "";
@@ -27,7 +27,8 @@ export default function ProfileDetails({ user, ...actions }) {
         </View>
         <View style={styles.card}>
           {editing ? (
-            <ProfileEditForm {...actions} />
+            <ProfileEditForm form={form} changeField={changeField} saving={saving}
+              cancelEditing={cancelEditing} saveProfile={saveProfile} />
           ) : (
             <>
               <ProfileInfoRow

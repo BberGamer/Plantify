@@ -1,15 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import diseaseService from "../services/diseaseService";
 import getErrorMessage from "../utils/getErrorMessage";
+import useScreenScope from "./useScreenScope";
 
 export default function usePlantDiseases(plantId) {
   const [result, setResult] = useState({ plantId: null, diseases: [], loading: true, error: "" });
   const request = useRef(0);
-  const mounted = useRef(false);
+  const { capture, isActive } = useScreenScope(() => retry(), undefined, plantId);
 
   const retry = useCallback(async () => {
+    if (!isActive()) return;
     const requestId = ++request.current;
-    const isCurrent = () => mounted.current && requestId === request.current;
+    const inScope = capture();
+    const isCurrent = () => inScope() && requestId === request.current;
     if (!plantId) {
       setResult({ plantId, diseases: [], loading: false, error: "" });
       return;
@@ -39,16 +42,7 @@ export default function usePlantDiseases(plantId) {
           error: getErrorMessage(error, "Không tải được bệnh thường gặp của cây.") });
       }
     }
-  }, [plantId]);
-
-  useEffect(() => {
-    mounted.current = true;
-    retry();
-    return () => {
-      mounted.current = false;
-      ++request.current;
-    };
-  }, [retry]);
+  }, [plantId, capture, isActive]);
 
   // Đổi cây phải ẩn dữ liệu cây cũ ngay cả trước khi effect mới chạy.
   return {
