@@ -11,13 +11,18 @@ Hướng dẫn agent, quy ước code, kiến trúc, thiết kế và kế hoạ
 | Phạm vi | Đã có trong source | Giới hạn |
 | --- | --- | --- |
 | Tài khoản | Đăng ký OTP email, đăng nhập, reset password, hồ sơ và phiên trên thiết bị | Các lỗi vòng đời phiên nằm trong kế hoạch; chưa có refresh-token flow |
-| Admin | Danh sách, tìm kiếm, phân trang, sửa user/role/status | Quyền và DTO cần chuẩn hóa thêm |
+| Admin | Thêm người dùng, danh sách, tìm kiếm, phân trang, sửa user/role/status | Quản trị viên khác chỉ được xem; bản thân sửa tên/SĐT |
 | Manager | CRUD cây và các tab khu vực quản lý | Màn bệnh cây/điều trị mới là placeholder |
 | Tra cứu cây | Danh sách, bộ lọc và chi tiết từ API | Chưa có tải trang tiếp theo cho toàn bộ danh sách |
 | Home/vườn/yêu thích | UI và một số dữ liệu minh họa | Một số nút chưa kết nối backend; thêm vào vườn chưa lưu thật |
 | Dịch vụ ngoài | Email OTP qua SMTP/Nodemailer | AI, weather API, payment/wallet, FCM, jobs và web CMS chưa triển khai trong source hiện tại |
 
 Không suy ra tính năng đã hoạt động chỉ từ tên tab hoặc biến có trong .env.example.
+
+Admin có thể thêm tài khoản tại `/admin/users` bằng họ tên, email, mật khẩu, vai trò
+và số điện thoại tùy chọn. Tài khoản mới hoạt động ngay, không cần OTP. API
+`POST /api/v1/users` yêu cầu quyền Admin, trả HTTP 201 cùng thông tin tài khoản,
+không cấp token hoặc thay đổi phiên của Admin.
 
 ## Cấu trúc và stack
 

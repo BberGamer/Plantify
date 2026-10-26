@@ -3,6 +3,10 @@ import api from "./api";
 import { adaptUsersList, mapUsersParams } from "./listAdapters";
 
 const userService = {
+  createUser: async (data) => {
+    const response = await api.post("/users", data);
+    return response.data;
+  },
   /**
    * Lay danh sach nguoi dung (phan trang, tim kiem, loc)
    * @param {object} params - { page, limit, search, role, status, sortBy, sortOrder }

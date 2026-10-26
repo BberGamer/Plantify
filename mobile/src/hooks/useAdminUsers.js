@@ -352,6 +352,18 @@ export default function useAdminUsers() {
   };
 
   return {
+    handleUserCreated: (user) => {
+      if (!isActive()) return;
+      const query = search.trim().toLowerCase();
+      const excluded = (selectedRole !== "all" && selectedRole !== user.role) ||
+        (selectedStatus !== "all" && selectedStatus !== String(user.status)) ||
+        (query && ![user.fullName, user.email, user.phone].some((value) =>
+          (value || "").toLowerCase().includes(query)));
+      showToast(excluded
+        ? "Đã thêm người dùng. Tài khoản mới không thuộc bộ lọc hiện tại."
+        : "Thêm người dùng thành công.");
+      fetchUsers(1);
+    },
     currentAdminId,
     users,
     pagination,

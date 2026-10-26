@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { garden } from "./theme";
 
-export default function UserHeader({ totalUsers = 0, onRefresh, onBack }) {
+export default function UserHeader({ totalUsers = 0, onRefresh, onBack, onAdd }) {
   const router = useRouter();
 
   const handleBack = () => {
@@ -41,7 +41,18 @@ export default function UserHeader({ totalUsers = 0, onRefresh, onBack }) {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.headerTitle}>Người dùng</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.headerTitle}>Người dùng</Text>
+        <TouchableOpacity
+          style={[styles.iconButton, styles.addButton]}
+          onPress={onAdd}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Thêm người dùng"
+        >
+          <Ionicons name="add" size={28} color={garden.white} />
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.statRow}>
         <View style={styles.statPill}>
@@ -78,6 +89,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  addButton: {
+    backgroundColor: garden.forest,
+    borderRadius: 12,
+  },
   eyebrow: {
     flexDirection: "row",
     alignItems: "center",
@@ -92,8 +107,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
-  headerTitle: {
+  titleRow: {
     marginTop: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  headerTitle: {
+    flex: 1,
     fontSize: 22,
     fontWeight: "800",
     color: garden.ink,

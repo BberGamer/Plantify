@@ -6,6 +6,7 @@ const { authenticate, authorizeAdmin } = require("../middlewares/auth.middleware
 
 // Tat ca cac route quan ly nguoi dung cua Admin deu yeu cau dang nhap va quyen Admin
 router.use(authenticate, authorizeAdmin);
+router.post("/", userController.createUser);
 
 /**
  * @route   GET /api/v1/users

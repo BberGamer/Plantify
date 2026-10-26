@@ -3,6 +3,38 @@ const v = require("../validators/common");
 // services/user.service.js - Logic nghiep vu Quan ly Nguoi dung (User Management)
 const validate = require("../validators/user.validator");
 const User = require("../models/user.model");
+const bcrypt = require("bcryptjs");
+
+const createUser = async (input) => {
+  const data = validate.create(input);
+  if (await User.findOne({ email: data.email })) {
+    throw new AppError("EMAIL_IN_USE", 409, "Email này đã được sử dụng bởi một tài khoản khác.");
+  }
+  if (data.phone && await User.findOne({ phone: data.phone })) {
+    throw new AppError("PHONE_IN_USE", 409, "Số điện thoại này đã được sử dụng bởi tài khoản khác.");
+  }
+  const password = await bcrypt.hash(data.password, 10);
+  let user;
+  try {
+    user = await User.create({ ...data, password, status: true, isGoogleAccount: false });
+  } catch (error) {
+    if (error.code === 11000 && error.keyPattern?.email) {
+      throw new AppError("EMAIL_IN_USE", 409, "Email này đã được sử dụng bởi một tài khoản khác.");
+    }
+    throw error;
+  }
+  return {
+    _id: user._id,
+    fullName: user.fullName,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    status: user.status,
+    isGoogleAccount: user.isGoogleAccount,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+};
 
 // Các endpoint quản lý người dùng chỉ cho phép actor có vai trò admin.
 const assertUserEditable = (user) => {
@@ -325,6 +357,7 @@ const updateUserRole = async (userId, role, currentAdminId) => {
 };
 
 module.exports = {
+  createUser,
   getUsers,
   getUserById,
   updateUserInfoAndStatus,
