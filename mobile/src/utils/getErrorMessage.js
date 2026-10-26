@@ -1,5 +1,7 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  SAME_ROLE_UPDATE_FORBIDDEN: "Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.",
+  ADMIN_ROLE_CHANGE_FORBIDDEN: "Bạn không thể thay đổi vai trò của quản trị viên khác.",
   SESSION_CHANGED: "Phiên đăng nhập đã thay đổi. Vui lòng thử lại.",
   SESSION_STORAGE_ERROR:
     "Không thể lưu phiên đăng nhập trên thiết bị. Vui lòng thử lại.",

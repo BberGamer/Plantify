@@ -4,6 +4,17 @@ const v = require("../validators/common");
 const validate = require("../validators/user.validator");
 const User = require("../models/user.model");
 
+// Các endpoint quản lý người dùng chỉ cho phép actor có vai trò admin.
+const assertUserEditable = (user) => {
+  if (user.role === "admin") {
+    throw new AppError(
+      "SAME_ROLE_UPDATE_FORBIDDEN",
+      403,
+      "Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.",
+    );
+  }
+};
+
 /**
  * Lay danh sach nguoi dung cho Admin
  * Ho tro phan trang (pagination), tim kiem (search) va loc (filter theo role, status)
@@ -142,6 +153,8 @@ const updateUserInfoAndStatus = async (
   }
 
   const { fullName, phone, status, role } = updateData;
+  const isSelf = user._id.toString() === currentAdminId?.toString();
+  if (!isSelf || role !== undefined || status !== undefined) assertUserEditable(user);
 
   // Cap nhat ho ten
   if (fullName !== undefined) {
@@ -254,6 +267,7 @@ const updateUserStatus = async (userId, status, currentAdminId) => {
     );
   }
 
+  assertUserEditable(user);
   user.status = parsedStatus;
   await user.save();
 
@@ -298,6 +312,7 @@ const updateUserRole = async (userId, role, currentAdminId) => {
     );
   }
 
+  assertUserEditable(user);
   user.role = normalizedRole;
   await user.save();
 

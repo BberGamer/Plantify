@@ -9,7 +9,7 @@ export const garden = {
   sprout: "#3FA673",
   mint: colors.lightMint, // #EDF7F1
   sage: "#DCEBE1",
-  cream: "#F6F8F1", // nen giay tai che
+  cream: colors.background,
   bark: "#7A5230", // mau vo cay
   barkBg: "#F5EDE4",
   terracotta: "#B4532A", // mau chau dat nung
@@ -19,7 +19,7 @@ export const garden = {
   ink: colors.textPrimary,
   inkSoft: "#4B6357",
   muted: "#7C8B83",
-  line: "#E1EAE3",
+  line: colors.border,
   white: colors.white,
   overlay: "rgba(13, 56, 39, 0.55)",
 };

@@ -119,6 +119,7 @@ export default function AdminUsersScreen() {
               />
             )}
             contentContainerStyle={styles.listContent}
+            keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
@@ -141,6 +142,7 @@ export default function AdminUsersScreen() {
 
       {/* MODAL 1: XEM CHI TIET & CAP NHAT THONG TIN */}
       <UserDetailModal
+        currentAdminId={currentAdminId}
         visible={detailModalVisible}
         user={selectedUser}
         fullName={editFullName}
@@ -182,10 +184,13 @@ export default function AdminUsersScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: garden.forest,
+    backgroundColor: garden.white,
   },
   container: {
     flex: 1,
+    width: "100%",
+    maxWidth: 960,
+    alignSelf: "center",
     backgroundColor: garden.cream,
   },
   listContent: {
