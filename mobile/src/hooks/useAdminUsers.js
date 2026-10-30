@@ -166,6 +166,14 @@ export default function useAdminUsers() {
 
   const handleSaveUserInfo = async () => {
     if (mutationPending.current || !selectedUser || !detailModalVisible || !isActive()) return;
+    if (selectedUser.role === "admin" && (
+      selectedUser._id !== currentAdminId ||
+      editRole !== selectedUser.role ||
+      editStatus !== (selectedUser.status !== false)
+    )) {
+      showToast("Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.", "error");
+      return;
+    }
     const isCurrent = capture();
     if (!editFullName.trim()) {
       showToast("Họ và tên không được để trống.", "error");
@@ -206,6 +214,10 @@ export default function useAdminUsers() {
 
   const handleOpenStatusConfirm = (target) => {
     if (mutationPending.current || !isActive()) return;
+    if (target.role === "admin") {
+      showToast("Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.", "error");
+      return;
+    }
     if (target._id === currentAdminId && target.status !== false) {
       showToast("Bạn không thể tự khóa tài khoản của chính mình!", "error");
       return;
@@ -218,6 +230,10 @@ export default function useAdminUsers() {
   const handleConfirmStatusChange = async () => {
     if (mutationPending.current || !targetUserForStatus || !confirmModalVisible || !isActive())
       return;
+    if (targetUserForStatus.role === "admin") {
+      showToast("Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.", "error");
+      return;
+    }
     const isCurrent = capture();
     mutationPending.current = true;
     setStatusLoading(true);
@@ -248,6 +264,10 @@ export default function useAdminUsers() {
 
   const handleOpenRoleModal = (target) => {
     if (mutationPending.current || !isActive()) return;
+    if (target.role === "admin") {
+      showToast("Không thể thay đổi vai trò quản trị viên.", "error");
+      return;
+    }
     closeDetail();
     closeStatus();
     setTargetUserForRole(target);
@@ -259,7 +279,7 @@ export default function useAdminUsers() {
       return;
     const isCurrent = capture();
     if (
-      targetUserForRole._id === currentAdminId &&
+      targetUserForRole.role === "admin" &&
       newRoleSelection !== "admin"
     ) {
       showToast(
@@ -321,6 +341,9 @@ export default function useAdminUsers() {
   };
   const changeField = (key, value) => {
     if (mutationPending.current || !detailModalVisible) return;
+    if (selectedUser?.role === "admin" && (
+      selectedUser._id !== currentAdminId || !["fullName", "phone"].includes(key)
+    )) return;
     const actions = { fullName: setEditFullName, phone: setEditPhone, role: setEditRole, status: setEditStatus };
     if (Object.prototype.hasOwnProperty.call(actions, key)) actions[key](value);
   };
@@ -329,6 +352,18 @@ export default function useAdminUsers() {
   };
 
   return {
+    handleUserCreated: (user) => {
+      if (!isActive()) return;
+      const query = search.trim().toLowerCase();
+      const excluded = (selectedRole !== "all" && selectedRole !== user.role) ||
+        (selectedStatus !== "all" && selectedStatus !== String(user.status)) ||
+        (query && ![user.fullName, user.email, user.phone].some((value) =>
+          (value || "").toLowerCase().includes(query)));
+      showToast(excluded
+        ? "Đã thêm người dùng. Tài khoản mới không thuộc bộ lọc hiện tại."
+        : "Thêm người dùng thành công.");
+      fetchUsers(1);
+    },
     currentAdminId,
     users,
     pagination,

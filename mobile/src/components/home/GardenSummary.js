@@ -1,13 +1,16 @@
 import React from 'react';
+import { useRouter } from 'expo-router';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Button, Card, ProgressBar, Text } from 'react-native-paper';
 
 export default function GardenSummary() {
+  const router = useRouter();
+  const openGarden = () => router.navigate('/(tabs)/garden');
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Vườn cây của bạn</Text>
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity activeOpacity={0.7} onPress={openGarden} accessibilityRole="button">
           <Text style={styles.linkText}>Xem vườn</Text>
         </TouchableOpacity>
       </View>
@@ -39,6 +42,7 @@ export default function GardenSummary() {
         </View>
 
         <Button
+          onPress={openGarden}
           mode="contained"
           buttonColor="#EAF5EE"
           textColor="#1A5B40"

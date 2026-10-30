@@ -1,7 +1,10 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  SAME_ROLE_UPDATE_FORBIDDEN: "Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.",
+  ADMIN_ROLE_CHANGE_FORBIDDEN: "Bạn không thể thay đổi vai trò của quản trị viên khác.",
   SESSION_CHANGED: "Phiên đăng nhập đã thay đổi. Vui lòng thử lại.",
-  SESSION_STORAGE_ERROR: "Không thể lưu phiên đăng nhập trên thiết bị. Vui lòng thử lại.",
+  SESSION_STORAGE_ERROR:
+    "Không thể lưu phiên đăng nhập trên thiết bị. Vui lòng thử lại.",
   REQUEST_IN_PROGRESS: "Thao tác đang được xử lý. Vui lòng chờ.",
   INVALID_RESPONSE: "Dữ liệu máy chủ trả về không hợp lệ. Vui lòng thử lại.",
   VALIDATION_ERROR: "Thông tin nhập chưa hợp lệ. Vui lòng kiểm tra lại.",
@@ -76,9 +79,9 @@ const LEGACY_MESSAGES = new Set([
   "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
   "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại",
   "Phác đồ điều trị phải là một đối tượng JSON.",
-  "Số điện thoại không hợp lệ (10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09).",
+  "Số điện thoại không hợp lệ.",
   "Số điện thoại này đã được sử dụng bởi tài khoản khác.",
-  "Số điện thoại phải có 10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09.",
+  "Số điện thoại phải có 10 số.",
   "Trạng thái bệnh không hợp lệ.",
   "Trạng thái không hợp lệ. Vui lòng chọn hoạt động hoặc bị khóa.",
   "Tài khoản Google không thể đổi email hoặc mật khẩu tại đây.",
@@ -111,6 +114,9 @@ export default function getErrorMessage(
   }
   const data = error?.response?.data;
   const code = data?.code || error?.code;
+  if (code === "VALIDATION_ERROR" && typeof data?.errors?.phone === "string") {
+    return data.errors.phone;
+  }
   if (
     typeof code === "string" &&
     Object.prototype.hasOwnProperty.call(ERROR_MESSAGES, code)

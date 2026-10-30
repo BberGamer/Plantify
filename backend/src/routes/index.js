@@ -11,5 +11,6 @@ router.use("/users", userRoutes);
 router.use("/admin/users", userRoutes);
 router.use("/plants", plantRoutes);
 router.use("/diseases", diseaseRoutes);
+router.use("/garden/plants", require("./garden.routes"));
 
 module.exports = router;

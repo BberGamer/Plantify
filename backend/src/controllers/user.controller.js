@@ -3,6 +3,15 @@ const v = require("../validators/common");
 const userService = require("../services/user.service");
 const { success } = require("../utils/api-response");
 
+const createUser = async (req, res, next) => {
+  try {
+    const user = await userService.createUser(req.body);
+    return success(res, "Thêm người dùng thành công", user, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
 /**
  * [GET] /api/v1/users hoac /api/v1/admin/users
  * Lay danh sach nguoi dung cho Admin
@@ -103,6 +112,7 @@ const updateUserRole = async (req, res, next) => {
 };
 
 module.exports = {
+  createUser,
   getUsers,
   getUserById,
   updateUser,
