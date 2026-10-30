@@ -16,7 +16,7 @@ const ITEMS = [
   },
   { label: "Danh sách\ncây", icon: "list-outline", activeIcon: "list", path: "/plants", href: "/plants" },
   { label: "Chẩn đoán", icon: "camera-outline" },
-  { label: "Vườn\ncây", icon: "leaf-outline" },
+  { label: "Vườn\ncây", icon: "leaf-outline", activeIcon: "leaf", path: "/garden", href: "/(tabs)/garden" },
   {
     label: "Tài khoản",
     icon: "person-outline",

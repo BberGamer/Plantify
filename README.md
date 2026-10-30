@@ -1,5 +1,9 @@
 # Plantify
 
+Backend My Garden: đã có API thêm/xem/sửa/lưu trữ, tìm kiếm, lọc và phân trang
+tại `/api/v1/garden/plants`, yêu cầu Customer đang hoạt động. Xem
+[hợp đồng API](backend/GARDEN_API.md). Frontend vườn vẫn dùng dữ liệu demo.
+
 Ứng dụng chăm sóc cây gồm mobile React Native/Expo và REST API Node.js/Express. Repository hiện dùng JavaScript; khu vực Admin/Manager nằm trong ứng dụng mobile.
 
 ## Tài liệu nội bộ
@@ -60,6 +64,8 @@ Backend mặc định tại http://localhost:5000; health check GET /health, API
 Script seed vẫn được khai báo nhưng backend/src/scripts/seed.js hiện chưa tồn tại; không dùng nó làm bước khởi động bắt buộc.
 
 ## Chạy mobile
+
+Màn **Vườn cây của tôi** tại `/(tabs)/garden` có thể mở từ thanh điều hướng hoặc các nút xem vườn trên Home. Giao diện dùng 4 cây mẫu, hỗ trợ tìm theo tên và lọc trạng thái; chưa kết nối API hoặc lưu dữ liệu. Các nút thêm, menu và thao tác trên cây hiện chưa khả dụng.
 
 Mở terminal khác từ root:
 
