@@ -6,10 +6,6 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "plantify",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true
     },
@@ -20,7 +16,13 @@
       "package": "com.plantify.app"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff"
+        }
+      ]
     ]
   }
 }
