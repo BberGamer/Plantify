@@ -32,10 +32,10 @@ không cấp token hoặc thay đổi phiên của Admin.
 
 ~~~text
 backend/      Express, Mongoose, JWT, bcryptjs, Nodemailer; CommonJS
-mobile/       Expo ~51, Router ~3.5, React Native ~0.74, Paper, Axios, Zustand; ES Modules
+mobile/       Expo ~58, Router ~58, React Native 0.88.1, React 19.3.0, Paper, Axios, Zustand; ES Modules
 ~~~
 
-Phiên bản dependency lấy từ package.json/lockfile của từng package. Repository chưa chốt phiên bản Node bằng file cấu hình chung; không tự nâng stack khi thiết lập môi trường.
+Phiên bản dependency lấy từ package.json/lockfile của từng package. Mobile dùng Node.js LTS 22.23.4 (ghi trong mobile/.nvmrc); Expo SDK 58 yêu cầu tối thiểu Node 22.13.0. Sau khi nâng Node, mở lại terminal/IDE và kiểm tra `node -v` trước khi cài dependency.
 
 ## Chạy backend
 
@@ -76,6 +76,8 @@ npm start
 ~~~
 
 Các script hiện có: start, android, ios, web. Chạy iOS simulator cần môi trường macOS phù hợp; client chạy ứng dụng phải tương thích Expo SDK của repository.
+
+Nếu PowerShell chặn `npm.ps1`, dùng `npm.cmd ci` và `npm.cmd start`. Kiểm tra phiên bản thư viện bằng `npx.cmd expo install --check`; khi cần đồng bộ theo SDK, chạy `npx.cmd expo install --fix`.
 
 API URL được cấu hình bằng EXPO_PUBLIC_API_URL. Có thể tạo mobile/.env.local với:
 
