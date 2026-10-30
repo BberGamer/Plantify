@@ -1,5 +1,9 @@
 # Plantify
 
+Backend My Garden: đã có API thêm/xem/sửa/lưu trữ, tìm kiếm, lọc và phân trang
+tại `/api/v1/garden/plants`, yêu cầu Customer đang hoạt động. Xem
+[hợp đồng API](backend/GARDEN_API.md). Frontend vườn vẫn dùng dữ liệu demo.
+
 Ứng dụng chăm sóc cây gồm mobile React Native/Expo và REST API Node.js/Express. Repository hiện dùng JavaScript; khu vực Admin/Manager nằm trong ứng dụng mobile.
 
 ## Tài liệu nội bộ
