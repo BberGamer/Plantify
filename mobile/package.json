@@ -35,5 +35,8 @@
     "@babel/plugin-transform-react-jsx": "7.29.7",
     "react-test-renderer": "^19.3.0"
   },
+  "overrides": {
+    "zod": "^4.6.7"
+  },
   "private": true
 }
