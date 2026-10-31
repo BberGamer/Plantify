@@ -10,13 +10,13 @@ router.post('/manager', createPlant);
 router.put('/manager/:id', updatePlant);
 router.delete('/manager/:id', deletePlant);
 
-// GET /api/v1/plants/categories  → danh sach danh muc
+// GET /api/plants/categories  → danh sach danh muc
 router.get('/categories', getCategories);
 
-// GET /api/v1/plants             → danh sach cay (filter, search, phan trang)
+// GET /api/plants             → danh sach cay (filter, search, phan trang)
 router.get('/', getPlants);
 
-// GET /api/v1/plants/:id         → chi tiet cay
+// GET /api/plants/:id         → chi tiet cay
 router.get('/:id', getPlantById);
 
 module.exports = router;
