@@ -19,7 +19,7 @@ Hướng dẫn agent, quy ước code, kiến trúc, thiết kế và kế hoạ
 | Manager | CRUD cây và các tab khu vực quản lý | Màn bệnh cây/điều trị mới là placeholder |
 | Tra cứu cây | Danh sách, bộ lọc và chi tiết từ API | Chưa có tải trang tiếp theo cho toàn bộ danh sách |
 | Home/vườn/yêu thích | UI và một số dữ liệu minh họa | Một số nút chưa kết nối backend; thêm vào vườn chưa lưu thật |
-| Dịch vụ ngoài | Email OTP qua SMTP/Nodemailer | AI, weather API, payment/wallet, FCM, jobs và web CMS chưa triển khai trong source hiện tại |
+| Dịch vụ ngoài | Email OTP qua SMTP/Nodemailer; chat văn bản qua API AI tương thích OpenAI | Weather API, payment/wallet, FCM, jobs và web CMS chưa triển khai |
 
 Không suy ra tính năng đã hoạt động chỉ từ tên tab hoặc biến có trong .env.example.
 
@@ -58,6 +58,7 @@ Biến được source hiện tại sử dụng:
 | MONGO_URI, DB_NAME | Kết nối MongoDB và tên database |
 | JWT_SECRET, JWT_EXPIRES_IN | Ký JWT và thời hạn; đặt secret riêng, không dựa vào fallback trong code |
 | EMAIL_USER, EMAIL_PASS | Tài khoản SMTP gửi OTP |
+| AI_API_KEY, AI_BASE_URL, AI_MODEL, AI_TIMEOUT_MS | Chat AI; URL mặc định https://platform.beeknoee.com/api/v1; model phải là ID thật; timeout 1000–45000ms, mặc định 30000ms |
 
 Backend mặc định tại http://localhost:5000; health check GET /health, API prefix /api/v1. Các biến refresh/weather/AI/payment/FCM trong file mẫu chưa đồng nghĩa có implementation.
 
@@ -65,7 +66,9 @@ Script seed vẫn được khai báo nhưng backend/src/scripts/seed.js hiện c
 
 ## Chạy mobile
 
-Màn **Trợ lý AI** tại `/(tabs)/chat` mở từ thẻ “Trợ lý AI” trên Trang chủ. Đây là giao diện chào tĩnh với câu hỏi gợi ý và ô soạn tin minh họa; chưa hỗ trợ nhập/gửi tin, gọi AI hoặc lưu lịch sử.
+Màn **Trợ lý AI** tại `/(tabs)/chat` mở từ thẻ “Trợ lý AI” trên Trang chủ, hỗ trợ nhập/gửi tin, chọn câu hỏi gợi ý và thử lại khi lỗi. Backend `POST /api/v1/chat` yêu cầu JWT và tài khoản đang hoạt động; nhận `{message, history}` và trả `{success, message, data:{reply}}`. Message tối đa 2000 ký tự; history tối đa 20 tin theo cặp user/assistant, tổng input tối đa 24000 ký tự. Mobile giữ tạm tối đa 40 tin, chỉ gửi phần lịch sử gần nhất trong giới hạn; không lưu DB/storage, không streaming hoặc đọc dữ liệu vườn. API key chỉ nằm ở backend. Cần Node.js 18+ cho fetch; khởi động lại backend khi đổi `.env`.
+
+Kiểm tra chat: backend chạy `node node_modules/jest/bin/jest.js tests/chat.test.js --runInBand`; mobile chạy `node --test tests/useChat.test.cjs`. Các test này mô phỏng provider/database, không thay kiểm tra thiết bị hoặc nhà cung cấp thật. Backend chặn request đồng thời theo user trong một process; triển khai nhiều replica cần bộ giới hạn dùng chung.
 
 Màn **Vườn cây của tôi** tại `/(tabs)/garden` có thể mở từ thanh điều hướng hoặc các nút xem vườn trên Home. Giao diện dùng 4 cây mẫu, hỗ trợ tìm theo tên và lọc trạng thái; chưa kết nối API hoặc lưu dữ liệu. Các nút thêm, menu và thao tác trên cây hiện chưa khả dụng.
 

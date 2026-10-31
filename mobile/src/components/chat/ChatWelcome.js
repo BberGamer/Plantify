@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, radius, spacing, typography } from "../../theme";
@@ -10,7 +10,7 @@ const SUGGESTIONS = [
   { icon: "flower-outline", text: "Cách chăm cây mới mua", background: colors.softPurpleBg },
 ];
 
-export default function ChatWelcome() {
+export default function ChatWelcome({ onSelect }) {
   return (
     <View style={styles.container}>
       <View style={styles.hero}>
@@ -31,12 +31,12 @@ export default function ChatWelcome() {
       <Text style={styles.sectionTitle}>Bạn đang quan tâm điều gì?</Text>
       <View style={styles.suggestions}>
         {SUGGESTIONS.map((item) => (
-          <View key={item.text} style={styles.card}>
+          <Pressable key={item.text} style={styles.card} onPress={() => onSelect(item.text)} accessibilityRole="button" accessibilityLabel={item.text}>
             <View style={[styles.icon, { backgroundColor: item.background }]}>
               <Ionicons name={item.icon} size={20} color={colors.primary} />
             </View>
             <Text style={styles.suggestionText}>{item.text}</Text>
-          </View>
+          </Pressable>
         ))}
       </View>
     </View>
