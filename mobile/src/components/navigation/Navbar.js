@@ -26,7 +26,13 @@ const ITEMS = [
     path: "/plants",
     href: "/plants",
   },
-  { label: "Chẩn đoán", icon: "camera", camera: true },
+  {
+    label: "Chẩn đoán",
+    icon: "camera",
+    camera: true,
+    path: "/customer/diagnosis",
+    href: "/customer/diagnosis",
+  },
   {
     label: "Vườn\ncây",
     icon: "leaf-outline",
@@ -56,21 +62,27 @@ export default function Navbar() {
         return (
           <Pressable
             key={item.label}
-            style={({ pressed }) => [styles.item, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.item,
+              item.camera && styles.cameraItem,
+              pressed && styles.pressed,
+            ]}
             disabled={!canNavigate}
             accessibilityRole="button"
             accessibilityLabel={item.label.replace("\n", " ")}
-            accessibilityHint={item.camera ? "Chưa khả dụng" : undefined}
+            accessibilityHint={
+              item.camera ? "Mở giao diện chẩn đoán bệnh cây" : undefined
+            }
             accessibilityState={{ selected: isActive, disabled: !canNavigate }}
             // navigate tái sử dụng trang trong stack khi có thể, tránh push lặp trang.
             onPress={() => {
               if (canNavigate && !isActive) router.navigate(item.href);
             }}
           >
-            <View style={styles.iconSlot}>
+            <View style={[styles.iconSlot, item.camera && styles.cameraSlot]}>
               {item.camera ? (
                 <LinearGradient
-                  colors={["#B5E77B", "#21C978"]}
+                  colors={["#42B986", colors.primaryLight]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.camera}
@@ -85,7 +97,13 @@ export default function Navbar() {
                 />
               )}
             </View>
-            <Text style={[styles.label, isActive && styles.activeLabel]}>
+            <Text
+              style={[
+                styles.label,
+                isActive && styles.activeLabel,
+                item.camera && styles.cameraLabel,
+              ]}
+            >
               {item.label}
             </Text>
           </Pressable>
@@ -103,6 +121,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     zIndex: 1,
     overflow: "visible",
+    paddingTop: 12,
   },
   item: {
     flex: 1,
@@ -115,6 +134,9 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   pressed: { backgroundColor: colors.softMintBg },
+  cameraItem: { marginTop: -12 },
+  cameraSlot: { height: 44 },
+  cameraLabel: { color: colors.primaryLight, fontWeight: "700" },
   iconSlot: {
     height: 26,
     alignItems: "center",
@@ -123,10 +145,17 @@ const styles = StyleSheet.create({
   },
   camera: {
     position: "absolute",
-    top: -22,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    top: -8,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    borderWidth: 3,
+    borderColor: colors.white,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
     alignItems: "center",
     justifyContent: "center",
   },
