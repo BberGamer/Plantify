@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card, Text } from 'react-native-paper';
+import { useRouter } from 'expo-router';
 
 // chieu rong cua cua so ung dung hien tai
 const { width } = Dimensions.get('window');
@@ -32,6 +33,7 @@ const FEATURES = [
   {
     id: '4',
     title: 'Trợ lý AI',
+    href: '/(tabs)/chat',
     subtitle: 'Hỏi đáp chăm cây',
     bgColor: '#F6F4FC',
     icon: <MaterialCommunityIcons name="robot-happy-outline" size={20} color="#7C3AED" />,
@@ -39,6 +41,7 @@ const FEATURES = [
 ];
 
 export default function FeatureGrid() {
+  const router = useRouter();
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Khám phá Plantify</Text>
@@ -47,6 +50,8 @@ export default function FeatureGrid() {
           <Card
             key={item.id}
             mode="contained"
+            onPress={item.href ? () => router.navigate(item.href) : undefined}
+            accessibilityLabel={item.title}
             style={[styles.card, { backgroundColor: item.bgColor }]}
           >
             <View style={styles.cardTop}>
