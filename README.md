@@ -6,6 +6,14 @@ README được đối chiếu với source ngày **31/10/2026**. Trạng thái 
 
 ## Tiến độ hiện tại
 
+Sau khi chụp/chọn ảnh, nút **Xem kết quả mẫu** mở giao diện kết quả với bệnh, độ tin cậy và gợi ý minh họa cố định. Dữ liệu mẫu không được suy ra từ ảnh; chưa gọi model hoặc lưu kết quả.
+
+Màn **Chẩn đoán bệnh** tại `/customer/diagnosis` mở từ Home hoặc nút camera màu xanh trên Navbar. Mobile hỗ trợ xin quyền camera, chụp ảnh, chọn một ảnh từ album và xem trước/chọn lại. Ảnh được giữ tạm trong màn hình, không upload, không tự lưu vào album và chưa gọi model chẩn đoán. Web chỉ hỗ trợ chọn ảnh. Quyền camera bị từ chối vẫn cho phép chọn ảnh từ album.
+
+Sau khi lấy code mới, chạy `npm ci` trong `mobile/` và khởi động lại Expo. Với development build, cần build lại app để áp dụng module native và cấu hình quyền mới; camera cần kiểm thử trên điện thoại thật. Triển khai dựa trên [Expo Camera](https://docs.expo.dev/versions/v58.0.0/sdk/camera/) và [Expo ImagePicker](https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/).
+
+Kiểm tra hook camera/album: từ `mobile/`, chạy `node --test src/hooks/__tests__/useDiagnosisCapture.test.cjs`. Bộ test dùng mock thiết bị, không thay kiểm thử camera/album thực tế.
+
 | Phạm vi | Đã triển khai | Giới hạn / phần còn lại |
 | --- | --- | --- |
 | Tài khoản | Đăng ký OTP email, đăng nhập, reset password, hồ sơ và phiên trên thiết bị | Các lỗi vòng đời phiên nằm trong kế hoạch; chưa có refresh-token flow |
