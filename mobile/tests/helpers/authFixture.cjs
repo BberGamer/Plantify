@@ -48,7 +48,7 @@ function authFixture(seed = {}, extraEntries = []) {
     },
   };
   const navigation = {
-    segments: ["(auth)", "login"],
+    segments: ["auth", "login"],
     key: "root",
     calls: [],
     pushes: [],

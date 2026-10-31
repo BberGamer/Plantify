@@ -74,8 +74,8 @@ export default function useLogin() {
         setLocalError("");
       }
     },
-    forgotPassword: () => { if (!isPending()) router.push("/(auth)/reset-password"); },
-    register: () => { if (!isPending()) router.push("/(auth)/register"); },
+    forgotPassword: () => { if (!isPending()) router.push("/auth/reset-password"); },
+    register: () => { if (!isPending()) router.push("/auth/register"); },
     googleLogin: () =>
       setLocalError("Tính năng đăng nhập bằng Google đang được phát triển."),
   };

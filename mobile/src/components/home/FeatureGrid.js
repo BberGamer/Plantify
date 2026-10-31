@@ -33,7 +33,7 @@ const FEATURES = [
   {
     id: '4',
     title: 'Trợ lý AI',
-    href: '/(tabs)/chat',
+    href: '/customer/chat',
     subtitle: 'Hỏi đáp chăm cây',
     bgColor: '#F6F4FC',
     icon: <MaterialCommunityIcons name="robot-happy-outline" size={20} color="#7C3AED" />,

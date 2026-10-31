@@ -21,7 +21,7 @@ app.get("/health", (req, res) => {
 });
 
 // === PHAN 3: Dang ky Routes cho cac Modules ===
-app.use("/api/v1", require("./routes"));
+app.use("/api", require("./routes"));
 
 // === PHAN 4: 404 Handler ===
 app.use((req, res) => {
