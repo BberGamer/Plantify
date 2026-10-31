@@ -65,6 +65,8 @@ Script seed vẫn được khai báo nhưng backend/src/scripts/seed.js hiện c
 
 ## Chạy mobile
 
+Màn **Trợ lý AI** tại `/(tabs)/chat` mở từ thẻ “Trợ lý AI” trên Trang chủ. Đây là giao diện chào tĩnh với câu hỏi gợi ý và ô soạn tin minh họa; chưa hỗ trợ nhập/gửi tin, gọi AI hoặc lưu lịch sử.
+
 Màn **Vườn cây của tôi** tại `/(tabs)/garden` có thể mở từ thanh điều hướng hoặc các nút xem vườn trên Home. Giao diện dùng 4 cây mẫu, hỗ trợ tìm theo tên và lọc trạng thái; chưa kết nối API hoặc lưu dữ liệu. Các nút thêm, menu và thao tác trên cây hiện chưa khả dụng.
 
 Mở terminal khác từ root:
