@@ -4,13 +4,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors, spacing, typography } from "../../src/theme";
 import DiagnosisCapture from "../../src/components/diagnosis/DiagnosisCapture";
+import DiagnosisPreview from "../../src/components/diagnosis/DiagnosisPreview";
+import useDiagnosisCapture from "../../src/hooks/useDiagnosisCapture";
+import useFormBack from "../../src/hooks/useFormBack";
 
 export default function DiagnosisScreen() {
   const router = useRouter();
+  const capture = useDiagnosisCapture();
   const handleBack = () => {
-    if (router.canGoBack()) router.back();
+    if (capture.photo) capture.retake();
+    else if (router.canGoBack()) router.back();
     else router.replace("/customer");
   };
+  useFormBack(handleBack, capture.busy);
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -18,6 +24,7 @@ export default function DiagnosisScreen() {
         <IconButton
           icon="arrow-left"
           onPress={handleBack}
+          disabled={capture.busy}
           accessibilityLabel="Quay lại"
         />
         <Text style={styles.title}>Chẩn đoán bệnh</Text>
@@ -27,7 +34,24 @@ export default function DiagnosisScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <DiagnosisCapture />
+        {capture.photo ? (
+          <DiagnosisPreview
+            photo={capture.photo} busy={capture.busy} onRetake={capture.retake}
+            onPickPhoto={capture.pickPhoto} onImageError={capture.onImageError}
+          />
+        ) : (
+          <DiagnosisCapture
+            cameraRef={capture.camera} showCamera={capture.showCamera}
+            permission={capture.permission} cameraError={capture.cameraError}
+            busy={capture.busy} canCapture={capture.canCapture}
+            onCameraReady={capture.onCameraReady} onCameraError={capture.onCameraError}
+            onEnableCamera={capture.enableCamera} onRetryCamera={capture.retryCamera}
+            onCapture={capture.takePhoto} onPickPhoto={capture.pickPhoto}
+          />
+        )}
+        {!!capture.error && (
+          <Text style={styles.error} accessibilityRole="alert">{capture.error}</Text>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -46,15 +70,15 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     width: "100%",
-    maxWidth: 520,
+    maxWidth: 560,
     alignSelf: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xxxl,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
     gap: spacing.lg,
   },
-  notice: {
+  error: {
     ...typography.caption,
-    color: colors.textSecondary,
+    color: colors.statusError,
     textAlign: "center",
   },
 });

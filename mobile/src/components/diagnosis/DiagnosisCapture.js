@@ -1,29 +1,61 @@
-import { Pressable, StyleSheet, View } from "react-native";
-import { Text } from "react-native-paper";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Button, Text } from "react-native-paper";
+import { CameraView } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, spacing, typography } from "../../theme";
 
-export default function DiagnosisCapture() {
+export default function DiagnosisCapture({
+  cameraRef, showCamera, permission, cameraError, busy, canCapture,
+  onCameraReady, onCameraError, onEnableCamera, onRetryCamera, onCapture, onPickPhoto,
+}) {
   return (
     <View style={styles.card}>
       <LinearGradient colors={["#203D32", "#10231D"]} style={styles.preview}>
-        <View style={styles.frame}>
+        {showCamera && (
+          <CameraView
+            ref={cameraRef}
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            mode="picture"
+            onCameraReady={onCameraReady}
+            onMountError={onCameraError}
+          />
+        )}
+        <View style={styles.frame} pointerEvents="none">
           <View style={[styles.corner, styles.topLeft]} />
           <View style={[styles.corner, styles.topRight]} />
           <View style={[styles.corner, styles.bottomLeft]} />
           <View style={[styles.corner, styles.bottomRight]} />
-          <View style={styles.leafHalo}>
+          {!showCamera && <View style={styles.leafHalo}>
             <Ionicons name="leaf-outline" size={70} color="#ABD6BB" />
-          </View>
+          </View>}
         </View>
+        {!showCamera && (
+          <View style={styles.permission}>
+            <Text style={styles.permissionText}>
+              {Platform.OS === "web" ? "Chọn ảnh từ thiết bị để tiếp tục." :
+                cameraError || "Cho phép camera để chụp ảnh cây."}
+            </Text>
+            {Platform.OS !== "web" && (
+              <Button
+                mode="contained" disabled={busy}
+                onPress={cameraError ? onRetryCamera : onEnableCamera}
+              >
+                {cameraError ? "Thử lại" : permission && !permission.granted &&
+                  !permission.canAskAgain ? "Mở cài đặt" : "Bật camera"}
+              </Button>
+            )}
+          </View>
+        )}
       </LinearGradient>
       <View style={styles.controls}>
         <Pressable
-          disabled
+          disabled={busy}
+          onPress={onPickPhoto}
           accessibilityRole="button"
           accessibilityLabel="Chọn ảnh từ album"
-          accessibilityState={{ disabled: true }}
+          accessibilityState={{ disabled: busy }}
           style={styles.control}
         >
           <View style={styles.albumIcon}>
@@ -36,10 +68,11 @@ export default function DiagnosisCapture() {
           <Text style={styles.controlLabel}>Album ảnh</Text>
         </Pressable>
         <Pressable
-          disabled
+          disabled={!canCapture}
+          onPress={onCapture}
           accessibilityRole="button"
           accessibilityLabel="Chụp ảnh"
-          accessibilityState={{ disabled: true }}
+          accessibilityState={{ disabled: !canCapture }}
           style={styles.control}
         >
           <View style={styles.shutterRing}>
@@ -47,7 +80,8 @@ export default function DiagnosisCapture() {
               colors={["#42B986", colors.primaryLight]}
               style={styles.shutter}
             >
-              <Ionicons name="camera" size={28} color={colors.white} />
+              {busy ? <ActivityIndicator color={colors.white} /> :
+                <Ionicons name="camera" size={28} color={colors.white} />}
             </LinearGradient>
           </View>
           <Text style={styles.shutterLabel}>Chụp ảnh</Text>
@@ -60,11 +94,13 @@ export default function DiagnosisCapture() {
 
 const styles = StyleSheet.create({
   card: { borderRadius: 24, overflow: "hidden", backgroundColor: colors.white },
-  preview: { alignItems: "center", padding: spacing.xl },
+  preview: { alignItems: "center", padding: spacing.xxl, paddingVertical: spacing.xxxl },
+  permission: { alignItems: "center", gap: spacing.md, marginTop: spacing.md },
+  permissionText: { ...typography.caption, color: colors.white, textAlign: "center" },
   frame: {
-    width: "82%",
-    maxWidth: 280,
-    aspectRatio: 1,
+    width: "100%",
+    maxWidth: 400,
+    aspectRatio: 0.8,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 22,
