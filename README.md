@@ -8,17 +8,12 @@ README được đối chiếu với source ngày **31/10/2026**. Trạng thái 
 
 | Phạm vi | Đã triển khai | Giới hạn / phần còn lại |
 | --- | --- | --- |
-| Tài khoản | Đăng ký bằng OTP email, đăng nhập/đăng xuất, đặt lại mật khẩu bằng OTP, xem/sửa hồ sơ | Chưa có đăng nhập Google hoặc refresh token |
-| Phiên mobile | Zustand giữ phiên, AsyncStorage lưu cache; kiểm tra dữ liệu phiên và hạn JWT khi khôi phục; Axios gắn token từ bộ nhớ và xóa phiên tương ứng khi nhận 401 hoặc `ACCOUNT_LOCKED` | Khôi phục cache chưa xác nhận lại tài khoản qua `/auth/me`; backend chưa có cơ chế thu hồi JWT khi logout |
-| Admin | Tạo tài khoản, xem danh sách/chi tiết, tìm kiếm, lọc, phân trang, sửa thông tin/vai trò/trạng thái | Admin khác chỉ được xem; bản thân chỉ sửa tên/SĐT |
-| Quản lý cây | Danh sách, tìm kiếm, phân trang, thêm/sửa/xóa cây, thông tin chăm sóc và trạng thái công khai | Chưa có giao diện quản lý danh mục cây riêng |
-| Quản lý bệnh cây | Danh sách, tìm kiếm, lọc trạng thái, phân trang, thêm/sửa/xóa; chọn các cây liên quan và đồng bộ liên kết cây–bệnh | Thao tác ghi dùng MongoDB transaction, cần database hỗ trợ transaction |
-| Tra cứu cây | Danh mục, tìm kiếm, lọc, phân trang, kéo làm mới, chi tiết và yêu cầu chăm sóc từ API; hiển thị bệnh thường gặp đang active | Yêu thích chỉ là state tại màn chi tiết; nút thêm vào vườn chưa gọi API |
-| Vườn cá nhân — backend | Thêm từ thư viện hoặc nhập loài thủ công; danh sách/chi tiết, tìm theo biệt danh, lọc, phân trang, sửa và lưu trữ; giới hạn dữ liệu theo chủ sở hữu | Chỉ Customer đang hoạt động; `next_routine` hiện trả `null`, chưa có lịch chăm sóc |
-| Vườn cá nhân — mobile | Màn `/customer/garden` có 4 cây mẫu, tìm theo tên và lọc trạng thái | Chưa kết nối API vườn; nút thêm, menu và thao tác trên cây chưa hoạt động |
-| Trang chủ | Điều hướng tới tra cứu, vườn, trợ lý AI và hồ sơ | Thời tiết, tổng quan vườn, công việc hôm nay và cây trên Home dùng dữ liệu minh họa |
-| Trợ lý AI | Màn `/customer/chat` có lời chào, câu hỏi gợi ý, ô soạn tin minh họa | Chưa nhập/gửi tin, gọi AI hoặc lưu lịch sử |
-| Điều trị và tích hợp khác | Schema bệnh có `treatment_protocol`; email OTP qua Nodemailer/Gmail SMTP | Tab điều trị còn placeholder; chưa có nhận diện/chẩn đoán AI, weather API, payment/wallet, FCM hoặc background jobs |
+| Tài khoản | Đăng ký OTP email, đăng nhập, reset password, hồ sơ và phiên trên thiết bị | Các lỗi vòng đời phiên nằm trong kế hoạch; chưa có refresh-token flow |
+| Admin | Thêm người dùng, danh sách, tìm kiếm, phân trang, sửa user/role/status | Quản trị viên khác chỉ được xem; bản thân sửa tên/SĐT |
+| Manager | CRUD cây và các tab khu vực quản lý | Màn bệnh cây/điều trị mới là placeholder |
+| Tra cứu cây | Danh sách, bộ lọc và chi tiết từ API | Chưa có tải trang tiếp theo cho toàn bộ danh sách |
+| Home/vườn/yêu thích | UI và một số dữ liệu minh họa | Một số nút chưa kết nối backend; thêm vào vườn chưa lưu thật |
+| Dịch vụ ngoài | Email OTP qua SMTP/Nodemailer; chat văn bản qua API AI tương thích OpenAI | Weather API, payment/wallet, FCM, jobs và web CMS chưa triển khai |
 
 Ưu tiên nối tiếp từ hiện trạng: kết nối mobile với API vườn, triển khai lịch chăm sóc/điều trị và các tích hợp còn thiếu, bổ sung bộ kiểm thử có thể chạy từ bản clone mới. Đây là phần còn lại quan sát từ source, không thay thế kế hoạch hay SRS được nhóm duyệt.
 
@@ -77,13 +72,11 @@ Chỉ copy khi chưa có `.env`. Điền cấu hình trước khi khởi động
 
 | Biến được source sử dụng | Mục đích |
 | --- | --- |
-| `PORT` | Cổng server, mặc định `5000` |
-| `NODE_ENV` | Chế độ chạy; bật request log khi khác `production` |
-| `MONGO_URI` | Chuỗi kết nối MongoDB |
-| `DB_NAME` | Tên database, mặc định `plantify_db` |
-| `JWT_SECRET` | Secret ký JWT; đặt giá trị riêng thay cho fallback trong code |
-| `JWT_EXPIRES_IN` | Thời hạn JWT, mặc định `1h` |
-| `EMAIL_USER`, `EMAIL_PASS` | Thông tin xác thực Gmail SMTP gửi OTP |
+| PORT, NODE_ENV | Cổng và chế độ chạy |
+| MONGO_URI, DB_NAME | Kết nối MongoDB và tên database |
+| JWT_SECRET, JWT_EXPIRES_IN | Ký JWT và thời hạn; đặt secret riêng, không dựa vào fallback trong code |
+| EMAIL_USER, EMAIL_PASS | Tài khoản SMTP gửi OTP |
+| AI_API_KEY, AI_BASE_URL, AI_MODEL, AI_TIMEOUT_MS | Chat AI; URL mặc định https://platform.beeknoee.com/api/v1; model phải là ID thật; timeout 1000–45000ms, mặc định 30000ms |
 
 ```powershell
 npm run dev

@@ -51,7 +51,7 @@ export default function GardenScreen() {
   const [query, setQuery] = useState('');
   const visiblePlants = PLANTS.filter(plant => (filter === 'all' || plant.status === filter) && plant.name.toLocaleLowerCase('vi').includes(query.trim().toLocaleLowerCase('vi')));
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <UnavailableButton icon="menu-outline" accessibilityLabel="Menu" style={styles.menu} />
         <Text accessibilityRole="header" style={styles.title}>Vườn cây của tôi</Text>
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   count: { fontSize: 12, color: colors.textSecondary },
   countNumber: { fontWeight: '700', color: colors.primary },
   list: { flex: 1, backgroundColor: '#FAFCFA' },
-  listContent: { paddingHorizontal: 18, paddingBottom: 24, gap: 14 },
+  listContent: { paddingHorizontal: 18, paddingBottom: 40, gap: 14 },
   card: { borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white, padding: 14 },
   plantRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   thumbnail: { width: 72, height: 88, borderRadius: 16, backgroundColor: colors.lightMint, alignItems: 'center', justifyContent: 'center' },

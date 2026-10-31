@@ -12,11 +12,15 @@ export default function ProfileContent({ onBack, showNavbar = false }) {
   const profile = useProfile();
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={showNavbar ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]}
+    >
       <ProfileHeader onBack={onBack} />
       <ScrollView
+        style={styles.scroll}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, showNavbar && styles.navContent]}
         showsVerticalScrollIndicator={false}
       >
         <ProfileIdentity user={profile.user} />
@@ -34,5 +38,7 @@ export default function ProfileContent({ onBack, showNavbar = false }) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.white },
+  scroll: { flex: 1 },
+  navContent: { paddingBottom: 40 },
   content: { padding: 18, paddingBottom: 28, backgroundColor: "#FAFCFA" },
 });
