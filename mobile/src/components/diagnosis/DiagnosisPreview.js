@@ -2,7 +2,7 @@ import { Image, StyleSheet, View } from "react-native";
 import { Button } from "react-native-paper";
 import { colors, spacing } from "../../theme";
 
-export default function DiagnosisPreview({ photo, busy, onRetake, onPickPhoto, onImageError }) {
+export default function DiagnosisPreview({ photo, busy, onRetake, onPickPhoto, onImageError, onViewResult }) {
   return (
     <View style={styles.card}>
       <Image
@@ -15,6 +15,9 @@ export default function DiagnosisPreview({ photo, busy, onRetake, onPickPhoto, o
           Chọn ảnh khác
         </Button>
       </View>
+      <Button mode="contained" onPress={onViewResult} disabled={busy} style={styles.resultButton}>
+        Xem kết quả mẫu
+      </Button>
     </View>
   );
 }
@@ -26,4 +29,5 @@ const styles = StyleSheet.create({
     flexDirection: "row", flexWrap: "wrap", justifyContent: "center",
     gap: spacing.md, padding: spacing.lg,
   },
+  resultButton: { marginHorizontal: spacing.lg, marginBottom: spacing.lg },
 });
