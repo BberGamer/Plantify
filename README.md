@@ -1,116 +1,180 @@
-# Plantify
+﻿# Plantify
 
-Backend My Garden: đã có API thêm/xem/sửa/lưu trữ, tìm kiếm, lọc và phân trang
-tại `/api/v1/garden/plants`, yêu cầu Customer đang hoạt động. Xem
-[hợp đồng API](backend/GARDEN_API.md). Frontend vườn vẫn dùng dữ liệu demo.
+Ứng dụng chăm sóc cây gồm mobile React Native/Expo và REST API Node.js/Express, lưu dữ liệu bằng MongoDB. Có ba vai trò `customer`, `manager`, `admin`; khu vực quản trị nằm trong ứng dụng mobile, chưa có web CMS riêng.
 
-Ứng dụng chăm sóc cây gồm mobile React Native/Expo và REST API Node.js/Express. Repository hiện dùng JavaScript; khu vực Admin/Manager nằm trong ứng dụng mobile.
+README được đối chiếu với source ngày **31/10/2026**. Trạng thái dưới đây mô tả phần đã triển khai trong mã nguồn, không đồng nghĩa đã kiểm thử tích hợp hoặc sẵn sàng production.
 
-## Tài liệu nội bộ
+## Tiến độ hiện tại
 
-Hướng dẫn agent, quy ước code, kiến trúc, thiết kế và kế hoạch refactor được nhóm gửi riêng, không phân phối qua Git. README chứa thông tin khởi chạy và hiện trạng cần thiết cho người nhận repository.
-
-## Hiện trạng
-
-| Phạm vi | Đã có trong source | Giới hạn |
+| Phạm vi | Đã triển khai | Giới hạn / phần còn lại |
 | --- | --- | --- |
-| Tài khoản | Đăng ký OTP email, đăng nhập, reset password, hồ sơ và phiên trên thiết bị | Các lỗi vòng đời phiên nằm trong kế hoạch; chưa có refresh-token flow |
-| Admin | Thêm người dùng, danh sách, tìm kiếm, phân trang, sửa user/role/status | Quản trị viên khác chỉ được xem; bản thân sửa tên/SĐT |
-| Manager | CRUD cây và các tab khu vực quản lý | Màn bệnh cây/điều trị mới là placeholder |
-| Tra cứu cây | Danh sách, bộ lọc và chi tiết từ API | Chưa có tải trang tiếp theo cho toàn bộ danh sách |
-| Home/vườn/yêu thích | UI và một số dữ liệu minh họa | Một số nút chưa kết nối backend; thêm vào vườn chưa lưu thật |
-| Dịch vụ ngoài | Email OTP qua SMTP/Nodemailer | AI, weather API, payment/wallet, FCM, jobs và web CMS chưa triển khai trong source hiện tại |
+| Tài khoản | Đăng ký bằng OTP email, đăng nhập/đăng xuất, đặt lại mật khẩu bằng OTP, xem/sửa hồ sơ | Chưa có đăng nhập Google hoặc refresh token |
+| Phiên mobile | Zustand giữ phiên, AsyncStorage lưu cache; kiểm tra dữ liệu phiên và hạn JWT khi khôi phục; Axios gắn token từ bộ nhớ và xóa phiên tương ứng khi nhận 401 hoặc `ACCOUNT_LOCKED` | Khôi phục cache chưa xác nhận lại tài khoản qua `/auth/me`; backend chưa có cơ chế thu hồi JWT khi logout |
+| Admin | Tạo tài khoản, xem danh sách/chi tiết, tìm kiếm, lọc, phân trang, sửa thông tin/vai trò/trạng thái | Admin khác chỉ được xem; bản thân chỉ sửa tên/SĐT |
+| Quản lý cây | Danh sách, tìm kiếm, phân trang, thêm/sửa/xóa cây, thông tin chăm sóc và trạng thái công khai | Chưa có giao diện quản lý danh mục cây riêng |
+| Quản lý bệnh cây | Danh sách, tìm kiếm, lọc trạng thái, phân trang, thêm/sửa/xóa; chọn các cây liên quan và đồng bộ liên kết cây–bệnh | Thao tác ghi dùng MongoDB transaction, cần database hỗ trợ transaction |
+| Tra cứu cây | Danh mục, tìm kiếm, lọc, phân trang, kéo làm mới, chi tiết và yêu cầu chăm sóc từ API; hiển thị bệnh thường gặp đang active | Yêu thích chỉ là state tại màn chi tiết; nút thêm vào vườn chưa gọi API |
+| Vườn cá nhân — backend | Thêm từ thư viện hoặc nhập loài thủ công; danh sách/chi tiết, tìm theo biệt danh, lọc, phân trang, sửa và lưu trữ; giới hạn dữ liệu theo chủ sở hữu | Chỉ Customer đang hoạt động; `next_routine` hiện trả `null`, chưa có lịch chăm sóc |
+| Vườn cá nhân — mobile | Màn `/customer/garden` có 4 cây mẫu, tìm theo tên và lọc trạng thái | Chưa kết nối API vườn; nút thêm, menu và thao tác trên cây chưa hoạt động |
+| Trang chủ | Điều hướng tới tra cứu, vườn, trợ lý AI và hồ sơ | Thời tiết, tổng quan vườn, công việc hôm nay và cây trên Home dùng dữ liệu minh họa |
+| Trợ lý AI | Màn `/customer/chat` có lời chào, câu hỏi gợi ý, ô soạn tin minh họa | Chưa nhập/gửi tin, gọi AI hoặc lưu lịch sử |
+| Điều trị và tích hợp khác | Schema bệnh có `treatment_protocol`; email OTP qua Nodemailer/Gmail SMTP | Tab điều trị còn placeholder; chưa có nhận diện/chẩn đoán AI, weather API, payment/wallet, FCM hoặc background jobs |
 
-Không suy ra tính năng đã hoạt động chỉ từ tên tab hoặc biến có trong .env.example.
+Ưu tiên nối tiếp từ hiện trạng: kết nối mobile với API vườn, triển khai lịch chăm sóc/điều trị và các tích hợp còn thiếu, bổ sung bộ kiểm thử có thể chạy từ bản clone mới. Đây là phần còn lại quan sát từ source, không thay thế kế hoạch hay SRS được nhóm duyệt.
 
-Admin có thể thêm tài khoản tại `/admin/users` bằng họ tên, email, mật khẩu, vai trò
-và số điện thoại tùy chọn. Tài khoản mới hoạt động ngay, không cần OTP. API
-`POST /api/v1/users` yêu cầu quyền Admin, trả HTTP 201 cùng thông tin tài khoản,
-không cấp token hoặc thay đổi phiên của Admin.
+## Cấu trúc và công nghệ
 
-## Cấu trúc và stack
+```text
+backend/
+  src/
+    config/              Kết nối MongoDB
+    routes/              auth, users, plants, diseases, garden
+    controllers/         Nhận request và trả response
+    services/            Nghiệp vụ, truy vấn Mongoose
+    validators/          Validation auth/user/plant/garden
+    models/              User, Plant, PlantCategory, Disease, UserPlant
+    middlewares/         JWT, phân quyền, quyền vườn, xử lý lỗi
+    integrations/email/  Gửi OTP
+    utils/               AppError và response helper
+    app.js               Express app và mount route
+    server.js            Nạp cấu hình, kết nối DB, mở server
+mobile/
+  app/                   Expo Router: auth, khách hàng, admin, manager, plants
+  src/
+    components/          UI theo từng khu vực
+    hooks/               Form, danh sách, phân trang và vòng đời màn hình
+    services/            Axios, API service, adapter danh sách, lưu phiên
+    constants/           Vai trò và route auth
+    theme/               Màu sắc, token, Paper theme
+    utils/               Chuẩn hóa thông báo lỗi
+  store/                 Auth store Zustand
+```
 
-~~~text
-backend/      Express, Mongoose, JWT, bcryptjs, Nodemailer; CommonJS
-mobile/       Expo ~58, Router ~58, React Native 0.88.1, React 19.3.0, Paper, Axios, Zustand; ES Modules
-~~~
+- Backend: JavaScript CommonJS, Express 4, Mongoose 7, JWT, bcryptjs, Nodemailer.
+- Mobile: JavaScript ES Modules, Expo `~58.0.21`, Expo Router `~58.0.28`, React Native `0.88.1`, React `19.3.0`, React Native Paper, Axios, Zustand.
+- Luồng chính: screen → hook → mobile service → REST API → controller → service → Mongoose. Phiên dùng chung được quản lý qua auth store.
 
-Phiên bản dependency lấy từ package.json/lockfile của từng package. Mobile dùng Node.js LTS 22.23.4 (ghi trong mobile/.nvmrc); Expo SDK 58 yêu cầu tối thiểu Node 22.13.0. Sau khi nâng Node, mở lại terminal/IDE và kiểm tra `node -v` trước khi cài dependency.
+Phiên bản và scripts cụ thể nằm trong [backend/package.json](backend/package.json) và [mobile/package.json](mobile/package.json); mỗi package có lockfile riêng.
+
+## Chuẩn bị môi trường
+
+- Node.js và npm. `mobile/package.json` khai báo Node `>=22.13.0 <23 || >=24.3.0 <25 || >=26.0.0 <27`; repository chưa có `.nvmrc`.
+- MongoDB có thể kết nối từ backend. Để thêm/sửa/xóa bệnh cây, dùng replica set hoặc cluster hỗ trợ transaction; MongoDB standalone không đáp ứng luồng ghi này.
+- Tài khoản Gmail SMTP và mật khẩu ứng dụng phù hợp để gửi OTP.
+- Client Expo tương thích SDK của repository hoặc môi trường chạy Android/iOS/web tương ứng. iOS simulator cần macOS.
 
 ## Chạy backend
 
 Từ root, dùng PowerShell:
 
-~~~powershell
+```powershell
 cd backend
 npm ci
 Copy-Item -LiteralPath .env.example -Destination .env -NoClobber
-npm run dev
-~~~
+```
 
-Điền cấu hình vào .env trước khi chạy server. Lệnh copy chỉ dùng khi chưa có file; -NoClobber tránh ghi đè cấu hình đã có.
+Chỉ copy khi chưa có `.env`. Điền cấu hình trước khi khởi động:
 
-Biến được source hiện tại sử dụng:
-
-| Biến | Mục đích |
+| Biến được source sử dụng | Mục đích |
 | --- | --- |
-| PORT, NODE_ENV | Cổng và chế độ chạy |
-| MONGO_URI, DB_NAME | Kết nối MongoDB và tên database |
-| JWT_SECRET, JWT_EXPIRES_IN | Ký JWT và thời hạn; đặt secret riêng, không dựa vào fallback trong code |
-| EMAIL_USER, EMAIL_PASS | Tài khoản SMTP gửi OTP |
+| `PORT` | Cổng server, mặc định `5000` |
+| `NODE_ENV` | Chế độ chạy; bật request log khi khác `production` |
+| `MONGO_URI` | Chuỗi kết nối MongoDB |
+| `DB_NAME` | Tên database, mặc định `plantify_db` |
+| `JWT_SECRET` | Secret ký JWT; đặt giá trị riêng thay cho fallback trong code |
+| `JWT_EXPIRES_IN` | Thời hạn JWT, mặc định `1h` |
+| `EMAIL_USER`, `EMAIL_PASS` | Thông tin xác thực Gmail SMTP gửi OTP |
 
-Backend mặc định tại http://localhost:5000; health check GET /health, API prefix /api/v1. Các biến refresh/weather/AI/payment/FCM trong file mẫu chưa đồng nghĩa có implementation.
+```powershell
+npm run dev
+```
 
-Script seed vẫn được khai báo nhưng backend/src/scripts/seed.js hiện chưa tồn tại; không dùng nó làm bước khởi động bắt buộc.
+`npm start` chạy server bằng Node, không dùng nodemon. Backend chỉ mở cổng sau khi kết nối MongoDB thành công. Health check: `GET http://localhost:5000/health`; API prefix: `/api`.
+
+Script `npm run seed` có khai báo nhưng `backend/src/scripts/seed.js` chưa tồn tại. Repository chưa có bước seed hoặc tạo Admin đầu tiên tự động; cần chuẩn bị tài khoản quản trị/dữ liệu ban đầu riêng. Đăng ký qua OTP tạo tài khoản Customer.
+
+Các biến AI/weather/payment/FCM/refresh trong `.env.example` chưa chứng minh có tích hợp tương ứng.
 
 ## Chạy mobile
 
-Màn **Trợ lý AI** tại `/(tabs)/chat` mở từ thẻ “Trợ lý AI” trên Trang chủ. Đây là giao diện chào tĩnh với câu hỏi gợi ý và ô soạn tin minh họa; chưa hỗ trợ nhập/gửi tin, gọi AI hoặc lưu lịch sử.
-
-Màn **Vườn cây của tôi** tại `/(tabs)/garden` có thể mở từ thanh điều hướng hoặc các nút xem vườn trên Home. Giao diện dùng 4 cây mẫu, hỗ trợ tìm theo tên và lọc trạng thái; chưa kết nối API hoặc lưu dữ liệu. Các nút thêm, menu và thao tác trên cây hiện chưa khả dụng.
-
 Mở terminal khác từ root:
 
-~~~powershell
+```powershell
 cd mobile
 npm ci
 npm start
-~~~
+```
 
-Các script hiện có: start, android, ios, web. Chạy iOS simulator cần môi trường macOS phù hợp; client chạy ứng dụng phải tương thích Expo SDK của repository.
+Có thể dùng `npm run android`, `npm run ios` hoặc `npm run web`. Nếu PowerShell chặn `npm.ps1`, dùng `npm.cmd` thay cho `npm`.
 
-Nếu PowerShell chặn `npm.ps1`, dùng `npm.cmd ci` và `npm.cmd start`. Kiểm tra phiên bản thư viện bằng `npx.cmd expo install --check`; khi cần đồng bộ theo SDK, chạy `npx.cmd expo install --fix`.
+Để cấu hình backend, tạo `mobile/.env.local`:
 
-API URL được cấu hình bằng EXPO_PUBLIC_API_URL. Có thể tạo mobile/.env.local với:
+```dotenv
+EXPO_PUBLIC_API_URL=http://<IP-máy-chạy-backend>:5000/api
+```
 
-~~~dotenv
-EXPO_PUBLIC_API_URL=http://<IP-máy-chạy-backend>:5000/api/v1
-~~~
+Nếu không đặt biến, Axios mặc định dùng `http://10.0.2.2:5000/api` trên Android và `http://localhost:5000/api` ở nền tảng khác. Điện thoại thật cần địa chỉ backend mà thiết bị truy cập được; `localhost` trên điện thoại không trỏ tới máy phát triển. Khởi động lại Expo sau khi đổi cấu hình.
 
-Khi không đặt biến, source dùng Android emulator 10.0.2.2 và localhost cho nền tảng khác. Điện thoại thật cần URL backend mà thiết bị truy cập được; localhost trên điện thoại không trỏ tới máy phát triển.
+Các màn chính:
+
+Nếu đã cấu hình `EXPO_PUBLIC_API_URL` trong môi trường cục bộ, đổi phần prefix sang `/api` rồi khởi động lại Expo. Cập nhật mobile và backend cùng đợt; prefix API có phiên bản cũ không còn được hỗ trợ.
+
+| Route mobile | Nội dung |
+| --- | --- |
+| `/auth/login`, `/auth/register`, `/auth/reset-password` | Xác thực tài khoản |
+| `/customer` | Trang chủ |
+| `/customer/garden`, `/customer/chat`, `/customer/profile` | Vườn demo, AI demo, hồ sơ |
+| `/plants`, `/plants/PlantList` | Danh mục và chi tiết cây (ID qua params) |
+| `/admin/users`, `/admin/profile` | Quản lý người dùng và hồ sơ Admin |
+| `/manager/plants`, `/manager/diseases` | Quản lý cây và bệnh cây |
+| `/manager/treatments`, `/manager/profile` | Điều trị placeholder và hồ sơ Manager |
+
+## API hiện có
+
+Đường dẫn dưới đây nằm sau prefix `/api`. Request được bảo vệ dùng header `Authorization: Bearer <token>`.
+
+| Method | Endpoint | Truy cập |
+| --- | --- | --- |
+| POST | `/auth/register/send-otp`, `/auth/register/verify-otp` | Public |
+| POST | `/auth/login`, `/auth/forgot-password`, `/auth/reset-password` | Public |
+| POST | `/auth/logout` | JWT |
+| GET, PATCH | `/auth/me` | JWT |
+| GET, POST | `/users` | Admin |
+| GET, PUT, PATCH | `/users/:id` | Admin |
+| PATCH | `/users/:id/status`, `/users/:id/role` | Admin |
+| GET | `/plants/categories`, `/plants`, `/plants/:id` | Public |
+| GET, POST | `/plants/manager` | Admin hoặc Manager |
+| PUT, DELETE | `/plants/manager/:id` | Admin hoặc Manager |
+| GET | `/diseases`, `/diseases/:id` | Public, chỉ bệnh active |
+| GET, POST | `/diseases/manager` | Admin hoặc Manager |
+| GET, PUT, DELETE | `/diseases/manager/:id` | Admin hoặc Manager |
+| GET, POST | `/garden/plants` | Customer đang hoạt động |
+| GET, PATCH | `/garden/plants/:id` | Customer sở hữu cây |
+| PATCH | `/garden/plants/:id/archive` | Customer sở hữu cây |
+
+`/admin/users` là alias backend của `/users`, có cùng middleware. Admin tạo tài khoản bằng `POST /users`: tài khoản hoạt động ngay, không cần OTP; API không cấp token mới hoặc thay phiên của Admin.
+
+API bệnh hỗ trợ tìm kiếm, phân trang, lọc theo `plant_id`; API quản lý thêm lọc `status`. Khi tạo/sửa bệnh phải chọn ít nhất một cây liên quan. Liên kết được lưu qua `Plant.common_disease_ids`; xóa bệnh đồng thời gỡ liên kết khỏi cây.
+
+API vườn hỗ trợ `page`, `limit`, `search`, `health_status`, `category_id`, `archived`. Lưu trữ dùng `PATCH /:id/archive`, không xóa bản ghi; cây đã lưu trữ không được sửa. Middleware vườn xác nhận lại trạng thái/vai trò từ database; middleware Admin/Manager hiện dựa vào role trong JWT.
+
+Response thường có `{ success, message, data }`; lỗi có thể kèm `code`, `errors`. Danh sách cây/bệnh/vườn trả dữ liệu cùng `total`, `page`, `limit`, `totalPages`; danh sách user dùng `users` và object `pagination`. Mobile có adapter để chuẩn hóa các dạng danh sách.
 
 ## Kiểm tra hiện tại
 
-Hai package chưa có scripts test/lint/format chung. Sau khi cài dependency, có thể chạy bộ test đang có:
+Hai package chưa khai báo scripts `test`, `lint`, `format` và repository chưa có workflow CI. Backend có dependency Jest/Supertest, nhưng chưa có bộ test backend được theo dõi trong Git. Mobile hiện chỉ theo dõi một số test helper; file test cục bộ nằm trong đường dẫn bị `.gitignore` bỏ qua. Vì vậy, bản clone mới chưa có bộ test hoàn chỉnh để chạy theo README.
 
-Backend, từ backend/:
+Có thể kiểm tra tính tương thích dependency mobile sau khi cài đặt:
 
-~~~powershell
-npm exec --no -- jest --runInBand
-~~~
+```powershell
+cd mobile
+npx.cmd expo install --check
+```
 
-Mobile, từ mobile/:
+Đây là kiểm tra dependency, không thay thế kiểm thử chức năng. Khi kiểm thử tích hợp, cần xác minh riêng OTP/email thật, quyền Admin/Manager/Customer, CRUD cây/bệnh (cả transaction), quyền sở hữu vườn và vòng đời phiên trên thiết bị. Việc cập nhật README này chỉ đối chiếu source và cấu hình, chưa xác nhận các luồng đó trên database hoặc Android/iOS.
 
-~~~powershell
-node --test tests/useManagerPlants.test.cjs tests/refactoredHooks.test.cjs tests/otpInput.test.cjs tests/localizedErrors.test.cjs
-~~~
+## Tài liệu và quy ước làm việc
 
-Mobile tests đang dùng Babel và shallow renderer; một số dependency cần được khai báo trực tiếp ở bước công cụ thay vì dựa vào dependency bắc cầu. Nếu checkout sạch chưa chạy được, ghi rõ lỗi; không mặc định lệnh trên chứng minh môi trường đã hoàn chỉnh.
+Hướng dẫn agent, quy ước code, kiến trúc, thiết kế và kế hoạch refactor được nhóm chia sẻ riêng; `docs/`, `rules/` và hướng dẫn agent không phân phối qua Git. README phải dùng được độc lập với các tài liệu nội bộ đó.
 
-Backend tests hiện mock auth service và có test.failing. Mobile helper mô phỏng một phần lifecycle. Các kiểm tra này không thay kiểm thử database/email thật hoặc thiết bị Android/iOS.
-
-Quy trình bổ sung scripts/CI và các trường hợp kiểm tra được nhóm chia sẻ trong bộ tài liệu nội bộ.
-
-## Cập nhật tài liệu
-
-Khi source thay đổi, cập nhật thông tin khởi chạy và hiện trạng trong README. Cập nhật bộ tài liệu nội bộ tương ứng và gửi riêng cho nhóm; không thêm liên kết tới file nội bộ không được phân phối qua Git.
+Khi thay đổi source, cập nhật tiến độ, API và hướng dẫn chạy tương ứng. Không commit `.env`, credential, OTP, token hoặc output build.

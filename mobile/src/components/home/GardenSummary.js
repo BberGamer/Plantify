@@ -5,7 +5,7 @@ import { Button, Card, ProgressBar, Text } from 'react-native-paper';
 
 export default function GardenSummary() {
   const router = useRouter();
-  const openGarden = () => router.navigate('/(tabs)/garden');
+  const openGarden = () => router.navigate('/customer/garden');
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>

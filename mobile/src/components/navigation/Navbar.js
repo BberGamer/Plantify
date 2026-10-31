@@ -11,18 +11,18 @@ const ITEMS = [
     label: "Trang chủ",
     icon: "home-outline",
     activeIcon: "home",
-    path: "/",
-    href: "/(tabs)",
+    path: "/customer",
+    href: "/customer",
   },
   { label: "Danh sách\ncây", icon: "list-outline", activeIcon: "list", path: "/plants", href: "/plants" },
   { label: "Chẩn đoán", icon: "camera-outline" },
-  { label: "Vườn\ncây", icon: "leaf-outline", activeIcon: "leaf", path: "/garden", href: "/(tabs)/garden" },
+  { label: "Vườn\ncây", icon: "leaf-outline", activeIcon: "leaf", path: "/customer/garden", href: "/customer/garden" },
   {
     label: "Tài khoản",
     icon: "person-outline",
     activeIcon: "person",
-    path: "/profile",
-    href: "/(tabs)/profile",
+    path: "/customer/profile",
+    href: "/customer/profile",
   },
 ];
 
