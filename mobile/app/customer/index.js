@@ -16,7 +16,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView
       style={styles.safeArea}
-      edges={["top", "left", "right", "bottom"]}
+      edges={["top", "left", "right"]}
     >
       <ScrollView
         style={styles.container}
@@ -48,6 +48,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 18,
-    paddingBottom: 28,
+    paddingBottom: 40,
   },
 });

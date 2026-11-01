@@ -50,7 +50,7 @@ export default function RegisterScreen() {
               loading={registration.loading}
               onChange={registration.changeField}
               onSubmit={registration.sendOTP}
-              onLogin={() => router.push("/(auth)/login")}
+              onLogin={() => router.push("/auth/login")}
             />
           ) : (
             <RegisterOtpForm

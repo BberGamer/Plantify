@@ -1,5 +1,10 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  AI_NOT_CONFIGURED: "Trợ lý AI chưa được cấu hình. Vui lòng thử lại sau.",
+  AI_TIMEOUT: "AI trả lời quá lâu. Vui lòng thử lại.",
+  AI_BUSY: "Trợ lý AI đang bận. Vui lòng thử lại sau.",
+  AI_UNAVAILABLE: "Không thể kết nối trợ lý AI. Vui lòng thử lại sau.",
+  AI_INVALID_RESPONSE: "Trợ lý AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.",
   SAME_ROLE_UPDATE_FORBIDDEN: "Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.",
   ADMIN_ROLE_CHANGE_FORBIDDEN: "Bạn không thể thay đổi vai trò của quản trị viên khác.",
   SESSION_CHANGED: "Phiên đăng nhập đã thay đổi. Vui lòng thử lại.",
