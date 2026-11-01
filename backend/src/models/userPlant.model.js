@@ -19,6 +19,7 @@ const userPlantSchema = new mongoose.Schema(
       validate: (value) => !value || /^https?:\/\/\S+$/i.test(value),
     },
     health_status: { type: String, enum: ["healthy", "treatment"], default: "healthy" },
+    is_under_treatment: { type: Boolean, default: false },
     acquisition_date: { type: Date, default: null },
     archived_at: { type: Date, default: null },
   },

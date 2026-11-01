@@ -5,6 +5,15 @@ const ERROR_MESSAGES = {
   AI_BUSY: "Trợ lý AI đang bận. Vui lòng thử lại sau.",
   AI_UNAVAILABLE: "Không thể kết nối trợ lý AI. Vui lòng thử lại sau.",
   AI_INVALID_RESPONSE: "Trợ lý AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.",
+  APPROVED_PROTOCOL_NOT_FOUND: "Chưa có phác đồ được phê duyệt cho bệnh này.",
+  ACTIVE_TREATMENT_EXISTS: "Cây đang có một đợt điều trị hoạt động.",
+  INVALID_TREATMENT_TRANSITION: "Trạng thái điều trị đã thay đổi. Vui lòng tải lại.",
+  TASK_ALREADY_COMPLETED: "Công việc này đã được hoàn thành.",
+  TASK_NOT_AVAILABLE: "Công việc chưa thể hoàn thành vào lúc này.",
+  TREATMENT_TASKS_INCOMPLETE: "Cần hoàn thành tất cả công việc trước khi ghi nhận cây đã hồi phục.",
+  TREATMENT_REFERENCE_MISSING: "Dữ liệu cây hoặc bệnh của lịch điều trị không còn đầy đủ.",
+  DIAGNOSIS_NOT_AVAILABLE: "Kết quả chẩn đoán chưa thể dùng để tạo lịch điều trị.",
+  DIAGNOSIS_DISEASE_MISMATCH: "Bệnh được chọn không khớp kết quả chẩn đoán.",
   SAME_ROLE_UPDATE_FORBIDDEN: "Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.",
   ADMIN_ROLE_CHANGE_FORBIDDEN: "Bạn không thể thay đổi vai trò của quản trị viên khác.",
   SESSION_CHANGED: "Phiên đăng nhập đã thay đổi. Vui lòng thử lại.",
@@ -121,6 +130,12 @@ export default function getErrorMessage(
   const code = data?.code || error?.code;
   if (code === "VALIDATION_ERROR" && typeof data?.errors?.phone === "string") {
     return data.errors.phone;
+  }
+  if (code === "VALIDATION_ERROR" && data?.errors) {
+    const first = Object.values(data.errors).find(
+      (message) => typeof message === "string" && message.trim(),
+    );
+    if (first) return first;
   }
   if (
     typeof code === "string" &&
