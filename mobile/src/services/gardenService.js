@@ -1,4 +1,6 @@
 import api from "./api";
+import { Platform } from "react-native";
+import { getSessionContext } from "./sessionAccess";
 
 const invalid = () => {
   const error = new Error("Dữ liệu vườn cây không hợp lệ.");
@@ -24,6 +26,24 @@ const adaptList = (envelope) => {
 };
 
 export default {
+  createPlant: async (fields, photo) => {
+    const sessionContext = getSessionContext();
+    let body = fields;
+    if (photo) {
+      body = new FormData();
+      for (const [key, value] of Object.entries(fields)) body.append(key, String(value));
+      if (Platform.OS === "web") {
+        const blob = await (await fetch(photo.uri)).blob();
+        body.append("photo", blob, photo.fileName || "plant.jpg");
+      } else {
+        body.append("photo", { uri: photo.uri, name: photo.fileName || "plant.jpg", type: photo.mimeType || "image/jpeg" });
+      }
+    }
+    return (await api.post("/garden/plants", body, {
+      sessionContext,
+      ...(photo ? { headers: { "Content-Type": Platform.OS === "web" ? false : "multipart/form-data" } } : {}),
+    })).data;
+  },
   getPlants: async ({ page = 1, limit = 50, search, healthStatus } = {}) => {
     const params = { page, limit };
     if (search?.trim()) params.search = search.trim();

@@ -4,6 +4,16 @@
 
 README được đối chiếu với source ngày **31/10/2026**. Trạng thái dưới đây mô tả phần đã triển khai trong mã nguồn, không đồng nghĩa đã kiểm thử tích hợp hoặc sẵn sàng production.
 
+### Thêm cây vào vườn
+
+Customer có thể chọn **Thêm cây** trong My Garden hoặc **Thêm vào vườn cây** từ chi tiết cây thư viện. Form lưu biệt danh, loài, vị trí, chậu và ngày nhận cây; ảnh JPG/PNG tối đa 10 MB là tùy chọn. Ngày nhận cây chọn bằng lịch, hiển thị DD/MM/YYYY, có thể để trống/xóa và không được sau hôm nay (theo múi giờ Việt Nam). Cây nhập tay không cần danh mục; cây thư viện giữ danh mục có sẵn. Chưa tạo lịch chăm sóc trong luồng này.
+
+Backend cần biến môi trường `PUBLIC_BASE_URL` là địa chỉ gốc công khai, ví dụ `http://192.168.1.10:5000` (không thêm `/api`). Mobile dùng `EXPO_PUBLIC_API_URL=http://192.168.1.10:5000/api`. Khi dùng thiết bị thật, thay IP bằng địa chỉ máy chạy backend mà điện thoại truy cập được. Thiếu `PUBLIC_BASE_URL` vẫn lưu cây không ảnh, nhưng upload trả lỗi 503.
+
+File ảnh nằm trong `backend/uploads/plants`, được phục vụ tại `/uploads/plants/...`; MongoDB chỉ lưu URL. Cần volume bền vững và sao lưu thư mục này khi triển khai. URL ảnh công khai; backend tự đặt tên ngẫu nhiên và loại metadata ảnh. `POST /api/garden/plants` hỗ trợ JSON như trước và multipart với một trường file `photo`.
+
+Kiểm tra chức năng: chạy `node --test tests/garden-create.test.cjs` trong `backend/` và `node --test tests/addGardenPlant.test.cjs` trong `mobile/`. Test backend mock truy vấn database; không thay thế kiểm thử MongoDB và thiết bị thật.
+
 ## Tiến độ hiện tại
 
 Sau khi chụp/chọn ảnh, nút **Xem kết quả mẫu** mở giao diện kết quả với bệnh, độ tin cậy và gợi ý minh họa cố định. Dữ liệu mẫu không được suy ra từ ảnh; chưa gọi model hoặc lưu kết quả.

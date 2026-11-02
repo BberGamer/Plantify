@@ -96,8 +96,8 @@ const create = async (userId, input) => {
     data.category_id = plant.category_id;
     snapshot = { common_name: plant.common_name, category_name: group.category_name, plant_image_url: plant.plant_image };
   } else {
-    const group = await category(data.category_id);
-    snapshot = { common_name: data.custom_species_name, category_name: group.category_name, plant_image_url: "" };
+    const group = data.category_id ? await category(data.category_id) : null;
+    snapshot = { common_name: data.custom_species_name, category_name: group?.category_name || "", plant_image_url: "" };
   }
   const plant = await UserPlant.create({ ...data, user_id: userId, species_snapshot: snapshot });
   return present(plant.toObject(), null);

@@ -8,6 +8,9 @@ const app = express();
 
 // === PHAN 1: Middlewares co ban ===
 app.use(cors());
+app.use("/uploads/plants", express.static(require("./middlewares/garden-upload.middleware").uploadDirectory, {
+  dotfiles: "deny", index: false, setHeaders: (res) => res.set("X-Content-Type-Options", "nosniff"),
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

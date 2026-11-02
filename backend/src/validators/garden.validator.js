@@ -36,13 +36,14 @@ const payload = (input, creating = false) => {
     else {
       if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) v.invalid("acquisition_date");
       const date = new Date(`${value}T00:00:00.000Z`);
-      if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) v.invalid("acquisition_date");
+      if (value.startsWith("0000-") || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) v.invalid("acquisition_date", "Ngày nhận cây không hợp lệ.");
+      const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      if (value > today) v.invalid("acquisition_date", "Ngày nhận cây không được ở tương lai.");
       result.acquisition_date = date;
     }
   }
   if (creating && !result.plant_id) {
     result.custom_species_name = v.text(result.custom_species_name, "custom_species_name");
-    result.category_id = v.id(result.category_id, "category_id");
   }
   if (!creating && !Object.keys(result).length) v.invalid("body", "Cần ít nhất một trường để cập nhật.");
   return result;
