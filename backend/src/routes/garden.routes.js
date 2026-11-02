@@ -5,7 +5,7 @@ const garden = require("../controllers/garden.controller");
 
 router.use(authenticate, customer);
 router.get("/", garden.list);
-router.post("/", garden.create);
+router.post("/", require("../middlewares/garden-upload.middleware").upload, garden.create);
 router.get("/:id", garden.detail);
 router.patch("/:id", garden.update);
 router.patch("/:id/archive", garden.archive);

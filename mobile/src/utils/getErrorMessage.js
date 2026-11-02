@@ -1,5 +1,7 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  INVALID_PHOTO: "Vui lòng chọn một ảnh JPG hoặc PNG hợp lệ, tối đa 10 MB (tối đa 40 triệu điểm ảnh).",
+  UPLOAD_NOT_CONFIGURED: "Máy chủ chưa cấu hình lưu ảnh. Bạn có thể bỏ ảnh để lưu cây trước.",
   AI_NOT_CONFIGURED: "Trợ lý AI chưa được cấu hình. Vui lòng thử lại sau.",
   AI_TIMEOUT: "AI trả lời quá lâu. Vui lòng thử lại.",
   AI_BUSY: "Trợ lý AI đang bận. Vui lòng thử lại sau.",

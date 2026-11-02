@@ -2,7 +2,7 @@ import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, Vi
 import { ActivityIndicator, Button, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import Navbar from "../../src/components/navigation/Navbar";
 import ListError from "../../src/components/common/ListError";
 import useGarden from "../../src/hooks/useGarden";
@@ -39,9 +39,12 @@ function GardenCard({ plant, onOpenPlant, onOpenTreatment }) {
 export default function GardenScreen() {
   const garden = useGarden();
   const router = useRouter();
+  const { addedPlant } = useLocalSearchParams();
   return <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
     <View style={styles.header}><View style={styles.headerSide} /><Text accessibilityRole="header" style={styles.title}>Vườn cây của tôi</Text><View style={styles.headerSide} /></View>
     <View style={styles.controls}>
+      {!!addedPlant && <Text accessibilityRole="alert">Đã thêm cây vào vườn thành công.</Text>}
+      <Button mode="contained" icon="plus" onPress={() => router.push("/customer/garden/add")}>Thêm cây</Button>
       <View style={styles.filters}>{FILTERS.map((item) => <Pressable key={item.id} onPress={() => garden.selectHealthStatus(item.id)} accessibilityRole="button" accessibilityState={{ selected: garden.healthStatus === item.id }} style={[styles.filter, garden.healthStatus === item.id && styles.selectedFilter]}><Text style={[styles.filterLabel, garden.healthStatus === item.id && styles.selectedFilterLabel]}>{item.label}</Text></Pressable>)}</View>
       <View style={styles.search}>
         <Ionicons name="search-outline" size={20} color={colors.textSecondary} />
