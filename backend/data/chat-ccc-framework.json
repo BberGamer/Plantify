@@ -1,0 +1,10 @@
+{
+  "evaluation_framework": "CCC",
+  "scale": { "min": 1, "max": 5 },
+  "criteria": {
+    "correctness": { "weight": 0.4, "description": "Độ chính xác của thông tin" },
+    "completeness": { "weight": 0.4, "description": "Mức độ đầy đủ các ý cần thiết" },
+    "communication": { "weight": 0.2, "description": "Độ rõ ràng và súc tích" }
+  },
+  "composite_formula": "0.4*C + 0.4*F + 0.2*M"
+}

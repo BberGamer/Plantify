@@ -4,6 +4,15 @@
 
 README được đối chiếu với source ngày **31/10/2026**. Trạng thái dưới đây mô tả phần đã triển khai trong mã nguồn, không đồng nghĩa đã kiểm thử tích hợp hoặc sẵn sàng production.
 
+Chat lưu câu hỏi–trả lời theo tài khoản/hội thoại trong `chat_turns`, tải lại lịch sử
+gần nhất và có đánh giá CCC tự động sau câu trả lời khi bật chế độ đánh giá.
+Điểm dựa trên reference draft được đánh dấu tham khảo, không xác nhận khoa học.
+Xem [cấu hình và hướng dẫn kiểm tra](backend/CHAT_EVALUATION.md).
+
+Chat hiện có thêm tra cứu bộ câu hỏi–đáp chuẩn trong MongoDB collection `chat_faqs`.
+Chỉ bản ghi `approved`, ngôn ngữ `vi` được sử dụng; câu khớp chính xác hoặc alias
+trả nguyên đáp án, câu khác gọi AI như trước. Xem [cấu hình FAQ và đánh giá trước/sau](backend/CHAT_FAQ.md).
+
 ### Thêm cây vào vườn
 
 Customer có thể chọn **Thêm cây** trong My Garden hoặc **Thêm vào vườn cây** từ chi tiết cây thư viện. Form lưu biệt danh, loài, vị trí, chậu và ngày nhận cây; ảnh JPG/PNG tối đa 10 MB là tùy chọn. Ngày nhận cây chọn bằng lịch, hiển thị DD/MM/YYYY, có thể để trống/xóa và không được sau hôm nay (theo múi giờ Việt Nam). Cây nhập tay không cần danh mục; cây thư viện giữ danh mục có sẵn. Chưa tạo lịch chăm sóc trong luồng này.
@@ -95,6 +104,7 @@ Chỉ copy khi chưa có `.env`. Điền cấu hình trước khi khởi động
 | JWT_SECRET, JWT_EXPIRES_IN | Ký JWT và thời hạn; đặt secret riêng, không dựa vào fallback trong code |
 | EMAIL_USER, EMAIL_PASS | Tài khoản SMTP gửi OTP |
 | AI_API_KEY, AI_BASE_URL, AI_MODEL, AI_TIMEOUT_MS | Chat AI; URL mặc định https://platform.beeknoee.com/api/v1; model phải là ID thật; timeout 1000–45000ms, mặc định 30000ms |
+| AI_EVALUATION_ENABLED, AI_EVALUATOR_MODEL | Bật/tắt chấm CCC tự động; judge mặc định dùng AI_MODEL; phát sinh thêm lượt gọi AI khi có đáp án tham chiếu |
 
 ```powershell
 npm run dev
@@ -128,13 +138,13 @@ Nếu không đặt biến, Axios mặc định dùng `http://10.0.2.2:5000/api`
 
 Các màn chính:
 
-Nếu đã cấu hình `EXPO_PUBLIC_API_URL` trong môi trường cục bộ, đổi phần prefix sang `/api` rồi khởi động lại Expo. Cập nhật mobile và backend cùng đợt; prefix API có phiên bản cũ không còn được hỗ trợ.
+Mobile mới dùng prefix `/api`. Backend cũng hỗ trợ alias `/api/v1` để các client còn cấu hình cũ tiếp tục hoạt động. Khởi động lại Expo sau khi đổi `EXPO_PUBLIC_API_URL`.
 
 | Route mobile | Nội dung |
 | --- | --- |
 | `/auth/login`, `/auth/register`, `/auth/reset-password` | Xác thực tài khoản |
 | `/customer` | Trang chủ |
-| `/customer/garden`, `/customer/chat`, `/customer/profile` | Vườn demo, AI demo, hồ sơ |
+| `/customer/garden`, `/customer/chat`, `/customer/profile` | Vườn, chat AI có lịch sử/đánh giá CCC, hồ sơ |
 | `/plants`, `/plants/PlantList` | Danh mục và chi tiết cây (ID qua params) |
 | `/admin/users`, `/admin/profile` | Quản lý người dùng và hồ sơ Admin |
 | `/manager/plants`, `/manager/diseases` | Quản lý cây và bệnh cây |
