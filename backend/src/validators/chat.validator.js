@@ -18,7 +18,8 @@ const chat = (input) => {
     return { role: item.role, content };
   });
   if (total > 24000) v.invalid("history", "Hội thoại quá dài. Vui lòng bắt đầu lại.");
-  return { message, history: normalized };
+  const conversation_id = input.conversation_id === undefined ? undefined : v.id(input.conversation_id, "conversation_id");
+  return { message, history: normalized, conversation_id };
 };
 
 module.exports = { chat };

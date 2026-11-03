@@ -24,7 +24,8 @@ app.get("/health", (req, res) => {
 });
 
 // === PHAN 3: Dang ky Routes cho cac Modules ===
-app.use("/api", require("./routes"));
+// Giữ tương thích client đang dùng /api và client dùng prefix /api/v1.
+app.use(["/api/v1", "/api"], require("./routes"));
 
 // === PHAN 4: 404 Handler ===
 app.use((req, res) => {

@@ -1,0 +1,652 @@
+[
+  {
+    "id": "AI-001",
+    "topic": "watering",
+    "question": "Khi nào tôi nên tưới cây trầu bà?",
+    "aliases": [
+      "Bao giờ cần tưới trầu bà?",
+      "Trầu bà nên tưới lúc nào?"
+    ],
+    "answer": "Với trầu bà trồng trong đất, hãy kiểm tra độ ẩm đất trước khi tưới. Khi lớp đất phía trên khô bớt, có thể tưới rồi để nước thừa thoát ra; nếu đất còn ẩm thì chờ thêm. Không có lịch tưới cố định cho mọi chậu vì nhu cầu còn phụ thuộc ánh sáng, môi trường và giá thể.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-002",
+    "topic": "watering",
+    "question": "Có nên tưới cây mỗi ngày không?",
+    "aliases": [
+      "Ngày nào cũng tưới cây có tốt không?",
+      "Cây có cần tưới hằng ngày không?"
+    ],
+    "answer": "Không phải cây nào cũng cần tưới mỗi ngày. Nhu cầu nước phụ thuộc loại cây, độ ẩm giá thể, kích thước chậu và môi trường. Hãy kiểm tra điều kiện thực tế trước khi tưới thay vì dùng một lịch chung. Bạn đang trồng cây gì?",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-003",
+    "topic": "watering",
+    "question": "Làm sao biết cây có thể đang thiếu nước?",
+    "aliases": [
+      "Dấu hiệu cây thiếu nước là gì?",
+      "Nhận biết cây thiếu nước thế nào?"
+    ],
+    "answer": "Cây thiếu nước có thể có lá rũ, cuộn hoặc mép lá khô, nhưng các dấu hiệu này không đủ để kết luận. Hãy kiểm tra độ ẩm đất ở độ sâu phù hợp với loại cây và chậu, thay vì chỉ nhìn mặt đất. Bạn đang trồng cây gì và đất hiện khô hay còn ẩm?",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-004",
+    "topic": "watering",
+    "question": "Làm sao biết cây có thể bị tưới quá nhiều?",
+    "aliases": [
+      "Dấu hiệu tưới cây quá nhiều là gì?",
+      "Cây bị thừa nước nhận biết thế nào?"
+    ],
+    "answer": "Đất ẩm kéo dài, nước đọng và cây suy yếu có thể liên quan đến tưới quá nhiều hoặc thoát nước kém. Lá vàng hay héo riêng lẻ chưa đủ kết luận. Nếu đất còn ướt, đừng tưới thêm ngay; hãy kiểm tra lỗ thoát nước, nước đọng và tình trạng rễ nếu cần.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-005",
+    "topic": "watering",
+    "question": "Cây bị héo có nên tưới thêm ngay không?",
+    "aliases": [
+      "Cây héo thì tưới ngay được không?",
+      "Thấy cây rũ có cần thêm nước không?"
+    ],
+    "answer": "Không nên tưới thêm ngay chỉ vì cây bị héo. Hãy kiểm tra độ ẩm đất trước: nếu còn ẩm, cần xem xét rễ và điều kiện môi trường; nếu đất khô, đối chiếu nhu cầu của loại cây rồi mới tưới. Cả thiếu nước và tổn thương rễ do đất quá ướt đều có thể khiến cây héo.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-006",
+    "topic": "watering",
+    "question": "Nước đọng trong đĩa lót chậu có ảnh hưởng gì?",
+    "aliases": [
+      "Có nên để nước trong đĩa lót chậu không?",
+      "Nước thừa dưới chậu có hại không?"
+    ],
+    "answer": "Với chậu trồng đất thông thường, nước đọng có thể làm giá thể ẩm kéo dài và giảm độ thoáng quanh rễ. Sau khi nước thừa thoát ra, nên đổ bỏ nước đọng. Chậu tự tưới hoặc hệ thủy canh cần được sử dụng theo thiết kế riêng.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-007",
+    "topic": "watering",
+    "question": "Vì sao đất trong chậu lâu khô?",
+    "aliases": [
+      "Đất chậu luôn ẩm là vì sao?",
+      "Tại sao tưới lâu rồi đất vẫn ướt?"
+    ],
+    "answer": "Đất lâu khô có thể do giá thể giữ nước nhiều, chậu quá lớn, thoát nước kém hoặc điều kiện ánh sáng và nhiệt độ. Kiểm tra lỗ thoát nước, nước đọng và độ ẩm đất trước khi tưới tiếp. Nếu đất ướt kéo dài kèm cây suy yếu, cần kiểm tra thêm bộ rễ.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-008",
+    "topic": "watering",
+    "question": "Chậu không có lỗ thoát nước có trồng cây được không?",
+    "aliases": [
+      "Trồng cây trong chậu kín có được không?",
+      "Chậu không đục lỗ có sao không?"
+    ],
+    "answer": "Chậu kín làm việc kiểm soát nước thừa khó hơn và có thể tăng nguy cơ úng với cây trồng đất. Cách dễ quản lý hơn là dùng chậu có lỗ thoát nước đặt bên trong chậu trang trí. Hệ trồng chuyên dụng như thủy canh hoặc chậu tự tưới cần có thiết kế và cách chăm sóc phù hợp.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-009",
+    "topic": "watering",
+    "question": "Có nên phun sương thay cho tưới đất không?",
+    "aliases": [
+      "Chỉ phun nước lên lá có đủ không?",
+      "Phun sương có thay tưới gốc được không?"
+    ],
+    "answer": "Với đa số cây trồng chậu trong đất, phun sương lên lá không thay thế việc cung cấp nước cho rễ. Việc tưới vẫn cần dựa trên độ ẩm giá thể và nhu cầu của cây. Không nên giữ lá ướt kéo dài khi môi trường ít thông thoáng.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-010",
+    "topic": "watering",
+    "question": "Cây này cần bao nhiêu nước mỗi lần tưới?",
+    "aliases": [
+      "Mỗi lần tưới bao nhiêu ml?",
+      "Một cây cần lượng nước bao nhiêu?"
+    ],
+    "answer": "Không có một lượng nước cố định phù hợp cho mọi cây. Bạn cho biết tên cây, kích thước chậu, loại đất và vị trí trồng nhé; đồng thời kiểm tra chậu có lỗ thoát nước và đất hiện khô hay ẩm. Những thông tin này giúp xác định cách tưới phù hợp hơn.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-011",
+    "topic": "light_and_environment",
+    "question": "Cây trầu bà thích hợp với ánh sáng thế nào?",
+    "aliases": [
+      "Trầu bà nên đặt ở đâu?",
+      "Trầu bà có cần nắng không?"
+    ],
+    "answer": "Trầu bà thường phù hợp với ánh sáng gián tiếp tương đối sáng. Khả năng chịu ít sáng không có nghĩa là cây phát triển tốt trong góc tối hoặc không có ánh sáng. Cần tránh thay đổi đột ngột sang nắng mạnh và điều chỉnh theo giống cây, vị trí thực tế.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-012",
+    "topic": "light_and_environment",
+    "question": "Sen đá có phù hợp với góc phòng tối không?",
+    "aliases": [
+      "Để sen đá trong phòng tối được không?",
+      "Sen đá có chịu thiếu sáng không?"
+    ],
+    "answer": "Phần lớn sen đá không phù hợp với góc phòng tối lâu dài. Tuy nhiên, nhu cầu ánh sáng khác nhau giữa các loài. Bạn nên xác định loại sen đá và lượng sáng thực tế để chọn vị trí phù hợp hoặc bổ sung đèn trồng cây.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-013",
+    "topic": "light_and_environment",
+    "question": "Làm sao biết cây có thể bị thiếu sáng?",
+    "aliases": [
+      "Dấu hiệu cây thiếu nắng là gì?",
+      "Nhận biết cây thiếu ánh sáng thế nào?"
+    ],
+    "answer": "Cây thiếu sáng có thể vươn dài, khoảng cách giữa các lá tăng hoặc phát triển yếu. Những biểu hiện này cần được đối chiếu với đặc điểm của loài và điều kiện chăm sóc khác. Bạn cho biết tên cây và vị trí đặt cây nhé.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-014",
+    "topic": "light_and_environment",
+    "question": "Những dấu hiệu nào có thể do nắng quá mạnh?",
+    "aliases": [
+      "Cây bị cháy nắng có biểu hiện gì?",
+      "Làm sao biết cây bị nắng gắt?"
+    ],
+    "answer": "Ánh sáng quá mạnh có thể gây vùng lá bạc màu, khô hoặc cháy, nhất là sau khi cây được chuyển đột ngột ra nắng. Tuy nhiên, các dấu hiệu này cũng có thể có nguyên nhân khác. Cần xem vị trí tổn thương và thời điểm thay đổi môi trường để đánh giá.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-015",
+    "topic": "light_and_environment",
+    "question": "Có nên đưa cây trong nhà ra nắng mạnh ngay không?",
+    "aliases": [
+      "Chuyển cây ra nắng ngay được không?",
+      "Cây đang trong nhà mang ra nắng gắt có sao không?"
+    ],
+    "answer": "Không nên chuyển đột ngột cây đang quen trong nhà ra nắng mạnh. Nếu loài cây phù hợp với vị trí mới, hãy cho cây thích nghi dần và theo dõi lá. Mức ánh sáng cuối cùng vẫn phải phù hợp với nhu cầu của cây.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-016",
+    "topic": "light_and_environment",
+    "question": "Cây có sống được trong phòng không có ánh sáng tự nhiên không?",
+    "aliases": [
+      "Phòng không có cửa sổ có trồng cây được không?",
+      "Cây sống trong phòng tối hoàn toàn được không?"
+    ],
+    "answer": "Cây cần nguồn sáng phù hợp để quang hợp. Phòng không có ánh sáng tự nhiên có thể trồng cây nếu có đèn trồng cây đáp ứng nhu cầu của loài. Không nên hiểu cây chịu bóng là có thể sống khỏe lâu dài trong tối hoàn toàn.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-017",
+    "topic": "light_and_environment",
+    "question": "Đặt cây sát máy lạnh có ảnh hưởng gì?",
+    "aliases": [
+      "Cây để trước điều hòa có sao không?",
+      "Gió máy lạnh có hại cho cây không?"
+    ],
+    "answer": "Gió máy lạnh thổi trực tiếp có thể làm một số cây bị ảnh hưởng bởi lạnh hoặc khô. Nên đặt cây tránh luồng gió trực tiếp, đồng thời theo dõi nhiệt độ và độ ẩm đất. Mức độ ảnh hưởng tùy loại cây và vị trí đặt, nên không giữ lịch tưới cũ một cách máy móc.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-018",
+    "topic": "light_and_environment",
+    "question": "Vì sao cây nghiêng về phía cửa sổ?",
+    "aliases": [
+      "Cây mọc lệch về phía có nắng là vì sao?",
+      "Cây hướng ra cửa sổ có bình thường không?"
+    ],
+    "answer": "Cây có thể phát triển hướng về nguồn sáng. Bạn nên kiểm tra ánh sáng có phân bố lệch hoặc chưa phù hợp không, rồi điều chỉnh vị trí hay xoay chậu khi phù hợp với loài. Nếu thân yếu hoặc cây nghiêng bất thường, cần kiểm tra thêm nguyên nhân khác.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-019",
+    "topic": "soil_and_nutrition",
+    "question": "Sen đá cần đất có đặc điểm gì?",
+    "aliases": [
+      "Đất trồng sen đá cần thế nào?",
+      "Sen đá nên dùng giá thể gì?"
+    ],
+    "answer": "Sen đá thường cần giá thể thoáng và thoát nước tốt để tránh giữ ẩm quá lâu quanh rễ. Thành phần phù hợp còn tùy loài, chậu và môi trường trồng. Không nên áp dụng một tỷ lệ phối trộn cố định cho mọi loại sen đá.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-020",
+    "topic": "soil_and_nutrition",
+    "question": "Khi nào nên kiểm tra xem cây có cần thay chậu không?",
+    "aliases": [
+      "Khi nào cần thay chậu cho cây?",
+      "Dấu hiệu cây cần chậu mới là gì?"
+    ],
+    "answer": "Nên kiểm tra khi bộ rễ quá chật, giá thể xuống cấp hoặc việc giữ nước và thoát nước thay đổi bất thường. Chỉ thấy một vài rễ ở lỗ chậu chưa đủ để quyết định. Cần xem tổng thể bộ rễ, tình trạng cây và đặc điểm loài.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-021",
+    "topic": "soil_and_nutrition",
+    "question": "Chậu càng lớn có giúp cây lớn nhanh hơn không?",
+    "aliases": [
+      "Có nên trồng cây nhỏ vào chậu thật lớn không?",
+      "Chậu to có tốt hơn cho cây không?"
+    ],
+    "answer": "Không nhất thiết. Chậu quá lớn so với bộ rễ có thể giữ ẩm lâu và khiến việc tưới khó kiểm soát. Hãy chọn kích thước phù hợp với bộ rễ, loài cây và giá thể thay vì tăng chậu quá nhiều ngay một lần.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-022",
+    "topic": "soil_and_nutrition",
+    "question": "Vì sao đất bị nén chặt có thể ảnh hưởng cây?",
+    "aliases": [
+      "Đất chậu bị chai có hại gì?",
+      "Giá thể quá chặt ảnh hưởng rễ thế nào?"
+    ],
+    "answer": "Giá thể bị nén chặt có thể giảm độ thoáng, thay đổi khả năng thoát nước và làm rễ phát triển khó khăn. Cần kiểm tra tình trạng giá thể và nhu cầu của cây trước khi thay hoặc cải thiện giá thể.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-023",
+    "topic": "soil_and_nutrition",
+    "question": "Có nên bón phân thật nhiều để cây nhanh lớn không?",
+    "aliases": [
+      "Bón nhiều phân có tốt không?",
+      "Tăng phân có giúp cây lớn nhanh không?"
+    ],
+    "answer": "Không nên. Bón quá mức có thể gây tích tụ muối và tổn thương cây. Việc bón cần phù hợp loài, giai đoạn phát triển và hướng dẫn của sản phẩm; phân bón không thay thế ánh sáng, nước hoặc bộ rễ khỏe.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-024",
+    "topic": "soil_and_nutrition",
+    "question": "Lá vàng có chắc là cây thiếu phân không?",
+    "aliases": [
+      "Cây vàng lá có cần bón phân ngay không?",
+      "Vàng lá có phải thiếu dinh dưỡng không?"
+    ],
+    "answer": "Không. Lá vàng có thể liên quan đến nước, ánh sáng, rễ, tuổi lá, sâu bệnh hoặc dinh dưỡng. Cần xác định nguyên nhân trước khi bổ sung phân vì bón thêm khi không cần có thể làm tình trạng nặng hơn.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-025",
+    "topic": "soil_and_nutrition",
+    "question": "Có nên bón phân ngay khi cây đang héo hoặc yếu không?",
+    "aliases": [
+      "Cây yếu có cần thêm phân không?",
+      "Cây héo bón phân có khỏe lại không?"
+    ],
+    "answer": "Không nên mặc định bón phân ngay. Trước tiên cần kiểm tra nước, ánh sáng, rễ và nguyên nhân cây suy yếu. Nếu rễ đang tổn thương hoặc giá thể có vấn đề, bón thêm phân có thể gây bất lợi.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-026",
+    "topic": "soil_and_nutrition",
+    "question": "Lớp trắng trên mặt đất chậu là gì?",
+    "aliases": [
+      "Đất chậu có mảng trắng là bị gì?",
+      "Mặt đất xuất hiện lớp trắng có phải nấm không?"
+    ],
+    "answer": "Lớp trắng có thể là muối khoáng tích tụ hoặc nấm phát triển trên bề mặt; chỉ mô tả màu trắng chưa đủ xác định. Bạn cho biết lớp này dạng cứng hay bông, đất có ẩm lâu không và loại nước đang dùng. Chưa nên kết luận cây mắc bệnh chỉ từ lớp trắng trên đất.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-027",
+    "topic": "leaf_symptoms",
+    "question": "Lá cây vàng có chắc do thiếu nước không?",
+    "aliases": [
+      "Vàng lá có phải thiếu nước không?",
+      "Lá vàng thì cần tưới thêm đúng không?"
+    ],
+    "answer": "Không. Lá vàng có thể do nhiều nguyên nhân, bao gồm tưới quá mức, thiếu nước, ánh sáng, rễ hoặc lão hóa. Bạn cho biết tên cây, lá nào bị vàng, đất đang khô hay ẩm và lịch tưới gần đây để khoanh vùng nguyên nhân.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-028",
+    "topic": "leaf_symptoms",
+    "question": "Một vài lá già phía dưới vàng có phải cây bị bệnh không?",
+    "aliases": [
+      "Lá già vàng có bình thường không?",
+      "Chỉ lá dưới vàng thì cây có bệnh không?"
+    ],
+    "answer": "Một vài lá già vàng có thể thuộc quá trình lão hóa tự nhiên, nhưng cần xem tốc độ vàng và các dấu hiệu đi kèm. Nếu nhiều lá vàng nhanh, cây héo hoặc đất ẩm kéo dài thì nên kiểm tra thêm. Chưa thể kết luận có bệnh chỉ từ vị trí lá vàng.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-029",
+    "topic": "leaf_symptoms",
+    "question": "Vì sao đầu lá hoặc mép lá bị khô?",
+    "aliases": [
+      "Tại sao cây bị cháy đầu lá?",
+      "Mép lá khô là do đâu?"
+    ],
+    "answer": "Đầu hoặc mép lá khô có thể liên quan đến thiếu nước, điều kiện môi trường hoặc muối khoáng tích tụ, tùy loại cây. Hãy kiểm tra độ ẩm đất và việc bón phân trước khi xử lý; không mặc định cần tưới hoặc bón thêm. Bạn đang trồng cây gì và đặt ở đâu?",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-030",
+    "topic": "leaf_symptoms",
+    "question": "Cây mới mua về rụng lá có thể do đâu?",
+    "aliases": [
+      "Cây vừa mua bị rụng lá là vì sao?",
+      "Đem cây về nhà thì lá rụng có sao không?"
+    ],
+    "answer": "Cây có thể phản ứng với thay đổi ánh sáng, nhiệt độ, độ ẩm hoặc cách tưới sau khi chuyển nơi trồng. Tuy nhiên, vẫn cần kiểm tra sâu bệnh và tình trạng rễ nếu có dấu hiệu bất thường. Bạn cho biết tên cây và thời gian bắt đầu rụng lá nhé.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-031",
+    "topic": "leaf_symptoms",
+    "question": "Lá cuộn lại có nghĩa là cây thiếu nước không?",
+    "aliases": [
+      "Lá xoăn có phải thiếu nước không?",
+      "Cây cuộn lá thì cần tưới thêm không?"
+    ],
+    "answer": "Không nhất thiết. Lá cuộn có thể liên quan đến đặc điểm loài, nước, nhiệt độ, ánh sáng hoặc sâu hại. Hãy kiểm tra độ ẩm đất và các dấu hiệu đi kèm trước khi tưới thêm.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-032",
+    "topic": "leaf_symptoms",
+    "question": "Lá đã bị cháy có xanh lại như cũ không?",
+    "aliases": [
+      "Phần lá cháy có hồi phục không?",
+      "Lá khô cháy có xanh lại được không?"
+    ],
+    "answer": "Phần mô lá đã chết thường không xanh lại. Việc chăm sóc phù hợp nhằm bảo vệ phần còn khỏe và hỗ trợ lá mới phát triển. Cần xác định nguyên nhân gây cháy để tránh tổn thương tiếp diễn.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-033",
+    "topic": "leaf_symptoms",
+    "question": "Cây rụng nhiều lá đột ngột thì cần kiểm tra gì trước?",
+    "aliases": [
+      "Cây rụng lá hàng loạt phải kiểm tra gì?",
+      "Tự nhiên cây rụng nhiều lá là vì sao?"
+    ],
+    "answer": "Trước tiên hãy kiểm tra độ ẩm đất và những thay đổi gần đây về vị trí, ánh sáng hoặc nhiệt độ. Tiếp theo quan sát lá, thân và dấu hiệu sâu bệnh; kiểm tra rễ nếu có lý do nghi ngờ. Không tăng nước hoặc phân ngay khi chưa rõ nguyên nhân. Bạn đang trồng cây gì?",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-034",
+    "topic": "leaf_symptoms",
+    "question": "Cây bị héo thì nó mắc bệnh gì?",
+    "aliases": [
+      "Cây rũ xuống là bệnh gì?",
+      "Nhìn cây héo có biết bệnh không?"
+    ],
+    "answer": "Chỉ có dấu hiệu héo thì chưa đủ xác định bệnh. Cây có thể héo do thiếu nước, rễ bị tổn thương hoặc điều kiện môi trường. Hãy kiểm tra độ ẩm đất trước khi tưới thêm. Bạn cho biết tên cây, vị trí trồng và thời điểm bắt đầu héo nhé.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-035",
+    "topic": "disease_and_pests",
+    "question": "Cây có những dấu hiệu nào khiến nghi ngờ thối rễ?",
+    "aliases": [
+      "Nhận biết cây có thể bị thối rễ thế nào?",
+      "Dấu hiệu nghi thối rễ là gì?"
+    ],
+    "answer": "Cây héo hoặc suy yếu dù đất còn ẩm là dấu hiệu cần kiểm tra thêm bộ rễ. Rễ mềm nhũn, phần mô dễ bong hoặc mùi bất thường có thể cho thấy rễ bị tổn thương. Màu rễ hay lá vàng riêng lẻ chưa đủ để kết luận thối rễ hoặc xác định tác nhân gây bệnh.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-036",
+    "topic": "disease_and_pests",
+    "question": "Rễ màu nâu có chắc là bị thối không?",
+    "aliases": [
+      "Rễ nâu là rễ thối đúng không?",
+      "Màu rễ tối có phải cây bị bệnh không?"
+    ],
+    "answer": "Không. Màu rễ có thể thay đổi theo loài, tuổi rễ và giá thể. Cần kiểm tra thêm độ chắc, tình trạng mô, mùi và sức khỏe của cây; không nên kết luận thối rễ chỉ dựa vào màu nâu.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-037",
+    "topic": "disease_and_pests",
+    "question": "Lá có đốm nâu có chắc là bệnh nấm không?",
+    "aliases": [
+      "Đốm nâu trên lá có phải nấm không?",
+      "Lá đốm có chắc bị bệnh không?"
+    ],
+    "answer": "Không. Đốm nâu có thể liên quan đến tổn thương môi trường, sâu hại hoặc bệnh. Cần biết tên cây, hình dạng và vị trí đốm, tốc độ lan và điều kiện chăm sóc để đánh giá thêm.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-038",
+    "topic": "disease_and_pests",
+    "question": "Bệnh phấn trắng trên hoa hồng thường có biểu hiện gì?",
+    "aliases": [
+      "Phấn trắng hoa hồng nhận biết thế nào?",
+      "Hoa hồng bị phấn trắng có dấu hiệu gì?"
+    ],
+    "answer": "Bệnh phấn trắng có thể tạo lớp trắng dạng bột trên lá, chồi hoặc bộ phận non; phần bị ảnh hưởng có thể biến dạng. Tuy nhiên, không phải mọi lớp trắng đều là phấn trắng. Cần quan sát kỹ và đối chiếu triệu chứng trước khi kết luận.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-039",
+    "topic": "disease_and_pests",
+    "question": "Rệp sáp thường có dấu hiệu gì trên cây?",
+    "aliases": [
+      "Làm sao nhận biết rệp sáp?",
+      "Rệp sáp trên cây trông thế nào?"
+    ],
+    "answer": "Một số rệp sáp có lớp sáp trắng như bông, thường xuất hiện ở vị trí kín như nách lá hoặc đốt thân. Cây có thể có dịch dính và sinh trưởng yếu. Cần quan sát tác nhân trực tiếp vì cặn hoặc lớp trắng khác có thể gây nhầm lẫn.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-040",
+    "topic": "disease_and_pests",
+    "question": "Những dấu hiệu nào khiến nghi ngờ cây có nhện hại?",
+    "aliases": [
+      "Nhện hại cây có dấu hiệu gì?",
+      "Làm sao biết cây có nhện đỏ?"
+    ],
+    "answer": "Lá có nhiều chấm nhạt nhỏ, đổi màu và đôi khi có tơ mịn có thể là dấu hiệu của một số loài nhện hại. Hãy kiểm tra kỹ mặt dưới lá, có thể dùng kính lúp để quan sát sinh vật nhỏ. Không kết luận có nhện hại chỉ từ một mạng tơ.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-041",
+    "topic": "disease_and_pests",
+    "question": "Chất dính trên lá có thể liên quan sâu hại không?",
+    "aliases": [
+      "Lá có dịch dính là do sâu hại à?",
+      "Vì sao bề mặt lá bị dính?"
+    ],
+    "answer": "Chất dính có thể liên quan đến dịch ngọt do một số côn trùng chích hút tiết ra, nhưng cũng cần phân biệt với dịch tự nhiên hoặc chất bám từ bên ngoài. Hãy kiểm tra mặt dưới lá, nách lá và thân để tìm tác nhân.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-042",
+    "topic": "disease_and_pests",
+    "question": "Có kiến trên cây thì chắc chắn cây đang bị rệp không?",
+    "aliases": [
+      "Có kiến có nghĩa là cây có rệp không?",
+      "Kiến xuất hiện trên cây có phải do rệp?"
+    ],
+    "answer": "Không chắc chắn. Kiến có thể bị thu hút bởi dịch ngọt của một số côn trùng, nhưng sự xuất hiện của kiến chưa đủ xác nhận có rệp. Cần kiểm tra trực tiếp lá và thân để tìm tác nhân.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-043",
+    "topic": "disease_and_pests",
+    "question": "Lớp đen như muội trên lá có thể là gì?",
+    "aliases": [
+      "Lá có muội đen là bị gì?",
+      "Mặt lá đen như bồ hóng là sao?"
+    ],
+    "answer": "Một khả năng là nấm bồ hóng phát triển trên dịch ngọt do côn trùng tiết ra, nhưng cần phân biệt với bụi hoặc tổn thương khác. Hãy mô tả lớp đen và kiểm tra xem cây có chất dính hoặc côn trùng chích hút không.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-044",
+    "topic": "disease_and_pests",
+    "question": "Bệnh cây có thể lây sang các chậu bên cạnh không?",
+    "aliases": [
+      "Cây bị bệnh có lây sang cây khác không?",
+      "Đặt cạnh cây bệnh có nguy hiểm không?"
+    ],
+    "answer": "Có thể, nhưng còn tùy nguyên nhân. Một số tác nhân gây bệnh có thể lan qua nước, dụng cụ, vật liệu trồng hoặc sinh vật mang truyền. Vấn đề do ánh sáng, nhiệt độ hay cách tưới không tự lây như bệnh do tác nhân gây bệnh. Cần xác định vấn đề cụ thể để chọn biện pháp phòng ngừa.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-045",
+    "topic": "prevention",
+    "question": "Vì sao nên để riêng cây mới mua trước khi đặt cạnh cây cũ?",
+    "aliases": [
+      "Cây mới mua có cần để riêng không?",
+      "Tại sao phải theo dõi cây mới trước khi nhập vườn?"
+    ],
+    "answer": "Để riêng cây mới giúp quan sát dấu hiệu sâu bệnh trước khi đưa vào nhóm cây đang có. Thời gian và cách theo dõi nên dựa trên loại cây và nguy cơ cụ thể; không có một mốc áp dụng cho mọi trường hợp.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-046",
+    "topic": "prevention",
+    "question": "Làm sao giảm nguy cơ bệnh lây giữa các chậu?",
+    "aliases": [
+      "Phòng bệnh lây giữa các cây thế nào?",
+      "Làm sao hạn chế cây bệnh ảnh hưởng cây khác?"
+    ],
+    "answer": "Hãy kiểm tra cây mới, để riêng cây nghi có sâu bệnh khi phù hợp, giữ dụng cụ sạch và tránh chuyển nước hoặc vật liệu có nguy cơ mang tác nhân giữa các chậu. Biện pháp cụ thể tùy loại sâu bệnh và đường lây. Những bước này giúp giảm nguy cơ, không bảo đảm ngăn mọi bệnh.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-047",
+    "topic": "prevention",
+    "question": "Vì sao nên vệ sinh dụng cụ cắt tỉa?",
+    "aliases": [
+      "Kéo cắt cây có cần vệ sinh không?",
+      "Dụng cụ bẩn có làm lây bệnh cây không?"
+    ],
+    "answer": "Dụng cụ có thể mang vật liệu hoặc một số tác nhân từ cây này sang cây khác. Vệ sinh phù hợp giúp giảm nguy cơ đó. Nếu cần khử trùng, hãy dùng phương pháp và hướng dẫn sản phẩm đã được kiểm chứng thay vì tự pha hóa chất.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-048",
+    "topic": "prevention",
+    "question": "Lá thường xuyên bị ướt có làm cây dễ bệnh hơn không?",
+    "aliases": [
+      "Lá ướt lâu có dễ bị bệnh không?",
+      "Nước đọng trên lá có ảnh hưởng gì?"
+    ],
+    "answer": "Lá ướt kéo dài có thể tạo điều kiện thuận lợi cho một số tác nhân gây bệnh, nhất là khi môi trường phù hợp với tác nhân đó. Tuy nhiên, ảnh hưởng tùy cây, bệnh và điều kiện trồng; không phải mọi bệnh đều cần lá ướt để phát triển.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-049",
+    "topic": "insufficient_information",
+    "question": "Chỉ nhìn lá vàng có xác định chính xác bệnh được không?",
+    "aliases": [
+      "Thấy lá vàng có chẩn đoán được bệnh không?",
+      "Một dấu hiệu vàng lá có đủ biết bệnh không?"
+    ],
+    "answer": "Không. Vàng lá là dấu hiệu có thể xuất hiện do nhiều nguyên nhân. Cần thêm tên cây, vị trí lá bị ảnh hưởng, diễn tiến, độ ẩm đất, ánh sáng và các dấu hiệu khác; một số trường hợp cần kiểm tra chuyên môn để xác định.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  },
+  {
+    "id": "AI-050",
+    "topic": "insufficient_information",
+    "question": "Cây TestPlantXYZ bị đốm lá thì nguyên nhân là gì?",
+    "aliases": [
+      "TestPlantXYZ bị vàng lá là bệnh gì?",
+      "Chăm cây TestPlantXYZ như thế nào?"
+    ],
+    "answer": "Mình chưa xác định được cây có tên TestPlantXYZ nên chưa thể kết luận nguyên nhân đốm lá. Bạn hãy kiểm tra lại tên hoặc cung cấp tên khoa học, đồng thời mô tả vị trí, hình dạng đốm và thời điểm xuất hiện. Mình sẽ không suy đoán đặc điểm riêng của cây khi chưa xác định được tên.",
+    "sources": [],
+    "status": "draft",
+    "language": "vi"
+  }
+]

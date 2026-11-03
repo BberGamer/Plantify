@@ -1,11 +1,14 @@
 const AppError = require("../../utils/app-error");
 
 // Đọc cấu hình khi gọi để không ảnh hưởng các module khác khi chưa cấu hình AI.
-const complete = async (messages) => {
+const complete = async (messages, options = {}) => {
   const key = process.env.AI_API_KEY?.trim();
-  const model = process.env.AI_MODEL?.trim();
+  const model = options.model || process.env.AI_MODEL?.trim();
+  const maxTokens = options.maxTokens || 1200;
+  if (!Number.isInteger(maxTokens) || maxTokens < 1 || maxTokens > 2000)
+    throw new Error("Invalid AI output limit");
   const base = process.env.AI_BASE_URL?.trim() || "https://platform.beeknoee.com/api/v1";
-  const timeout = Number(process.env.AI_TIMEOUT_MS || 30000);
+  const timeout = Number(options.timeoutMs ?? process.env.AI_TIMEOUT_MS ?? 30000);
   let url;
   try {
     url = new URL(`${base.replace(/\/$/, "")}/chat/completions`);
@@ -15,7 +18,7 @@ const complete = async (messages) => {
     throw new AppError("AI_NOT_CONFIGURED", 503, "Trợ lý AI chưa được cấu hình.");
   }
   if (!key || !model || model === "MODEL_ID_CUA_BAN" ||
-      !Number.isInteger(timeout) || timeout < 1000 || timeout > 45000)
+      !Number.isInteger(timeout) || timeout < 1000 || timeout > (options.timeoutMs !== undefined ? 90000 : 45000))
     throw new AppError("AI_NOT_CONFIGURED", 503, "Trợ lý AI chưa được cấu hình.");
 
   const controller = new AbortController();
@@ -25,7 +28,7 @@ const complete = async (messages) => {
       method: "POST",
       redirect: "error",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, messages, max_tokens: 1200, stream: false }),
+      body: JSON.stringify({ model, messages, max_tokens: maxTokens, stream: false }),
       signal: controller.signal,
     });
     if (!response.ok) {
