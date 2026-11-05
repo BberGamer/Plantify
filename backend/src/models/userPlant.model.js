@@ -6,7 +6,7 @@ const userPlantSchema = new mongoose.Schema(
     plant_id: { type: mongoose.Schema.Types.ObjectId, ref: "Plant", default: null },
     plant_nickname: { type: String, required: true, trim: true, maxlength: 150 },
     custom_species_name: { type: String, trim: true, default: "", maxlength: 200 },
-    category_id: { type: mongoose.Schema.Types.ObjectId, ref: "PlantCategory", required: true },
+    category_id: { type: mongoose.Schema.Types.ObjectId, ref: "PlantCategory", default: null },
     species_snapshot: {
       common_name: { type: String, default: "" },
       category_name: { type: String, default: "" },
@@ -19,6 +19,7 @@ const userPlantSchema = new mongoose.Schema(
       validate: (value) => !value || /^https?:\/\/\S+$/i.test(value),
     },
     health_status: { type: String, enum: ["healthy", "treatment"], default: "healthy" },
+    is_under_treatment: { type: Boolean, default: false },
     acquisition_date: { type: Date, default: null },
     archived_at: { type: Date, default: null },
   },

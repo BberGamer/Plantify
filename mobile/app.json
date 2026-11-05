@@ -18,6 +18,23 @@
     "plugins": [
       "expo-router",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Cho phép Plantify sử dụng camera để chụp ảnh cây.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Cho phép Plantify chọn ảnh cây từ thư viện.",
+          "cameraPermission": "Cho phép Plantify sử dụng camera để chụp ảnh cây.",
+          "microphonePermission": false
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#ffffff"

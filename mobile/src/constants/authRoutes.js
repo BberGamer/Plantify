@@ -1,7 +1,7 @@
 export const ROLE_ROUTES = {
   admin: "/admin/users",
   manager: "/manager/plants",
-  customer: "/(tabs)",
+  customer: "/customer",
 };
 
 export function getAuthRedirect(
@@ -9,13 +9,14 @@ export function getAuthRedirect(
   group,
 ) {
   if (!hasHydrated || isRestoring) return null;
-  if (!isAuthenticated) return group === "(auth)" ? null : "/(auth)/login";
+  if (!isAuthenticated) return group === "auth" ? null : "/auth/login";
   if (
     !group ||
-    group === "(auth)" ||
+    group === "index" ||
+    group === "auth" ||
     (group === "admin" && role !== "admin") ||
     (group === "manager" && role !== "manager") ||
-    (group === "(tabs)" && role !== "customer")
+    (group === "customer" && role !== "customer")
   ) {
     return ROLE_ROUTES[role] || ROLE_ROUTES.customer;
   }

@@ -18,7 +18,7 @@ export default function PlantDirectoryScreen() {
   return (
     <SafeAreaView
       style={styles.safeArea}
-      edges={["top", "left", "right", "bottom"]}
+      edges={["top", "left", "right"]}
     >
       <PlantDirectoryHeader onBack={() => router.back()} />
       <PlantDirectoryFilters
@@ -54,6 +54,7 @@ export default function PlantDirectoryScreen() {
         </View>
       ) : (
         <FlatList
+          style={styles.list}
           data={directory.plants}
           refreshing={directory.refreshing}
           onRefresh={directory.refresh}
@@ -94,6 +95,7 @@ export default function PlantDirectoryScreen() {
   );
 }
 const styles = StyleSheet.create({
+  list: { flex: 1 },
   safeArea: {
     flex: 1,
     backgroundColor: "#F9FAF9",
@@ -115,7 +117,7 @@ const styles = StyleSheet.create({
   // Grid
   grid: {
     paddingHorizontal: 12,
-    paddingBottom: 20,
+    paddingBottom: 40,
     paddingTop: 4,
   },
   columnWrapper: {

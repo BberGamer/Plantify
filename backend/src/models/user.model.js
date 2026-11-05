@@ -39,6 +39,9 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    notification_preferences: {
+      treatment_reminders: { type: Boolean, default: true },
+    },
     // Phan biet tai khoan dang ky qua Google va tai khoan email thuong
     isGoogleAccount: {
       type: Boolean,
