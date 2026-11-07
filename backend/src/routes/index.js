@@ -12,6 +12,7 @@ router.use("/admin/users", userRoutes);
 router.use("/plants", plantRoutes);
 router.use("/diseases", diseaseRoutes);
 router.use("/garden/plants", require("./garden.routes"));
+router.use("/favorites/plants", require("./favorite.routes"));
 router.use("/chat", require("./chat.routes"));
 router.use("/treatments", require("./treatment.routes"));
 

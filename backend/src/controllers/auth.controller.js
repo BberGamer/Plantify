@@ -2,7 +2,15 @@ const validate = require("../validators/auth.validator");
 const v = require("../validators/common");
 // controllers/auth.controller.js - Dieu phoi request & response cho module Auth
 const authService = require("../services/auth.service");
+const googleAuth = require("../services/google-auth.service");
 const { success } = require("../utils/api-response");
+
+const googleAction = (action, message) => async (req, res, next) => {
+  try {
+    res.set("Cache-Control", "no-store");
+    return success(res, message, await action(req.body));
+  } catch (error) { next(error); }
+};
 
 /**
  * [POST] /register/send-otp
@@ -122,6 +130,9 @@ const updateProfile = async (req, res, next) => {
 };
 
 module.exports = {
+  googleChallenge: googleAction(() => googleAuth.challenge(), "Đã tạo phiên xác thực Google."),
+  googleLogin: googleAction(googleAuth.login, "Đã xác minh tài khoản Google."),
+  completeGoogle: googleAction(googleAuth.complete, "Đăng ký bằng Google thành công."),
   updateProfile,
   sendRegisterOTP,
   verifyRegisterOTP,

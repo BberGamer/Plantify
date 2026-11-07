@@ -27,6 +27,15 @@ const generateJwtToken = (user) => {
   );
 };
 
+const createSession = (user) => {
+  const userObj = user.toObject();
+  delete userObj.password;
+  delete userObj.resetPasswordOTP;
+  delete userObj.resetPasswordOTPExpires;
+  delete userObj.googleSub;
+  return { user: userObj, token: generateJwtToken(user) };
+};
+
 // === PHAN 1: DANG KY TAI KHOAN CO OTP ===
 
 const sendRegisterOTP = async (userData) => {
@@ -118,13 +127,7 @@ const verifyRegisterOTP = async (email, otp) => {
 
   pendingRegistrations.delete(normalizedEmail);
 
-  const token = generateJwtToken(newUser);
-  const userObj = newUser.toObject();
-  delete userObj.password;
-  delete userObj.resetPasswordOTP;
-  delete userObj.resetPasswordOTPExpires;
-
-  return { user: userObj, token };
+  return createSession(newUser);
 };
 
 // === PHAN 2: DANG NHAP & DANG XUAT ===
@@ -167,13 +170,7 @@ const login = async (email, password) => {
     );
   }
 
-  const token = generateJwtToken(user);
-  const userObj = user.toObject();
-  delete userObj.password;
-  delete userObj.resetPasswordOTP;
-  delete userObj.resetPasswordOTPExpires;
-
-  return { user: userObj, token };
+  return createSession(user);
 };
 
 const logout = async (userId) => {
@@ -183,7 +180,7 @@ const logout = async (userId) => {
 const getMe = async (userId) => {
   v.id(userId);
   const user = await User.findById(userId).select(
-    "-password -resetPasswordOTP -resetPasswordOTPExpires",
+    "-password -resetPasswordOTP -resetPasswordOTPExpires -googleSub",
   );
   if (!user) {
     throw new AppError(
@@ -297,7 +294,7 @@ const updateProfile = async (userId, input = {}) => {
   const sensitiveChange =
     normalizedEmail !== user.email || newPassword !== undefined;
   if (sensitiveChange) {
-    if (user.isGoogleAccount)
+    if (user.isGoogleAccount && !user.password)
       throw new AppError(
         "GOOGLE_ACCOUNT",
         400,
@@ -360,6 +357,7 @@ const updateProfile = async (userId, input = {}) => {
 };
 
 module.exports = {
+  createSession,
   updateProfile,
   sendRegisterOTP,
   verifyRegisterOTP,

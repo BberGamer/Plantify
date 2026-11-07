@@ -25,24 +25,34 @@ const adaptList = (envelope) => {
   };
 };
 
+const plantBody = async (fields, photo) => {
+  if (!photo) return fields;
+  const body = new FormData();
+  for (const [key, value] of Object.entries(fields)) body.append(key, value === null ? "" : String(value));
+  if (Platform.OS === "web") {
+    const blob = await (await fetch(photo.uri)).blob();
+    body.append("photo", blob, photo.fileName || "plant.jpg");
+  } else {
+    body.append("photo", { uri: photo.uri, name: photo.fileName || "plant.jpg", type: photo.mimeType || "image/jpeg" });
+  }
+  return body;
+};
+
+const plantRequestOptions = (photo, sessionContext) => ({
+  sessionContext,
+  ...(photo ? { headers: { "Content-Type": Platform.OS === "web" ? false : "multipart/form-data" } } : {}),
+});
+
 export default {
   createPlant: async (fields, photo) => {
     const sessionContext = getSessionContext();
-    let body = fields;
-    if (photo) {
-      body = new FormData();
-      for (const [key, value] of Object.entries(fields)) body.append(key, String(value));
-      if (Platform.OS === "web") {
-        const blob = await (await fetch(photo.uri)).blob();
-        body.append("photo", blob, photo.fileName || "plant.jpg");
-      } else {
-        body.append("photo", { uri: photo.uri, name: photo.fileName || "plant.jpg", type: photo.mimeType || "image/jpeg" });
-      }
-    }
-    return (await api.post("/garden/plants", body, {
-      sessionContext,
-      ...(photo ? { headers: { "Content-Type": Platform.OS === "web" ? false : "multipart/form-data" } } : {}),
-    })).data;
+    const body = await plantBody(fields, photo);
+    return (await api.post("/garden/plants", body, plantRequestOptions(photo, sessionContext))).data;
+  },
+  updatePlant: async (id, fields, photo) => {
+    const sessionContext = getSessionContext();
+    const body = await plantBody(fields, photo);
+    return (await api.patch(`/garden/plants/${id}`, body, plantRequestOptions(photo, sessionContext))).data;
   },
   getPlants: async ({ page = 1, limit = 50, search, healthStatus } = {}) => {
     const params = { page, limit };

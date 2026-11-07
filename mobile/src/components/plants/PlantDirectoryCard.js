@@ -2,7 +2,7 @@
 
 import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 
-import { Text } from "react-native-paper";
+import { ActivityIndicator, Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
 
@@ -10,12 +10,17 @@ export default function PlantDirectoryCard(
   {
     item,
     onOpen,
+    showFavorite = false,
+    isFavorite = false,
+    favoriteBusy = false,
+    onToggleFavorite,
   },
 ) {
   const catName = item.category_id?.category_name || "";
 
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.88} onPress={() => onOpen(item._id)}>
+    <View style={styles.card}>
+    <TouchableOpacity activeOpacity={0.88} onPress={() => onOpen(item._id)} accessibilityLabel={`Xem chi tiết ${item.common_name}`}>
       <View style={styles.imageWrapper}>
         <Image
           source={{
@@ -36,7 +41,7 @@ export default function PlantDirectoryCard(
         <Text style={styles.cardScientific} numberOfLines={1}>
           {item.scientific_name}
         </Text>
-        <View style={styles.cardFooter}>
+        <View style={[styles.cardFooter, showFavorite && styles.footerWithFavorite]}>
           <Ionicons name="water-outline" size={12} color={colors.primaryLight} />
           <Text style={styles.cardWater} numberOfLines={1}>
             {item.care_requirements?.water || ""}
@@ -44,10 +49,20 @@ export default function PlantDirectoryCard(
         </View>
       </View>
     </TouchableOpacity>
+    {showFavorite && <TouchableOpacity style={styles.favoriteButton} disabled={favoriteBusy}
+      accessibilityRole="button" accessibilityLabel={`${isFavorite ? "Bỏ yêu thích" : "Yêu thích"} ${item.common_name}`}
+      accessibilityState={{ disabled: favoriteBusy, selected: isFavorite, busy: favoriteBusy }}
+      onPress={() => onToggleFavorite(item._id)}>
+      {favoriteBusy ? <ActivityIndicator size={20} color={colors.primary} />
+        : <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={24} color={isFavorite ? colors.statusError : colors.textSecondary} />}
+    </TouchableOpacity>}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  favoriteButton: { position: "absolute", bottom: 0, right: 2, width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  footerWithFavorite: { paddingRight: 36, minHeight: 22 },
   // Card
   card: {
     width: "48.5%",

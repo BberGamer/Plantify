@@ -7,6 +7,7 @@ import { useRouter } from "expo-router";
 import { colors } from "../../src/theme/colors";
 import Navbar from "../../src/components/navigation/Navbar";
 import usePlantDirectory from "../../src/hooks/usePlantDirectory";
+import useFavoriteActions from "../../src/hooks/useFavoriteActions";
 import PlantDirectoryHeader from "../../src/components/plants/PlantDirectoryHeader";
 import PlantDirectoryFilters from "../../src/components/plants/PlantDirectoryFilters";
 import PlantDirectoryCard from "../../src/components/plants/PlantDirectoryCard";
@@ -14,6 +15,7 @@ import ListPagination from "../../src/components/common/ListPagination";
 import ListError from "../../src/components/common/ListError";
 export default function PlantDirectoryScreen() {
   const directory = usePlantDirectory();
+  const favorite = useFavoriteActions(directory.plants);
   const router = useRouter();
   return (
     <SafeAreaView
@@ -39,6 +41,7 @@ export default function PlantDirectoryScreen() {
       <View style={styles.resultRow}>
         <Text style={styles.resultCount}>{directory.total} loài cây</Text>
       </View>
+      {!!favorite.error && <ListError message={favorite.error} onRetry={favorite.retry} />}
       {directory.loading ? (
         <View style={styles.centerBox}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -56,12 +59,17 @@ export default function PlantDirectoryScreen() {
         <FlatList
           style={styles.list}
           data={directory.plants}
+          extraData={favorite}
           refreshing={directory.refreshing}
           onRefresh={directory.refresh}
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => (
             <PlantDirectoryCard
               item={item}
+              showFavorite={favorite.enabled}
+              isFavorite={favorite.favorites[item._id] === true}
+              favoriteBusy={!!favorite.pending[item._id] || favorite.favorites[item._id] === undefined}
+              onToggleFavorite={favorite.toggle}
               onOpen={(id) =>
                 router.push({
                   pathname: "/plants/PlantList",

@@ -10,7 +10,7 @@ module.exports = async (req, res, next) => {
     if (!user || !user.status)
       throw new AppError("ACCOUNT_INACTIVE", 403, "Tài khoản không còn hoạt động.");
     if (user.role !== "customer")
-      throw new AppError("FORBIDDEN", 403, "Chỉ khách hàng được quản lý vườn cá nhân.");
+      throw new AppError("FORBIDDEN", 403, "Chỉ tài khoản khách hàng được thực hiện thao tác này.");
     next();
   } catch (error) { next(error); }
 };

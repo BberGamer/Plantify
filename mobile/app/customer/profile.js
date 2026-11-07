@@ -5,6 +5,7 @@ import ProfileContent from "../../src/components/profile/ProfileContent";
 export default function CustomerProfileRoute() {
   const router = useRouter();
   return (
-    <ProfileContent onBack={() => router.navigate("/customer")} showNavbar />
+    <ProfileContent onBack={() => router.navigate("/customer")} showNavbar
+      onOpenFavorites={() => router.push("/customer/favorites")} />
   );
 }

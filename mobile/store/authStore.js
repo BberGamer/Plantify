@@ -37,6 +37,7 @@ const useAuthStore = create((set, get) => {
       hasHydrated: true,
       isRestoring: false,
       isLoggingIn: false,
+      googleRegistration: null,
       ...extra,
     });
     return context();
@@ -47,6 +48,7 @@ const useAuthStore = create((set, get) => {
     expected,
     loggingIn,
     canCommit = () => true,
+    registration = null,
   ) => {
     if (expected && !matches(expected)) return cancelled();
     if (authentication)
@@ -54,7 +56,7 @@ const useAuthStore = create((set, get) => {
         success: false,
         error: getErrorMessage(sessionError("REQUEST_IN_PROGRESS")),
       };
-    const attempt = { context: reset({ isLoggingIn: loggingIn }) };
+    const attempt = { context: reset({ isLoggingIn: loggingIn, googleRegistration: registration }) };
     authentication = attempt;
     const cleanup = sessionStorage.clear();
     try {
@@ -65,6 +67,16 @@ const useAuthStore = create((set, get) => {
           response: { data: response },
         });
       if (response?.success !== true) throw sessionError("INVALID_RESPONSE");
+      if (response.data?.nextStep === "complete_profile") {
+        const data = response.data;
+        if (typeof data.registrationTicket !== "string" || !/^[\w-]{43}$/.test(data.registrationTicket) ||
+            !Number.isFinite(data.expiresAt) || data.expiresAt <= Date.now() ||
+            typeof data.profile?.email !== "string" || typeof data.profile?.fullName !== "string")
+          throw sessionError("INVALID_RESPONSE");
+        set({ googleRegistration: { registrationTicket: data.registrationTicket, expiresAt: data.expiresAt,
+          profile: { email: data.profile.email, fullName: data.profile.fullName } }, isLoggingIn: false });
+        return { success: true, requiresProfile: true };
+      }
       const session = normalizeSession(response.data);
       const saved = await sessionStorage.write(
         session,
@@ -72,7 +84,7 @@ const useAuthStore = create((set, get) => {
       );
       if (!saved || !matches(attempt.context) || !canCommit())
         return cancelled();
-      set({ ...session, isAuthenticated: true, isLoggingIn: false });
+      set({ ...session, isAuthenticated: true, isLoggingIn: false, googleRegistration: null });
       return { success: true, user: session.user };
     } catch (error) {
       await cleanup;
@@ -95,6 +107,7 @@ const useAuthStore = create((set, get) => {
     hasHydrated: false,
     isRestoring: true,
     isLoggingIn: false,
+    googleRegistration: null,
 
     loadUser: () => {
       if (get().hasHydrated) return Promise.resolve();
@@ -140,6 +153,19 @@ const useAuthStore = create((set, get) => {
         true,
         canCommit,
       ),
+
+    loginGoogle: (idToken, challengeToken, canCommit) =>
+      establish(() => authService.loginGoogle({ idToken, challengeToken }), null, true, canCommit),
+
+    completeGoogle: (fields, expected, canCommit) => {
+      const registration = get().googleRegistration;
+      if (!registration || registration.expiresAt <= Date.now()) return Promise.resolve({
+        success: false, error: getErrorMessage({ code: "GOOGLE_FLOW_EXPIRED" }),
+      });
+      return establish(() => authService.completeGoogle({ ...fields, registrationTicket: registration.registrationTicket }),
+        expected, true, canCommit, registration);
+    },
+    clearGoogleRegistration: () => { if (!authentication) set({ googleRegistration: null }); },
 
     setAuthSession: (user, token, expected, canCommit) => {
       if (get().isAuthenticated) return Promise.resolve(cancelled());
