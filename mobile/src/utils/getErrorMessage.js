@@ -1,5 +1,12 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  GOOGLE_NOT_CONFIGURED: "Chưa cấu hình đăng nhập Google. Vui lòng thử lại sau.",
+  GOOGLE_TOKEN_INVALID: "Không xác minh được tài khoản Google. Vui lòng chọn tài khoản lại.",
+  GOOGLE_FLOW_EXPIRED: "Phiên xác thực Google đã hết hạn. Vui lòng quay lại chọn tài khoản Google.",
+  GOOGLE_ACCOUNT_CONFLICT: "Tài khoản vừa được đăng ký hoặc liên kết. Vui lòng quay lại đăng nhập Google.",
+  GOOGLE_LINK_REQUIRED: "Email này cần xác minh bổ sung. Vui lòng dùng đăng ký hoặc đăng nhập bằng email.",
+  GOOGLE_BUSY: "Có nhiều yêu cầu đăng nhập Google. Vui lòng thử lại sau.",
+  GOOGLE_SCRIPT_ERROR: "Không tải được đăng nhập Google. Kiểm tra kết nối hoặc thử lại.",
   EVALUATION_DISABLED: "Chế độ đánh giá AI đang tắt.",
   INVALID_PHOTO: "Vui lòng chọn một ảnh JPG hoặc PNG hợp lệ, tối đa 10 MB (tối đa 40 triệu điểm ảnh).",
   UPLOAD_NOT_CONFIGURED: "Máy chủ chưa cấu hình lưu ảnh. Bạn có thể bỏ ảnh để lưu cây trước.",
