@@ -32,7 +32,7 @@ const payload = (input, creating = false) => {
   }
   if (input.acquisition_date !== undefined) {
     const value = input.acquisition_date;
-    if (value === null) result.acquisition_date = null;
+    if (value === null || (!creating && value === "")) result.acquisition_date = null;
     else {
       if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) v.invalid("acquisition_date");
       const date = new Date(`${value}T00:00:00.000Z`);
