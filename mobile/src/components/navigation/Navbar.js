@@ -57,7 +57,8 @@ export default function Navbar() {
     <View style={[styles.navbar, { paddingBottom: insets.bottom }]}>
       {ITEMS.map((item) => {
         // Dựa vào trang thực tế, không cố định Home đang active như bản cũ.
-        const isActive = pathname === item.path;
+        const isActive = pathname === item.path ||
+          (item.path === "/customer/profile" && pathname === "/customer/favorites");
         const canNavigate = Boolean(item.href);
         return (
           <Pressable

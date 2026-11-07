@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { List, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ProfileHeader from "./ProfileHeader";
 import ProfileIdentity from "./ProfileIdentity";
@@ -8,7 +9,7 @@ import Navbar from "../navigation/Navbar";
 import useProfile from "../../hooks/useProfile";
 import { colors } from "../../theme/colors";
 
-export default function ProfileContent({ onBack, showNavbar = false }) {
+export default function ProfileContent({ onBack, showNavbar = false, onOpenFavorites }) {
   const profile = useProfile();
 
   return (
@@ -28,6 +29,13 @@ export default function ProfileContent({ onBack, showNavbar = false }) {
           isLoggingOut={profile.isLoggingOut} startEditing={profile.startEditing}
           message={profile.message} form={profile.form} changeField={profile.changeField}
           saving={profile.saving} cancelEditing={profile.cancelEditing} saveProfile={profile.saveProfile} />
+        {onOpenFavorites && <View style={styles.favorites}>
+          <Text variant="titleMedium" style={styles.sectionTitle}>Cây yêu thích</Text>
+          <List.Item title="Cây yêu thích của tôi" onPress={onOpenFavorites}
+            disabled={profile.isLoggingOut} style={styles.favoriteLink}
+            left={(props) => <List.Icon {...props} icon="heart-outline" color={colors.primary} />}
+            right={(props) => <List.Icon {...props} icon="chevron-right" color={colors.primary} />} />
+        </View>}
         <ProfileLogout isLoggingOut={profile.isLoggingOut} saving={profile.saving}
           logoutError={profile.logoutError} handleLogout={profile.handleLogout} />
       </ScrollView>
@@ -37,6 +45,9 @@ export default function ProfileContent({ onBack, showNavbar = false }) {
 }
 
 const styles = StyleSheet.create({
+  favorites: { marginTop: 20, marginBottom: 8, gap: 10 },
+  sectionTitle: { color: colors.textPrimary, fontWeight: "700" },
+  favoriteLink: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 20 },
   safeArea: { flex: 1, backgroundColor: colors.white },
   scroll: { flex: 1 },
   navContent: { paddingBottom: 40 },
