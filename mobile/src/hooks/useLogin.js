@@ -8,6 +8,7 @@ import useScreenScope from "./useScreenScope";
 export default function useLogin() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
+  const loginGoogle = useAuthStore((state) => state.loginGoogle);
   const isLoading = useAuthStore((state) => state.isLoggingIn);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,7 +77,25 @@ export default function useLogin() {
     },
     forgotPassword: () => { if (!isPending()) router.push("/auth/reset-password"); },
     register: () => { if (!isPending()) router.push("/auth/register"); },
-    googleLogin: () =>
-      setLocalError("Tính năng đăng nhập bằng Google đang được phát triển."),
+    googleLogin: async (idToken, challengeToken) => {
+      if (isPending() || !isActive()) return;
+      const inScreen = capture(false);
+      const attempt = {};
+      pending.current = attempt;
+      setLocalError("");
+      setFieldErrors({});
+      try {
+        const request = loginGoogle(idToken, challengeToken, inScreen);
+        attempt.version = useAuthStore.getState().sessionVersion;
+        const response = await request;
+        if (!inScreen() || pending.current !== attempt) return;
+        if (response.success) {
+          setPassword("");
+          if (response.requiresProfile) router.push("/auth/google-complete");
+        } else if (!response.cancelled) setLocalError(response.error);
+      } catch (failure) {
+        if (inScreen() && pending.current === attempt) setLocalError(getErrorMessage(failure, "Đăng nhập Google thất bại."));
+      } finally { if (pending.current === attempt) pending.current = null; }
+    },
   };
 }
