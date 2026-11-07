@@ -22,6 +22,7 @@ export default function PlantListScreen() {
         <Text style={styles.title}>{plant.plant_nickname}</Text>
         <Text style={styles.body}>{plant.species_name || "Chưa xác định loài"}</Text>
         <Text style={styles.body}>{plant.placement_location || "Chưa có vị trí đặt cây"}</Text>
+        {!plant.archived_at && <Button mode="outlined" icon="pencil-outline" onPress={() => router.push({ pathname: "/customer/garden/edit", params: { plantId } })}>Sửa thông tin cây</Button>}
       </View>
       {plant.active_treatment ? <View style={styles.treatment}>
         <Text style={styles.sectionTitle}>Đang điều trị</Text>
