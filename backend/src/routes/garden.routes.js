@@ -7,7 +7,7 @@ router.use(authenticate, customer);
 router.get("/", garden.list);
 router.post("/", require("../middlewares/garden-upload.middleware").upload, garden.create);
 router.get("/:id", garden.detail);
-router.patch("/:id", garden.update);
+router.patch("/:id", require("../middlewares/garden-upload.middleware").upload, garden.update);
 router.patch("/:id/archive", garden.archive);
 
 module.exports = router;
