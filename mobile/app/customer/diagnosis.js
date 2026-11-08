@@ -24,7 +24,7 @@ export default function DiagnosisScreen() {
     if (showResult) toggleResult(null);
     else if (capture.photo) capture.retake();
     else if (router.canGoBack()) router.back();
-    else router.replace("/customer");
+    else router.replace("/customer/home");
   };
   useFormBack(handleBack, capture.busy);
 
