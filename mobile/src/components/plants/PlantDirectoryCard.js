@@ -2,7 +2,7 @@
 
 import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 
-import { ActivityIndicator, Text } from "react-native-paper";
+import { ActivityIndicator, Button, Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
 
@@ -14,6 +14,7 @@ export default function PlantDirectoryCard(
     isFavorite = false,
     favoriteBusy = false,
     onToggleFavorite,
+    onAddToGarden,
   },
 ) {
   const catName = item.category_id?.category_name || "";
@@ -49,19 +50,23 @@ export default function PlantDirectoryCard(
         </View>
       </View>
     </TouchableOpacity>
-    {showFavorite && <TouchableOpacity style={styles.favoriteButton} disabled={favoriteBusy}
+    {showFavorite && <TouchableOpacity style={[styles.favoriteButton, onAddToGarden && styles.favoriteAboveAction]} disabled={favoriteBusy}
       accessibilityRole="button" accessibilityLabel={`${isFavorite ? "Bỏ yêu thích" : "Yêu thích"} ${item.common_name}`}
       accessibilityState={{ disabled: favoriteBusy, selected: isFavorite, busy: favoriteBusy }}
       onPress={() => onToggleFavorite(item._id)}>
       {favoriteBusy ? <ActivityIndicator size={20} color={colors.primary} />
         : <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={24} color={isFavorite ? colors.statusError : colors.textSecondary} />}
     </TouchableOpacity>}
+    {onAddToGarden && <Button icon="plus" compact onPress={() => onAddToGarden(item._id)}>
+      Thêm vào vườn
+    </Button>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   favoriteButton: { position: "absolute", bottom: 0, right: 2, width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  favoriteAboveAction: { bottom: 40 },
   footerWithFavorite: { paddingRight: 36, minHeight: 22 },
   // Card
   card: {

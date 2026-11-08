@@ -1,5 +1,6 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  FAVORITE_LIMIT_REACHED: "Bạn đã đạt giới hạn 5 cây yêu thích của gói Free. Hãy bỏ một cây trước khi thêm cây mới.",
   GOOGLE_NOT_CONFIGURED: "Chưa cấu hình đăng nhập Google. Vui lòng thử lại sau.",
   GOOGLE_TOKEN_INVALID: "Không xác minh được tài khoản Google. Vui lòng chọn tài khoản lại.",
   GOOGLE_FLOW_EXPIRED: "Phiên xác thực Google đã hết hạn. Vui lòng quay lại chọn tài khoản Google.",
