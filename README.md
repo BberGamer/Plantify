@@ -13,6 +13,16 @@ Chat hiện có thêm tra cứu bộ câu hỏi–đáp chuẩn trong MongoDB co
 Chỉ bản ghi `approved`, ngôn ngữ `vi` được sử dụng; câu khớp chính xác hoặc alias
 trả nguyên đáp án, câu khác gọi AI như trước. Xem [cấu hình FAQ và đánh giá trước/sau](backend/CHAT_FAQ.md).
 
+### Cây yêu thích của customer
+
+Trong danh mục hoặc chi tiết cây, customer bấm trái tim để lưu/bỏ yêu thích. Tại **Tài khoản → Cây yêu thích của tôi**, có tổng số cây, chỉnh sửa danh sách, xem chi tiết, thêm vào vườn qua form hiện có và khám phá thêm cây. Dữ liệu lưu theo tài khoản trong `favorite_plants`; cây bị ẩn/xóa không hiển thị trong danh sách.
+
+Theo BR-25 trong Report 3, tài khoản Free lưu tối đa 5 cây. Hiện chưa có hệ thống xác thực gói Pro nên backend áp dụng hạn mức Free cho mọi customer. Unique index theo tài khoản/slot bảo vệ các yêu cầu thêm đồng thời; dữ liệu cũ vẫn được tính vào hạn mức. Backend cần quyền tạo index MongoDB. Chưa triển khai mua/nâng cấp Pro.
+
+API customer đang hoạt động: `GET /api/favorites/plants` (page/limit), `GET /api/favorites/plants/status?ids=...`, `PUT /api/favorites/plants/:plantId`, `DELETE /api/favorites/plants/:plantId`. PUT/DELETE có thể gọi lại an toàn; vượt hạn mức trả 409 với code `FAVORITE_LIMIT_REACHED`.
+
+Kiểm tra: tại `backend/`, chạy `node --test src/services/__tests__/favorite.test.cjs`; tại `mobile/`, chạy `node --test src/hooks/favoriteDetail.test.cjs`. Test dùng mock, cần kiểm thử bổ sung với MongoDB và thiết bị thật.
+
 ### Thêm cây vào vườn
 
 Customer có thể chọn **Thêm cây** trong My Garden hoặc **Thêm vào vườn cây** từ chi tiết cây thư viện. Form lưu biệt danh, loài, vị trí, chậu và ngày nhận cây; ảnh JPG/PNG tối đa 10 MB là tùy chọn. Ngày nhận cây chọn bằng lịch, hiển thị DD/MM/YYYY, có thể để trống/xóa và không được sau hôm nay (theo múi giờ Việt Nam). Cây nhập tay không cần danh mục; cây thư viện giữ danh mục có sẵn. Chưa tạo lịch chăm sóc trong luồng này.
