@@ -1,7 +1,7 @@
 export const ROLE_ROUTES = {
   admin: "/admin/users",
   manager: "/manager/plants",
-  customer: "/customer",
+  customer: "/customer/home",
 };
 
 export function getAuthRedirect(

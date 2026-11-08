@@ -16,8 +16,8 @@ const ITEMS = [
     label: "Trang chủ",
     icon: "home-outline",
     activeIcon: "home",
-    path: "/customer",
-    href: "/customer",
+    path: "/customer/home",
+    href: "/customer/home",
   },
   {
     label: "Danh sách\ncây",

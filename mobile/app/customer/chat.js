@@ -17,7 +17,7 @@ export default function ChatScreen() {
 
   function handleBack() {
     if (router.canGoBack()) router.back();
-    else router.replace("/customer");
+    else router.replace("/customer/home");
   }
 
   return (
