@@ -4,15 +4,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { garden } from "./theme";
 
 export default function UserEmptyState({
-  title = "Khu vườn còn trống",
+  title = "Không tìm thấy người dùng",
   subtitle = "Không tìm thấy người dùng phù hợp. Hãy thử đổi từ khóa hoặc bộ lọc nhé.",
 }) {
   return (
     <View style={styles.emptyContainer}>
       <View style={styles.potWrap}>
-        <Ionicons name="leaf-outline" size={40} color={garden.moss} />
-        <View style={styles.potRim} />
-        <View style={styles.pot} />
+        <Ionicons name="people-outline" size={40} color={garden.moss} />
       </View>
       <Text style={styles.emptyTitle}>{title}</Text>
       <Text style={styles.emptySub}>{subtitle}</Text>
@@ -34,20 +32,6 @@ const styles = StyleSheet.create({
     backgroundColor: garden.mint,
     alignItems: "center",
     justifyContent: "center",
-  },
-  potRim: {
-    width: 46,
-    height: 8,
-    borderRadius: 3,
-    backgroundColor: garden.terracotta,
-    marginTop: 2,
-  },
-  pot: {
-    width: 36,
-    height: 20,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-    backgroundColor: "#C9683B",
   },
   emptyTitle: {
     fontSize: 17,

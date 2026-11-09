@@ -7,6 +7,7 @@ import useAuthStore from "../../store/authStore";
 import { getSessionContext, isSessionCurrent } from "../services/sessionAccess";
 import useOtpCountdown from "./useOtpCountdown";
 import useScreenScope from "./useScreenScope";
+import validateRegistration from "../utils/registrationValidation";
 
 export default function useRegister() {
   const router = useRouter();
@@ -46,21 +47,7 @@ export default function useRegister() {
   const send = async (resend) => {
     if (pending.current || !isActive() || (resend ? step !== 2 || !countdown.canResend() : step !== 1)) return;
     const isCurrent = capture();
-    let message = "";
-    if (!form.fullName.trim()) message = "Vui lòng nhập họ và tên.";
-    else if (!form.email.trim()) message = "Vui lòng nhập địa chỉ email.";
-    else if (
-      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(
-        form.email.trim(),
-      )
-    )
-      message = "Email không đúng định dạng.";
-    else if (form.password.length < 8)
-      message = "Mật khẩu phải có tối thiểu 8 ký tự.";
-    else if (form.password !== form.confirmPassword)
-      message = "Mật khẩu xác nhận không khớp.";
-    else if (!form.agreeTerms)
-      message = "Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách.";
+    const message = validateRegistration(form);
     if (message) {
       setErrorMsg(message);
       return;

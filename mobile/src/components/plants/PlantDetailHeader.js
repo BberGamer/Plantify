@@ -2,13 +2,15 @@
 
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 
-import { Text } from "react-native-paper";
+import { ActivityIndicator, Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
 
 export default function PlantDetailHeader(
   {
     saved,
+    showFavorite = false,
+    busy = false,
     canSave,
     onBack,
     onToggleSaved,
@@ -20,15 +22,18 @@ export default function PlantDetailHeader(
         <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
       </TouchableOpacity>
       <Text style={styles.floatingTitle}>Chi tiết cây</Text>
-      <TouchableOpacity
+      {showFavorite ? <TouchableOpacity
         style={[styles.circleBtn, saved && styles.circleBtnActive]}
+        accessibilityRole="button"
+        accessibilityLabel={saved ? "Bỏ yêu thích cây" : "Yêu thích cây"}
+        accessibilityState={{ disabled: !canSave, selected: saved, busy }}
         onPress={onToggleSaved}
         disabled={!canSave}>
-        <Ionicons
-          name={saved ? "bookmark" : "bookmark-outline"}
+        {busy ? <ActivityIndicator size={20} color={colors.primary} /> : <Ionicons
+          name={saved ? "heart" : "heart-outline"}
           size={20}
-          color={saved ? "#FFFFFF" : colors.textPrimary} />
-      </TouchableOpacity>
+          color={saved ? "#FFFFFF" : colors.textPrimary} />}
+      </TouchableOpacity> : <View style={styles.circlePlaceholder} />}
     </View>
   );
 }
@@ -47,13 +52,14 @@ const styles = StyleSheet.create({
   },
 
   circleBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.softMintBg,
     justifyContent: "center",
     alignItems: "center",
   },
+  circlePlaceholder: { width: 44, height: 44 },
 
   circleBtnActive: {
     backgroundColor: colors.primary,

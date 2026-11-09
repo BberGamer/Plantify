@@ -5,7 +5,7 @@ import { adaptPlantsList, mapPlantsParams } from "./listAdapters";
 const plantService = {
   /**
    * Lay danh sach danh muc cay
-   * GET /api/v1/plants/categories
+   * GET /api/plants/categories
    */
   getCategories: async () => {
     const response = await api.get("/plants/categories");
@@ -14,7 +14,7 @@ const plantService = {
 
   /**
    * Lay danh sach cay co the loc theo danh muc va tim kiem
-   * GET /api/v1/plants?category_id=...&search=...&page=1&limit=20
+   * GET /api/plants?category_id=...&search=...&page=1&limit=20
    */
   getPlants: async ({ categoryId, search, page = 1, limit = 20 } = {}) => {
     const params = mapPlantsParams({ categoryId, search, page, limit });
@@ -25,7 +25,7 @@ const plantService = {
 
   /**
    * Lay chi tiet mot cay theo ID
-   * GET /api/v1/plants/:id
+   * GET /api/plants/:id
    */
   getPlantById: async (id) => {
     const response = await api.get(`/plants/${id}`);

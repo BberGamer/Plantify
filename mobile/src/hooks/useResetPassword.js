@@ -110,7 +110,7 @@ export default function useResetPassword() {
       setNewPassword("");
       setConfirmPassword("");
       redirectTimer.current = setTimeout(() => {
-        if (isCurrent()) router.replace("/(auth)/login");
+        if (isCurrent()) router.replace("/auth/login");
       }, 2000);
     } catch (error) {
       if (isCurrent())

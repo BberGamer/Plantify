@@ -32,10 +32,7 @@ const email = (value) => {
 const phone = (value) => {
   const result = text(value, "phone", false);
   if (result && !/^0[35789]\d{8}$/.test(result))
-    invalid(
-      "phone",
-      "Số điện thoại phải có 10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09.",
-    );
+    invalid("phone", "Số điện thoại phải có 10 số.");
   return result;
 };
 const password = (value, field = "password", creating = true) => {
@@ -47,7 +44,7 @@ const password = (value, field = "password", creating = true) => {
     invalid(
       field,
       creating
-        ? "Mật khẩu cần ít nhất 8 ký tự và không quá 72 byte."
+        ? "Mật khẩu cần ít nhất 8 ký tự."
         : "Vui lòng nhập mật khẩu.",
     );
   }

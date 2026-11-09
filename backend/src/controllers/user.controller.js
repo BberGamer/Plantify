@@ -3,8 +3,17 @@ const v = require("../validators/common");
 const userService = require("../services/user.service");
 const { success } = require("../utils/api-response");
 
+const createUser = async (req, res, next) => {
+  try {
+    const user = await userService.createUser(req.body);
+    return success(res, "Thêm người dùng thành công", user, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
 /**
- * [GET] /api/v1/users hoac /api/v1/admin/users
+ * [GET] /api/users hoac /api/admin/users
  * Lay danh sach nguoi dung cho Admin
  */
 const getUsers = async (req, res, next) => {
@@ -17,7 +26,7 @@ const getUsers = async (req, res, next) => {
 };
 
 /**
- * [GET] /api/v1/users/:id
+ * [GET] /api/users/:id
  * Lay chi tiet thong tin mot nguoi dung theo ID
  */
 const getUserById = async (req, res, next) => {
@@ -31,7 +40,7 @@ const getUserById = async (req, res, next) => {
 };
 
 /**
- * [PUT / PATCH] /api/v1/users/:id
+ * [PUT / PATCH] /api/users/:id
  * Cap nhat thong tin & trang thai nguoi dung (Active / Banned)
  */
 const updateUser = async (req, res, next) => {
@@ -55,7 +64,7 @@ const updateUser = async (req, res, next) => {
 };
 
 /**
- * [PATCH] /api/v1/users/:id/status
+ * [PATCH] /api/users/:id/status
  * Khoa / Mo khoa tai khoan nguoi dung (Deactivate / Ban user account)
  */
 const updateUserStatus = async (req, res, next) => {
@@ -78,7 +87,7 @@ const updateUserStatus = async (req, res, next) => {
 };
 
 /**
- * [PATCH] /api/v1/users/:id/role
+ * [PATCH] /api/users/:id/role
  * Quan ly vai tro he thong (Manage System Roles: Customer / Manager / Admin)
  */
 const updateUserRole = async (req, res, next) => {
@@ -103,6 +112,7 @@ const updateUserRole = async (req, res, next) => {
 };
 
 module.exports = {
+  createUser,
   getUsers,
   getUserById,
   updateUser,

@@ -1,7 +1,36 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  AI_INCOMPLETE_RESPONSE: "AI chưa hoàn tất câu trả lời. Vui lòng thử lại với câu hỏi cụ thể hơn.",
+  FAVORITE_LIMIT_REACHED: "Bạn đã đạt giới hạn 5 cây yêu thích của gói Free. Hãy bỏ một cây trước khi thêm cây mới.",
+  GOOGLE_NOT_CONFIGURED: "Chưa cấu hình đăng nhập Google. Vui lòng thử lại sau.",
+  GOOGLE_TOKEN_INVALID: "Không xác minh được tài khoản Google. Vui lòng chọn tài khoản lại.",
+  GOOGLE_FLOW_EXPIRED: "Phiên xác thực Google đã hết hạn. Vui lòng quay lại chọn tài khoản Google.",
+  GOOGLE_ACCOUNT_CONFLICT: "Tài khoản vừa được đăng ký hoặc liên kết. Vui lòng quay lại đăng nhập Google.",
+  GOOGLE_LINK_REQUIRED: "Email này cần xác minh bổ sung. Vui lòng dùng đăng ký hoặc đăng nhập bằng email.",
+  GOOGLE_BUSY: "Có nhiều yêu cầu đăng nhập Google. Vui lòng thử lại sau.",
+  GOOGLE_SCRIPT_ERROR: "Không tải được đăng nhập Google. Kiểm tra kết nối hoặc thử lại.",
+  EVALUATION_DISABLED: "Chế độ đánh giá AI đang tắt.",
+  INVALID_PHOTO: "Vui lòng chọn một ảnh JPG hoặc PNG hợp lệ, tối đa 10 MB (tối đa 40 triệu điểm ảnh).",
+  UPLOAD_NOT_CONFIGURED: "Máy chủ chưa cấu hình lưu ảnh. Bạn có thể bỏ ảnh để lưu cây trước.",
+  AI_NOT_CONFIGURED: "Trợ lý AI chưa được cấu hình. Vui lòng thử lại sau.",
+  AI_TIMEOUT: "AI trả lời quá lâu. Vui lòng thử lại.",
+  AI_BUSY: "Trợ lý AI đang bận. Vui lòng thử lại sau.",
+  AI_UNAVAILABLE: "Không thể kết nối trợ lý AI. Vui lòng thử lại sau.",
+  AI_INVALID_RESPONSE: "Trợ lý AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.",
+  APPROVED_PROTOCOL_NOT_FOUND: "Chưa có phác đồ được phê duyệt cho bệnh này.",
+  ACTIVE_TREATMENT_EXISTS: "Cây đang có một đợt điều trị hoạt động.",
+  INVALID_TREATMENT_TRANSITION: "Trạng thái điều trị đã thay đổi. Vui lòng tải lại.",
+  TASK_ALREADY_COMPLETED: "Công việc này đã được hoàn thành.",
+  TASK_NOT_AVAILABLE: "Công việc chưa thể hoàn thành vào lúc này.",
+  TREATMENT_TASKS_INCOMPLETE: "Cần hoàn thành tất cả công việc trước khi ghi nhận cây đã hồi phục.",
+  TREATMENT_REFERENCE_MISSING: "Dữ liệu cây hoặc bệnh của lịch điều trị không còn đầy đủ.",
+  DIAGNOSIS_NOT_AVAILABLE: "Kết quả chẩn đoán chưa thể dùng để tạo lịch điều trị.",
+  DIAGNOSIS_DISEASE_MISMATCH: "Bệnh được chọn không khớp kết quả chẩn đoán.",
+  SAME_ROLE_UPDATE_FORBIDDEN: "Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.",
+  ADMIN_ROLE_CHANGE_FORBIDDEN: "Bạn không thể thay đổi vai trò của quản trị viên khác.",
   SESSION_CHANGED: "Phiên đăng nhập đã thay đổi. Vui lòng thử lại.",
-  SESSION_STORAGE_ERROR: "Không thể lưu phiên đăng nhập trên thiết bị. Vui lòng thử lại.",
+  SESSION_STORAGE_ERROR:
+    "Không thể lưu phiên đăng nhập trên thiết bị. Vui lòng thử lại.",
   REQUEST_IN_PROGRESS: "Thao tác đang được xử lý. Vui lòng chờ.",
   INVALID_RESPONSE: "Dữ liệu máy chủ trả về không hợp lệ. Vui lòng thử lại.",
   VALIDATION_ERROR: "Thông tin nhập chưa hợp lệ. Vui lòng kiểm tra lại.",
@@ -76,9 +105,9 @@ const LEGACY_MESSAGES = new Set([
   "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
   "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại",
   "Phác đồ điều trị phải là một đối tượng JSON.",
-  "Số điện thoại không hợp lệ (10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09).",
+  "Số điện thoại không hợp lệ.",
   "Số điện thoại này đã được sử dụng bởi tài khoản khác.",
-  "Số điện thoại phải có 10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09.",
+  "Số điện thoại phải có 10 số.",
   "Trạng thái bệnh không hợp lệ.",
   "Trạng thái không hợp lệ. Vui lòng chọn hoạt động hoặc bị khóa.",
   "Tài khoản Google không thể đổi email hoặc mật khẩu tại đây.",
@@ -111,6 +140,15 @@ export default function getErrorMessage(
   }
   const data = error?.response?.data;
   const code = data?.code || error?.code;
+  if (code === "VALIDATION_ERROR" && typeof data?.errors?.phone === "string") {
+    return data.errors.phone;
+  }
+  if (code === "VALIDATION_ERROR" && data?.errors) {
+    const first = Object.values(data.errors).find(
+      (message) => typeof message === "string" && message.trim(),
+    );
+    if (first) return first;
+  }
   if (
     typeof code === "string" &&
     Object.prototype.hasOwnProperty.call(ERROR_MESSAGES, code)

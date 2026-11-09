@@ -17,6 +17,7 @@ export default function RegisterForm({
   onChange,
   onSubmit,
   onLogin,
+  googleMode = false,
 }) {
   const { fullName, email, phone, password, confirmPassword, agreeTerms } =
     form;
@@ -27,8 +28,8 @@ export default function RegisterForm({
         <View style={styles.badge}>
           <Text style={styles.badgeText}>THAM GIA PLANTIFY</Text>
         </View>
-        <Text style={styles.title}>Tạo tài khoản mới</Text>
-        <Text style={styles.subtitle}>Điền thông tin của bạn để bắt đầu.</Text>
+        <Text style={styles.title}>{googleMode ? "Hoàn tất thông tin tài khoản" : "Tạo tài khoản mới"}</Text>
+        <Text style={styles.subtitle}>{googleMode ? "Email đã được Google xác minh. Bổ sung thông tin và tạo mật khẩu để hoàn tất đăng ký." : "Điền thông tin của bạn để bắt đầu."}</Text>
       </View>
 
       <View style={styles.form}>
@@ -36,6 +37,7 @@ export default function RegisterForm({
           label="Họ và tên"
           placeholder="Nhập họ và tên"
           value={fullName}
+          maxLength={googleMode ? 100 : undefined}
           disabled={loading}
           onChangeText={(value) => onChange("fullName", value)}
           autoCapitalize="words"
@@ -45,7 +47,7 @@ export default function RegisterForm({
           label="Địa chỉ email"
           placeholder="Nhập địa chỉ email"
           value={email}
-          disabled={loading}
+          disabled={loading || googleMode}
           onChangeText={(value) => onChange("email", value)}
           autoCapitalize="none"
           autoCorrect={false}
@@ -103,17 +105,17 @@ export default function RegisterForm({
 
         {/* Button: Create Account */}
         <Button mode="contained" style={styles.submit} contentStyle={{ minHeight: control.minHeight }} loading={loading} disabled={loading} onPress={onSubmit}>
-          Đăng ký
+          {googleMode ? "Hoàn tất đăng ký" : "Đăng ký"}
         </Button>
 
         {/* Footer Link */}
         <View style={styles.footerContainer}>
           <Text style={styles.footerText}>
-            Bạn đã có tài khoản?{" "}
+            {googleMode ? "Muốn chọn tài khoản khác? " : "Bạn đã có tài khoản? "}
             <Text style={styles.linkText} accessibilityRole="link"
               accessibilityState={{ disabled: loading }}
               onPress={() => { if (!loading) onLogin(); }}>
-              Đăng nhập
+              {googleMode ? "Quay lại" : "Đăng nhập"}
             </Text>
           </Text>
         </View>

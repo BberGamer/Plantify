@@ -33,17 +33,6 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.topBar}>
-            <TouchableOpacity
-              onPress={registration.goBack}
-              disabled={registration.loading}
-              style={styles.backButton}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={24}
-                color={colors.textPrimary}
-              />
-            </TouchableOpacity>
           </View>
           {!!registration.errorMsg && (
             <View style={styles.errorBox}>
@@ -61,7 +50,7 @@ export default function RegisterScreen() {
               loading={registration.loading}
               onChange={registration.changeField}
               onSubmit={registration.sendOTP}
-              onLogin={() => router.push("/(auth)/login")}
+              onLogin={() => router.push("/auth/login")}
             />
           ) : (
             <RegisterOtpForm

@@ -3,6 +3,49 @@ const v = require("../validators/common");
 // services/user.service.js - Logic nghiep vu Quan ly Nguoi dung (User Management)
 const validate = require("../validators/user.validator");
 const User = require("../models/user.model");
+const bcrypt = require("bcryptjs");
+
+const createUser = async (input) => {
+  const data = validate.create(input);
+  if (await User.findOne({ email: data.email })) {
+    throw new AppError("EMAIL_IN_USE", 409, "Email này đã được sử dụng bởi một tài khoản khác.");
+  }
+  if (data.phone && await User.findOne({ phone: data.phone })) {
+    throw new AppError("PHONE_IN_USE", 409, "Số điện thoại này đã được sử dụng bởi tài khoản khác.");
+  }
+  const password = await bcrypt.hash(data.password, 10);
+  let user;
+  try {
+    user = await User.create({ ...data, password, status: true, isGoogleAccount: false });
+  } catch (error) {
+    if (error.code === 11000 && error.keyPattern?.email) {
+      throw new AppError("EMAIL_IN_USE", 409, "Email này đã được sử dụng bởi một tài khoản khác.");
+    }
+    throw error;
+  }
+  return {
+    _id: user._id,
+    fullName: user.fullName,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    status: user.status,
+    isGoogleAccount: user.isGoogleAccount,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+};
+
+// Các endpoint quản lý người dùng chỉ cho phép actor có vai trò admin.
+const assertUserEditable = (user) => {
+  if (user.role === "admin") {
+    throw new AppError(
+      "SAME_ROLE_UPDATE_FORBIDDEN",
+      403,
+      "Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.",
+    );
+  }
+};
 
 /**
  * Lay danh sach nguoi dung cho Admin
@@ -142,6 +185,8 @@ const updateUserInfoAndStatus = async (
   }
 
   const { fullName, phone, status, role } = updateData;
+  const isSelf = user._id.toString() === currentAdminId?.toString();
+  if (!isSelf || role !== undefined || status !== undefined) assertUserEditable(user);
 
   // Cap nhat ho ten
   if (fullName !== undefined) {
@@ -254,6 +299,7 @@ const updateUserStatus = async (userId, status, currentAdminId) => {
     );
   }
 
+  assertUserEditable(user);
   user.status = parsedStatus;
   await user.save();
 
@@ -298,6 +344,7 @@ const updateUserRole = async (userId, role, currentAdminId) => {
     );
   }
 
+  assertUserEditable(user);
   user.role = normalizedRole;
   await user.save();
 
@@ -310,6 +357,7 @@ const updateUserRole = async (userId, role, currentAdminId) => {
 };
 
 module.exports = {
+  createUser,
   getUsers,
   getUserById,
   updateUserInfoAndStatus,

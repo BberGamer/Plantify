@@ -43,11 +43,6 @@ function ChipRow({ title, items, selected, onSelect }) {
               accessibilityRole="button"
               accessibilityState={{ selected: isActive }}
             >
-              <Ionicons
-                name={it.icon}
-                size={13}
-                color={isActive ? garden.white : garden.moss}
-              />
               <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
                 {it.label}
               </Text>
@@ -82,6 +77,8 @@ export default function UserFilterBar({
             value={search}
             onChangeText={onSearchChange}
             onSubmitEditing={onSearchSubmit}
+            autoCapitalize="none"
+            autoCorrect={false}
             returnKeyType="search"
             accessibilityLabel="Tìm kiếm người dùng"
           />
@@ -90,6 +87,7 @@ export default function UserFilterBar({
               onPress={onSearchClear}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               accessibilityLabel="Xóa từ khóa"
+              accessibilityRole="button"
             >
               <Ionicons name="close-circle" size={18} color={garden.muted} />
             </TouchableOpacity>
@@ -125,7 +123,7 @@ export default function UserFilterBar({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: -22,
+    paddingTop: 16,
     paddingBottom: 4,
   },
   searchSection: {
@@ -139,16 +137,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: garden.white,
-    borderRadius: 16,
+    borderRadius: 8,
     paddingHorizontal: 14,
-    height: 48,
+    minHeight: 48,
     borderWidth: 1,
     borderColor: garden.line,
-    shadowColor: garden.forest,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
   },
   searchInput: {
     flex: 1,
@@ -159,20 +152,12 @@ const styles = StyleSheet.create({
   },
   searchBtn: {
     marginLeft: 10,
-    backgroundColor: garden.sprout,
+    backgroundColor: garden.forest,
     width: 48,
-    height: 48,
-    borderTopLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    borderTopRightRadius: 8,
-    borderBottomLeftRadius: 8,
+    minHeight: 48,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: garden.forest,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
   },
   filterSection: {
     flexDirection: "row",
@@ -184,9 +169,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     color: garden.inkSoft,
-    width: 72,
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
+    width: 76,
   },
   chipsContainer: {
     flexDirection: "row",
@@ -197,8 +180,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-    height: 34,
-    borderRadius: 17,
+    minHeight: 44,
+    paddingVertical: 8,
+    borderRadius: 8,
     backgroundColor: garden.white,
     borderWidth: 1,
     borderColor: garden.line,

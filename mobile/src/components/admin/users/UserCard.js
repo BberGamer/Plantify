@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { RoleBadge, StatusBadge, GoogleBadge } from "./UserBadges";
-import { garden, getRoleMeta, leafShape } from "./theme";
+import { garden } from "./theme";
 
 export default function UserCard({
   item,
@@ -22,13 +22,10 @@ export default function UserCard({
 
   const isSelf = item._id === currentAdminId;
   const isActive = item.status !== false;
-  const roleMeta = getRoleMeta(item.role);
+
 
   return (
     <View style={[styles.userCard, !isActive && styles.userCardDormant]}>
-      {/* Vien la ben trai the hien vai tro */}
-      <View style={[styles.stem, { backgroundColor: roleMeta.color }]} />
-
       {/* CARD HEADER / SUMMARY */}
       <TouchableOpacity
         style={styles.cardHeader}
@@ -47,9 +44,7 @@ export default function UserCard({
           >
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
-          <View style={[styles.avatarSprout, { backgroundColor: roleMeta.bg }]}>
-            <Ionicons name={roleMeta.icon} size={11} color={roleMeta.color} />
-          </View>
+
         </View>
 
         {/* User Info */}
@@ -102,17 +97,20 @@ export default function UserCard({
           <Text style={styles.btnSoftText}>Chi tiết</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.btnSoft]}
+        {item.role !== "admin" && <TouchableOpacity
+          style={[styles.actionBtn, styles.btnSoft, item.role === "admin" && styles.disabled]}
           onPress={() => onOpenRole(item)}
+          disabled={item.role === "admin"}
+          accessibilityState={{ disabled: item.role === "admin" }}
+          accessibilityLabel={item.role === "admin" ? "Không thể đổi vai trò quản trị viên" : "Đổi vai trò"}
           activeOpacity={0.7}
           accessibilityRole="button"
         >
           <Ionicons name="git-branch-outline" size={15} color={garden.forest} />
           <Text style={styles.btnSoftText}>Vai trò</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
 
-        <TouchableOpacity
+        {item.role !== "admin" && <TouchableOpacity
           style={[
             styles.actionBtn,
             isActive ? styles.btnDanger : styles.btnSuccess,
@@ -134,40 +132,27 @@ export default function UserCard({
           >
             {isActive ? "Khóa" : "Kích hoạt"}
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  disabled: {
+    opacity: 0.45,
+  },
   userCard: {
     backgroundColor: garden.white,
-    borderRadius: 20,
-    borderTopLeftRadius: 28,
+    borderRadius: 12,
     padding: 14,
-    paddingLeft: 18,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: garden.line,
     overflow: "hidden",
-    shadowColor: garden.forest,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 2,
   },
   userCardDormant: {
     backgroundColor: "#FBFBF8",
-  },
-  stem: {
-    position: "absolute",
-    left: 0,
-    top: 16,
-    bottom: 16,
-    width: 4,
-    borderTopRightRadius: 4,
-    borderBottomRightRadius: 4,
   },
   cardHeader: {
     flexDirection: "row",
@@ -178,7 +163,9 @@ const styles = StyleSheet.create({
     height: 50,
   },
   avatar: {
-    ...leafShape(46),
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -186,18 +173,6 @@ const styles = StyleSheet.create({
     color: garden.white,
     fontWeight: "800",
     fontSize: 16,
-  },
-  avatarSprout: {
-    position: "absolute",
-    right: 0,
-    bottom: 0,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: garden.white,
-    justifyContent: "center",
-    alignItems: "center",
   },
   userInfo: {
     flex: 1,
@@ -248,6 +223,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   actionButtonsRow: {
+    flexWrap: "wrap",
     flexDirection: "row",
     alignItems: "center",
     marginTop: 12,
@@ -257,12 +233,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionBtn: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 88,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    height: 44,
-    borderRadius: 14,
+    minHeight: 44,
+    paddingVertical: 10,
+    borderRadius: 8,
     gap: 5,
   },
   btnSoft: {

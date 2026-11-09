@@ -1,7 +1,10 @@
 import { create } from "zustand";
 import authService from "../src/services/authService";
 import getErrorMessage from "../src/utils/getErrorMessage";
-import sessionStorage, { normalizeSession, normalizeSessionUser } from "../src/services/sessionStorage";
+import sessionStorage, {
+  normalizeSession,
+  normalizeSessionUser,
+} from "../src/services/sessionStorage";
 import { bindSessionAccess, sessionError } from "../src/services/sessionAccess";
 
 const emptySession = { user: null, token: null, isAuthenticated: false };
@@ -18,41 +21,83 @@ const useAuthStore = create((set, get) => {
   });
   const matches = (expected) => {
     const current = context();
-    return !!expected && expected.version === current.version &&
-      expected.token === current.token && expected.userId === current.userId;
+    return (
+      !!expected &&
+      expected.version === current.version &&
+      expected.token === current.token &&
+      expected.userId === current.userId
+    );
   };
   const reset = (extra = {}) => {
     authentication = null;
     profileMutation = null;
-    set({ ...emptySession, sessionVersion: get().sessionVersion + 1,
-      hasHydrated: true, isRestoring: false, isLoggingIn: false, ...extra });
+    set({
+      ...emptySession,
+      sessionVersion: get().sessionVersion + 1,
+      hasHydrated: true,
+      isRestoring: false,
+      isLoggingIn: false,
+      googleRegistration: null,
+      ...extra,
+    });
     return context();
   };
 
-  const establish = async (fetchSession, expected, loggingIn, canCommit = () => true) => {
+  const establish = async (
+    fetchSession,
+    expected,
+    loggingIn,
+    canCommit = () => true,
+    registration = null,
+  ) => {
     if (expected && !matches(expected)) return cancelled();
-    if (authentication) return { success: false, error: getErrorMessage(sessionError("REQUEST_IN_PROGRESS")) };
-    const attempt = { context: reset({ isLoggingIn: loggingIn }) };
+    if (authentication)
+      return {
+        success: false,
+        error: getErrorMessage(sessionError("REQUEST_IN_PROGRESS")),
+      };
+    const attempt = { context: reset({ isLoggingIn: loggingIn, googleRegistration: registration }) };
     authentication = attempt;
     const cleanup = sessionStorage.clear();
     try {
       const response = await fetchSession();
       if (!matches(attempt.context) || !canCommit()) return cancelled();
-      if (response?.success === false) throw Object.assign(new Error("Đăng nhập thất bại."), { response: { data: response } });
+      if (response?.success === false)
+        throw Object.assign(new Error("Đăng nhập thất bại."), {
+          response: { data: response },
+        });
       if (response?.success !== true) throw sessionError("INVALID_RESPONSE");
+      if (response.data?.nextStep === "complete_profile") {
+        const data = response.data;
+        if (typeof data.registrationTicket !== "string" || !/^[\w-]{43}$/.test(data.registrationTicket) ||
+            !Number.isFinite(data.expiresAt) || data.expiresAt <= Date.now() ||
+            typeof data.profile?.email !== "string" || typeof data.profile?.fullName !== "string")
+          throw sessionError("INVALID_RESPONSE");
+        set({ googleRegistration: { registrationTicket: data.registrationTicket, expiresAt: data.expiresAt,
+          profile: { email: data.profile.email, fullName: data.profile.fullName } }, isLoggingIn: false });
+        return { success: true, requiresProfile: true };
+      }
       const session = normalizeSession(response.data);
-      const saved = await sessionStorage.write(session, () => matches(attempt.context) && canCommit());
-      if (!saved || !matches(attempt.context) || !canCommit()) return cancelled();
-      set({ ...session, isAuthenticated: true, isLoggingIn: false });
+      const saved = await sessionStorage.write(
+        session,
+        () => matches(attempt.context) && canCommit(),
+      );
+      if (!saved || !matches(attempt.context) || !canCommit())
+        return cancelled();
+      set({ ...session, isAuthenticated: true, isLoggingIn: false, googleRegistration: null });
       return { success: true, user: session.user };
     } catch (error) {
       await cleanup;
       if (!matches(attempt.context)) return cancelled();
       set({ ...emptySession, isLoggingIn: false });
-      return { success: false, error: getErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại.") };
+      return {
+        success: false,
+        error: getErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại."),
+      };
     } finally {
       if (authentication === attempt) authentication = null;
-      if (matches(attempt.context) && !get().isAuthenticated) set({ isLoggingIn: false });
+      if (matches(attempt.context) && !get().isAuthenticated)
+        set({ isLoggingIn: false });
     }
   };
 
@@ -62,6 +107,7 @@ const useAuthStore = create((set, get) => {
     hasHydrated: false,
     isRestoring: true,
     isLoggingIn: false,
+    googleRegistration: null,
 
     loadUser: () => {
       if (get().hasHydrated) return Promise.resolve();
@@ -72,25 +118,63 @@ const useAuthStore = create((set, get) => {
         try {
           const session = await sessionStorage.read(() => matches(origin));
           if (!matches(origin)) return;
-          set({ ...(session || emptySession), isAuthenticated: !!session,
-            sessionVersion: get().sessionVersion + (session || get().token || get().user ? 1 : 0),
-            hasHydrated: true, isRestoring: false, isLoggingIn: false });
+          set({
+            ...(session || emptySession),
+            isAuthenticated: !!session,
+            sessionVersion:
+              get().sessionVersion +
+              (session || get().token || get().user ? 1 : 0),
+            hasHydrated: true,
+            isRestoring: false,
+            isLoggingIn: false,
+          });
         } catch {
           if (!matches(origin)) return;
-          set({ ...emptySession, sessionVersion: get().sessionVersion + 1,
-            hasHydrated: true, isRestoring: false, isLoggingIn: false });
+          set({
+            ...emptySession,
+            sessionVersion: get().sessionVersion + 1,
+            hasHydrated: true,
+            isRestoring: false,
+            isLoggingIn: false,
+          });
           // Queue trước mọi lần đăng nhập kế tiếp; không chạy cleanup trễ sau login mới.
           await sessionStorage.clear();
-        } finally { hydration = null; }
+        } finally {
+          hydration = null;
+        }
       })();
       return hydration;
     },
 
-    login: (email, password, canCommit) => establish(() => authService.login({ email, password }), null, true, canCommit),
+    login: (email, password, canCommit) =>
+      establish(
+        () => authService.login({ email, password }),
+        null,
+        true,
+        canCommit,
+      ),
+
+    loginGoogle: (idToken, challengeToken, canCommit) =>
+      establish(() => authService.loginGoogle({ idToken, challengeToken }), null, true, canCommit),
+
+    completeGoogle: (fields, expected, canCommit) => {
+      const registration = get().googleRegistration;
+      if (!registration || registration.expiresAt <= Date.now()) return Promise.resolve({
+        success: false, error: getErrorMessage({ code: "GOOGLE_FLOW_EXPIRED" }),
+      });
+      return establish(() => authService.completeGoogle({ ...fields, registrationTicket: registration.registrationTicket }),
+        expected, true, canCommit, registration);
+    },
+    clearGoogleRegistration: () => { if (!authentication) set({ googleRegistration: null }); },
 
     setAuthSession: (user, token, expected, canCommit) => {
       if (get().isAuthenticated) return Promise.resolve(cancelled());
-      return establish(() => ({ success: true, data: { user, token } }), expected, false, canCommit);
+      return establish(
+        () => ({ success: true, data: { user, token } }),
+        expected,
+        false,
+        canCommit,
+      );
     },
 
     updateProfile: async (data, expected) => {
@@ -103,13 +187,20 @@ const useAuthStore = create((set, get) => {
       try {
         const response = await authService.updateProfile({ ...data }, origin);
         if (!matches(origin)) return { cancelled: true };
-        if (response?.success === false) throw Object.assign(new Error("Không thể lưu hồ sơ."), { response: { data: response } });
+        if (response?.success === false)
+          throw Object.assign(new Error("Không thể lưu hồ sơ."), {
+            response: { data: response },
+          });
         if (response?.success !== true) throw sessionError("INVALID_RESPONSE");
         const user = normalizeSessionUser(response.data);
-        if ((user._id || user.id) !== origin.userId) throw sessionError("INVALID_RESPONSE");
+        if ((user._id || user.id) !== origin.userId)
+          throw sessionError("INVALID_RESPONSE");
         set({ user });
         try {
-          const cacheSaved = await sessionStorage.write({ user, token: origin.token }, () => matches(origin));
+          const cacheSaved = await sessionStorage.write(
+            { user, token: origin.token },
+            () => matches(origin),
+          );
           return matches(origin) ? { cacheSaved } : { cancelled: true };
         } catch {
           return matches(origin) ? { cacheSaved: false } : { cancelled: true };
@@ -127,7 +218,9 @@ const useAuthStore = create((set, get) => {
       const signedOut = reset(); // Xóa trong bộ nhớ ngay, trước mọi await hoặc lỗi storage/server.
       const cleanup = sessionStorage.clear();
       const remote = origin.token
-        ? Promise.resolve().then(() => authService.logout(origin)).catch(() => {})
+        ? Promise.resolve()
+            .then(() => authService.logout(origin))
+            .catch(() => {})
         : Promise.resolve();
       const [cacheCleared] = await Promise.all([cleanup, remote]);
       return { success: true, cacheCleared, context: signedOut };
@@ -145,8 +238,11 @@ const useAuthStore = create((set, get) => {
 bindSessionAccess({
   getContext: () => {
     const state = useAuthStore.getState();
-    return { version: state.sessionVersion, token: state.token,
-      userId: state.user?._id || state.user?.id || null };
+    return {
+      version: state.sessionVersion,
+      token: state.token,
+      userId: state.user?._id || state.user?.id || null,
+    };
   },
   expire: (origin) => useAuthStore.getState().expireSession(origin),
 });

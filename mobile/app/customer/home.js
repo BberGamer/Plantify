@@ -4,7 +4,6 @@ import { StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import HomeHeader from "../../src/components/home/HomeHeader";
-import HeroBanner from "../../src/components/home/HeroBanner";
 import FeatureGrid from "../../src/components/home/FeatureGrid";
 import GardenSummary from "../../src/components/home/GardenSummary";
 import TodayTasks from "../../src/components/home/TodayTasks";
@@ -16,7 +15,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView
       style={styles.safeArea}
-      edges={["top", "left", "right", "bottom"]}
+      edges={["top", "left", "right"]}
     >
       <ScrollView
         style={styles.container}
@@ -25,7 +24,6 @@ export default function HomeScreen() {
       >
         <HomeHeader />
         <WeatherCard />
-        <HeroBanner />
         <FeatureGrid />
         <GardenSummary />
         <TodayTasks />
@@ -48,6 +46,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 18,
-    paddingBottom: 28,
+    paddingBottom: 40,
   },
 });

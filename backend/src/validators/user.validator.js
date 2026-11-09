@@ -43,4 +43,14 @@ const query = (input = {}) => {
     v.invalid("sortOrder");
   return result;
 };
-module.exports = { role, update, query };
+const create = (input) => {
+  v.object(input);
+  return {
+    fullName: v.text(input.fullName, "fullName"),
+    email: v.email(input.email),
+    phone: input.phone === undefined ? "" : v.phone(input.phone),
+    password: v.password(input.password),
+    role: input.role === undefined ? "customer" : role(input.role),
+  };
+};
+module.exports = { role, update, query, create };
