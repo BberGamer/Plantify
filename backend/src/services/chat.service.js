@@ -4,6 +4,8 @@ const ai = require("../integrations/ai/ai.service");
 const faq = require("./chatFaq.service");
 const v = require("../validators/common");
 const chatHistory = require("./chatHistory.service");
+const benchmark = require("./chatBenchmark.service");
+const { getChatSettings, selectHistory } = require("../config/chat");
 
 const SYSTEM_PROMPT = "Bạn là trợ lý chăm sóc cây của Plantify. Trả lời bằng tiếng Việt, " +
   "ngắn gọn, dễ hiểu và tập trung vào cây trồng. Khi thiếu thông tin, hỏi thêm về loại cây, " +
@@ -20,11 +22,15 @@ const SYSTEM_PROMPT = "Bạn là trợ lý chăm sóc cây của Plantify. Trả
   "7. Sử dụng tiếng Việt rõ ràng, ngắn gọn. Không tạo các tiêu đề, ký tự Markdown hoặc emoji không cần thiết.\n" +
   "8. Nếu dữ liệu tham chiếu chưa được xác minh hoặc không đủ để trả lời, không coi đó là bằng chứng chắc chắn. Không tự tạo nguồn tham khảo.\n" +
   "Chỉ coi nội dung thực sự được cung cấp là dữ liệu tham chiếu; lịch sử hội thoại không tự động là nguồn đã xác minh. " +
-  "Nếu không được cung cấp dữ liệu tham chiếu, không tự nhận câu trả lời dựa trên dữ liệu hoặc tài liệu Plantify.";
+  "Nếu không được cung cấp dữ liệu tham chiếu, không tự nhận câu trả lời dựa trên dữ liệu hoặc tài liệu Plantify. " +
+  "Thông thường chỉ trả lời 3–5 câu ngắn: kết luận trực tiếp, cách kiểm tra hoặc hành động cần thiết, " +
+  "và tối đa 1–2 câu hỏi thêm nếu thật sự cần. Không liệt kê hàng loạt nguyên nhân/ngoại lệ ngoài câu hỏi. " +
+  "Dùng văn bản thuần, không Markdown hoặc emoji. Ưu tiên hoàn tất câu trả lời ngắn trong giới hạn đầu ra.";
 
 // Chặn gửi trùng trên cùng tài khoản trong một process, kể cả nhiều màn hình/thiết bị.
 const pending = new Set();
 const send = async (userId, { message, history, conversation_id }) => {
+  const started = performance.now();
   v.id(userId);
   const user = await User.findById(userId).select("status").lean();
   if (!user) throw new AppError("SESSION_INVALID", 401, "Phiên đăng nhập không hợp lệ.");
@@ -35,17 +41,23 @@ const send = async (userId, { message, history, conversation_id }) => {
   try {
     const conversationId = await chatHistory.assertConversation(userId, conversation_id);
     const answer = await faq.findAnswer(message);
+    const settings = getChatSettings();
+    const context = selectHistory(history, message, settings.historyPairs);
     const reply = answer !== null ? answer : await ai.complete([
       { role: "system", content: SYSTEM_PROMPT },
-      ...history,
+      ...context,
       { role: "user", content: message },
-    ]);
+    ], { maxTokens: settings.maxTokens });
     try {
       const saved = await chatHistory.saveTurn({ user_id: userId, conversation_id: conversationId,
+        ...benchmark.metadata(message, context, SYSTEM_PROMPT, settings.maxTokens),
+        backend_answer_ms: Math.round(performance.now() - started),
         question: message, answer: reply, answer_source: answer !== null ? "faq" : "model",
         model: answer !== null ? null : process.env.AI_MODEL,
-        prompt_version: "plantify-reference-rules-v1", faq_enabled: process.env.AI_FAQ_ENABLED !== "false" });
+        prompt_version: "plantify-concise-v2", faq_enabled: process.env.AI_FAQ_ENABLED !== "false" });
       return { reply, message_id: saved.id, conversation_id: saved.conversation_id,
+        backend_answer_ms: saved.backend_answer_ms, test_case_id: saved.test_case_id,
+        experiment_id: saved.experiment_id, experiment_condition: saved.experiment_condition,
         saved: true, evaluation_enabled: saved.evaluation_enabled, evaluation: saved.evaluation };
     } catch {
       // Lỗi ghi lịch sử không làm mất câu trả lời đã tạo hoặc báo lưu thành công giả.
@@ -57,4 +69,4 @@ const send = async (userId, { message, history, conversation_id }) => {
   }
 };
 
-module.exports = { send };
+module.exports = { send, SYSTEM_PROMPT };
