@@ -5,13 +5,6 @@ import { getSessionContext } from "../services/sessionAccess";
 import chatService from "../services/chatService";
 import getErrorMessage from "../utils/getErrorMessage";
 
-const wait = (signal) => new Promise((resolve) => {
-  const done = () => { clearTimeout(timer); signal.removeEventListener("abort", done); resolve(); };
-  const timer = setTimeout(done, 2000);
-  signal.addEventListener("abort", done, { once: true });
-  if (signal.aborted) done();
-});
-
 export default function useChat() {
   const version = useAuthStore((state) => state.sessionVersion);
   const [draft, setDraft] = useState("");
@@ -25,8 +18,8 @@ export default function useChat() {
   const conversationId = useRef(null);
   const pending = useRef(null);
   const historyRequest = useRef(null);
-  const evaluations = useRef(new Map());
-  const queue = useRef(Promise.resolve());
+  const timings = useRef(new Map());
+  const measured = useRef(new Set());
   const { capture, isActive } = useScreenScope(() => { void loadHistory(); }, () => {
     abortAll();
     setSending(false); setLoadingHistory(false);
@@ -35,53 +28,19 @@ export default function useChat() {
   function abortAll() {
     pending.current?.abort(); pending.current = null;
     historyRequest.current?.abort(); historyRequest.current = null;
-    for (const controller of evaluations.current.values()) controller.abort();
-    evaluations.current.clear(); queue.current = Promise.resolve();
+    for (const controller of timings.current.values()) controller.abort();
+    timings.current.clear();
   }
   useEffect(() => {
     // Scope đã vô hiệu hóa callbacks của phiên cũ; không giữ hội thoại giữa hai user.
     pending.current?.abort(); pending.current = null;
-    for (const controller of evaluations.current.values()) controller.abort();
-    evaluations.current.clear(); queue.current = Promise.resolve();
     conversation.current = []; conversationId.current = null;
     setSending(false);
+    measured.current.clear();
     setMessages([]); setDraft(""); setError(""); setHistoryError(""); setHasOlder(false);
   }, [version]);
 
   const updateMessages = (items) => { conversation.current = items; setMessages(items); };
-  const updateEvaluation = (id, evaluation) => updateMessages(conversation.current.map((item) =>
-    item.id === id && item.role === "assistant" ? { ...item, evaluation } : item));
-
-  async function evaluateTurn(id) {
-    if (!id || !isActive() || evaluations.current.has(id)) return;
-    const controller = new AbortController();
-    evaluations.current.set(id, controller);
-    const current = capture();
-    const context = getSessionContext();
-    updateEvaluation(id, { status: "processing" });
-    try {
-      let response = await chatService.evaluate(id, context, controller.signal);
-      if (response?.success !== true || !response.data?.status) throw new Error();
-      for (let poll = 0; response.data.status === "processing" && poll < 30 && current() && !controller.signal.aborted; poll++) {
-        await wait(controller.signal);
-        if (!current() || controller.signal.aborted) return;
-        response = await chatService.getEvaluation(id, context, controller.signal);
-        if (response?.success !== true || !response.data?.status) throw new Error();
-      }
-      if (current() && !controller.signal.aborted) updateEvaluation(id, response.data);
-    } catch (failure) {
-      if (current() && !controller.signal.aborted) updateEvaluation(id, {
-        status: "failed", message: getErrorMessage(failure, "Chưa tải được đánh giá. Bạn có thể thử lại."),
-      });
-    } finally {
-      if (evaluations.current.get(id) === controller) evaluations.current.delete(id);
-    }
-  }
-  function enqueueEvaluation(id) {
-    const current = capture();
-    queue.current = queue.current.catch(() => {}).then(() => current() ? evaluateTurn(id) : undefined);
-  }
-
   async function loadHistory() {
     if (!isActive() || pending.current || historyRequest.current) return;
     const context = getSessionContext();
@@ -100,11 +59,10 @@ export default function useChat() {
       setHasOlder(!!data.next_cursor);
       updateMessages(data.turns.flatMap((turn) => [
         { id: `${turn.id}-user`, role: "user", content: turn.question },
-        { id: turn.id, role: "assistant", content: turn.answer, evaluation: turn.evaluation,
+        { id: turn.id, role: "assistant", content: turn.answer,
+          client_response_ms: turn.client_response_ms,
           saved: true, answerSource: turn.answer_source },
       ]));
-      for (const turn of data.turns) if (turn.evaluation_enabled &&
-        ["not_requested", "processing"].includes(turn.evaluation?.status)) enqueueEvaluation(turn.id);
     } catch (failure) {
       if (current() && !controller.signal.aborted)
         setHistoryError(getErrorMessage(failure, "Chưa tải được lịch sử. Có thể thử lại hoặc bắt đầu cuộc trò chuyện mới."));
@@ -123,6 +81,7 @@ export default function useChat() {
     if (!context.token) { setError("Vui lòng đăng nhập để trò chuyện."); return; }
     let history = conversation.current.slice(-20).map(({ role, content }) => ({ role, content }));
     while (history.reduce((sum, item) => sum + item.content.length, message.length) > 24000) history = history.slice(2);
+    const sentAt = performance.now();
     const controller = new AbortController(); pending.current = controller;
     const current = capture(); setSending(true); setError("");
     try {
@@ -137,10 +96,9 @@ export default function useChat() {
       updateMessages([...conversation.current,
         { id: `${id}-user`, role: "user", content: message },
         { id, role: "assistant", content: reply, saved: data.saved,
-          evaluation: data.evaluation || { status: "disabled" } },
+          sentAt },
       ].slice(-40));
       setDraft("");
-      if (data.message_id && data.evaluation_enabled) enqueueEvaluation(data.message_id);
     } catch (failure) {
       if (current() && !controller.signal.aborted) setError(getErrorMessage(failure, "Không thể gửi tin nhắn. Vui lòng thử lại."));
     } finally {
@@ -152,8 +110,22 @@ export default function useChat() {
     abortAll(); updateMessages([]); conversationId.current = null;
     setDraft(""); setError(""); setHistoryError(""); setLoadingHistory(false); setHasOlder(false);
   };
+  const markDisplayed = (id) => {
+    const item = conversation.current.find((message) => message.id === id && message.role === "assistant");
+    if (!item || !item.saved || typeof item.sentAt !== "number" || measured.current.has(id)) return;
+    measured.current.add(id);
+    const ms = Math.max(0, Math.round(performance.now() - item.sentAt));
+    updateMessages(conversation.current.map((message) => message.id === id ? { ...message, client_response_ms: ms } : message));
+    const current = capture();
+    const controller = new AbortController(); timings.current.set(id, controller);
+    chatService.recordTiming(id, ms, getSessionContext(), controller.signal).catch(() => {
+      if (current() && !controller.signal.aborted) updateMessages(conversation.current.map((message) =>
+        message.id === id ? { ...message, timing_error: true } : message));
+    }).finally(() => timings.current.delete(id));
+  };
   return { draft, messages, sending, error, send, loadingHistory, historyError, hasOlder,
-    reloadHistory: loadHistory, newConversation, retryEvaluation: enqueueEvaluation,
+    markDisplayed,
+    reloadHistory: loadHistory, newConversation,
     changeDraft: (value) => { if (!pending.current) { setDraft(value); setError(""); } },
   };
 }

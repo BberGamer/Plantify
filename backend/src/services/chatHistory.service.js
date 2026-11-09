@@ -4,9 +4,6 @@ const ChatTurn = require("../models/chatTurn.model");
 const AppError = require("../utils/app-error");
 const v = require("../validators/common");
 
-const evaluationEnabled = () => process.env.AI_EVALUATION_ENABLED === "true" ||
-  (process.env.AI_EVALUATION_ENABLED === undefined && process.env.NODE_ENV !== "production");
-
 const assertActive = async (userId) => {
   v.id(userId);
   const user = await User.findById(userId).select("status").lean();
@@ -17,8 +14,10 @@ const publicTurn = (turn) => ({
   id: String(turn._id), conversation_id: String(turn.conversation_id),
   question: turn.question, answer: turn.answer, answer_source: turn.answer_source,
   model: turn.model, prompt_version: turn.prompt_version,
-  created_at: turn.created_at, evaluation_enabled: turn.evaluation_enabled,
-  evaluation: turn.evaluation || { status: "not_requested" },
+  created_at: turn.created_at, evaluation_enabled: false,
+  backend_answer_ms: turn.backend_answer_ms, client_response_ms: turn.client_response_ms,
+  test_case_id: turn.test_case_id, experiment_id: turn.experiment_id, experiment_condition: turn.experiment_condition,
+  evaluation: { status: "disabled" },
 });
 const assertConversation = async (userId, conversationId) => {
   if (!conversationId) return new mongoose.Types.ObjectId();
@@ -28,8 +27,8 @@ const assertConversation = async (userId, conversationId) => {
   return conversationId;
 };
 const saveTurn = async (input) => {
-  const turn = await ChatTurn.create({ ...input, evaluation_enabled: evaluationEnabled(),
-    evaluation: { status: evaluationEnabled() ? "not_requested" : "disabled" } });
+  const turn = await ChatTurn.create({ ...input, evaluation_enabled: false,
+    evaluation: { status: "disabled" } });
   return publicTurn(turn);
 };
 const getTurn = async (userId, id) => {
@@ -58,4 +57,4 @@ const list = async (userId, query) => {
     turns: page.reverse().map(publicTurn) };
 };
 
-module.exports = { assertActive, evaluationEnabled, assertConversation, saveTurn, getTurn, publicTurn, list };
+module.exports = { assertActive, assertConversation, saveTurn, getTurn, publicTurn, list };

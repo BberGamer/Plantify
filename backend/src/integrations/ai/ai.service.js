@@ -38,6 +38,8 @@ const complete = async (messages, options = {}) => {
     }
     const data = await response.json();
     const reply = data?.choices?.[0]?.message?.content;
+    if (data?.choices?.[0]?.finish_reason === "length")
+      throw new AppError("AI_INCOMPLETE_RESPONSE", 502, "AI chưa hoàn tất câu trả lời. Vui lòng thử lại với câu hỏi cụ thể hơn.");
     if (typeof reply !== "string" || !reply.trim() || reply.length > 12000)
       throw new AppError("AI_INVALID_RESPONSE", 502, "Trợ lý AI trả về dữ liệu không hợp lệ.");
     return reply.trim();

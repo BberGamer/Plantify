@@ -4,7 +4,7 @@ const controller = require("../controllers/chat.controller");
 
 router.post("/", authenticate, controller.send);
 router.get("/history", authenticate, controller.list);
-router.post("/:id/evaluation", authenticate, controller.evaluate);
-router.get("/:id/evaluation", authenticate, controller.getEvaluation);
+router.get("/report.csv", authenticate, controller.exportReport);
+router.patch("/:id/timing", authenticate, controller.recordTiming);
 
 module.exports = router;

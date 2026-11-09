@@ -2,7 +2,7 @@ const validate = require("../validators/chat.validator");
 const chat = require("../services/chat.service");
 const { success } = require("../utils/api-response");
 const history = require("../services/chatHistory.service");
-const evaluation = require("../services/chatEvaluation.service");
+const benchmark = require("../services/chatBenchmark.service");
 
 const send = async (req, res, next) => {
   try {
@@ -18,16 +18,15 @@ const list = async (req, res, next) => {
   try { return success(res, "Lấy lịch sử thành công.", await history.list(req.user.id, req.query)); }
   catch (error) { next(error); }
 };
-const evaluate = async (req, res, next) => {
-  try { return success(res, "Kết quả đánh giá.", await evaluation.evaluate(req.user.id, req.params.id)); }
+const recordTiming = async (req, res, next) => {
+  try { return success(res, "Ghi nhận thời gian.", await benchmark.recordTiming(req.user.id, req.params.id, req.body)); }
   catch (error) { next(error); }
 };
-const getEvaluation = async (req, res, next) => {
+const exportReport = async (req, res, next) => {
   try {
-    await history.assertActive(req.user.id);
-    const turn = await history.getTurn(req.user.id, req.params.id);
-    return success(res, "Kết quả đánh giá.", turn.evaluation || { status: "not_requested" });
+    const csv = await benchmark.exportReport(req.user.id, req.query);
+    return res.type("text/csv; charset=utf-8").attachment("Plantify_AI_Results.csv").send(csv);
   } catch (error) { next(error); }
 };
 
-module.exports = { send, list, evaluate, getEvaluation };
+module.exports = { send, list, recordTiming, exportReport };
