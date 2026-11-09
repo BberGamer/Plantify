@@ -19,7 +19,7 @@ export default function ChatComposer({ draft, onChange, onSend, sending, error }
               iconColor={colors.primary} accessibilityLabel="Gửi tin nhắn"
               disabled={!draft.trim()} onPress={onSend} />}
         </View>
-        <Text style={styles.caption}>Hội thoại được lưu trên tài khoản. AI và điểm CCC chỉ mang tính tham khảo.</Text>
+        <Text style={styles.caption}>Hội thoại được lưu trên tài khoản. AI có thể nhầm lẫn.</Text>
       </View>
     </View>
   );

@@ -5,13 +5,14 @@
 README được đối chiếu với source ngày **31/10/2026**. Trạng thái dưới đây mô tả phần đã triển khai trong mã nguồn, không đồng nghĩa đã kiểm thử tích hợp hoặc sẵn sàng production.
 
 Chat lưu câu hỏi–trả lời theo tài khoản/hội thoại trong `chat_turns`, tải lại lịch sử
-gần nhất và có đánh giá CCC tự động sau câu trả lời khi bật chế độ đánh giá.
-Điểm dựa trên reference draft được đánh dấu tham khảo, không xác nhận khoa học.
-Xem [cấu hình và hướng dẫn kiểm tra](backend/CHAT_EVALUATION.md).
+gần nhất và hiển thị thời gian phản hồi. Đã bỏ tự chấm và bảng CCC khỏi màn chat;
+API chấm CCC đã được gỡ; chat không đọc file kiến thức hoặc rubric từ backend/data.
+Bộ [30 test case, đo thời gian và xuất CSV](backend/CHAT_TEST_REPORT.md)
+hỗ trợ báo cáo thủ công trước/sau.
 
 Chat hiện có thêm tra cứu bộ câu hỏi–đáp chuẩn trong MongoDB collection `chat_faqs`.
 Chỉ bản ghi `approved`, ngôn ngữ `vi` được sử dụng; câu khớp chính xác hoặc alias
-trả nguyên đáp án, câu khác gọi AI như trước. Xem [cấu hình FAQ và đánh giá trước/sau](backend/CHAT_FAQ.md).
+trả nguyên đáp án, câu khác gọi AI như trước.
 
 ### Cây yêu thích của customer
 
@@ -114,6 +115,7 @@ Chỉ copy khi chưa có `.env`. Điền cấu hình trước khi khởi động
 | JWT_SECRET, JWT_EXPIRES_IN | Ký JWT và thời hạn; đặt secret riêng, không dựa vào fallback trong code |
 | EMAIL_USER, EMAIL_PASS | Tài khoản SMTP gửi OTP |
 | AI_API_KEY, AI_BASE_URL, AI_MODEL, AI_TIMEOUT_MS | Chat AI; URL mặc định https://platform.beeknoee.com/api/v1; model phải là ID thật; timeout 1000–45000ms, mặc định 30000ms |
+| AI_CHAT_MAX_TOKENS, AI_CHAT_HISTORY_PAIRS | Ưu tiên câu trả lời ngắn: mặc định 800 token, 3 cặp gần nhất và ngân sách ngữ cảnh 6000 ký tự. Thay model/cấu hình cần đo lại chất lượng và tốc độ; không bảo đảm mọi request dưới 5 giây. |
 | AI_EVALUATION_ENABLED, AI_EVALUATOR_MODEL | Bật/tắt chấm CCC tự động; judge mặc định dùng AI_MODEL; phát sinh thêm lượt gọi AI khi có đáp án tham chiếu |
 
 ```powershell

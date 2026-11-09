@@ -6,7 +6,6 @@ import { useRouter } from "expo-router";
 import ChatHeader from "../../src/components/chat/ChatHeader";
 import ChatWelcome from "../../src/components/chat/ChatWelcome";
 import ChatComposer from "../../src/components/chat/ChatComposer";
-import ChatEvaluation from "../../src/components/chat/ChatEvaluation";
 import useChat from "../../src/hooks/useChat";
 import { colors, spacing } from "../../src/theme";
 
@@ -37,11 +36,13 @@ export default function ChatScreen() {
           {!chat.messages.length && !chat.loadingHistory ? <ChatWelcome onSelect={chat.changeDraft} /> :
             <View style={styles.thread}>
               {chat.messages.map((message, index) => <View key={message.id || index}
+                onLayout={message.role === "assistant" ? () => chat.markDisplayed(message.id) : undefined}
                 style={[styles.bubble, message.role === "user" ? styles.user : styles.assistant]}>
                 <Text style={styles.speaker}>{message.role === "user" ? "Bạn" : "Trợ lý AI"}</Text>
                 <Text selectable style={styles.message}>{message.content}</Text>
-                {message.role === "assistant" && <ChatEvaluation evaluation={message.evaluation}
-                  onRetry={() => chat.retryEvaluation(message.id)} />}
+                {message.role === "assistant" && Number.isFinite(message.client_response_ms) &&
+                  <Text style={styles.timing}>Thời gian trả lời: {(message.client_response_ms / 1000).toFixed(2)} giây</Text>}
+                {message.timing_error && <Text style={styles.timing}>Chưa lưu được thời gian đo; bạn có thể ghi lại thủ công.</Text>}
               </View>)}
             </View>}
           {chat.sending && <View style={styles.thread} accessibilityLiveRegion="polite">
@@ -69,4 +70,5 @@ const styles = StyleSheet.create({
   speaker: { fontSize: 12, fontWeight: "700", color: colors.primary, marginBottom: spacing.xs },
   message: { fontSize: 15, lineHeight: 23, color: colors.textPrimary },
   pending: { color: colors.textSecondary, marginVertical: spacing.sm },
+  timing: { color: colors.textSecondary, fontSize: 12, marginTop: spacing.sm },
 });
