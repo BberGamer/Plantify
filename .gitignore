@@ -61,3 +61,12 @@ docs/
 *.ppt
 *.pdf
 backend/uploads/
+
+# ===== Python inference =====
+.venv/
+__pycache__/
+*.py[cod]
+*.pt
+
+# Local runtime model bundle (weights and metadata)
+/inference/model/
