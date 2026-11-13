@@ -34,15 +34,55 @@ File ảnh nằm trong `backend/uploads/plants`, được phục vụ tại `/up
 
 Kiểm tra chức năng: chạy `node --test tests/garden-create.test.cjs` trong `backend/` và `node --test tests/addGardenPlant.test.cjs` trong `mobile/`. Test backend mock truy vấn database; không thay thế kiểm thử MongoDB và thiết bị thật.
 
+## Chẩn đoán ảnh thật (cập nhật 10/11/2026)
+
+Luồng đã nối: **chụp/chọn ảnh → mobile → `POST /api/diagnosis` → Python YOLO → kết quả**.
+Backend xác thực customer đang hoạt động trước khi nhận ảnh. Ảnh JPEG/PNG/WebP tĩnh,
+tối đa 10 MiB và 25 megapixel, được chuyển nguyên bytes/EXIF sang Python; không lưu
+ảnh hoặc kết quả chẩn đoán vào database. Model nạp một lần từ
+`inference/model/weights/best_macro_f1.pt`, đúng 78 class và pad 384×384 của notebook.
+Bộ model hiện tại là run `PlantWild78_YOLO26m_20261111T094602654958Z_2b02c35f`,
+train 95 epoch; checkpoint được chọn theo validation Macro F1 tại epoch 63.
+Mapping gồm 78 class (ID 0–77), đã đồng bộ với taxonomy tiếng Việt của backend.
+
+App hiển thị kết quả thật bằng tiếng Việt, trạng thái phân tích và lỗi/thử lại. Kết quả
+yếu hoặc phân vân **không được trình bày như kết luận bệnh**; ảnh quá nhỏ, gần như
+trống hoặc quá tối/sáng yêu cầu chụp lại. Chỉ khi kết quả vượt ngưỡng mới hiển thị
+gợi ý nhận diện. Các ngưỡng mặc định là quy tắc tạm thời, chưa được hiệu chỉnh:
+top-1 từ 0.70, chênh top-1/top-2 từ 0.15; dưới 0.35 chuyển sang chưa nhận diện được.
+Điểm mô hình không phải độ chính xác hay xác suất đã hiệu chỉnh. Classifier chỉ có
+78 class, vẫn có thể tự tin với ảnh không phải cây; đây không phải bộ phát hiện OOD.
+
+Tên cây/bệnh lấy từ taxonomy kiểm tra theo mapping model. Thông tin triệu chứng/chăm
+sóc chỉ lấy từ danh mục database khi khớp duy nhất theo alias chính xác, bệnh còn
+active và liên kết với cây qua `common_disease_ids`. Không có mapping thì vẫn hiển
+thị gợi ý model nhưng không bịa nội dung bệnh/phác đồ hay MongoDB ID. Không tự áp
+dụng lịch điều trị từ ảnh; luồng chọn cây/phác đồ và xác nhận điều trị vẫn riêng biệt.
+
+Cần chạy cả Python, Express và Expo. Tại root repo, mở terminal Python:
+
+```powershell
+inference/.venv/Scripts/python.exe -m inference
+```
+
+Terminal khác chạy backend như thường lệ (`cd backend; npm run dev`), rồi mobile
+(`cd mobile; npm start`). Backend mặc định gọi `http://127.0.0.1:8001`; khi tách máy/
+container, đặt `DIAGNOSIS_INFERENCE_URL`. Mobile vẫn chỉ dùng `EXPO_PUBLIC_API_URL`
+trỏ vào Express, không gọi thẳng Python. Chi tiết API, cấu hình và kiểm thử:
+[backend/DIAGNOSIS_API.md](backend/DIAGNOSIS_API.md), [inference/README.md](inference/README.md).
+
 ## Tiến độ hiện tại
 
-Sau khi chụp/chọn ảnh, nút **Xem kết quả mẫu** mở giao diện kết quả với bệnh, độ tin cậy và gợi ý minh họa cố định. Dữ liệu mẫu không được suy ra từ ảnh; chưa gọi model hoặc lưu kết quả.
-
-Màn **Chẩn đoán bệnh** tại `/customer/diagnosis` mở từ Home hoặc nút camera màu xanh trên Navbar. Mobile hỗ trợ xin quyền camera, chụp ảnh, chọn một ảnh từ album và xem trước/chọn lại. Ảnh được giữ tạm trong màn hình, không upload, không tự lưu vào album và chưa gọi model chẩn đoán. Web chỉ hỗ trợ chọn ảnh. Quyền camera bị từ chối vẫn cho phép chọn ảnh từ album.
+Màn **Chẩn đoán bệnh** tại `/customer/diagnosis` mở từ Home hoặc camera trên Navbar.
+Nút **Phân tích ảnh** gửi ảnh đã chọn đến backend và hiển thị dữ liệu model thật;
+đã bỏ kết quả mẫu. Có chụp ảnh, chọn lại, xem ảnh, retry lỗi, thông báo kết quả
+không chắc chắn và hướng dẫn chụp lại. Ảnh chỉ giữ tạm trong màn hình và request,
+không tự lưu album hoặc lịch sử chẩn đoán. Web hỗ trợ chọn ảnh; quyền camera bị
+từ chối vẫn cho phép chọn album. Camera/album và hiển thị cần kiểm thử thiết bị thật.
 
 Sau khi lấy code mới, chạy `npm ci` trong `mobile/` và khởi động lại Expo. Với development build, cần build lại app để áp dụng module native và cấu hình quyền mới; camera cần kiểm thử trên điện thoại thật. Triển khai dựa trên [Expo Camera](https://docs.expo.dev/versions/v58.0.0/sdk/camera/) và [Expo ImagePicker](https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/).
 
-Kiểm tra hook camera/album: từ `mobile/`, chạy `node --test src/hooks/__tests__/useDiagnosisCapture.test.cjs`. Bộ test dùng mock thiết bị, không thay kiểm thử camera/album thực tế.
+Kiểm tra luồng chẩn đoán theo [DIAGNOSIS_API.md](backend/DIAGNOSIS_API.md). Test hook/service dùng mock thiết bị và phiên; không thay kiểm thử camera/album thực tế.
 
 | Phạm vi | Đã triển khai | Giới hạn / phần còn lại |
 | --- | --- | --- |
@@ -170,6 +210,7 @@ Mobile mới dùng prefix `/api`. Backend cũng hỗ trợ alias `/api/v1` để
 | --- | --- | --- |
 | POST | `/auth/register/send-otp`, `/auth/register/verify-otp` | Public |
 | POST | `/auth/login`, `/auth/forgot-password`, `/auth/reset-password` | Public |
+| POST | `/diagnosis` (multipart `photo`) | Customer đang hoạt động |
 | POST | `/auth/logout` | JWT |
 | GET, PATCH | `/auth/me` | JWT |
 | GET, POST | `/users` | Admin |

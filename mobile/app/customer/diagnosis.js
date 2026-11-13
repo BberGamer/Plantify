@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { IconButton, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,24 +9,28 @@ import DiagnosisPreview from "../../src/components/diagnosis/DiagnosisPreview";
 import DiagnosisResult from "../../src/components/diagnosis/DiagnosisResult";
 import useDiagnosisCapture from "../../src/hooks/useDiagnosisCapture";
 import useFormBack from "../../src/hooks/useFormBack";
+import useDiagnosis from "../../src/hooks/useDiagnosis";
 
 export default function DiagnosisScreen() {
   const router = useRouter();
-  const capture = useDiagnosisCapture();
+  const operationLock = useRef(null);
+  const capture = useDiagnosisCapture(operationLock);
+  const diagnosis = useDiagnosis(capture.photo, operationLock);
   const scroll = useRef(null);
-  const [resultPhoto, setResultPhoto] = useState(null);
-  const showResult = !!capture.photo && resultPhoto === capture.photo;
-  const toggleResult = (photo) => {
-    setResultPhoto(photo);
-    scroll.current?.scrollTo({ y: 0, animated: false });
-  };
+  const showResult = !!diagnosis.result && !diagnosis.imageInvalid;
+  const busy = capture.busy || diagnosis.busy;
+  const onImageError = () => { capture.onImageError(); diagnosis.onImageError(); };
+  useEffect(() => {
+    if (diagnosis.result) scroll.current?.scrollTo({ y: 0, animated: false });
+  }, [diagnosis.result]);
   const handleBack = () => {
-    if (showResult) toggleResult(null);
+    if (operationLock.current) return;
+    if (showResult) diagnosis.clearResult();
     else if (capture.photo) capture.retake();
     else if (router.canGoBack()) router.back();
     else router.replace("/customer/home");
   };
-  useFormBack(handleBack, capture.busy);
+  useFormBack(handleBack, busy);
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -34,7 +38,7 @@ export default function DiagnosisScreen() {
         <IconButton
           icon="arrow-left"
           onPress={handleBack}
-          disabled={capture.busy}
+          disabled={busy}
           accessibilityLabel="Quay lại"
         />
         <Text style={styles.title}>{showResult ? "Kết quả chẩn đoán" : "Chẩn đoán bệnh"}</Text>
@@ -47,27 +51,30 @@ export default function DiagnosisScreen() {
       >
         {showResult ? (
           <DiagnosisResult
-            photo={capture.photo} onBack={() => toggleResult(null)}
-            onRetake={capture.retake} onImageError={capture.onImageError}
+            photo={capture.photo} result={diagnosis.result} onBack={diagnosis.clearResult}
+            onRetake={capture.retake} onImageError={onImageError}
           />
         ) : capture.photo ? (
           <DiagnosisPreview
-            photo={capture.photo} busy={capture.busy} onRetake={capture.retake}
-            onPickPhoto={capture.pickPhoto} onImageError={capture.onImageError}
-            onViewResult={() => toggleResult(capture.photo)}
+            photo={capture.photo} busy={busy} analyzing={diagnosis.busy}
+            imageInvalid={diagnosis.imageInvalid} onRetake={capture.retake}
+            onPickPhoto={capture.pickPhoto} onImageError={onImageError}
+            onAnalyze={diagnosis.analyze}
           />
         ) : (
           <DiagnosisCapture
             cameraRef={capture.camera} showCamera={capture.showCamera}
             permission={capture.permission} cameraError={capture.cameraError}
-            busy={capture.busy} canCapture={capture.canCapture}
+            busy={busy} canCapture={capture.canCapture && !busy}
             onCameraReady={capture.onCameraReady} onCameraError={capture.onCameraError}
             onEnableCamera={capture.enableCamera} onRetryCamera={capture.retryCamera}
             onCapture={capture.takePhoto} onPickPhoto={capture.pickPhoto}
           />
         )}
-        {!!capture.error && (
-          <Text style={styles.error} accessibilityRole="alert">{capture.error}</Text>
+        {!!(diagnosis.error || capture.error) && (
+          <Text style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
+            {diagnosis.error || capture.error}
+          </Text>
         )}
       </ScrollView>
     </SafeAreaView>

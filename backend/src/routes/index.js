@@ -15,5 +15,6 @@ router.use("/garden/plants", require("./garden.routes"));
 router.use("/favorites/plants", require("./favorite.routes"));
 router.use("/chat", require("./chat.routes"));
 router.use("/treatments", require("./treatment.routes"));
+router.use("/diagnosis", require("./diagnosis.routes"));
 
 module.exports = router;

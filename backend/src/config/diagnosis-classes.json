@@ -1,0 +1,1410 @@
+[
+  {
+    "class_id": 0,
+    "class_name": "apple black rot",
+    "folder": "c000_apple_black_rot",
+    "is_healthy": false,
+    "display_name": "Táo — Thối đen",
+    "plant_name": "Táo",
+    "disease_name": "Thối đen",
+    "plant_aliases": [
+      "Táo",
+      "Apple"
+    ],
+    "disease_aliases": [
+      "Thối đen",
+      "Black rot",
+      "apple black rot",
+      "Thối đen Táo"
+    ]
+  },
+  {
+    "class_id": 1,
+    "class_name": "apple leaf",
+    "folder": "c001_apple_leaf",
+    "is_healthy": true,
+    "display_name": "Táo — Lá khỏe",
+    "plant_name": "Táo",
+    "disease_name": null,
+    "plant_aliases": [
+      "Táo",
+      "Apple"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 2,
+    "class_name": "apple mosaic virus",
+    "folder": "c002_apple_mosaic_virus",
+    "is_healthy": false,
+    "display_name": "Táo — Khảm lá do virus",
+    "plant_name": "Táo",
+    "disease_name": "Khảm lá do virus",
+    "plant_aliases": [
+      "Táo",
+      "Apple"
+    ],
+    "disease_aliases": [
+      "Khảm lá do virus",
+      "Khảm lá",
+      "Mosaic virus",
+      "apple mosaic virus",
+      "Khảm lá do virus Táo",
+      "Khảm lá Táo"
+    ]
+  },
+  {
+    "class_id": 3,
+    "class_name": "apple rust",
+    "folder": "c003_apple_rust",
+    "is_healthy": false,
+    "display_name": "Táo — Gỉ sắt",
+    "plant_name": "Táo",
+    "disease_name": "Gỉ sắt",
+    "plant_aliases": [
+      "Táo",
+      "Apple"
+    ],
+    "disease_aliases": [
+      "Gỉ sắt",
+      "Rỉ sắt",
+      "Rust",
+      "apple rust",
+      "Gỉ sắt Táo",
+      "Rỉ sắt Táo"
+    ]
+  },
+  {
+    "class_id": 4,
+    "class_name": "apple scab",
+    "folder": "c004_apple_scab",
+    "is_healthy": false,
+    "display_name": "Táo — Ghẻ",
+    "plant_name": "Táo",
+    "disease_name": "Ghẻ",
+    "plant_aliases": [
+      "Táo",
+      "Apple"
+    ],
+    "disease_aliases": [
+      "Ghẻ",
+      "Scab",
+      "apple scab",
+      "Ghẻ Táo"
+    ]
+  },
+  {
+    "class_id": 5,
+    "class_name": "banana leaf",
+    "folder": "c005_banana_leaf",
+    "is_healthy": true,
+    "display_name": "Chuối — Lá khỏe",
+    "plant_name": "Chuối",
+    "disease_name": null,
+    "plant_aliases": [
+      "Chuối",
+      "Banana"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 6,
+    "class_name": "banana panama disease",
+    "folder": "c006_banana_panama_disease",
+    "is_healthy": false,
+    "display_name": "Chuối — Héo Panama",
+    "plant_name": "Chuối",
+    "disease_name": "Héo Panama",
+    "plant_aliases": [
+      "Chuối",
+      "Banana"
+    ],
+    "disease_aliases": [
+      "Héo Panama",
+      "Bệnh Panama",
+      "Panama disease",
+      "banana panama disease",
+      "Héo Panama Chuối",
+      "Bệnh Panama Chuối"
+    ]
+  },
+  {
+    "class_id": 7,
+    "class_name": "basil downy mildew",
+    "folder": "c007_basil_downy_mildew",
+    "is_healthy": false,
+    "display_name": "Húng quế — Sương mai",
+    "plant_name": "Húng quế",
+    "disease_name": "Sương mai",
+    "plant_aliases": [
+      "Húng quế",
+      "Basil"
+    ],
+    "disease_aliases": [
+      "Sương mai",
+      "Downy mildew",
+      "basil downy mildew",
+      "Sương mai Húng quế"
+    ]
+  },
+  {
+    "class_id": 8,
+    "class_name": "basil leaf",
+    "folder": "c008_basil_leaf",
+    "is_healthy": true,
+    "display_name": "Húng quế — Lá khỏe",
+    "plant_name": "Húng quế",
+    "disease_name": null,
+    "plant_aliases": [
+      "Húng quế",
+      "Basil"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 9,
+    "class_name": "bean halo blight",
+    "folder": "c009_bean_halo_blight",
+    "is_healthy": false,
+    "display_name": "Đậu — Đốm lá quầng",
+    "plant_name": "Đậu",
+    "disease_name": "Đốm lá quầng",
+    "plant_aliases": [
+      "Đậu",
+      "Bean"
+    ],
+    "disease_aliases": [
+      "Đốm lá quầng",
+      "Cháy lá quầng",
+      "Halo blight",
+      "bean halo blight",
+      "Đốm lá quầng Đậu",
+      "Cháy lá quầng Đậu"
+    ]
+  },
+  {
+    "class_id": 10,
+    "class_name": "bean leaf",
+    "folder": "c010_bean_leaf",
+    "is_healthy": true,
+    "display_name": "Đậu — Lá khỏe",
+    "plant_name": "Đậu",
+    "disease_name": null,
+    "plant_aliases": [
+      "Đậu",
+      "Bean"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 11,
+    "class_name": "bean mosaic virus",
+    "folder": "c011_bean_mosaic_virus",
+    "is_healthy": false,
+    "display_name": "Đậu — Khảm lá do virus",
+    "plant_name": "Đậu",
+    "disease_name": "Khảm lá do virus",
+    "plant_aliases": [
+      "Đậu",
+      "Bean"
+    ],
+    "disease_aliases": [
+      "Khảm lá do virus",
+      "Khảm lá",
+      "Mosaic virus",
+      "bean mosaic virus",
+      "Khảm lá do virus Đậu",
+      "Khảm lá Đậu"
+    ]
+  },
+  {
+    "class_id": 12,
+    "class_name": "bean rust",
+    "folder": "c012_bean_rust",
+    "is_healthy": false,
+    "display_name": "Đậu — Gỉ sắt",
+    "plant_name": "Đậu",
+    "disease_name": "Gỉ sắt",
+    "plant_aliases": [
+      "Đậu",
+      "Bean"
+    ],
+    "disease_aliases": [
+      "Gỉ sắt",
+      "Rỉ sắt",
+      "Rust",
+      "bean rust",
+      "Gỉ sắt Đậu",
+      "Rỉ sắt Đậu"
+    ]
+  },
+  {
+    "class_id": 13,
+    "class_name": "bell pepper leaf",
+    "folder": "c013_bell_pepper_leaf",
+    "is_healthy": true,
+    "display_name": "Ớt chuông — Lá khỏe",
+    "plant_name": "Ớt chuông",
+    "disease_name": null,
+    "plant_aliases": [
+      "Ớt chuông",
+      "Bell pepper"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 14,
+    "class_name": "bell pepper leaf spot",
+    "folder": "c014_bell_pepper_leaf_spot",
+    "is_healthy": false,
+    "display_name": "Ớt chuông — Đốm lá",
+    "plant_name": "Ớt chuông",
+    "disease_name": "Đốm lá",
+    "plant_aliases": [
+      "Ớt chuông",
+      "Bell pepper"
+    ],
+    "disease_aliases": [
+      "Đốm lá",
+      "Leaf spot",
+      "bell pepper leaf spot",
+      "Đốm lá Ớt chuông"
+    ]
+  },
+  {
+    "class_id": 15,
+    "class_name": "broccoli downy mildew",
+    "folder": "c015_broccoli_downy_mildew",
+    "is_healthy": false,
+    "display_name": "Súp lơ xanh — Sương mai",
+    "plant_name": "Súp lơ xanh",
+    "disease_name": "Sương mai",
+    "plant_aliases": [
+      "Súp lơ xanh",
+      "Bông cải xanh",
+      "Broccoli"
+    ],
+    "disease_aliases": [
+      "Sương mai",
+      "Downy mildew",
+      "broccoli downy mildew",
+      "Sương mai Súp lơ xanh"
+    ]
+  },
+  {
+    "class_id": 16,
+    "class_name": "broccoli leaf",
+    "folder": "c016_broccoli_leaf",
+    "is_healthy": true,
+    "display_name": "Súp lơ xanh — Lá khỏe",
+    "plant_name": "Súp lơ xanh",
+    "disease_name": null,
+    "plant_aliases": [
+      "Súp lơ xanh",
+      "Bông cải xanh",
+      "Broccoli"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 17,
+    "class_name": "carrot cavity spot",
+    "folder": "c017_carrot_cavity_spot",
+    "is_healthy": false,
+    "display_name": "Cà rốt — Đốm lõm củ (cavity spot)",
+    "plant_name": "Cà rốt",
+    "disease_name": "Đốm lõm củ (cavity spot)",
+    "plant_aliases": [
+      "Cà rốt",
+      "Carrot"
+    ],
+    "disease_aliases": [
+      "Đốm lõm củ (cavity spot)",
+      "Đốm lõm củ",
+      "Cavity spot",
+      "carrot cavity spot",
+      "Đốm lõm củ Cà rốt"
+    ]
+  },
+  {
+    "class_id": 18,
+    "class_name": "celery early blight",
+    "folder": "c018_celery_early_blight",
+    "is_healthy": false,
+    "display_name": "Cần tây — Đốm lá sớm (early blight)",
+    "plant_name": "Cần tây",
+    "disease_name": "Đốm lá sớm (early blight)",
+    "plant_aliases": [
+      "Cần tây",
+      "Celery"
+    ],
+    "disease_aliases": [
+      "Đốm lá sớm (early blight)",
+      "Đốm lá sớm",
+      "Early blight",
+      "celery early blight",
+      "Đốm lá sớm Cần tây"
+    ]
+  },
+  {
+    "class_id": 19,
+    "class_name": "celery leaf",
+    "folder": "c019_celery_leaf",
+    "is_healthy": true,
+    "display_name": "Cần tây — Lá khỏe",
+    "plant_name": "Cần tây",
+    "disease_name": null,
+    "plant_aliases": [
+      "Cần tây",
+      "Celery"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 20,
+    "class_name": "cherry leaf",
+    "folder": "c020_cherry_leaf",
+    "is_healthy": true,
+    "display_name": "Anh đào — Lá khỏe",
+    "plant_name": "Anh đào",
+    "disease_name": null,
+    "plant_aliases": [
+      "Anh đào",
+      "Cherry"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 21,
+    "class_name": "cherry leaf spot",
+    "folder": "c021_cherry_leaf_spot",
+    "is_healthy": false,
+    "display_name": "Anh đào — Đốm lá",
+    "plant_name": "Anh đào",
+    "disease_name": "Đốm lá",
+    "plant_aliases": [
+      "Anh đào",
+      "Cherry"
+    ],
+    "disease_aliases": [
+      "Đốm lá",
+      "Leaf spot",
+      "cherry leaf spot",
+      "Đốm lá Anh đào"
+    ]
+  },
+  {
+    "class_id": 22,
+    "class_name": "cherry powdery mildew",
+    "folder": "c022_cherry_powdery_mildew",
+    "is_healthy": false,
+    "display_name": "Anh đào — Phấn trắng",
+    "plant_name": "Anh đào",
+    "disease_name": "Phấn trắng",
+    "plant_aliases": [
+      "Anh đào",
+      "Cherry"
+    ],
+    "disease_aliases": [
+      "Phấn trắng",
+      "Powdery mildew",
+      "cherry powdery mildew",
+      "Phấn trắng Anh đào"
+    ]
+  },
+  {
+    "class_id": 23,
+    "class_name": "citrus canker",
+    "folder": "c023_citrus_canker",
+    "is_healthy": false,
+    "display_name": "Cây có múi — Loét",
+    "plant_name": "Cây có múi",
+    "disease_name": "Loét",
+    "plant_aliases": [
+      "Cây có múi",
+      "Citrus"
+    ],
+    "disease_aliases": [
+      "Loét",
+      "Canker",
+      "citrus canker",
+      "Loét Cây có múi"
+    ]
+  },
+  {
+    "class_id": 24,
+    "class_name": "citrus greening disease",
+    "folder": "c024_citrus_greening_disease",
+    "is_healthy": false,
+    "display_name": "Cây có múi — Vàng lá gân xanh",
+    "plant_name": "Cây có múi",
+    "disease_name": "Vàng lá gân xanh",
+    "plant_aliases": [
+      "Cây có múi",
+      "Citrus"
+    ],
+    "disease_aliases": [
+      "Vàng lá gân xanh",
+      "Greening",
+      "Greening disease",
+      "citrus greening disease",
+      "Vàng lá gân xanh Cây có múi"
+    ]
+  },
+  {
+    "class_id": 25,
+    "class_name": "coffee leaf",
+    "folder": "c025_coffee_leaf",
+    "is_healthy": true,
+    "display_name": "Cà phê — Lá khỏe",
+    "plant_name": "Cà phê",
+    "disease_name": null,
+    "plant_aliases": [
+      "Cà phê",
+      "Coffee"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 26,
+    "class_name": "coffee leaf rust",
+    "folder": "c026_coffee_leaf_rust",
+    "is_healthy": false,
+    "display_name": "Cà phê — Gỉ sắt lá",
+    "plant_name": "Cà phê",
+    "disease_name": "Gỉ sắt lá",
+    "plant_aliases": [
+      "Cà phê",
+      "Coffee"
+    ],
+    "disease_aliases": [
+      "Gỉ sắt lá",
+      "Rỉ sắt lá",
+      "Gỉ sắt",
+      "Rỉ sắt",
+      "Leaf rust",
+      "coffee leaf rust",
+      "Gỉ sắt lá Cà phê",
+      "Rỉ sắt lá Cà phê",
+      "Gỉ sắt Cà phê",
+      "Rỉ sắt Cà phê"
+    ]
+  },
+  {
+    "class_id": 27,
+    "class_name": "corn gray leaf spot",
+    "folder": "c027_corn_gray_leaf_spot",
+    "is_healthy": false,
+    "display_name": "Ngô — Đốm lá xám",
+    "plant_name": "Ngô",
+    "disease_name": "Đốm lá xám",
+    "plant_aliases": [
+      "Ngô",
+      "Bắp",
+      "Corn"
+    ],
+    "disease_aliases": [
+      "Đốm lá xám",
+      "Gray leaf spot",
+      "corn gray leaf spot",
+      "Đốm lá xám Ngô"
+    ]
+  },
+  {
+    "class_id": 28,
+    "class_name": "corn leaf",
+    "folder": "c028_corn_leaf",
+    "is_healthy": true,
+    "display_name": "Ngô — Lá khỏe",
+    "plant_name": "Ngô",
+    "disease_name": null,
+    "plant_aliases": [
+      "Ngô",
+      "Bắp",
+      "Corn"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 29,
+    "class_name": "corn northern leaf blight",
+    "folder": "c029_corn_northern_leaf_blight",
+    "is_healthy": false,
+    "display_name": "Ngô — Đốm lá lớn (northern leaf blight)",
+    "plant_name": "Ngô",
+    "disease_name": "Đốm lá lớn (northern leaf blight)",
+    "plant_aliases": [
+      "Ngô",
+      "Bắp",
+      "Corn"
+    ],
+    "disease_aliases": [
+      "Đốm lá lớn (northern leaf blight)",
+      "Đốm lá lớn",
+      "Northern leaf blight",
+      "corn northern leaf blight",
+      "Đốm lá lớn Ngô"
+    ]
+  },
+  {
+    "class_id": 30,
+    "class_name": "corn rust",
+    "folder": "c030_corn_rust",
+    "is_healthy": false,
+    "display_name": "Ngô — Gỉ sắt",
+    "plant_name": "Ngô",
+    "disease_name": "Gỉ sắt",
+    "plant_aliases": [
+      "Ngô",
+      "Bắp",
+      "Corn"
+    ],
+    "disease_aliases": [
+      "Gỉ sắt",
+      "Rỉ sắt",
+      "Rust",
+      "corn rust",
+      "Gỉ sắt Ngô",
+      "Rỉ sắt Ngô"
+    ]
+  },
+  {
+    "class_id": 31,
+    "class_name": "corn smut",
+    "folder": "c031_corn_smut",
+    "is_healthy": false,
+    "display_name": "Ngô — Bệnh than (smut)",
+    "plant_name": "Ngô",
+    "disease_name": "Bệnh than (smut)",
+    "plant_aliases": [
+      "Ngô",
+      "Bắp",
+      "Corn"
+    ],
+    "disease_aliases": [
+      "Bệnh than (smut)",
+      "Bệnh than",
+      "Smut",
+      "corn smut",
+      "Bệnh than Ngô"
+    ]
+  },
+  {
+    "class_id": 32,
+    "class_name": "cucumber angular leaf spot",
+    "folder": "c032_cucumber_angular_leaf_spot",
+    "is_healthy": false,
+    "display_name": "Dưa chuột — Đốm lá góc cạnh",
+    "plant_name": "Dưa chuột",
+    "disease_name": "Đốm lá góc cạnh",
+    "plant_aliases": [
+      "Dưa chuột",
+      "Dưa leo",
+      "Cucumber"
+    ],
+    "disease_aliases": [
+      "Đốm lá góc cạnh",
+      "Angular leaf spot",
+      "cucumber angular leaf spot",
+      "Đốm lá góc cạnh Dưa chuột"
+    ]
+  },
+  {
+    "class_id": 33,
+    "class_name": "cucumber bacterial wilt",
+    "folder": "c033_cucumber_bacterial_wilt",
+    "is_healthy": false,
+    "display_name": "Dưa chuột — Héo vi khuẩn",
+    "plant_name": "Dưa chuột",
+    "disease_name": "Héo vi khuẩn",
+    "plant_aliases": [
+      "Dưa chuột",
+      "Dưa leo",
+      "Cucumber"
+    ],
+    "disease_aliases": [
+      "Héo vi khuẩn",
+      "Bacterial wilt",
+      "cucumber bacterial wilt",
+      "Héo vi khuẩn Dưa chuột"
+    ]
+  },
+  {
+    "class_id": 34,
+    "class_name": "cucumber leaf",
+    "folder": "c034_cucumber_leaf",
+    "is_healthy": true,
+    "display_name": "Dưa chuột — Lá khỏe",
+    "plant_name": "Dưa chuột",
+    "disease_name": null,
+    "plant_aliases": [
+      "Dưa chuột",
+      "Dưa leo",
+      "Cucumber"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 35,
+    "class_name": "cucumber powdery mildew",
+    "folder": "c035_cucumber_powdery_mildew",
+    "is_healthy": false,
+    "display_name": "Dưa chuột — Phấn trắng",
+    "plant_name": "Dưa chuột",
+    "disease_name": "Phấn trắng",
+    "plant_aliases": [
+      "Dưa chuột",
+      "Dưa leo",
+      "Cucumber"
+    ],
+    "disease_aliases": [
+      "Phấn trắng",
+      "Powdery mildew",
+      "cucumber powdery mildew",
+      "Phấn trắng Dưa chuột"
+    ]
+  },
+  {
+    "class_id": 36,
+    "class_name": "eggplant cercospora leaf spot",
+    "folder": "c036_eggplant_cercospora_leaf_spot",
+    "is_healthy": false,
+    "display_name": "Cà tím — Đốm lá Cercospora",
+    "plant_name": "Cà tím",
+    "disease_name": "Đốm lá Cercospora",
+    "plant_aliases": [
+      "Cà tím",
+      "Eggplant"
+    ],
+    "disease_aliases": [
+      "Đốm lá Cercospora",
+      "Cercospora leaf spot",
+      "eggplant cercospora leaf spot",
+      "Đốm lá Cercospora Cà tím"
+    ]
+  },
+  {
+    "class_id": 37,
+    "class_name": "eggplant leaf",
+    "folder": "c037_eggplant_leaf",
+    "is_healthy": true,
+    "display_name": "Cà tím — Lá khỏe",
+    "plant_name": "Cà tím",
+    "disease_name": null,
+    "plant_aliases": [
+      "Cà tím",
+      "Eggplant"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 38,
+    "class_name": "garlic leaf",
+    "folder": "c038_garlic_leaf",
+    "is_healthy": true,
+    "display_name": "Tỏi — Lá khỏe",
+    "plant_name": "Tỏi",
+    "disease_name": null,
+    "plant_aliases": [
+      "Tỏi",
+      "Garlic"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 39,
+    "class_name": "garlic leaf blight",
+    "folder": "c039_garlic_leaf_blight",
+    "is_healthy": false,
+    "display_name": "Tỏi — Cháy lá",
+    "plant_name": "Tỏi",
+    "disease_name": "Cháy lá",
+    "plant_aliases": [
+      "Tỏi",
+      "Garlic"
+    ],
+    "disease_aliases": [
+      "Cháy lá",
+      "Leaf blight",
+      "garlic leaf blight",
+      "Cháy lá Tỏi"
+    ]
+  },
+  {
+    "class_id": 40,
+    "class_name": "garlic rust",
+    "folder": "c040_garlic_rust",
+    "is_healthy": false,
+    "display_name": "Tỏi — Gỉ sắt",
+    "plant_name": "Tỏi",
+    "disease_name": "Gỉ sắt",
+    "plant_aliases": [
+      "Tỏi",
+      "Garlic"
+    ],
+    "disease_aliases": [
+      "Gỉ sắt",
+      "Rỉ sắt",
+      "Rust",
+      "garlic rust",
+      "Gỉ sắt Tỏi",
+      "Rỉ sắt Tỏi"
+    ]
+  },
+  {
+    "class_id": 41,
+    "class_name": "grape black rot",
+    "folder": "c041_grape_black_rot",
+    "is_healthy": false,
+    "display_name": "Nho — Thối đen",
+    "plant_name": "Nho",
+    "disease_name": "Thối đen",
+    "plant_aliases": [
+      "Nho",
+      "Grape",
+      "Grapevine"
+    ],
+    "disease_aliases": [
+      "Thối đen",
+      "Black rot",
+      "grape black rot",
+      "Thối đen Nho"
+    ]
+  },
+  {
+    "class_id": 42,
+    "class_name": "grape downy mildew",
+    "folder": "c042_grape_downy_mildew",
+    "is_healthy": false,
+    "display_name": "Nho — Sương mai",
+    "plant_name": "Nho",
+    "disease_name": "Sương mai",
+    "plant_aliases": [
+      "Nho",
+      "Grape",
+      "Grapevine"
+    ],
+    "disease_aliases": [
+      "Sương mai",
+      "Downy mildew",
+      "grape downy mildew",
+      "Sương mai Nho"
+    ]
+  },
+  {
+    "class_id": 43,
+    "class_name": "grape leaf",
+    "folder": "c043_grape_leaf",
+    "is_healthy": true,
+    "display_name": "Nho — Lá khỏe",
+    "plant_name": "Nho",
+    "disease_name": null,
+    "plant_aliases": [
+      "Nho",
+      "Grape",
+      "Grapevine"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 44,
+    "class_name": "grape leaf spot",
+    "folder": "c044_grape_leaf_spot",
+    "is_healthy": false,
+    "display_name": "Nho — Đốm lá",
+    "plant_name": "Nho",
+    "disease_name": "Đốm lá",
+    "plant_aliases": [
+      "Nho",
+      "Grape",
+      "Grapevine"
+    ],
+    "disease_aliases": [
+      "Đốm lá",
+      "Leaf spot",
+      "grape leaf spot",
+      "Đốm lá Nho"
+    ]
+  },
+  {
+    "class_id": 45,
+    "class_name": "grapevine leafroll disease",
+    "folder": "c045_grapevine_leafroll_disease",
+    "is_healthy": false,
+    "display_name": "Nho — Cuốn lá",
+    "plant_name": "Nho",
+    "disease_name": "Cuốn lá",
+    "plant_aliases": [
+      "Nho",
+      "Grape",
+      "Grapevine"
+    ],
+    "disease_aliases": [
+      "Cuốn lá",
+      "Leafroll disease",
+      "grapevine leafroll disease",
+      "Cuốn lá Nho"
+    ]
+  },
+  {
+    "class_id": 46,
+    "class_name": "lettuce downy mildew",
+    "folder": "c046_lettuce_downy_mildew",
+    "is_healthy": false,
+    "display_name": "Xà lách — Sương mai",
+    "plant_name": "Xà lách",
+    "disease_name": "Sương mai",
+    "plant_aliases": [
+      "Xà lách",
+      "Lettuce"
+    ],
+    "disease_aliases": [
+      "Sương mai",
+      "Downy mildew",
+      "lettuce downy mildew",
+      "Sương mai Xà lách"
+    ]
+  },
+  {
+    "class_id": 47,
+    "class_name": "lettuce leaf",
+    "folder": "c047_lettuce_leaf",
+    "is_healthy": true,
+    "display_name": "Xà lách — Lá khỏe",
+    "plant_name": "Xà lách",
+    "disease_name": null,
+    "plant_aliases": [
+      "Xà lách",
+      "Lettuce"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 48,
+    "class_name": "lettuce mosaic virus",
+    "folder": "c048_lettuce_mosaic_virus",
+    "is_healthy": false,
+    "display_name": "Xà lách — Khảm lá do virus",
+    "plant_name": "Xà lách",
+    "disease_name": "Khảm lá do virus",
+    "plant_aliases": [
+      "Xà lách",
+      "Lettuce"
+    ],
+    "disease_aliases": [
+      "Khảm lá do virus",
+      "Khảm lá",
+      "Mosaic virus",
+      "lettuce mosaic virus",
+      "Khảm lá do virus Xà lách",
+      "Khảm lá Xà lách"
+    ]
+  },
+  {
+    "class_id": 49,
+    "class_name": "maple leaf",
+    "folder": "c049_maple_leaf",
+    "is_healthy": true,
+    "display_name": "Phong — Lá khỏe",
+    "plant_name": "Phong",
+    "disease_name": null,
+    "plant_aliases": [
+      "Phong",
+      "Maple"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 50,
+    "class_name": "maple tar spot",
+    "folder": "c050_maple_tar_spot",
+    "is_healthy": false,
+    "display_name": "Phong — Đốm hắc ín (tar spot)",
+    "plant_name": "Phong",
+    "disease_name": "Đốm hắc ín (tar spot)",
+    "plant_aliases": [
+      "Phong",
+      "Maple"
+    ],
+    "disease_aliases": [
+      "Đốm hắc ín (tar spot)",
+      "Đốm hắc ín",
+      "Tar spot",
+      "maple tar spot",
+      "Đốm hắc ín Phong"
+    ]
+  },
+  {
+    "class_id": 51,
+    "class_name": "peach leaf",
+    "folder": "c051_peach_leaf",
+    "is_healthy": true,
+    "display_name": "Đào — Lá khỏe",
+    "plant_name": "Đào",
+    "disease_name": null,
+    "plant_aliases": [
+      "Đào",
+      "Peach"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 52,
+    "class_name": "peach leaf curl",
+    "folder": "c052_peach_leaf_curl",
+    "is_healthy": false,
+    "display_name": "Đào — Xoăn lá",
+    "plant_name": "Đào",
+    "disease_name": "Xoăn lá",
+    "plant_aliases": [
+      "Đào",
+      "Peach"
+    ],
+    "disease_aliases": [
+      "Xoăn lá",
+      "Leaf curl",
+      "peach leaf curl",
+      "Xoăn lá Đào"
+    ]
+  },
+  {
+    "class_id": 53,
+    "class_name": "plum leaf",
+    "folder": "c053_plum_leaf",
+    "is_healthy": true,
+    "display_name": "Mận — Lá khỏe",
+    "plant_name": "Mận",
+    "disease_name": null,
+    "plant_aliases": [
+      "Mận",
+      "Plum"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 54,
+    "class_name": "plum pocket disease",
+    "folder": "c054_plum_pocket_disease",
+    "is_healthy": false,
+    "display_name": "Mận — Phồng quả (plum pocket)",
+    "plant_name": "Mận",
+    "disease_name": "Phồng quả (plum pocket)",
+    "plant_aliases": [
+      "Mận",
+      "Plum"
+    ],
+    "disease_aliases": [
+      "Phồng quả (plum pocket)",
+      "Phồng quả",
+      "Plum pocket",
+      "Pocket disease",
+      "plum pocket disease",
+      "Phồng quả Mận"
+    ]
+  },
+  {
+    "class_id": 55,
+    "class_name": "potato early blight",
+    "folder": "c055_potato_early_blight",
+    "is_healthy": false,
+    "display_name": "Khoai tây — Đốm vòng",
+    "plant_name": "Khoai tây",
+    "disease_name": "Đốm vòng",
+    "plant_aliases": [
+      "Khoai tây",
+      "Potato"
+    ],
+    "disease_aliases": [
+      "Đốm vòng",
+      "Early blight",
+      "potato early blight",
+      "Đốm vòng Khoai tây"
+    ]
+  },
+  {
+    "class_id": 56,
+    "class_name": "potato late blight",
+    "folder": "c056_potato_late_blight",
+    "is_healthy": false,
+    "display_name": "Khoai tây — Mốc sương",
+    "plant_name": "Khoai tây",
+    "disease_name": "Mốc sương",
+    "plant_aliases": [
+      "Khoai tây",
+      "Potato"
+    ],
+    "disease_aliases": [
+      "Mốc sương",
+      "Late blight",
+      "potato late blight",
+      "Mốc sương Khoai tây"
+    ]
+  },
+  {
+    "class_id": 57,
+    "class_name": "potato leaf",
+    "folder": "c057_potato_leaf",
+    "is_healthy": true,
+    "display_name": "Khoai tây — Lá khỏe",
+    "plant_name": "Khoai tây",
+    "disease_name": null,
+    "plant_aliases": [
+      "Khoai tây",
+      "Potato"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 58,
+    "class_name": "raspberry leaf",
+    "folder": "c058_raspberry_leaf",
+    "is_healthy": true,
+    "display_name": "Mâm xôi — Lá khỏe",
+    "plant_name": "Mâm xôi",
+    "disease_name": null,
+    "plant_aliases": [
+      "Mâm xôi",
+      "Raspberry"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 59,
+    "class_name": "rice blast",
+    "folder": "c059_rice_blast",
+    "is_healthy": false,
+    "display_name": "Lúa — Đạo ôn",
+    "plant_name": "Lúa",
+    "disease_name": "Đạo ôn",
+    "plant_aliases": [
+      "Lúa",
+      "Rice"
+    ],
+    "disease_aliases": [
+      "Đạo ôn",
+      "Blast",
+      "rice blast",
+      "Đạo ôn Lúa"
+    ]
+  },
+  {
+    "class_id": 60,
+    "class_name": "rice leaf",
+    "folder": "c060_rice_leaf",
+    "is_healthy": true,
+    "display_name": "Lúa — Lá khỏe",
+    "plant_name": "Lúa",
+    "disease_name": null,
+    "plant_aliases": [
+      "Lúa",
+      "Rice"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 61,
+    "class_name": "rice sheath blight",
+    "folder": "c061_rice_sheath_blight",
+    "is_healthy": false,
+    "display_name": "Lúa — Khô vằn",
+    "plant_name": "Lúa",
+    "disease_name": "Khô vằn",
+    "plant_aliases": [
+      "Lúa",
+      "Rice"
+    ],
+    "disease_aliases": [
+      "Khô vằn",
+      "Sheath blight",
+      "rice sheath blight",
+      "Khô vằn Lúa"
+    ]
+  },
+  {
+    "class_id": 62,
+    "class_name": "soybean leaf",
+    "folder": "c062_soybean_leaf",
+    "is_healthy": true,
+    "display_name": "Đậu tương — Lá khỏe",
+    "plant_name": "Đậu tương",
+    "disease_name": null,
+    "plant_aliases": [
+      "Đậu tương",
+      "Đậu nành",
+      "Soybean"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 63,
+    "class_name": "squash leaf",
+    "folder": "c063_squash_leaf",
+    "is_healthy": true,
+    "display_name": "Bí — Lá khỏe",
+    "plant_name": "Bí",
+    "disease_name": null,
+    "plant_aliases": [
+      "Bí",
+      "Squash"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 64,
+    "class_name": "squash powdery mildew",
+    "folder": "c064_squash_powdery_mildew",
+    "is_healthy": false,
+    "display_name": "Bí — Phấn trắng",
+    "plant_name": "Bí",
+    "disease_name": "Phấn trắng",
+    "plant_aliases": [
+      "Bí",
+      "Squash"
+    ],
+    "disease_aliases": [
+      "Phấn trắng",
+      "Powdery mildew",
+      "squash powdery mildew",
+      "Phấn trắng Bí"
+    ]
+  },
+  {
+    "class_id": 65,
+    "class_name": "strawberry anthracnose",
+    "folder": "c065_strawberry_anthracnose",
+    "is_healthy": false,
+    "display_name": "Dâu tây — Thán thư",
+    "plant_name": "Dâu tây",
+    "disease_name": "Thán thư",
+    "plant_aliases": [
+      "Dâu tây",
+      "Strawberry"
+    ],
+    "disease_aliases": [
+      "Thán thư",
+      "Anthracnose",
+      "strawberry anthracnose",
+      "Thán thư Dâu tây"
+    ]
+  },
+  {
+    "class_id": 66,
+    "class_name": "strawberry leaf",
+    "folder": "c066_strawberry_leaf",
+    "is_healthy": true,
+    "display_name": "Dâu tây — Lá khỏe",
+    "plant_name": "Dâu tây",
+    "disease_name": null,
+    "plant_aliases": [
+      "Dâu tây",
+      "Strawberry"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 67,
+    "class_name": "strawberry leaf scorch",
+    "folder": "c067_strawberry_leaf_scorch",
+    "is_healthy": false,
+    "display_name": "Dâu tây — Cháy lá (leaf scorch)",
+    "plant_name": "Dâu tây",
+    "disease_name": "Cháy lá (leaf scorch)",
+    "plant_aliases": [
+      "Dâu tây",
+      "Strawberry"
+    ],
+    "disease_aliases": [
+      "Cháy lá (leaf scorch)",
+      "Cháy lá",
+      "Leaf scorch",
+      "strawberry leaf scorch",
+      "Cháy lá Dâu tây"
+    ]
+  },
+  {
+    "class_id": 68,
+    "class_name": "tobacco leaf",
+    "folder": "c068_tobacco_leaf",
+    "is_healthy": true,
+    "display_name": "Thuốc lá — Lá khỏe",
+    "plant_name": "Thuốc lá",
+    "disease_name": null,
+    "plant_aliases": [
+      "Thuốc lá",
+      "Tobacco"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 69,
+    "class_name": "tobacco mosaic virus",
+    "folder": "c069_tobacco_mosaic_virus",
+    "is_healthy": false,
+    "display_name": "Thuốc lá — Khảm lá do virus",
+    "plant_name": "Thuốc lá",
+    "disease_name": "Khảm lá do virus",
+    "plant_aliases": [
+      "Thuốc lá",
+      "Tobacco"
+    ],
+    "disease_aliases": [
+      "Khảm lá do virus",
+      "Khảm lá",
+      "Mosaic virus",
+      "tobacco mosaic virus",
+      "Khảm lá do virus Thuốc lá",
+      "Khảm lá Thuốc lá"
+    ]
+  },
+  {
+    "class_id": 70,
+    "class_name": "tomato bacterial leaf spot",
+    "folder": "c070_tomato_bacterial_leaf_spot",
+    "is_healthy": false,
+    "display_name": "Cà chua — Đốm lá vi khuẩn",
+    "plant_name": "Cà chua",
+    "disease_name": "Đốm lá vi khuẩn",
+    "plant_aliases": [
+      "Cà chua",
+      "Tomato"
+    ],
+    "disease_aliases": [
+      "Đốm lá vi khuẩn",
+      "Bacterial leaf spot",
+      "tomato bacterial leaf spot",
+      "Đốm lá vi khuẩn Cà chua"
+    ]
+  },
+  {
+    "class_id": 71,
+    "class_name": "tomato early blight",
+    "folder": "c071_tomato_early_blight",
+    "is_healthy": false,
+    "display_name": "Cà chua — Đốm vòng",
+    "plant_name": "Cà chua",
+    "disease_name": "Đốm vòng",
+    "plant_aliases": [
+      "Cà chua",
+      "Tomato"
+    ],
+    "disease_aliases": [
+      "Đốm vòng",
+      "Early blight",
+      "tomato early blight",
+      "Đốm vòng Cà chua"
+    ]
+  },
+  {
+    "class_id": 72,
+    "class_name": "tomato late blight",
+    "folder": "c072_tomato_late_blight",
+    "is_healthy": false,
+    "display_name": "Cà chua — Mốc sương",
+    "plant_name": "Cà chua",
+    "disease_name": "Mốc sương",
+    "plant_aliases": [
+      "Cà chua",
+      "Tomato"
+    ],
+    "disease_aliases": [
+      "Mốc sương",
+      "Late blight",
+      "tomato late blight",
+      "Mốc sương Cà chua"
+    ]
+  },
+  {
+    "class_id": 73,
+    "class_name": "tomato leaf",
+    "folder": "c073_tomato_leaf",
+    "is_healthy": true,
+    "display_name": "Cà chua — Lá khỏe",
+    "plant_name": "Cà chua",
+    "disease_name": null,
+    "plant_aliases": [
+      "Cà chua",
+      "Tomato"
+    ],
+    "disease_aliases": []
+  },
+  {
+    "class_id": 74,
+    "class_name": "tomato leaf mold",
+    "folder": "c074_tomato_leaf_mold",
+    "is_healthy": false,
+    "display_name": "Cà chua — Mốc lá",
+    "plant_name": "Cà chua",
+    "disease_name": "Mốc lá",
+    "plant_aliases": [
+      "Cà chua",
+      "Tomato"
+    ],
+    "disease_aliases": [
+      "Mốc lá",
+      "Leaf mold",
+      "tomato leaf mold",
+      "Mốc lá Cà chua"
+    ]
+  },
+  {
+    "class_id": 75,
+    "class_name": "tomato mosaic virus",
+    "folder": "c075_tomato_mosaic_virus",
+    "is_healthy": false,
+    "display_name": "Cà chua — Khảm lá do virus",
+    "plant_name": "Cà chua",
+    "disease_name": "Khảm lá do virus",
+    "plant_aliases": [
+      "Cà chua",
+      "Tomato"
+    ],
+    "disease_aliases": [
+      "Khảm lá do virus",
+      "Khảm lá",
+      "Mosaic virus",
+      "tomato mosaic virus",
+      "Khảm lá do virus Cà chua",
+      "Khảm lá Cà chua"
+    ]
+  },
+  {
+    "class_id": 76,
+    "class_name": "tomato septoria leaf spot",
+    "folder": "c076_tomato_septoria_leaf_spot",
+    "is_healthy": false,
+    "display_name": "Cà chua — Đốm lá Septoria",
+    "plant_name": "Cà chua",
+    "disease_name": "Đốm lá Septoria",
+    "plant_aliases": [
+      "Cà chua",
+      "Tomato"
+    ],
+    "disease_aliases": [
+      "Đốm lá Septoria",
+      "Septoria leaf spot",
+      "tomato septoria leaf spot",
+      "Đốm lá Septoria Cà chua"
+    ]
+  },
+  {
+    "class_id": 77,
+    "class_name": "zucchini yellow mosaic virus",
+    "folder": "c077_zucchini_yellow_mosaic_virus",
+    "is_healthy": false,
+    "display_name": "Bí ngòi — Khảm vàng do virus",
+    "plant_name": "Bí ngòi",
+    "disease_name": "Khảm vàng do virus",
+    "plant_aliases": [
+      "Bí ngòi",
+      "Zucchini"
+    ],
+    "disease_aliases": [
+      "Khảm vàng do virus",
+      "Khảm vàng",
+      "Yellow mosaic virus",
+      "zucchini yellow mosaic virus",
+      "Khảm vàng do virus Bí ngòi",
+      "Khảm vàng Bí ngòi"
+    ]
+  }
+]
