@@ -43,6 +43,7 @@ export default function GardenScreen() {
   return <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
     <View style={styles.header}><View style={styles.headerSide} /><Text accessibilityRole="header" style={styles.title}>Vườn cây của tôi</Text><View style={styles.headerSide} /></View>
     <View style={styles.controls}>
+      <Button mode="outlined" icon="calendar-plus" onPress={() => router.push({ pathname: "/customer/care", params: { create: "1" } })}>Thêm lịch chăm sóc</Button>
       {!!addedPlant && <Text accessibilityRole="alert">Đã thêm cây vào vườn thành công.</Text>}
       <Button mode="contained" icon="plus" onPress={() => router.push("/customer/garden/add")}>Thêm cây</Button>
       <View style={styles.filters}>{FILTERS.map((item) => <Pressable key={item.id} onPress={() => garden.selectHealthStatus(item.id)} accessibilityRole="button" accessibilityState={{ selected: garden.healthStatus === item.id }} style={[styles.filter, garden.healthStatus === item.id && styles.selectedFilter]}><Text style={[styles.filterLabel, garden.healthStatus === item.id && styles.selectedFilterLabel]}>{item.label}</Text></Pressable>)}</View>
