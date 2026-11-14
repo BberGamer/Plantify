@@ -7,14 +7,24 @@ import {
 } from "./sessionAccess";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+// Mục đích: Báo ảnh hoặc kết quả không hợp lệ.
+// Cách chạy: Ném lỗi kèm code để hook chọn thông báo phù hợp.
 const invalid = (code = "DIAGNOSIS_INVALID_RESPONSE") => {
   throw Object.assign(new Error("Dữ liệu chẩn đoán không hợp lệ."), { code });
 };
+// Mục đích: Kiểm tra chuỗi có nội dung.
+// Cách chạy: Chỉ chấp nhận chuỗi còn ký tự sau khi bỏ khoảng trắng hai đầu.
 const text = (value) => typeof value === "string" && value.trim().length > 0;
+// Mục đích: Kiểm tra trường văn bản có thể thiếu.
+// Cách chạy: Chấp nhận null hoặc chuỗi.
 const optionalText = (value) => value === null || typeof value === "string";
+// Mục đích: Kiểm tra ID database có thể thiếu.
+// Cách chạy: Chấp nhận null hoặc chuỗi ObjectId gồm 24 ký tự hex.
 const optionalId = (value) =>
   value === null || (typeof value === "string" && /^[a-f\d]{24}$/i.test(value));
 
+// Mục đích: Kiểm tra một gợi ý nhận diện.
+// Cách chạy: Đối chiếu ID nhãn, tên, điểm và các trường danh mục với kiểu dữ liệu yêu cầu.
 const candidateValid = (item) =>
   item &&
   Number.isInteger(item.class_id) &&
@@ -33,6 +43,8 @@ const candidateValid = (item) =>
   optionalText(item.symptoms) &&
   optionalText(item.care_advice);
 
+// Mục đích: Chặn kết quả API sai hoặc mâu thuẫn.
+// Cách chạy: Kiểm tra metadata, top 5 và tính lại trạng thái từ chất lượng ảnh cùng ngưỡng.
 function validateResponse(envelope) {
   const data = envelope?.data;
   if (
@@ -124,6 +136,8 @@ function validateResponse(envelope) {
 }
 
 export default {
+  // Mục đích: Gửi ảnh để chẩn đoán.
+  // Cách chạy: Kiểm tra ảnh/phiên, tạo multipart phù hợp nền tảng rồi gọi API và xác minh kết quả.
   async analyze(photo, { sessionContext = getSessionContext(), signal } = {}) {
     if (!photo || !text(photo.uri)) invalid("DIAGNOSIS_INVALID_PHOTO");
     if (photo.fileSize > 10 * 1024 * 1024) invalid("DIAGNOSIS_IMAGE_TOO_LARGE");

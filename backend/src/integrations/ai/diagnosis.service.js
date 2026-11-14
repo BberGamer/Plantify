@@ -1,15 +1,21 @@
 const AppError = require("../../utils/app-error");
 const { getDiagnosisConfig } = require("../../config/diagnosis");
 
+// Mục đích: Tạo lỗi dịch vụ model chưa sẵn sàng.
+// Cách chạy: Trả AppError 503 để mobile có thể báo thử lại sau.
 const unavailable = () => new AppError(
   "DIAGNOSIS_UNAVAILABLE", 503,
   "Dịch vụ nhận diện chưa sẵn sàng. Vui lòng thử lại sau.",
 );
+// Mục đích: Tạo lỗi dữ liệu trả về từ Python.
+// Cách chạy: Trả AppError 502 khi response sai cấu trúc hoặc vượt giới hạn.
 const invalidResponse = () => new AppError(
   "DIAGNOSIS_INVALID_RESPONSE", 502,
   "Dịch vụ nhận diện trả kết quả không hợp lệ. Vui lòng thử lại.",
 );
 
+// Mục đích: Đọc response Python với giới hạn dung lượng.
+// Cách chạy: Đếm bytes khi đọc và từ chối nội dung lớn hơn 64 KiB.
 const responseText = async (response) => {
   if (!response.body?.getReader) {
     const text = await response.text();
@@ -34,13 +40,21 @@ const responseText = async (response) => {
   } finally { reader.releaseLock(); }
 };
 
+// Mục đích: Tạo bộ gọi HTTP tới Python.
+// Cách chạy: Nhận hàm fetch để dùng khi chạy thật hoặc thay thế trong kiểm thử.
 const createInferenceClient = ({ fetchImpl = globalThis.fetch } = {}) => ({
+  // Mục đích: Gửi ảnh tới dịch vụ model.
+  // Cách chạy: Tạo multipart photo, áp dụng timeout/hủy request rồi chuẩn hóa response và lỗi.
   async predict(photo, { signal, config = getDiagnosisConfig() } = {}) {
     const controller = new AbortController();
     let timedOut = false;
+    // Mục đích: Dừng request HTTP tới Python.
+    // Cách chạy: Hủy AbortController nội bộ khi nhận tín hiệu từ request bên ngoài.
     const abort = () => controller.abort();
     if (signal?.aborted) abort();
     signal?.addEventListener("abort", abort, { once: true });
+    // Mục đích: Giới hạn thời gian chờ Python.
+    // Cách chạy: Đánh dấu timeout và hủy request khi hết thời gian cấu hình.
     const timer = setTimeout(() => {
       timedOut = true;
       abort();

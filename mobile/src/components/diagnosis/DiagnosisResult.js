@@ -8,8 +8,12 @@ const RETAKE_TIPS = [
   "Giữ máy ổn định, lau ống kính và dùng ánh sáng tự nhiên; tránh ảnh cháy sáng hoặc quá tối.",
   "Đổi góc chụp hoặc chụp gần hơn, không dùng bộ lọc màu.",
 ];
+// Mục đích: Định dạng điểm model để hiển thị.
+// Cách chạy: Nhân điểm với 100 và giữ một chữ số sau dấu thập phân.
 const scoreText = (score) => `${(score * 100).toFixed(1)}%`;
 
+// Mục đích: Hiển thị kết quả theo mức chắc chắn.
+// Cách chạy: Đọc status để render gợi ý, thông tin danh mục hoặc hướng dẫn chụp lại.
 export default function DiagnosisResult({
   photo,
   result,

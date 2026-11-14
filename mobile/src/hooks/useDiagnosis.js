@@ -34,6 +34,8 @@ const MESSAGES = {
   INFERENCE_BUSY: "Dịch vụ đang xử lý ảnh khác. Vui lòng thử lại sau.",
 };
 
+// Mục đích: Quản lý trạng thái phân tích ảnh của màn hình.
+// Cách chạy: Giữ loading, kết quả, lỗi và hủy request khi ảnh, phiên hoặc màn hình đổi.
 export default function useDiagnosis(photo, operationLock) {
   const version = useAuthStore((state) => state.sessionVersion);
   const [result, setResult] = useState(null);
@@ -44,6 +46,8 @@ export default function useDiagnosis(photo, operationLock) {
   const latestPhoto = useRef(photo);
   latestPhoto.current = photo;
 
+  // Mục đích: Vô hiệu hóa lần phân tích hiện tại.
+  // Cách chạy: Hủy request, mở khóa và xóa kết quả/lỗi nếu được yêu cầu.
   function invalidate(clear = true) {
     const controller = pending.current;
     controller?.abort();
@@ -60,9 +64,13 @@ export default function useDiagnosis(photo, operationLock) {
     () => invalidate(),
     photo,
   );
+  // Mục đích: Dọn lần phân tích khi ảnh hoặc phiên thay đổi.
+  // Cách chạy: Xóa trạng thái cũ; hàm cleanup hủy request và mở khóa khi effect kết thúc.
   useEffect(() => {
     invalidate();
     setImageInvalid(false);
+    // Mục đích: Ngừng dùng request của ảnh hoặc phiên cũ.
+    // Cách chạy: Hủy controller đang chờ và giải phóng khóa do controller đó giữ.
     return () => {
       const controller = pending.current;
       controller?.abort();
@@ -71,6 +79,8 @@ export default function useDiagnosis(photo, operationLock) {
     };
   }, [photo, version]);
 
+  // Mục đích: Bắt đầu phân tích ảnh đang chọn.
+  // Cách chạy: Khóa thao tác, gửi ảnh và chỉ cập nhật nếu ảnh cùng phiên vẫn còn hiệu lực.
   async function analyze() {
     if (
       !photo ||
@@ -129,11 +139,15 @@ export default function useDiagnosis(photo, operationLock) {
     }
   }
 
+  // Mục đích: Quay lại phần xem ảnh.
+  // Cách chạy: Xóa kết quả và lỗi khi không có thao tác đang chạy.
   const clearResult = () => {
     if (pending.current || operationLock.current) return;
     setResult(null);
     setError("");
   };
+  // Mục đích: Xử lý ảnh không hiển thị được.
+  // Cách chạy: Hủy phân tích, đánh dấu ảnh lỗi và yêu cầu chọn lại.
   const onImageError = () => {
     invalidate();
     setImageInvalid(true);

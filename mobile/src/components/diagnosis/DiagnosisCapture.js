@@ -5,6 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, spacing, typography } from "../../theme";
 
+// Mục đích: Hiển thị camera và lựa chọn lấy ảnh.
+// Cách chạy: Dựa vào props quyền/trạng thái để render camera, hướng dẫn và nút thao tác.
 export default function DiagnosisCapture({
   cameraRef, showCamera, permission, cameraError, busy, canCapture,
   onCameraReady, onCameraError, onEnableCamera, onRetryCamera, onCapture, onPickPhoto,
