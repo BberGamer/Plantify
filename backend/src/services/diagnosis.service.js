@@ -5,15 +5,25 @@ const classes = require("../config/diagnosis-classes.json");
 const inference = require("../integrations/ai/diagnosis.service");
 const { getDiagnosisConfig } = require("../config/diagnosis");
 
+// Mục đích: Tạo lỗi kết quả model không hợp lệ.
+// Cách chạy: Trả AppError 502 khi dữ liệu không khớp hợp đồng hoặc taxonomy.
 const invalidResponse = () => new AppError(
   "DIAGNOSIS_INVALID_RESPONSE", 502,
   "Kết quả model không khớp bộ nhãn đã cấu hình. Vui lòng thử lại.",
 );
+// Mục đích: Chuẩn hóa tên để so khớp danh mục.
+// Cách chạy: Chuẩn hóa Unicode, bỏ khoảng trắng thừa và chuyển chữ thường.
 const normalize = (value) => value.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("vi");
+// Mục đích: Giữ ký tự trong alias như văn bản thường.
+// Cách chạy: Thêm ký tự escape trước các ký tự đặc biệt của regex.
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+// Mục đích: Kiểm tra ID nhãn model.
+// Cách chạy: Chấp nhận số nguyên từ 0 đến 77.
 const validId = (id) => Number.isInteger(id) && id >= 0 && id < 78;
 const qualityReasons = new Set(["too_small", "too_dark", "too_bright", "low_detail"]);
 
+// Mục đích: Xác minh kết quả raw từ Python.
+// Cách chạy: Kiểm tra top 5, nhãn, điểm, chất lượng ảnh và metadata trước khi sử dụng.
 const validateResult = (data, taxonomy = classes) => {
   if (!data || !Array.isArray(data.top5) || data.top5.length !== 5 || !data.prediction ||
       !data.image || !Number.isInteger(data.image.width) || !Number.isInteger(data.image.height) ||
@@ -52,6 +62,8 @@ const validateResult = (data, taxonomy = classes) => {
   return data;
 };
 
+// Mục đích: Chuyển dự đoán thành dữ liệu cho app.
+// Cách chạy: Ghép điểm model với nhãn tiếng Việt; để thông tin database là null ban đầu.
 const toCandidate = (raw, taxonomy = classes) => {
   const entry = taxonomy[raw.class_id];
   return {
@@ -65,15 +77,23 @@ const careLabels = {
   light: "Ánh sáng", water: "Tưới nước", temperature: "Nhiệt độ",
   humidity: "Độ ẩm", soil: "Đất trồng", fertilizer: "Phân bón",
 };
+// Mục đích: Tạo nội dung chăm sóc từ danh mục.
+// Cách chạy: Lấy các trường chuỗi có nội dung, gắn nhãn tiếng Việt rồi nối thành các dòng.
 const careText = (requirements) => Object.entries(careLabels)
   .filter(([key]) => typeof requirements?.[key] === "string" && requirements[key].trim())
   .map(([key, label]) => `${label}: ${requirements[key].trim().slice(0, 1000)}`)
   .join("\n") || null;
+// Mục đích: Làm sạch danh sách tên dùng để tìm kiếm.
+// Cách chạy: Giữ chuỗi hợp lệ, chuẩn hóa tên và loại tên trùng.
 const exactAliases = (aliases) => Array.isArray(aliases)
   ? [...new Set(aliases.filter((x) => typeof x === "string" && x.trim()).map(normalize))]
   : [];
+// Mục đích: Tạo điều kiện tìm tên chính xác trong MongoDB.
+// Cách chạy: Chuyển alias thành regex có đầu/cuối và không phân biệt hoa thường.
 const aliasFilter = (aliases) => ({ $in: aliases.map((alias) => new RegExp(`^${escapeRegex(alias)}$`, "i")) });
 
+// Mục đích: Tạo hàm bổ sung thông tin cây/bệnh từ database.
+// Cách chạy: Chỉ ghép khi khớp duy nhất theo alias và bệnh còn active, liên kết đúng cây.
 const createCatalogEnricher = ({ plantModel = Plant, diseaseModel = Disease } = {}) => async (candidate, entry) => {
   const plantAliases = exactAliases(entry.plant_aliases);
   if (!plantAliases.length) return candidate;
@@ -107,9 +127,13 @@ const messages = {
   poor_image_quality: "Ảnh quá nhỏ, quá tối/sáng hoặc thiếu chi tiết để phân tích. Hãy chụp lại một ảnh rõ hơn.",
 };
 
+// Mục đích: Tạo service điều phối nghiệp vụ chẩn đoán.
+// Cách chạy: Nhận bộ dự đoán, taxonomy, hàm ghép danh mục và cấu hình để dùng chung.
 const createDiagnosisService = ({
   predictor = inference, enrich = createCatalogEnricher(), taxonomy = classes, configProvider = getDiagnosisConfig,
 } = {}) => ({
+  // Mục đích: Quyết định kết quả nào được hiển thị.
+  // Cách chạy: Gọi Python, kiểm tra chất lượng/điểm/chênh lệch rồi bổ sung danh mục nếu identified.
   async diagnose(photo, options = {}) {
     const config = configProvider();
     const data = validateResult(await predictor.predict(photo, { ...options, config }), taxonomy);

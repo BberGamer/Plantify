@@ -23,6 +23,8 @@ IMAGE_FORMATS = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 
 
 class InferenceError(Exception):
+    # Mục đích: Tạo lỗi có mã và trạng thái HTTP.
+    # Cách chạy: Lưu status, code và message để API trả lỗi thống nhất.
     def __init__(self, status, code, message):
         super().__init__(message)
         self.status = status
@@ -30,10 +32,14 @@ class InferenceError(Exception):
         self.message = message
 
 
+# Mục đích: Đọc metadata model.
+# Cách chạy: Đọc file UTF-8 rồi chuyển JSON thành dữ liệu Python.
 def read_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+# Mục đích: Tính mã kiểm tra file weights.
+# Cách chạy: Đọc từng khối bytes và cộng dồn SHA-256.
 def file_sha256(path):
     digest = hashlib.sha256()
     with Path(path).open("rb") as stream:
@@ -42,6 +48,8 @@ def file_sha256(path):
     return digest.hexdigest()
 
 
+# Mục đích: Xác minh bộ model trước khi nạp.
+# Cách chạy: Đối chiếu run, epoch, hash weights và thứ tự 78 nhãn; sai thì báo lỗi.
 def verify_bundle(settings):
     root = settings.model_dir
     summary = read_json(root / "run_summary.json")
@@ -94,6 +102,8 @@ def verify_bundle(settings):
     }
 
 
+# Mục đích: Chuẩn bị ảnh đúng cách đã train.
+# Cách chạy: Sửa hướng EXIF, chuyển RGB và pad giữ tỉ lệ về 384×384.
 def prepare_image(image):
     # Giữ đúng pipeline trong metadata/plantwild_preprocess.py của run đã train.
     image = ImageOps.exif_transpose(image).convert("RGB")
@@ -103,6 +113,8 @@ def prepare_image(image):
     )
 
 
+# Mục đích: Phát hiện ảnh quá kém chất lượng.
+# Cách chạy: Kiểm tra kích thước, độ sáng và độ biến thiên; trả các lý do cần chụp lại.
 def image_quality(image):
     # Chỉ chặn ảnh rõ ràng thiếu thông tin; đây không phải bộ phát hiện cây/OOD.
     gray = image.convert("L")
@@ -126,6 +138,8 @@ def image_quality(image):
     }
 
 
+# Mục đích: Đọc và kiểm tra ảnh đầu vào.
+# Cách chạy: Kiểm tra bytes, định dạng, số pixel và ảnh động rồi trả ảnh đã chuẩn bị.
 def decode_image(content, content_type, settings):
     if not content:
         raise InferenceError(400, "EMPTY_IMAGE", "Ảnh tải lên rỗng.")
@@ -162,6 +176,8 @@ def decode_image(content, content_type, settings):
 
 
 class PlantClassifier:
+    # Mục đích: Nạp model một lần khi khởi động.
+    # Cách chạy: Kiểm tra bundle, thư viện, thiết bị và nhãn rồi chạy thử để làm nóng model.
     def __init__(self, settings: Settings):
         self.settings = settings
         self._lock = threading.Lock()
@@ -195,6 +211,8 @@ class PlantClassifier:
         LOGGER.info("Model sẵn sàng: run=%s checkpoint=%s epoch=%s device=%s",
                     self.info["run_id"], CHECKPOINT, self.info["checkpoint_epoch"], settings.device)
 
+    # Mục đích: Chạy phân loại trên ảnh đã chuẩn bị.
+    # Cách chạy: Gọi YOLO với cấu hình cố định, kiểm tra rồi trả điểm của 78 class.
     def _predict(self, image):
         results = self.model.predict(
             image, imgsz=IMAGE_SIZE, device=self.settings.device,
@@ -204,6 +222,8 @@ class PlantClassifier:
             raise RuntimeError("Model trả kết quả không hợp lệ.")
         return results[0].probs
 
+    # Mục đích: Phân tích ảnh và trả 5 nhóm có điểm cao nhất.
+    # Cách chạy: Khóa lượt chạy, xử lý ảnh, gọi model, ghép nhãn và luôn mở khóa khi xong.
     def predict(self, content, content_type):
         if not self._lock.acquire(blocking=False):
             raise InferenceError(503, "INFERENCE_BUSY", "Model đang xử lý ảnh khác. Vui lòng thử lại.")

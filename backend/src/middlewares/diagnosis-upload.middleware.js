@@ -8,11 +8,15 @@ const parse = multer({
   limits: { fileSize: MAX_IMAGE_BYTES, files: 1, fields: 0, parts: 1 },
 }).single("photo");
 
+// Mục đích: Tạo lỗi ảnh đầu vào.
+// Cách chạy: Đóng gói HTTP status và hướng dẫn định dạng, dung lượng ảnh.
 const invalidPhoto = (status = 400) => new AppError(
   "DIAGNOSIS_INVALID_PHOTO", status,
   "Chọn một ảnh JPEG, PNG hoặc WebP tĩnh, tối đa 10 MiB và 25 megapixel.",
 );
 
+// Mục đích: Nhận và xác minh ảnh upload.
+// Cách chạy: Multer giữ một file trong RAM; Sharp kiểm tra định dạng, số trang và kích thước.
 const uploadDiagnosisPhoto = (req, res, next) => parse(req, res, async (error) => {
   if (error) return next(invalidPhoto(error.code === "LIMIT_FILE_SIZE" ? 413 : 400));
   if (!req.file || !req.file.buffer.length) return next(invalidPhoto());

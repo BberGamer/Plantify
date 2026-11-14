@@ -11,6 +11,8 @@ import useDiagnosisCapture from "../../src/hooks/useDiagnosisCapture";
 import useFormBack from "../../src/hooks/useFormBack";
 import useDiagnosis from "../../src/hooks/useDiagnosis";
 
+// Mục đích: Hiển thị luồng chụp ảnh và chẩn đoán.
+// Cách chạy: Ghép hook camera/phân tích, chọn màn chụp, xem ảnh hoặc kết quả theo state.
 export default function DiagnosisScreen() {
   const router = useRouter();
   const operationLock = useRef(null);
@@ -19,10 +21,16 @@ export default function DiagnosisScreen() {
   const scroll = useRef(null);
   const showResult = !!diagnosis.result && !diagnosis.imageInvalid;
   const busy = capture.busy || diagnosis.busy;
+  // Mục đích: Đồng bộ lỗi ảnh giữa hai hook.
+  // Cách chạy: Gọi xử lý lỗi của camera và phân tích để ngừng dùng ảnh hỏng.
   const onImageError = () => { capture.onImageError(); diagnosis.onImageError(); };
+  // Mục đích: Đưa người dùng về đầu kết quả mới.
+  // Cách chạy: Cuộn lên đầu khi state kết quả thay đổi và có dữ liệu.
   useEffect(() => {
     if (diagnosis.result) scroll.current?.scrollTo({ y: 0, animated: false });
   }, [diagnosis.result]);
+  // Mục đích: Quay lại bước trước trong luồng.
+  // Cách chạy: Chặn khi bận; lần lượt đóng kết quả, bỏ ảnh hoặc điều hướng về màn trước.
   const handleBack = () => {
     if (operationLock.current) return;
     if (showResult) diagnosis.clearResult();

@@ -2,6 +2,8 @@ import { Image, StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { colors, spacing, typography } from "../../theme";
 
+// Mục đích: Cho xem ảnh trước khi phân tích.
+// Cách chạy: Render ảnh và nút phân tích/chọn lại; khóa nút và hiển thị tiến trình khi bận.
 export default function DiagnosisPreview({
   photo,
   busy,

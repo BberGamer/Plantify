@@ -1,10 +1,14 @@
 const AppError = require("../utils/app-error");
 
+// Mục đích: Tạo lỗi cấu hình diagnosis.
+// Cách chạy: Trả AppError 503 với mã DIAGNOSIS_NOT_CONFIGURED.
 const invalid = () => new AppError(
   "DIAGNOSIS_NOT_CONFIGURED", 503,
   "Cấu hình dịch vụ chẩn đoán chưa hợp lệ. Vui lòng liên hệ quản trị viên.",
 );
 
+// Mục đích: Đọc một cấu hình dạng số.
+// Cách chạy: Dùng mặc định nếu thiếu; kiểm tra giá trị và khoảng cho phép nếu có.
 const number = (env, key, fallback, min, max) => {
   if (env[key] === undefined) return fallback;
   if (typeof env[key] !== "string" || !env[key].trim()) throw invalid();
@@ -13,6 +17,8 @@ const number = (env, key, fallback, min, max) => {
   return value;
 };
 
+// Mục đích: Lấy cấu hình gọi Python và ngưỡng nhận diện.
+// Cách chạy: Đọc biến môi trường, kiểm tra URL, timeout và thứ tự các ngưỡng.
 const getDiagnosisConfig = (env = process.env) => {
   const minConfidence = number(env, "DIAGNOSIS_MIN_CONFIDENCE", 0.7, 0, 1);
   const minMargin = number(env, "DIAGNOSIS_MIN_MARGIN", 0.15, 0, 1);

@@ -11,6 +11,8 @@ class Settings:
     max_file_bytes: int = 10 * 1024 * 1024
     max_image_pixels: int = 25_000_000
 
+    # Mục đích: Chặn cấu hình Python không hợp lệ.
+    # Cách chạy: Kiểm tra thiết bị, số luồng CPU và giới hạn ảnh ngay khi tạo Settings.
     def __post_init__(self):
         if self.device not in {"cpu", "0"}:
             raise ValueError("PLANTIFY_INFERENCE_DEVICE chỉ nhận cpu hoặc 0 (một GPU).")
@@ -19,6 +21,8 @@ class Settings:
         if self.max_file_bytes <= 0 or self.max_image_pixels <= 0:
             raise ValueError("Giới hạn ảnh phải lớn hơn 0.")
 
+    # Mục đích: Đọc cấu hình chạy model từ môi trường.
+    # Cách chạy: Lấy đường dẫn model, thiết bị và số luồng; dùng giá trị mặc định nếu chưa đặt.
     @classmethod
     def from_env(cls):
         root = Path(__file__).resolve().parent.parent
