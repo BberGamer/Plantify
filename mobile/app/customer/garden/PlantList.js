@@ -19,6 +19,7 @@ export default function PlantListScreen() {
     {detail.loading ? <View style={styles.center}><ActivityIndicator size="large" /><Text>Đang tải thông tin cây...</Text></View> : detail.error || !plant ? <View style={styles.center}><ListError message={detail.error || "Không tìm thấy cây."} onRetry={detail.retry} /></View> : <ScrollView contentContainerStyle={styles.content}>
       {plant.display_image_url ? <Image source={{ uri: plant.display_image_url }} style={styles.image} /> : <View style={[styles.image, styles.placeholder]}><Ionicons name="leaf-outline" size={48} color={colors.primaryLight} /></View>}
       <View style={styles.card}>
+        {!plant.archived_at && <Button mode="outlined" icon="calendar" onPress={() => router.push({ pathname: "/customer/care", params: { plantId } })}>Lịch tưới nước / bón phân</Button>}
         <Text style={styles.title}>{plant.plant_nickname}</Text>
         <Text style={styles.body}>{plant.species_name || "Chưa xác định loài"}</Text>
         <Text style={styles.body}>{plant.placement_location || "Chưa có vị trí đặt cây"}</Text>

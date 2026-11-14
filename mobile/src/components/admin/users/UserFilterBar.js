@@ -1,13 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Divider, Menu } from "react-native-paper";
 import { garden, ROLE_META } from "./theme";
 
 export const USER_ROLES = [
@@ -23,37 +23,6 @@ export const USER_STATUSES = [
   { key: "false", label: "Đã khóa", icon: "snow" },
 ];
 
-function ChipRow({ title, items, selected, onSelect }) {
-  return (
-    <View style={styles.filterSection}>
-      <Text style={styles.filterTitle}>{title}</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipsContainer}
-      >
-        {items.map((it) => {
-          const isActive = selected === it.key;
-          return (
-            <TouchableOpacity
-              key={it.key}
-              style={[styles.chip, isActive && styles.chipActive]}
-              onPress={() => onSelect(it.key)}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isActive }}
-            >
-              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
-                {it.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-    </View>
-  );
-}
-
 export default function UserFilterBar({
   search,
   onSearchChange,
@@ -64,6 +33,8 @@ export default function UserFilterBar({
   selectedStatus,
   onSelectStatus,
 }) {
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterCount = Number(selectedRole !== "all") + Number(selectedStatus !== "all");
   return (
     <View style={styles.container}>
       {/* SEARCH BAR - noi len tren header */}
@@ -94,29 +65,47 @@ export default function UserFilterBar({
           )}
         </View>
 
-        <TouchableOpacity
-          style={styles.searchBtn}
-          onPress={onSearchSubmit}
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel="Tìm"
+        <Menu
+          visible={filterOpen}
+          onDismiss={() => setFilterOpen(false)}
+          anchorPosition="bottom"
+          contentStyle={styles.filterMenu}
+          anchor={
+            <TouchableOpacity
+              style={[styles.filterButton, filterCount > 0 && styles.filterButtonActive]}
+              onPress={() => setFilterOpen(true)}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={`Lọc người dùng: ${filterCount} bộ lọc đang áp dụng`}
+              accessibilityState={{ expanded: filterOpen }}
+            >
+              <Ionicons name="options-outline" size={23} color={filterCount > 0 ? garden.white : garden.forest} />
+              {filterCount > 0 ? <View style={styles.filterBadge}><Text style={styles.filterBadgeText}>{filterCount}</Text></View> : null}
+            </TouchableOpacity>
+          }
         >
-          <Ionicons name="arrow-forward" size={20} color={garden.white} />
-        </TouchableOpacity>
+          <Text style={styles.menuHeading}>VAI TRÒ</Text>
+          {USER_ROLES.map(item => <Menu.Item
+            key={`role-${item.key}`}
+            title={item.label}
+            trailingIcon={selectedRole === item.key ? "check" : undefined}
+            titleStyle={selectedRole === item.key ? styles.selectedTitle : undefined}
+            onPress={() => onSelectRole(item.key)}
+          />)}
+          <Divider />
+          <Text style={styles.menuHeading}>TRẠNG THÁI</Text>
+          {USER_STATUSES.map(item => <Menu.Item
+            key={`status-${item.key}`}
+            title={item.label}
+            trailingIcon={selectedStatus === item.key ? "check" : undefined}
+            titleStyle={selectedStatus === item.key ? styles.selectedTitle : undefined}
+            onPress={() => onSelectStatus(item.key)}
+          />)}
+          {filterCount > 0 ? <Divider /> : null}
+          {filterCount > 0 ? <Menu.Item title="Xóa bộ lọc" leadingIcon="filter-remove-outline" onPress={() => { onSelectRole("all"); onSelectStatus("all"); setFilterOpen(false); }} /> : null}
+        </Menu>
       </View>
 
-      <ChipRow
-        title="Vai trò"
-        items={USER_ROLES}
-        selected={selectedRole}
-        onSelect={onSelectRole}
-      />
-      <ChipRow
-        title="Trạng thái"
-        items={USER_STATUSES}
-        selected={selectedStatus}
-        onSelect={onSelectStatus}
-      />
     </View>
   );
 }
@@ -131,13 +120,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     marginBottom: 6,
+    gap: 10,
   },
   searchBox: {
     flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: garden.white,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 14,
     minHeight: 48,
     borderWidth: 1,
@@ -145,61 +136,25 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
+    minWidth: 0,
     fontSize: 15,
     color: garden.ink,
     marginLeft: 8,
     paddingVertical: 0,
   },
-  searchBtn: {
-    marginLeft: 10,
-    backgroundColor: garden.forest,
-    width: 48,
-    minHeight: 48,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
+  filterButton: {
+    width: 48, height: 48, borderRadius: 12,
+    backgroundColor: garden.white, borderWidth: 1, borderColor: garden.line,
+    justifyContent: "center", alignItems: "center",
   },
-  filterSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 16,
-    paddingVertical: 4,
+  filterButtonActive: { backgroundColor: garden.forest, borderColor: garden.forest },
+  filterBadge: {
+    position: "absolute", top: -4, right: -4, width: 18, height: 18,
+    borderRadius: 9, backgroundColor: garden.mint, borderWidth: 1, borderColor: garden.white,
+    alignItems: "center", justifyContent: "center",
   },
-  filterTitle: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: garden.inkSoft,
-    width: 76,
-  },
-  chipsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingRight: 16,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    minHeight: 44,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: garden.white,
-    borderWidth: 1,
-    borderColor: garden.line,
-    marginRight: 8,
-    gap: 5,
-  },
-  chipActive: {
-    backgroundColor: garden.forest,
-    borderColor: garden.forest,
-  },
-  chipText: {
-    fontSize: 13,
-    color: garden.inkSoft,
-    fontWeight: "500",
-  },
-  chipTextActive: {
-    color: garden.white,
-    fontWeight: "600",
-  },
+  filterBadgeText: { fontSize: 10, fontWeight: "700", color: garden.forest },
+  filterMenu: { borderRadius: 16, backgroundColor: garden.white, minWidth: 230 },
+  menuHeading: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6, color: garden.muted, fontSize: 11, fontWeight: "700" },
+  selectedTitle: { color: garden.forest, fontWeight: "700" },
 });

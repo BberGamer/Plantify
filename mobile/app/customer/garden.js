@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from "react-native";
-import { ActivityIndicator, Button, Text } from "react-native-paper";
+import { ActivityIndicator, Button, Menu, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -38,18 +39,37 @@ function GardenCard({ plant, onOpenPlant, onOpenTreatment }) {
 
 export default function GardenScreen() {
   const garden = useGarden();
+  const [filterOpen, setFilterOpen] = useState(false);
   const router = useRouter();
   const { addedPlant } = useLocalSearchParams();
   return <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
     <View style={styles.header}><View style={styles.headerSide} /><Text accessibilityRole="header" style={styles.title}>Vườn cây của tôi</Text><View style={styles.headerSide} /></View>
     <View style={styles.controls}>
       {!!addedPlant && <Text accessibilityRole="alert">Đã thêm cây vào vườn thành công.</Text>}
-      <Button mode="contained" icon="plus" onPress={() => router.push("/customer/garden/add")}>Thêm cây</Button>
-      <View style={styles.filters}>{FILTERS.map((item) => <Pressable key={item.id} onPress={() => garden.selectHealthStatus(item.id)} accessibilityRole="button" accessibilityState={{ selected: garden.healthStatus === item.id }} style={[styles.filter, garden.healthStatus === item.id && styles.selectedFilter]}><Text style={[styles.filterLabel, garden.healthStatus === item.id && styles.selectedFilterLabel]}>{item.label}</Text></Pressable>)}</View>
-      <View style={styles.search}>
-        <Ionicons name="search-outline" size={20} color={colors.textSecondary} />
-        <TextInput value={garden.search} onChangeText={garden.changeSearch} placeholder="Tìm cây trong vườn của bạn..." placeholderTextColor={colors.textMuted} accessibilityLabel="Tìm cây trong vườn" style={styles.input} />
-        {!!garden.search && <Pressable onPress={garden.clearSearch} accessibilityLabel="Xóa tìm kiếm" style={styles.clear}><Ionicons name="close-circle" size={20} color={colors.textSecondary} /></Pressable>}
+      <View style={styles.primaryActions}>
+        <Pressable accessibilityRole="button" onPress={() => router.push("/customer/garden/add")} style={({ pressed }) => [styles.actionButton, styles.addPlantButton, pressed && styles.pressed]}>
+          <Ionicons name="add" size={20} color={colors.white} />
+          <Text style={[styles.actionLabel, styles.addPlantLabel]}>Thêm cây</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: "/customer/care", params: { create: "1" } })} style={({ pressed }) => [styles.actionButton, styles.addScheduleButton, pressed && styles.pressed]}>
+          <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+          <Text style={styles.actionLabel}>Thêm lịch chăm sóc</Text>
+        </Pressable>
+      </View>
+      <View style={styles.searchRow}>
+        <View style={styles.search}>
+          <Ionicons name="search-outline" size={19} color={colors.textSecondary} />
+          <TextInput value={garden.search} onChangeText={garden.changeSearch} placeholder="Tìm cây trong vườn..." placeholderTextColor={colors.textMuted} accessibilityLabel="Tìm cây trong vườn" style={styles.input} />
+          {!!garden.search && <Pressable accessibilityRole="button" onPress={garden.clearSearch} accessibilityLabel="Xóa tìm kiếm" style={styles.clear}><Ionicons name="close-circle" size={19} color={colors.textSecondary} /></Pressable>}
+        </View>
+        <Menu visible={filterOpen} onDismiss={() => setFilterOpen(false)} anchorPosition="bottom" contentStyle={styles.filterMenu} anchor={
+          <Pressable accessibilityRole="button" accessibilityLabel={`Lọc sức khỏe cây: ${FILTERS.find(item => item.id === garden.healthStatus)?.label || "Tất cả"}`} accessibilityState={{ expanded: filterOpen }} onPress={() => setFilterOpen(true)} style={({ pressed }) => [styles.filterButton, garden.healthStatus !== "all" && styles.filterButtonActive, pressed && styles.pressed]}>
+            <Ionicons name="options-outline" size={23} color={garden.healthStatus !== "all" ? colors.white : colors.primary} />
+            {garden.healthStatus !== "all" && <View style={styles.filterDot} />}
+          </Pressable>
+        }>
+          {FILTERS.map(item => <Menu.Item key={item.id} title={item.label} leadingIcon={item.id === "all" ? "view-grid-outline" : item.id === "healthy" ? "leaf" : "medical-bag"} trailingIcon={garden.healthStatus === item.id ? "check" : undefined} titleStyle={garden.healthStatus === item.id ? styles.selectedFilterTitle : undefined} onPress={() => { garden.selectHealthStatus(item.id); setFilterOpen(false); }} />)}
+        </Menu>
       </View>
     </View>
     {garden.loading && !garden.refreshing ? <View style={styles.center}><ActivityIndicator size="large" /><Text>Đang tải vườn cây...</Text></View> : garden.error ? <View style={styles.center}><ListError message={garden.error} onRetry={garden.retry} busy={garden.loading} /></View> : <ScrollView style={styles.list} contentContainerStyle={styles.listContent} refreshControl={<RefreshControl refreshing={garden.refreshing} onRefresh={garden.refresh} colors={[colors.primary]} />}>
@@ -67,14 +87,22 @@ const styles = StyleSheet.create({
   headerSide: { width: 44 },
   title: { ...typography.section, flex: 1, textAlign: "center", color: colors.textPrimary },
   controls: { padding: spacing.lg, gap: spacing.md, backgroundColor: colors.background },
-  filters: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  filter: { minHeight: 44, justifyContent: "center", borderRadius: radius.pill, paddingHorizontal: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white },
-  selectedFilter: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterLabel: { ...typography.caption, color: colors.textSecondary, fontWeight: "600" },
-  selectedFilterLabel: { color: colors.white },
-  search: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.white, paddingHorizontal: spacing.md },
-  input: { flex: 1, color: colors.textPrimary, paddingVertical: spacing.md },
-  clear: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" },
+  primaryActions: { flexDirection: "row", alignItems: "stretch", gap: 10 },
+  actionButton: { flex: 1, minWidth: 0, minHeight: 56, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 7, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 12, borderWidth: 1 },
+  addPlantButton: { backgroundColor: colors.primary, borderColor: colors.primary },
+  addScheduleButton: { backgroundColor: colors.white, borderColor: "#D5E2D8" },
+  actionLabel: { flexShrink: 1, fontSize: 12, lineHeight: 18, fontWeight: "700", color: colors.primary, textAlign: "center" },
+  addPlantLabel: { color: colors.white },
+  pressed: { opacity: 0.75 },
+  searchRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  search: { flex: 1, minWidth: 0, minHeight: 50, flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.white, paddingLeft: spacing.md, paddingRight: spacing.sm },
+  input: { flex: 1, minWidth: 0, fontSize: 13, color: colors.textPrimary, paddingVertical: 14 },
+  clear: { minWidth: 36, minHeight: 44, alignItems: "center", justifyContent: "center" },
+  filterButton: { width: 50, height: 50, borderRadius: 14, backgroundColor: colors.white, borderWidth: 1, borderColor: "#D5E2D8", alignItems: "center", justifyContent: "center" },
+  filterButtonActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  filterDot: { position: "absolute", top: 9, right: 9, width: 6, height: 6, borderRadius: 3, backgroundColor: "#C7E2AF" },
+  filterMenu: { backgroundColor: colors.white, borderRadius: 16 },
+  selectedFilterTitle: { color: colors.primary, fontWeight: "700" },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.md },
   list: { flex: 1, backgroundColor: colors.background },
   listContent: { width: "100%", maxWidth: 720, alignSelf: "center", padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxxl },

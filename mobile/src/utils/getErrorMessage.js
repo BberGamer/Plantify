@@ -1,5 +1,7 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  CARE_UNAVAILABLE: "Lịch đã dừng, cây đã lưu trữ hoặc đang điều trị. Vui lòng tải lại lịch.",
+  CARE_NOT_FOUND: "Không tìm thấy lịch chăm sóc. Vui lòng tải lại lịch.",
   AI_INCOMPLETE_RESPONSE: "AI chưa hoàn tất câu trả lời. Vui lòng thử lại với câu hỏi cụ thể hơn.",
   FAVORITE_LIMIT_REACHED: "Bạn đã đạt giới hạn 5 cây yêu thích của gói Free. Hãy bỏ một cây trước khi thêm cây mới.",
   GOOGLE_NOT_CONFIGURED: "Chưa cấu hình đăng nhập Google. Vui lòng thử lại sau.",

@@ -6,8 +6,8 @@ const { authenticate, authorizeManager } = require('../middlewares/auth.middlewa
 
 router.use('/manager', authenticate, authorizeManager);
 router.get('/manager', getManagerPlants);
-router.post('/manager', createPlant);
-router.put('/manager/:id', updatePlant);
+router.post('/manager', require('../middlewares/garden-upload.middleware').upload, createPlant);
+router.put('/manager/:id', require('../middlewares/garden-upload.middleware').upload, updatePlant);
 router.delete('/manager/:id', deletePlant);
 
 // GET /api/plants/categories  → danh sach danh muc

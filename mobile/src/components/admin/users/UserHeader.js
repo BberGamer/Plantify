@@ -1,46 +1,11 @@
 import React from "react";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { garden } from "./theme";
 
-export default function UserHeader({ totalUsers = 0, onRefresh, onBack, onAdd }) {
-  const router = useRouter();
-
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
-    } else {
-      router.back();
-    }
-  };
-
+export default function UserHeader({ totalUsers = 0, onAdd }) {
   return (
     <View style={styles.header}>
-      <View style={styles.topRow}>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={handleBack}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="Quay lại"
-        >
-          <Ionicons name="arrow-back" size={22} color={garden.forest} />
-        </TouchableOpacity>
-
-        <Text style={styles.eyebrowText}>Quản lý tài khoản</Text>
-
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={onRefresh}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="Làm mới danh sách"
-        >
-          <Ionicons name="reload" size={20} color={garden.forest} />
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.titleRow}>
         <Text style={styles.headerTitle}>Người dùng</Text>
         <TouchableOpacity
@@ -76,11 +41,6 @@ const styles = StyleSheet.create({
     borderBottomColor: garden.line,
     overflow: "hidden",
   },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
   iconButton: {
     width: 44,
     height: 44,
@@ -93,22 +53,8 @@ const styles = StyleSheet.create({
     backgroundColor: garden.forest,
     borderRadius: 12,
   },
-  eyebrow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.12)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 14,
-    gap: 5,
-  },
-  eyebrowText: {
-    color: garden.inkSoft,
-    fontSize: 12,
-    fontWeight: "600",
-  },
   titleRow: {
-    marginTop: 16,
+    marginTop: 4,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
