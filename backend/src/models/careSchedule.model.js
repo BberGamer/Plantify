@@ -14,6 +14,11 @@ const careScheduleSchema = new mongoose.Schema(
       required: true,
     },
     title: { type: String, required: true, trim: true, maxlength: 200 },
+    start_date: { type: String, default: null },
+    end_date: { type: String, default: null },
+    time: { type: String, default: "08:00" },
+    repeat_every_days: { type: Number, min: 1, max: 365, default: 1 },
+    notes: { type: String, maxlength: 1000, default: "" },
     is_paused: { type: Boolean, default: false },
     pause_reason: {
       type: String,
