@@ -84,7 +84,6 @@ export default function AdminUsersScreen() {
         {/* HEADER */}
         <UserHeader
           totalUsers={pagination.total}
-          onRefresh={handleRefresh}
           onAdd={createUser.open}
         />
 
@@ -122,8 +121,6 @@ export default function AdminUsersScreen() {
                 item={item}
                 currentAdminId={currentAdminId}
                 onOpenDetail={handleOpenDetail}
-                onOpenRole={handleOpenRoleModal}
-                onOpenStatus={handleOpenStatusConfirm}
               />
             )}
             contentContainerStyle={styles.listContent}

@@ -8,8 +8,6 @@ export default function UserCard({
   item,
   currentAdminId,
   onOpenDetail,
-  onOpenRole,
-  onOpenStatus,
 }) {
   const initials = item.fullName
     ? item.fullName
@@ -85,63 +83,11 @@ export default function UserCard({
         {item.isGoogleAccount && <GoogleBadge />}
       </View>
 
-      {/* ACTION BUTTONS ROW */}
-      <View style={styles.actionButtonsRow}>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.btnSoft]}
-          onPress={() => onOpenDetail(item)}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-        >
-          <Ionicons name="create-outline" size={15} color={garden.forest} />
-          <Text style={styles.btnSoftText}>Chi tiết</Text>
-        </TouchableOpacity>
-
-        {item.role !== "admin" && <TouchableOpacity
-          style={[styles.actionBtn, styles.btnSoft, item.role === "admin" && styles.disabled]}
-          onPress={() => onOpenRole(item)}
-          disabled={item.role === "admin"}
-          accessibilityState={{ disabled: item.role === "admin" }}
-          accessibilityLabel={item.role === "admin" ? "Không thể đổi vai trò quản trị viên" : "Đổi vai trò"}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-        >
-          <Ionicons name="git-branch-outline" size={15} color={garden.forest} />
-          <Text style={styles.btnSoftText}>Vai trò</Text>
-        </TouchableOpacity>}
-
-        {item.role !== "admin" && <TouchableOpacity
-          style={[
-            styles.actionBtn,
-            isActive ? styles.btnDanger : styles.btnSuccess,
-          ]}
-          onPress={() => onOpenStatus(item)}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-        >
-          <Ionicons
-            name={isActive ? "lock-closed" : "leaf"}
-            size={14}
-            color={isActive ? garden.terracotta : garden.white}
-          />
-          <Text
-            style={[
-              styles.btnSolidText,
-              { color: isActive ? garden.terracotta : garden.white },
-            ]}
-          >
-            {isActive ? "Khóa" : "Kích hoạt"}
-          </Text>
-        </TouchableOpacity>}
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  disabled: {
-    opacity: 0.45,
-  },
   userCard: {
     backgroundColor: garden.white,
     borderRadius: 12,
@@ -221,44 +167,5 @@ const styles = StyleSheet.create({
     marginTop: 12,
     flexWrap: "wrap",
     gap: 6,
-  },
-  actionButtonsRow: {
-    flexWrap: "wrap",
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: garden.line,
-    gap: 8,
-  },
-  actionBtn: {
-    flexGrow: 1,
-    flexBasis: 88,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 5,
-  },
-  btnSoft: {
-    backgroundColor: garden.mint,
-  },
-  btnSoftText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: garden.forest,
-  },
-  btnDanger: {
-    backgroundColor: garden.terracottaBg,
-  },
-  btnSuccess: {
-    backgroundColor: garden.moss,
-  },
-  btnSolidText: {
-    fontSize: 13,
-    fontWeight: "700",
   },
 });
