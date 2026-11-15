@@ -1,11 +1,9 @@
 ﻿import { View } from "react-native";
 import { ActivityIndicator, Button, Card, Text } from "react-native-paper";
 import { useRouter } from "expo-router";
-import useCareTasks, { gardenToday } from "../../hooks/useCareTasks";
 
-export default function TodayTasks() {
+export default function TodayTasks({ care }) {
   const router = useRouter();
-  const care = useCareTasks(gardenToday());
   return <View style={{ marginTop: 24, gap: 12 }}>
     <Text variant="titleLarge">Chăm sóc thường hôm nay</Text>
     {care.loading ? <ActivityIndicator /> : care.error ? <><Text>{care.error}</Text><Button onPress={care.reload}>Thử lại</Button></> : <>

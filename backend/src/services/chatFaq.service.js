@@ -24,4 +24,4 @@ const findAnswer = async (message) => {
   return answers.length === 1 ? answers[0] : null;
 };
 
-module.exports = { findAnswer };
+module.exports = { findAnswer, normalize };

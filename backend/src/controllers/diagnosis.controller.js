@@ -3,7 +3,7 @@ const { success } = require("../utils/api-response");
 
 // Mục đích: Điều phối request chẩn đoán ảnh.
 // Cách chạy: Gọi service, trả kết quả và hủy cuộc gọi Python nếu client ngắt kết nối.
-const predict = async (req, res, next) => {
+const analyze = (identification = false) => async (req, res, next) => {
   const controller = new AbortController();
   // Mục đích: Hủy cuộc gọi nhận diện đang chờ.
   // Cách chạy: Phát tín hiệu abort qua controller của request này.
@@ -16,7 +16,8 @@ const predict = async (req, res, next) => {
   try {
     const data = await diagnosis.diagnose(req.file, {
       signal: controller.signal,
-      userId: req.user.id,
+      // Nhận diện tên cây không tạo bằng chứng chẩn đoán để áp dụng điều trị.
+      userId: identification ? undefined : req.user.id,
     });
     if (!controller.signal.aborted && !res.destroyed)
       return success(res, data.message, data);
@@ -28,4 +29,4 @@ const predict = async (req, res, next) => {
   }
 };
 
-module.exports = { predict };
+module.exports = { predict: analyze(), identify: analyze(true) };

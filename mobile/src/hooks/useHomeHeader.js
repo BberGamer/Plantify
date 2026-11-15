@@ -11,6 +11,7 @@ export default function useHomeHeader() {
   const { handleLogout, isLoggingOut, logoutError } = useLogout();
   const roleLabel = getRoleLabel(user?.role);
   const openAdmin = () => router.push("/admin/users");
+  const openNotifications = () => router.navigate("/customer/notifications");
   const openAccountMenu = () => {
     if (isLoggingOut) return;
     Alert.alert(
@@ -27,5 +28,5 @@ export default function useHomeHeader() {
       ],
     );
   };
-  return { roleLabel, user, openAdmin, openAccountMenu, isLoggingOut, logoutError };
+  return { roleLabel, user, openAdmin, openAccountMenu, openNotifications, isLoggingOut, logoutError };
 }

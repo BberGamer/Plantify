@@ -14,8 +14,11 @@ router.use("/diseases", diseaseRoutes);
 router.use("/garden/plants", require("./garden.routes"));
 router.use("/favorites/plants", require("./favorite.routes"));
 router.use("/chat", require("./chat.routes"));
+router.use("/chat-faqs/manager", require("./chatFaqManagement.routes"));
 router.use("/treatments", require("./treatment.routes"));
 router.use("/diagnosis", require("./diagnosis.routes"));
 router.use("/care-schedules", require("./care.routes"));
+router.use("/notifications", require("./notification.routes"));
+router.use("/identification", require("./identification.routes"));
 
 module.exports = router;

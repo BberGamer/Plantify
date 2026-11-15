@@ -106,6 +106,67 @@ trỏ vào Express, không gọi thẳng Python. Chi tiết API, cấu hình và
 
 ## Tiến độ hiện tại
 
+### Quản trị FAQ chat (15/11/2026)
+
+Manager có tab **FAQ** với hai ô: **Tất cả** đọc FAQ tiếng Việt từ `chat_faqs`,
+**Chat người dùng** đọc các lượt câu hỏi–trả lời từ `chat_turns` (không phải `chat_turn`).
+Giữ nút **Tạo FAQ**; bỏ hai bộ lọc Nháp/Đã duyệt trên danh sách. Cả hai nguồn có
+tìm kiếm và phân trang riêng theo ô đang chọn; lượt chat hiển thị câu hỏi, câu trả lời,
+nguồn trả lời, thời gian và mã người dùng, chỉ xem, không tự chuyển thành FAQ.
+Ô Tất cả có thao tác **Sửa** và **Xóa** (thay nút Xem/Duyệt). Xóa cần xác nhận,
+xóa vĩnh viễn đúng FAQ và giữ nguyên lịch sử chat; danh sách tải lại sau khi xóa.
+API `DELETE /api/chat-faqs/manager/:id` nhận body `{ version }`, kiểm tra quyền và
+phiên bản hiện tại trước khi xóa. API duyệt/gỡ duyệt vẫn giữ cho caller hiện có.
+Câu hỏi chính tối đa 1000 ký tự, câu trả lời
+tối đa 12000 ký tự, tối đa 30 câu hỏi tương đương. Tạo mới luôn lưu nháp; sửa FAQ
+đã duyệt sẽ chuyển về nháp. Manager mở **Xem / Duyệt** để đọc toàn bộ nội dung và
+xác nhận duyệt, hoặc **Xem / Gỡ duyệt** để ngừng sử dụng trong chat.
+
+API nằm dưới `/api/chat-faqs/manager`: `GET /`, `GET /:id`, `POST /`, `PUT /:id`,
+`PATCH /:id/approve`, `PATCH /:id/unapprove`. Cập nhật/duyệt/gỡ duyệt yêu cầu
+`version` hiện tại, tránh ghi đè hoặc duyệt nhầm nội dung đã bị người khác sửa.
+Backend xác minh tài khoản hoạt động và quyền Manager/Admin từ database.
+`GET /api/chat-faqs/manager/chat-turns` đọc các lượt chat cho khu vực quản lý,
+tìm theo câu hỏi/câu trả lời, phân trang và không trả metadata nội bộ của prompt.
+FAQ cũ thiếu version hoặc lưu version không phải số nguyên dương được hiển thị là
+phiên bản 1; lần sửa/duyệt tiếp theo lưu phiên bản số, đối chiếu nguyên giá trị cũ
+trong thao tác cập nhật nguyên tử. Không cần sửa hàng loạt dữ liệu MongoDB trước.
+
+Câu hỏi/alias được kiểm tra trùng bằng cùng quy tắc chuẩn hóa mà chat sử dụng.
+Unique sparse multikey index `match_keys` bảo vệ ghi đồng thời cho các FAQ quản lý
+mới/cập nhật; cần quyền tạo index MongoDB. FAQ cũ được đối chiếu khi thao tác nhưng
+không tự sửa/import dữ liệu cũ. Chat tiếp tục chỉ dùng FAQ `approved`, `language=vi`;
+`AI_FAQ_ENABLED=false` vẫn tắt tra cứu FAQ. Nguồn tham khảo đã có được giữ nguyên.
+
+### Trang chủ theo tài khoản (15/11/2026)
+
+Các ô “Nhận diện cây”, “Vườn của tôi” và chuông thông báo đã có điều hướng.
+Nhận diện cây mở `/customer/identification`, dùng chung camera và model 78 nhãn
+cây/bệnh với chẩn đoán, chỉ gợi ý tên cây khi vượt các ngưỡng hiện có; chưa hỗ trợ
+nhận diện mọi loài cây. `POST /api/identification` nhận multipart `photo`, bảo vệ
+bằng phiên Customer đang hoạt động như chẩn đoán nhưng không lưu bằng chứng bệnh
+để áp dụng điều trị. Kết quả có liên kết chi tiết khi khớp cây trong danh mục.
+
+Chuông mở `/customer/notifications`: danh sách nhắc điều trị đã đến hạn của tài
+khoản, phân trang, kéo làm mới, đánh dấu đã đọc và mở lịch điều trị. API gồm
+`GET /api/notifications?page=1&limit=20` và `PATCH /api/notifications/:id/read`;
+chỉ Customer đang hoạt động được truy cập, chỉ đọc/sửa thông báo của chính mình.
+Thông báo tương lai hoặc đã hủy không hiển thị. Đây là hộp thông báo trong ứng dụng;
+chưa có worker gửi push/FCM hoặc thông báo trên hệ điều hành. Nút “Xem lịch chăm sóc”
+tiếp tục mở màn `/customer/care` đã có.
+
+Trang chủ lấy tổng số cây và số cây khỏe mạnh từ API vườn theo phiên đăng nhập,
+không tính cây đã lưu trữ. Số cây đang điều trị là phần còn lại theo hai trạng thái
+hiện có (`healthy`, `treatment`); tỷ lệ sức khỏe là số cây khỏe mạnh / tổng số cây,
+không phải đánh giá sức khỏe từ AI. Vườn rỗng hiển thị “Chưa có cây”.
+Danh sách xem trước hiển thị tối đa 6 cây mới nhất với ảnh/tên/trạng thái thật;
+bấm cây mở chi tiết, “Xem thêm” mở vườn. Công việc chăm sóc thường hôm nay tiếp tục
+dùng API lịch chăm sóc theo ngày Việt Nam, hỗ trợ đánh dấu hoàn thành. Dữ liệu tải
+lại khi quay về trang chủ hoặc kéo xuống làm mới; lỗi có nút thử lại.
+Weather vẫn ghi rõ là dữ liệu minh họa.
+
+Cần kiểm thử thêm với MongoDB và thiết bị thật.
+
 Màn **Chẩn đoán bệnh** tại `/customer/diagnosis` mở từ Home hoặc camera trên Navbar.
 Nút **Phân tích ảnh** gửi ảnh đã chọn đến backend và hiển thị dữ liệu model thật;
 đã bỏ kết quả mẫu. Có chụp ảnh, chọn lại, xem ảnh, retry lỗi, thông báo kết quả
