@@ -61,6 +61,13 @@ const treatmentTaskSchema = new mongoose.Schema(
       required: true,
       immutable: true,
     },
+    dosage_note: {
+      type: String,
+      trim: true,
+      maxlength: 2000,
+      default: "",
+      immutable: true,
+    },
     important_note: {
       type: String,
       trim: true,
@@ -233,7 +240,14 @@ treatmentScheduleSchema.index(
 treatmentScheduleSchema.index({ user_id: 1, status: 1, created_at: -1 });
 treatmentScheduleSchema.index({ user_plant_id: 1, created_at: -1 });
 treatmentScheduleSchema.index({ treatment_protocol_id: 1, created_at: -1 });
-treatmentScheduleSchema.index({ diagnosis_id: 1 }, { sparse: true });
+treatmentScheduleSchema.index(
+  { diagnosis_id: 1, user_id: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { diagnosis_id: { $type: "objectId" } },
+    name: "one_schedule_per_diagnosis",
+  },
+);
 
 module.exports = mongoose.model(
   "TreatmentSchedule",
