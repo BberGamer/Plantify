@@ -20,12 +20,29 @@ export default function TreatmentPreviewScreen() {
   const value = (input) => (typeof input === "string" ? input : "");
   const treatment = useTreatmentPreview({
     diseaseId: value(params.diseaseId),
+    plantId: value(params.plantId),
     userPlantId: value(params.userPlantId),
     diagnosisId: value(params.diagnosisId) || undefined,
     startDate: value(params.startDate) || undefined,
   });
   const [confirming, setConfirming] = useState(false);
   const data = treatment.data;
+  const selectedProtocol = treatment.protocols.find(
+    (protocol) => protocol._id === treatment.selectedProtocolId,
+  );
+
+  function addDetectedPlant() {
+    router.push({
+      pathname: "/customer/garden/add",
+      params: {
+        plantId: value(params.plantId),
+        diseaseId: value(params.diseaseId),
+        diagnosisId: value(params.diagnosisId),
+        startDate: value(params.startDate),
+        returnTo: "treatmentPreview",
+      },
+    });
+  }
 
   async function apply() {
     const activeTreatment = await treatment.apply();
@@ -44,6 +61,54 @@ export default function TreatmentPreviewScreen() {
       <TreatmentStateView loading={treatment.loading} error={treatment.error} onRetry={treatment.retry} />
     ) : !data ? <>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Chọn cây trong vườn</Text>
+          <Text style={styles.body}>
+            Chỉ những cây cùng loài với kết quả AI mới được hiển thị.
+          </Text>
+          {treatment.gardenPlants.map((plant) => {
+            const selected = treatment.selectedUserPlantId === plant._id;
+            const disabled = Boolean(plant.active_treatment);
+            return (
+              <Pressable
+                key={plant._id}
+                onPress={() => !disabled && treatment.selectGardenPlant(plant._id)}
+                disabled={disabled}
+                accessibilityRole="radio"
+                accessibilityState={{ selected, disabled }}
+                style={[
+                  styles.plantOption,
+                  selected && styles.protocolSelected,
+                  disabled && styles.disabled,
+                ]}
+              >
+                <View style={styles.protocolHeader}>
+                  <View style={styles.summaryText}>
+                    <Text style={styles.protocolName}>{plant.plant_nickname}</Text>
+                    <Text style={styles.protocolMeta}>
+                      {plant.species_name || "Cây trong vườn"}
+                    </Text>
+                  </View>
+                  <View style={[styles.radio, selected && styles.radioSelected]} />
+                </View>
+                {disabled && (
+                  <Text style={styles.error}>Cây đang có đợt điều trị hoạt động.</Text>
+                )}
+              </Pressable>
+            );
+          })}
+          {!treatment.gardenPlants.length && (
+            <View style={styles.missingPlant}>
+              <Text style={styles.error}>
+                Vườn của bạn chưa có cây cùng loài với kết quả AI. Cần thêm cây này
+                vào vườn để tạo và áp dụng lịch điều trị.
+              </Text>
+              <Button mode="outlined" icon="plus" onPress={addDetectedPlant}>
+                Thêm cây đã nhận diện vào vườn
+              </Button>
+            </View>
+          )}
+        </View>
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Chọn phác đồ đã phê duyệt</Text>
           <Text style={styles.body}>Phác đồ sẽ được dùng để tạo lịch xem trước. Điều trị chỉ bắt đầu sau khi bạn xác nhận áp dụng.</Text>
@@ -65,10 +130,41 @@ export default function TreatmentPreviewScreen() {
             <Text style={styles.protocolMeta}>{protocol.duration_days} ngày · Phiên bản {protocol.version}</Text>
           </Pressable>;
         }) : <TreatmentStateView empty="Chưa có phác đồ đã phê duyệt cho bệnh này." />}
+        {!!selectedProtocol && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Chi tiết phác đồ</Text>
+            {!!selectedProtocol.approved_instructions?.length && (
+              <View style={styles.card}>
+                <Text style={styles.protocolName}>Hướng dẫn đã được phê duyệt</Text>
+                {selectedProtocol.approved_instructions.map((instruction, index) => (
+                  <Text key={`${selectedProtocol._id}-instruction-${index}`} style={styles.body}>
+                    • {instruction}
+                  </Text>
+                ))}
+              </View>
+            )}
+            {selectedProtocol.stages?.map((stage, index) => (
+              <TreatmentStageCard
+                key={stage._id || `${selectedProtocol._id}-stage-${stage.order}`}
+                stage={{ ...stage, _id: stage._id || `${selectedProtocol._id}-${stage.order}` }}
+                initiallyExpanded={index === 0}
+              />
+            ))}
+            {!!selectedProtocol.safety_guidelines?.length && (
+              <TreatmentSafetyNotice>
+                {selectedProtocol.safety_guidelines.join(" ")}
+              </TreatmentSafetyNotice>
+            )}
+          </View>
+        )}
         {!!treatment.generateError && <Text style={styles.error} accessibilityRole="alert">{treatment.generateError}</Text>}
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-        <Button mode="contained" onPress={treatment.generate} loading={treatment.generating} disabled={!treatment.canGenerate || treatment.generating} contentStyle={styles.buttonContent}>Tạo lịch điều trị</Button>
+        {treatment.gardenPlants.length ? (
+          <Button mode="contained" onPress={treatment.generate} loading={treatment.generating} disabled={!treatment.canGenerate || treatment.generating} contentStyle={styles.buttonContent}>Tạo lịch điều trị</Button>
+        ) : (
+          <Button mode="contained" icon="plus" onPress={addDetectedPlant} contentStyle={styles.buttonContent}>Thêm cây để áp dụng</Button>
+        )}
       </View>
     </> : <>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -130,6 +226,8 @@ const styles = StyleSheet.create({
   metricValue: { ...typography.title, color: colors.primary },
   metricLabel: { ...typography.caption, color: colors.textSecondary },
   protocolCard: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm },
+  plantOption: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing.md, gap: spacing.xs },
+  disabled: { opacity: 0.55 },
   protocolSelected: { borderColor: colors.primaryLight, backgroundColor: colors.softMintBg },
   protocolHeader: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   protocolName: { ...typography.label, flex: 1, color: colors.textPrimary },
@@ -137,6 +235,7 @@ const styles = StyleSheet.create({
   radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.inputBorder },
   radioSelected: { borderWidth: 6, borderColor: colors.primaryLight },
   error: { ...typography.body, color: colors.statusError, textAlign: "center" },
+  missingPlant: { gap: spacing.md },
   footer: { backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.lg, paddingTop: spacing.md },
   buttonContent: { minHeight: 48 },
 });
