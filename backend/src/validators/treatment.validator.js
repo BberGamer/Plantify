@@ -1,5 +1,115 @@
 const v = require("./common");
 
+const allowedProtocolFields = [
+  "disease_id",
+  "plant_ids",
+  "protocol_name",
+  "description",
+  "duration_days",
+  "stages",
+  "approved_instructions",
+  "safety_guidelines",
+  "status",
+];
+
+const textList = (value, field, required = true) => {
+  if (!Array.isArray(value) || (required && value.length === 0))
+    v.invalid(field, `Trường ${field} phải là danh sách không rỗng.`);
+  const items = value.map((item, index) => {
+    const result = v.text(item, `${field}.${index}`);
+    if (result.length > 2000)
+      v.invalid(field, `Mỗi nội dung trong ${field} tối đa 2000 ký tự.`);
+    return result;
+  });
+  return [...new Set(items)];
+};
+
+const protocol = (input) => {
+  v.object(input);
+  for (const key of Object.keys(input)) {
+    if (!allowedProtocolFields.includes(key))
+      v.invalid(key, `Trường ${key} không được hỗ trợ.`);
+  }
+  if (!Array.isArray(input.plant_ids) || input.plant_ids.length === 0)
+    v.invalid("plant_ids", "Vui lòng chọn ít nhất một cây áp dụng.");
+  if (input.duration_days === undefined)
+    v.invalid("duration_days", "Vui lòng nhập thời lượng phác đồ.");
+  const duration = v.positiveInteger(
+    input.duration_days,
+    undefined,
+    "duration_days",
+    365,
+  );
+  if (!Array.isArray(input.stages) || input.stages.length === 0)
+    v.invalid("stages", "Phác đồ cần ít nhất một giai đoạn.");
+  const stages = input.stages.map((stage, index) => {
+    v.object(stage, `stages.${index}`);
+    for (const key of Object.keys(stage)) {
+      if (
+        ![
+          "order",
+          "title",
+          "start_day",
+          "end_day",
+          "instructions",
+          "dosage_note",
+          "important_note",
+        ].includes(key)
+      )
+        v.invalid(`stages.${index}.${key}`);
+    }
+    const title = v.text(stage.title, `stages.${index}.title`);
+    const startDay = v.positiveInteger(
+      stage.start_day,
+      undefined,
+      `stages.${index}.start_day`,
+      duration,
+    );
+    const endDay = v.positiveInteger(
+      stage.end_day,
+      undefined,
+      `stages.${index}.end_day`,
+      duration,
+    );
+    if (endDay < startDay)
+      v.invalid(`stages.${index}.end_day`, "Ngày kết thúc phải từ ngày bắt đầu trở đi.");
+    return {
+      order: index + 1,
+      title,
+      start_day: startDay,
+      end_day: endDay,
+      instructions: textList(stage.instructions, `stages.${index}.instructions`),
+      dosage_note: v.text(stage.dosage_note || "", `stages.${index}.dosage_note`, false),
+      important_note: v.text(
+        stage.important_note || "",
+        `stages.${index}.important_note`,
+        false,
+      ),
+    };
+  });
+  const status = input.status || "draft";
+  if (!["draft", "approved"].includes(status))
+    v.invalid("status", "Trạng thái phác đồ không hợp lệ.");
+  const result = {
+    disease_id: v.id(input.disease_id, "disease_id"),
+    plant_ids: [...new Set(input.plant_ids.map((id) => v.id(id, "plant_ids")))],
+    protocol_name: v.text(input.protocol_name, "protocol_name"),
+    description: v.text(input.description, "description"),
+    duration_days: duration,
+    stages,
+    approved_instructions: textList(
+      input.approved_instructions || [],
+      "approved_instructions",
+      status === "approved",
+    ),
+    safety_guidelines: textList(input.safety_guidelines, "safety_guidelines"),
+    status,
+  };
+  if (result.protocol_name.length > 200) v.invalid("protocol_name");
+  if (result.description.length > 5000) v.invalid("description");
+  return result;
+};
+
 const generate = (input) => {
   v.object(input);
   for (const key of Object.keys(input)) {
@@ -59,4 +169,4 @@ const rescheduleTask = (input) => {
   return { scheduled_date: scheduledDate };
 };
 
-module.exports = { generate, finish, rescheduleTask };
+module.exports = { generate, finish, rescheduleTask, protocol };
