@@ -108,6 +108,21 @@ trỏ vào Express, không gọi thẳng Python. Chi tiết API, cấu hình và
 
 ### Trang chủ theo tài khoản (15/11/2026)
 
+Các ô “Nhận diện cây”, “Vườn của tôi” và chuông thông báo đã có điều hướng.
+Nhận diện cây mở `/customer/identification`, dùng chung camera và model 78 nhãn
+cây/bệnh với chẩn đoán, chỉ gợi ý tên cây khi vượt các ngưỡng hiện có; chưa hỗ trợ
+nhận diện mọi loài cây. `POST /api/identification` nhận multipart `photo`, bảo vệ
+bằng phiên Customer đang hoạt động như chẩn đoán nhưng không lưu bằng chứng bệnh
+để áp dụng điều trị. Kết quả có liên kết chi tiết khi khớp cây trong danh mục.
+
+Chuông mở `/customer/notifications`: danh sách nhắc điều trị đã đến hạn của tài
+khoản, phân trang, kéo làm mới, đánh dấu đã đọc và mở lịch điều trị. API gồm
+`GET /api/notifications?page=1&limit=20` và `PATCH /api/notifications/:id/read`;
+chỉ Customer đang hoạt động được truy cập, chỉ đọc/sửa thông báo của chính mình.
+Thông báo tương lai hoặc đã hủy không hiển thị. Đây là hộp thông báo trong ứng dụng;
+chưa có worker gửi push/FCM hoặc thông báo trên hệ điều hành. Nút “Xem lịch chăm sóc”
+tiếp tục mở màn `/customer/care` đã có.
+
 Trang chủ lấy tổng số cây và số cây khỏe mạnh từ API vườn theo phiên đăng nhập,
 không tính cây đã lưu trữ. Số cây đang điều trị là phần còn lại theo hai trạng thái
 hiện có (`healthy`, `treatment`); tỷ lệ sức khỏe là số cây khỏe mạnh / tổng số cây,

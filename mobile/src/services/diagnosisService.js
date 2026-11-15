@@ -147,7 +147,7 @@ function validateResponse(envelope) {
 export default {
   // Mục đích: Gửi ảnh để chẩn đoán.
   // Cách chạy: Kiểm tra ảnh/phiên, tạo multipart phù hợp nền tảng rồi gọi API và xác minh kết quả.
-  async analyze(photo, { sessionContext = getSessionContext(), signal } = {}) {
+  async analyze(photo, { sessionContext = getSessionContext(), signal, identification = false } = {}) {
     if (!photo || !text(photo.uri)) invalid("DIAGNOSIS_INVALID_PHOTO");
     if (photo.fileSize > 10 * 1024 * 1024) invalid("DIAGNOSIS_IMAGE_TOO_LARGE");
     if (!sessionContext?.token) throw sessionError("AUTH_REQUIRED");
@@ -200,7 +200,7 @@ export default {
       });
     }
     // Không để JSON header mặc định hoặc tự đặt boundary cho multipart.
-    const response = await api.post("/diagnosis", body, {
+    const response = await api.post(identification ? "/identification" : "/diagnosis", body, {
       signal,
       sessionContext,
       timeout: 30000,

@@ -15,7 +15,8 @@ const FEATURES = [
   {
     id: "1",
     title: "Nhận diện cây",
-    subtitle: "Biết tên cây tức thì",
+    href: "/customer/identification",
+    subtitle: "Gợi ý tên cây từ ảnh",
     bgColor: "#EEF8F1",
     icon: <Ionicons name="leaf-outline" size={20} color="#247855" />,
   },
@@ -30,7 +31,8 @@ const FEATURES = [
   {
     id: "3",
     title: "Vườn của tôi",
-    subtitle: "Quản lý 12 cây",
+    href: "/customer/garden",
+    subtitle: "Quản lý cây trong vườn",
     bgColor: "#F4FBF7",
     icon: (
       <MaterialCommunityIcons name="sprout-outline" size={20} color="#247855" />

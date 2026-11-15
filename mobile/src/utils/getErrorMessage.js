@@ -1,5 +1,6 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  NOTIFICATION_NOT_FOUND: "Thông báo không còn khả dụng. Vui lòng tải lại danh sách.",
   CARE_UNAVAILABLE: "Lịch đã dừng, cây đã lưu trữ hoặc đang điều trị. Vui lòng tải lại lịch.",
   CARE_NOT_FOUND: "Không tìm thấy lịch chăm sóc. Vui lòng tải lại lịch.",
   AI_INCOMPLETE_RESPONSE: "AI chưa hoàn tất câu trả lời. Vui lòng thử lại với câu hỏi cụ thể hơn.",

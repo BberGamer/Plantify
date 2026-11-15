@@ -17,5 +17,7 @@ router.use("/chat", require("./chat.routes"));
 router.use("/treatments", require("./treatment.routes"));
 router.use("/diagnosis", require("./diagnosis.routes"));
 router.use("/care-schedules", require("./care.routes"));
+router.use("/notifications", require("./notification.routes"));
+router.use("/identification", require("./identification.routes"));
 
 module.exports = router;

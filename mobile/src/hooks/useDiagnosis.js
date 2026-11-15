@@ -36,7 +36,7 @@ const MESSAGES = {
 
 // Mục đích: Quản lý trạng thái phân tích ảnh của màn hình.
 // Cách chạy: Giữ loading, kết quả, lỗi và hủy request khi ảnh, phiên hoặc màn hình đổi.
-export default function useDiagnosis(photo, operationLock) {
+export default function useDiagnosis(photo, operationLock, identification = false) {
   const version = useAuthStore((state) => state.sessionVersion);
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -105,6 +105,7 @@ export default function useDiagnosis(photo, operationLock) {
     setResult(null);
     try {
       const response = await diagnosisService.analyze(selected, {
+        identification,
         sessionContext: context,
         signal: controller.signal,
       });

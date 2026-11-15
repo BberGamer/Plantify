@@ -6,7 +6,7 @@ import useHomeHeader from "../../hooks/useHomeHeader";
 import { colors } from "../../theme/colors";
 
 export default function HomeHeader() {
-  const { user, openAdmin, openAccountMenu, isLoggingOut, logoutError, roleLabel } = useHomeHeader();
+  const { user, openAdmin, openAccountMenu, openNotifications, isLoggingOut, logoutError, roleLabel } = useHomeHeader();
 
   const initials = user?.fullName
     ? user.fullName
@@ -39,7 +39,7 @@ export default function HomeHeader() {
               <Text style={styles.adminBadgeBtnText}>{roleLabel}</Text>
             </TouchableOpacity>
           )}
-          <IconButton icon="bell-outline" iconColor="#183B2B" size={20} style={styles.bellButton} />
+          <IconButton icon="bell-outline" accessibilityLabel="Mở thông báo" onPress={openNotifications} iconColor="#183B2B" size={20} style={styles.bellButton} />
           <TouchableOpacity onPress={openAccountMenu} disabled={isLoggingOut} activeOpacity={0.8}>
             <Avatar.Text
               size={38}
