@@ -106,6 +106,20 @@ trỏ vào Express, không gọi thẳng Python. Chi tiết API, cấu hình và
 
 ## Tiến độ hiện tại
 
+### Trang chủ theo tài khoản (15/11/2026)
+
+Trang chủ lấy tổng số cây và số cây khỏe mạnh từ API vườn theo phiên đăng nhập,
+không tính cây đã lưu trữ. Số cây đang điều trị là phần còn lại theo hai trạng thái
+hiện có (`healthy`, `treatment`); tỷ lệ sức khỏe là số cây khỏe mạnh / tổng số cây,
+không phải đánh giá sức khỏe từ AI. Vườn rỗng hiển thị “Chưa có cây”.
+Danh sách xem trước hiển thị tối đa 6 cây mới nhất với ảnh/tên/trạng thái thật;
+bấm cây mở chi tiết, “Xem thêm” mở vườn. Công việc chăm sóc thường hôm nay tiếp tục
+dùng API lịch chăm sóc theo ngày Việt Nam, hỗ trợ đánh dấu hoàn thành. Dữ liệu tải
+lại khi quay về trang chủ hoặc kéo xuống làm mới; lỗi có nút thử lại.
+Weather vẫn ghi rõ là dữ liệu minh họa.
+
+Cần kiểm thử thêm với MongoDB và thiết bị thật.
+
 Màn **Chẩn đoán bệnh** tại `/customer/diagnosis` mở từ Home hoặc camera trên Navbar.
 Nút **Phân tích ảnh** gửi ảnh đã chọn đến backend và hiển thị dữ liệu model thật;
 đã bỏ kết quả mẫu. Có chụp ảnh, chọn lại, xem ảnh, retry lỗi, thông báo kết quả

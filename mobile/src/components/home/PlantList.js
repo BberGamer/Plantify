@@ -1,52 +1,33 @@
 import React from 'react';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Card, Text } from 'react-native-paper';
 
-const PLANTS = [
-  {
-    id: '1',
-    name: 'Trầu bà',
-    status: 'Khỏe mạnh',
-    statusColor: '#22C55E',
-    image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=500&auto=format&fit=crop&q=80',
-  },
-  {
-    id: '2',
-    name: 'Hoa hồng',
-    status: 'Cần kiểm tra lá',
-    statusColor: '#F59E0B',
-    image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop&q=80',
-  },
-  {
-    id: '3',
-    name: 'Cà chua',
-    status: 'Đang theo dõi...',
-    statusColor: '#F59E0B',
-    image: 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=500&auto=format&fit=crop&q=80',
-  },
-];
-
-export default function PlantList() {
+export default function PlantList({ plants }) {
+  const router = useRouter();
+  const openGarden = () => router.push("/customer/garden");
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Danh sách cây</Text>
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity activeOpacity={0.7} onPress={openGarden} accessibilityRole="button">
           <Text style={styles.linkText}>Xem thêm</Text>
         </TouchableOpacity>
       </View>
 
+      {!plants.length && <Text>Vườn của bạn chưa có cây. Thêm cây trong mục Vườn cây để bắt đầu.</Text>}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollList}>
-        {PLANTS.map((plant) => (
-          <Card key={plant.id} mode="contained" style={styles.card}>
+        {plants.map((plant) => (
+          <Card key={plant._id} onPress={() => router.push({ pathname: "/customer/garden/PlantList", params: { plantId: plant._id } })} mode="contained" style={styles.card}>
             <View style={styles.imageWrapper}>
-              <Card.Cover source={{ uri: plant.image }} style={styles.image} resizeMode="cover" />
-              <View style={[styles.statusDot, { backgroundColor: plant.statusColor }]} />
+              {plant.display_image_url ? <Card.Cover source={{ uri: plant.display_image_url }} style={styles.image} resizeMode="cover" /> : <View style={[styles.image, { alignItems: "center", justifyContent: "center", backgroundColor: "#EAF5EE" }]}><Ionicons name="leaf-outline" size={40} color="#247855" /></View>}
+              <View style={[styles.statusDot, { backgroundColor: plant.health_status === "treatment" ? "#F59E0B" : "#22C55E" }]} />
             </View>
             <View style={styles.cardContent}>
-              <Text style={styles.plantName}>{plant.name}</Text>
+              <Text style={styles.plantName}>{plant.plant_nickname}</Text>
               <Text style={styles.plantStatus} numberOfLines={1}>
-                {plant.status}
+                {plant.health_status === "treatment" ? "Đang điều trị" : "Khỏe mạnh"}
               </Text>
             </View>
           </Card>
