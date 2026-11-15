@@ -124,8 +124,29 @@ const getDiseases = async (query = {}, managerView = false) => {
     Disease.countDocuments(filter),
   ]);
 
+  let items = diseases;
+  if (managerView && diseases.length) {
+    const linkedPlants = await Plant.find({
+      common_disease_ids: { $in: diseases.map((disease) => disease._id) },
+    })
+      .select("_id common_disease_ids")
+      .lean();
+    const plantIdsByDisease = new Map(
+      diseases.map((disease) => [String(disease._id), []]),
+    );
+    for (const plant of linkedPlants) {
+      for (const diseaseId of plant.common_disease_ids || []) {
+        plantIdsByDisease.get(String(diseaseId))?.push(String(plant._id));
+      }
+    }
+    items = diseases.map((disease) => ({
+      ...disease,
+      plant_ids: plantIdsByDisease.get(String(disease._id)) || [],
+    }));
+  }
+
   return {
-    diseases,
+    diseases: items,
     total,
     page,
     limit,
