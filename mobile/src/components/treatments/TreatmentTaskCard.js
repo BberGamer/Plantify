@@ -20,6 +20,9 @@ export default function TreatmentTaskCard({ task, busy, onComplete }) {
           <Text style={styles.title}>{task.title}</Text>
           <Text style={[styles.status, { color }]}>{label} · {new Intl.DateTimeFormat("vi-VN").format(new Date(task.scheduled_date))}</Text>
           {!!task.instructions && <Text style={styles.body}>{task.instructions}</Text>}
+          {!!task.dosage_note && (
+            <Text style={styles.dosage}>Liều lượng: {task.dosage_note}</Text>
+          )}
         </View>
       </View>
       {canComplete && <Button mode="outlined" onPress={() => onComplete(task)} loading={busy} disabled={busy}>
@@ -36,4 +39,5 @@ const styles = StyleSheet.create({
   title: { ...typography.label, color: colors.textPrimary },
   status: { ...typography.caption, fontWeight: "600" },
   body: { ...typography.body, color: colors.textSecondary, marginTop: spacing.xs },
+  dosage: { ...typography.label, color: colors.primaryLight, marginTop: spacing.xs },
 });

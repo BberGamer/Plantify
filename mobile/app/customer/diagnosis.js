@@ -61,6 +61,16 @@ export default function DiagnosisScreen() {
           <DiagnosisResult
             photo={capture.photo} result={diagnosis.result} onBack={diagnosis.clearResult}
             onRetake={capture.retake} onImageError={onImageError}
+            onCreateTreatment={() =>
+              router.push({
+                pathname: "/customer/treatments/preview",
+                params: {
+                  diagnosisId: diagnosis.result.diagnosis_id,
+                  plantId: diagnosis.result.prediction.plant_id,
+                  diseaseId: diagnosis.result.prediction.disease_id,
+                },
+              })
+            }
           />
         ) : capture.photo ? (
           <DiagnosisPreview

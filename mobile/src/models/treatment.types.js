@@ -8,6 +8,7 @@
  * @property {number} start_day
  * @property {number} end_day
  * @property {string[]} instructions
+ * @property {string=} dosage_note
  * @property {string=} important_note
  */
 
@@ -20,6 +21,7 @@
  * @property {"pending"|"completed"|"upcoming"} status
  * @property {string=} completed_at
  * @property {string=} instructions
+ * @property {string=} dosage_note
  * @property {string=} important_note
  */
 

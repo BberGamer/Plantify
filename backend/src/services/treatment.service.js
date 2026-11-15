@@ -3,7 +3,9 @@ const AppError = require("../utils/app-error");
 const TreatmentProtocol = require("../models/treatmentProtocol.model");
 const TreatmentSchedule = require("../models/treatmentSchedule.model");
 const UserPlant = require("../models/userPlant.model");
+const Plant = require("../models/plant.model");
 const Disease = require("../models/disease.model");
+const DiseaseDiagnosis = require("../models/diseaseDiagnosis.model");
 const CareSchedule = require("../models/careSchedule.model");
 const Notification = require("../models/notification.model");
 const User = require("../models/user.model");
@@ -12,6 +14,16 @@ const v = require("../validators/common");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const terminalStatuses = ["recovered", "failed", "cancelled"];
+
+// Một số MongoDB driver trả metadata commit thay vì giá trị callback.
+// Giữ kết quả nghiệp vụ tách khỏi giá trị trả về của transaction driver.
+const withTransactionResult = async (operation) => {
+  let result;
+  await mongoose.connection.transaction(async (session) => {
+    result = await operation(session);
+  });
+  return result;
+};
 
 const assertTransition = (current, next) => {
   const allowed =
@@ -74,7 +86,14 @@ const createReminderOperations = (schedule) =>
 const addDays = (date, days) => new Date(date.getTime() + days * DAY_MS);
 const utcToday = () => {
   const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const vietnam = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  return new Date(
+    Date.UTC(
+      vietnam.getUTCFullYear(),
+      vietnam.getUTCMonth(),
+      vietnam.getUTCDate(),
+    ),
+  );
 };
 
 const createProtocolSnapshot = (protocol) => ({
@@ -106,6 +125,7 @@ const createTasks = (protocol, startDate) =>
           title: stage.title,
           scheduled_date: addDays(startDate, day - 1),
           instructions: [...stage.instructions],
+          dosage_note: stage.dosage_note || "",
           important_note: stage.important_note || "",
           status: "pending",
         });
@@ -170,11 +190,15 @@ const presentSchedule = async (schedule, session) => {
       safety_guidelines: value.protocol_snapshot.safety_guidelines,
       approved_instructions: value.protocol_snapshot.approved_instructions,
     },
-    stages: value.protocol_snapshot.stages,
+    stages: value.protocol_snapshot.stages.map((stage) => ({
+      ...stage,
+      _id: String(stage.source_stage_id || `stage-${stage.order}`),
+    })),
     task_progress: value.tasks.map((task) => ({
       ...task,
       status:
-        task.status === "pending" && new Date(task.scheduled_date) > new Date()
+        task.status === "pending" &&
+        new Date(task.scheduled_date) > utcToday()
           ? "upcoming"
           : task.status,
       instructions: task.instructions.join(" "),
@@ -218,17 +242,20 @@ const getOwnedPlant = async (userId, plantId, session) => {
   return plant;
 };
 
-const getApprovedProtocols = async (diseaseId) => {
+const getApprovedProtocols = async (diseaseId, plantId) => {
   v.id(diseaseId, "disease_id");
+  if (plantId) v.id(plantId, "plant_id");
   const disease = await Disease.findOne({ _id: diseaseId, status: "active" })
     .select("_id disease_name")
     .lean();
   if (!disease)
     throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy bệnh cây đang hoạt động.");
-  const protocols = await TreatmentProtocol.find({
+  const filter = {
     disease_id: diseaseId,
     status: "approved",
-  })
+  };
+  if (plantId) filter.plant_ids = plantId;
+  const protocols = await TreatmentProtocol.find(filter)
     .sort({ version: -1, updated_at: -1 })
     .lean();
   return { disease, protocols };
@@ -236,21 +263,13 @@ const getApprovedProtocols = async (diseaseId) => {
 
 const assertDiagnosis = async (diagnosisId, userId, diseaseId, session) => {
   if (!diagnosisId) return;
-  const Diagnosis = mongoose.models.DiseaseDiagnosis;
-  if (!Diagnosis)
-    throw new AppError(
-      "DIAGNOSIS_NOT_AVAILABLE",
-      409,
-      "Chức năng lưu chẩn đoán chưa khả dụng.",
-    );
-  const diagnosis = await Diagnosis.findOne({
+  const diagnosis = await DiseaseDiagnosis.findOne({
     _id: diagnosisId,
     user_id: userId,
   }).session(session || null);
   if (!diagnosis)
     throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy kết quả chẩn đoán.");
   if (
-    diagnosis.disease_id &&
     String(diagnosis.disease_id) !== String(diseaseId)
   )
     throw new AppError(
@@ -258,57 +277,117 @@ const assertDiagnosis = async (diagnosisId, userId, diseaseId, session) => {
       400,
       "Bệnh được chọn không khớp kết quả chẩn đoán.",
     );
+  return diagnosis;
 };
 
 const generateSchedule = async (userId, input) => {
   v.id(userId, "user_id");
   const data = validate.generate(input);
-  return mongoose.connection.transaction(async (session) => {
-    await getOwnedPlant(userId, data.user_plant_id, session);
-    const protocol = await TreatmentProtocol.findOne({
-      _id: data.treatment_protocol_id,
-      disease_id: data.disease_id,
-      status: "approved",
-    }).session(session);
-    if (!protocol)
-      throw new AppError(
-        "APPROVED_PROTOCOL_NOT_FOUND",
-        404,
-        "Không tìm thấy phác đồ đã được phê duyệt cho bệnh này.",
+  try {
+    return await withTransactionResult(async (session) => {
+      const plant = await getOwnedPlant(userId, data.user_plant_id, session);
+      const protocol = await TreatmentProtocol.findOne({
+        _id: data.treatment_protocol_id,
+        disease_id: data.disease_id,
+        plant_ids: plant.plant_id,
+        status: "approved",
+      }).session(session);
+      if (!protocol)
+        throw new AppError(
+          "APPROVED_PROTOCOL_NOT_FOUND",
+          404,
+          "Không tìm thấy phác đồ đã được phê duyệt cho bệnh này.",
+        );
+      const diagnosis = await assertDiagnosis(
+        data.diagnosis_id,
+        userId,
+        data.disease_id,
+        session,
       );
-    await assertDiagnosis(data.diagnosis_id, userId, data.disease_id, session);
-    const active = await TreatmentSchedule.exists({
-      user_plant_id: data.user_plant_id,
-      status: "in_progress",
-    }).session(session);
-    if (active)
-      throw new AppError(
-        "ACTIVE_TREATMENT_EXISTS",
-        409,
-        "Cây đang có một đợt điều trị hoạt động.",
-      );
-    const startDate = data.start_date || utcToday();
-    const endDate = addDays(startDate, protocol.duration_days - 1);
-    const [schedule] = await TreatmentSchedule.create(
-      [
-        {
+      if (
+        diagnosis &&
+        (!plant.plant_id ||
+          String(diagnosis.plant_id) !== String(plant.plant_id))
+      )
+        throw new AppError(
+          "DIAGNOSIS_PLANT_MISMATCH",
+          400,
+          "Cây trong vườn không khớp loài cây từ kết quả chẩn đoán.",
+        );
+      if (
+        diagnosis?.user_plant_id &&
+        String(diagnosis.user_plant_id) !== String(plant._id)
+      )
+        throw new AppError(
+          "DIAGNOSIS_ALREADY_USED",
+          409,
+          "Kết quả chẩn đoán đã được dùng cho cây khác.",
+        );
+      if (diagnosis) {
+        const previous = await TreatmentSchedule.findOne({
+          diagnosis_id: diagnosis._id,
           user_id: userId,
-          user_plant_id: data.user_plant_id,
-          disease_id: data.disease_id,
-          treatment_protocol_id: protocol._id,
-          diagnosis_id: data.diagnosis_id || null,
-          protocol_snapshot: createProtocolSnapshot(protocol),
-          start_date: startDate,
-          end_date: endDate,
-          status: "generated",
-          current_stage: 0,
-          tasks: createTasks(protocol, startDate),
-        },
-      ],
-      { session },
-    );
-    return presentSchedule(schedule, session);
-  });
+        }).session(session);
+        if (previous) {
+          if (["generated", "in_progress"].includes(previous.status))
+            return presentSchedule(previous, session);
+          throw new AppError(
+            "DIAGNOSIS_ALREADY_USED",
+            409,
+            "Kết quả chẩn đoán đã được dùng cho một đợt điều trị đã kết thúc.",
+          );
+        }
+        diagnosis.user_plant_id = plant._id;
+        await diagnosis.save({ session });
+      }
+      const active = await TreatmentSchedule.exists({
+        user_plant_id: data.user_plant_id,
+        status: "in_progress",
+      }).session(session);
+      if (active)
+        throw new AppError(
+          "ACTIVE_TREATMENT_EXISTS",
+          409,
+          "Cây đang có một đợt điều trị hoạt động.",
+        );
+      const startDate = data.start_date || utcToday();
+      const endDate = addDays(startDate, protocol.duration_days - 1);
+      const [schedule] = await TreatmentSchedule.create(
+        [
+          {
+            user_id: userId,
+            user_plant_id: data.user_plant_id,
+            disease_id: data.disease_id,
+            treatment_protocol_id: protocol._id,
+            diagnosis_id: data.diagnosis_id || null,
+            protocol_snapshot: createProtocolSnapshot(protocol),
+            start_date: startDate,
+            end_date: endDate,
+            status: "generated",
+            current_stage: 0,
+            tasks: createTasks(protocol, startDate),
+          },
+        ],
+        { session },
+      );
+      return presentSchedule(schedule, session);
+    });
+  } catch (error) {
+    if (error?.code === 11000 && data.diagnosis_id) {
+      const previous = await TreatmentSchedule.findOne({
+        diagnosis_id: data.diagnosis_id,
+        user_id: userId,
+      }).lean();
+      if (previous && ["generated", "in_progress"].includes(previous.status))
+        return presentSchedule(previous);
+      throw new AppError(
+        "DIAGNOSIS_ALREADY_USED",
+        409,
+        "Kết quả chẩn đoán đã được dùng để tạo lịch điều trị.",
+      );
+    }
+    throw error;
+  }
 };
 
 const getSchedule = async (userId, scheduleId) => {
@@ -327,7 +406,7 @@ const activateSchedule = async (userId, scheduleId) => {
   v.id(userId, "user_id");
   v.id(scheduleId, "schedule_id");
   try {
-    return await mongoose.connection.transaction(async (session) => {
+    return await withTransactionResult(async (session) => {
       const schedule = await TreatmentSchedule.findOne({
         _id: scheduleId,
         user_id: userId,
@@ -413,8 +492,9 @@ const completeTask = async (userId, scheduleId, taskId) => {
   v.id(userId, "user_id");
   v.id(scheduleId, "schedule_id");
   v.id(taskId, "task_id");
-  return mongoose.connection.transaction(async (session) => {
+  return withTransactionResult(async (session) => {
     const now = new Date();
+    const availableThrough = utcToday();
     const schedule = await TreatmentSchedule.findOneAndUpdate(
       {
         _id: scheduleId,
@@ -424,7 +504,7 @@ const completeTask = async (userId, scheduleId, taskId) => {
           $elemMatch: {
             _id: taskId,
             status: "pending",
-            scheduled_date: { $lte: now },
+            scheduled_date: { $lte: availableThrough },
           },
         },
       },
@@ -499,7 +579,7 @@ const rescheduleTask = async (userId, scheduleId, taskId, input) => {
   v.id(scheduleId, "schedule_id");
   v.id(taskId, "task_id");
   const result = validate.rescheduleTask(input);
-  return mongoose.connection.transaction(async (session) => {
+  return withTransactionResult(async (session) => {
     const schedule = await TreatmentSchedule.findOne({
       _id: scheduleId,
       user_id: userId,
@@ -557,7 +637,7 @@ const finishSchedule = async (userId, scheduleId, input) => {
   v.id(userId, "user_id");
   v.id(scheduleId, "schedule_id");
   const result = validate.finish(input);
-  return mongoose.connection.transaction(async (session) => {
+  return withTransactionResult(async (session) => {
     const schedule = await TreatmentSchedule.findOne({
       _id: scheduleId,
       user_id: userId,
@@ -626,6 +706,165 @@ const finishSchedule = async (userId, scheduleId, input) => {
   });
 };
 
+const assertProtocolReferences = async (data, session) => {
+  const [disease, plants] = await Promise.all([
+    Disease.findById(data.disease_id)
+      .select("_id disease_name status")
+      .session(session || null)
+      .lean(),
+    Plant.find({ _id: { $in: data.plant_ids } })
+      .select("_id common_name common_disease_ids is_published")
+      .session(session || null)
+      .lean(),
+  ]);
+  if (!disease)
+    throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy bệnh cây.");
+  if (plants.length !== data.plant_ids.length)
+    throw new AppError("RESOURCE_NOT_FOUND", 404, "Có cây áp dụng không tồn tại.");
+  const unrelated = plants.find(
+    (plant) =>
+      !plant.common_disease_ids?.some(
+        (diseaseId) => String(diseaseId) === String(data.disease_id),
+      ),
+  );
+  if (unrelated)
+    throw new AppError(
+      "PROTOCOL_PLANT_DISEASE_MISMATCH",
+      400,
+      `Bệnh chưa được liên kết với cây ${unrelated.common_name}.`,
+    );
+  if (
+    data.status === "approved" &&
+    (disease.status !== "active" || plants.some((plant) => !plant.is_published))
+  )
+    throw new AppError(
+      "PROTOCOL_REFERENCE_INACTIVE",
+      409,
+      "Chỉ có thể phê duyệt phác đồ cho cây và bệnh đang công khai.",
+    );
+  return { disease, plants };
+};
+
+const approvalFields = (data, userId) =>
+  data.status === "approved"
+    ? {
+        instruction_source: "manager_verified",
+        approved_by: userId,
+        approved_at: new Date(),
+      }
+    : {
+        instruction_source: "manager_verified",
+        approved_by: null,
+        approved_at: null,
+      };
+
+const getManagerProtocols = async (input = {}) => {
+  const page = v.positiveInteger(input.page, 1, "page");
+  const limit = v.positiveInteger(input.limit, 20, "limit", 100);
+  const filter = {};
+  if (input.status) {
+    if (!["draft", "approved", "deprecated"].includes(input.status))
+      v.invalid("status", "Trạng thái phác đồ không hợp lệ.");
+    filter.status = input.status;
+  }
+  if (input.disease_id) filter.disease_id = v.id(input.disease_id, "disease_id");
+  if (typeof input.search === "string" && input.search.trim())
+    filter.protocol_name = new RegExp(v.escapeRegex(input.search.trim()), "i");
+  const [items, total] = await Promise.all([
+    TreatmentProtocol.find(filter)
+      .populate("disease_id", "disease_name status")
+      .populate("plant_ids", "common_name is_published")
+      .sort({ updated_at: -1, _id: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    TreatmentProtocol.countDocuments(filter),
+  ]);
+  return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+};
+
+const getManagerProtocol = async (id) => {
+  v.id(id, "protocol_id");
+  const item = await TreatmentProtocol.findById(id)
+    .populate("disease_id", "disease_name status")
+    .populate("plant_ids", "common_name is_published")
+    .lean();
+  if (!item)
+    throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy phác đồ điều trị.");
+  return item;
+};
+
+const createProtocol = async (userId, input) => {
+  v.id(userId, "user_id");
+  const data = validate.protocol(input);
+  await assertProtocolReferences(data);
+  const latest = await TreatmentProtocol.findOne({
+    disease_id: data.disease_id,
+    protocol_name: data.protocol_name,
+  })
+    .sort({ version: -1 })
+    .select("version")
+    .lean();
+  const item = await TreatmentProtocol.create({
+    ...data,
+    ...approvalFields(data, userId),
+    version: (latest?.version || 0) + 1,
+    created_by: userId,
+  });
+  return getManagerProtocol(String(item._id));
+};
+
+const updateProtocol = async (userId, id, input) => {
+  v.id(userId, "user_id");
+  v.id(id, "protocol_id");
+  const data = validate.protocol(input);
+  return withTransactionResult(async (session) => {
+    const current = await TreatmentProtocol.findById(id).session(session);
+    if (!current)
+      throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy phác đồ điều trị.");
+    if (String(current.disease_id) !== String(data.disease_id))
+      throw new AppError(
+        "PROTOCOL_DISEASE_IMMUTABLE",
+        409,
+        "Không thể đổi bệnh của phác đồ đã tạo.",
+      );
+    await assertProtocolReferences(data, session);
+    if (current.status === "approved") {
+      const [replacement] = await TreatmentProtocol.create(
+        [
+          {
+            ...data,
+            ...approvalFields(data, userId),
+            version: current.version + 1,
+            created_by: userId,
+          },
+        ],
+        { session },
+      );
+      await TreatmentProtocol.updateOne(
+        { _id: current._id, status: "approved" },
+        { $set: { status: "deprecated" } },
+        { session },
+      );
+      return replacement.toObject();
+    }
+    Object.assign(current, data, approvalFields(data, userId));
+    await current.save({ session });
+    return current.toObject();
+  });
+};
+
+const deprecateProtocol = async (id) => {
+  v.id(id, "protocol_id");
+  const item = await TreatmentProtocol.findOneAndUpdate(
+    { _id: id, status: { $ne: "deprecated" } },
+    { $set: { status: "deprecated" } },
+    { new: true, runValidators: true },
+  ).lean();
+  if (item) return item;
+  return getManagerProtocol(id);
+};
+
 module.exports = {
   getApprovedProtocols,
   generateSchedule,
@@ -634,6 +873,11 @@ module.exports = {
   completeTask,
   rescheduleTask,
   finishSchedule,
+  getManagerProtocols,
+  getManagerProtocol,
+  createProtocol,
+  updateProtocol,
+  deprecateProtocol,
   _private: {
     addDays,
     createProtocolSnapshot,

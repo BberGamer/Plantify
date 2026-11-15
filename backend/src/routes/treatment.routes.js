@@ -1,9 +1,23 @@
 const router = require("express").Router();
-const { authenticate } = require("../middlewares/auth.middleware");
+const {
+  authenticate,
+  authorizeManager,
+} = require("../middlewares/auth.middleware");
 const authorizeCustomer = require("../middlewares/garden.middleware");
 const controller = require("../controllers/treatment.controller");
 
-router.use(authenticate, authorizeCustomer);
+router.use(authenticate);
+router.get("/manager", authorizeManager, controller.managerList);
+router.post("/manager", authorizeManager, controller.managerCreate);
+router.get("/manager/:id", authorizeManager, controller.managerDetail);
+router.put("/manager/:id", authorizeManager, controller.managerUpdate);
+router.patch(
+  "/manager/:id/deprecate",
+  authorizeManager,
+  controller.managerDeprecate,
+);
+
+router.use(authorizeCustomer);
 router.get("/protocols", controller.protocols);
 router.post("/schedules", controller.generate);
 router.get("/schedules/:id", controller.detail);

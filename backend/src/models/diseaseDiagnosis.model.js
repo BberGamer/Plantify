@@ -1,0 +1,61 @@
+const mongoose = require("mongoose");
+
+const diagnosisSchema = new mongoose.Schema(
+  {
+    user_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      immutable: true,
+    },
+    user_plant_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "UserPlant",
+      default: null,
+    },
+    plant_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Plant",
+      required: true,
+      immutable: true,
+    },
+    disease_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Disease",
+      required: true,
+      immutable: true,
+    },
+    class_id: { type: Number, required: true, min: 0, max: 77, immutable: true },
+    class_name: { type: String, required: true, trim: true, immutable: true },
+    confidence: { type: Number, required: true, min: 0, max: 1, immutable: true },
+    status: {
+      type: String,
+      enum: ["identified"],
+      required: true,
+      immutable: true,
+    },
+    model: {
+      name: { type: String, required: true },
+      run_id: { type: String, required: true },
+      checkpoint: { type: String, required: true },
+      checkpoint_epoch: { type: Number, required: true },
+    },
+    image: {
+      width: { type: Number, required: true },
+      height: { type: Number, required: true },
+    },
+    processing_ms: { type: Number, required: true, min: 0 },
+  },
+  {
+    timestamps: { createdAt: "created_at", updatedAt: false },
+  },
+);
+
+diagnosisSchema.index({ user_id: 1, created_at: -1 });
+diagnosisSchema.index({ plant_id: 1, disease_id: 1, created_at: -1 });
+
+module.exports = mongoose.model(
+  "DiseaseDiagnosis",
+  diagnosisSchema,
+  "disease_diagnoses",
+);

@@ -71,7 +71,8 @@ function validateResponse(envelope) {
     !Number.isInteger(data.model?.epochs_completed) ||
     data.model.checkpoint_epoch > data.model.epochs_completed ||
     !Number.isFinite(data.processing_ms) ||
-    data.processing_ms < 0
+    data.processing_ms < 0 ||
+    !optionalId(data.diagnosis_id)
   )
     invalid();
   const thresholds = data.thresholds;
@@ -130,6 +131,14 @@ function validateResponse(envelope) {
       "is_healthy",
       "confidence",
     ].some((key) => data.prediction[key] !== top[key])
+  )
+    invalid();
+  if (
+    data.status === "identified" &&
+    !data.prediction.is_healthy &&
+    data.prediction.plant_id &&
+    data.prediction.disease_id &&
+    !data.diagnosis_id
   )
     invalid();
   return envelope;

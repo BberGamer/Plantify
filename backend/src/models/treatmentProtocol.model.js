@@ -32,6 +32,17 @@ const treatmentProtocolSchema = new mongoose.Schema(
       required: true,
       immutable: true,
     },
+    plant_ids: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Plant" }],
+      required: true,
+      validate: {
+        validator: (items) =>
+          Array.isArray(items) &&
+          items.length > 0 &&
+          new Set(items.map(String)).size === items.length,
+        message: "Phác đồ cần ít nhất một cây áp dụng và không được trùng cây.",
+      },
+    },
     protocol_name: {
       type: String,
       required: true,
@@ -130,6 +141,22 @@ treatmentProtocolSchema.pre("validate", function validateProtocol(next) {
   }
 
   if (this.status === "approved") {
+    if (
+      stages.some((stage, index) => stage.order !== index + 1) ||
+      stages.some(
+        (stage, index) =>
+          stage.start_day !== (index === 0 ? 1 : stages[index - 1].end_day + 1),
+      ) ||
+      occupiedDays.size !== this.duration_days ||
+      Array.from(
+        { length: this.duration_days },
+        (_, index) => index + 1,
+      ).some((day) => !occupiedDays.has(day))
+    )
+      this.invalidate(
+        "stages",
+        "Phác đồ được phê duyệt phải có giai đoạn liên tục và bao phủ đủ toàn bộ thời lượng.",
+      );
     if (this.instruction_source === "ai_unverified")
       this.invalidate(
         "instruction_source",
@@ -157,6 +184,7 @@ treatmentProtocolSchema.index(
   },
 );
 treatmentProtocolSchema.index({ disease_id: 1, status: 1, updated_at: -1 });
+treatmentProtocolSchema.index({ disease_id: 1, plant_ids: 1, status: 1 });
 
 module.exports = mongoose.model(
   "TreatmentProtocol",
