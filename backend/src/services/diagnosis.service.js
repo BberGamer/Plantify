@@ -1,6 +1,7 @@
 const AppError = require("../utils/app-error");
 const Plant = require("../models/plant.model");
 const Disease = require("../models/disease.model");
+const DiseaseDiagnosis = require("../models/diseaseDiagnosis.model");
 const classes = require("../config/diagnosis-classes.json");
 const inference = require("../integrations/ai/diagnosis.service");
 const { getDiagnosisConfig } = require("../config/diagnosis");
@@ -161,7 +162,7 @@ const createDiagnosisService = ({
       message = messages.low_confidence;
     }
     const prediction = status === "identified" ? await enrich(top, taxonomy[top.class_id]) : null;
-    return {
+    const result = {
       status, reason, message, prediction, alternatives,
       thresholds: { ...config.thresholds },
       image: { width: data.image.width, height: data.image.height,
@@ -171,6 +172,35 @@ const createDiagnosisService = ({
         classes: data.model.classes, image_size: data.model.image_size, device: data.model.device },
       processing_ms: data.processing_ms,
     };
+    if (
+      options.userId &&
+      status === "identified" &&
+      prediction?.plant_id &&
+      prediction?.disease_id &&
+      !prediction.is_healthy
+    ) {
+      const saved = await DiseaseDiagnosis.create({
+        user_id: options.userId,
+        plant_id: prediction.plant_id,
+        disease_id: prediction.disease_id,
+        class_id: prediction.class_id,
+        class_name: prediction.class_name,
+        confidence: prediction.confidence,
+        status: "identified",
+        model: {
+          name: result.model.name,
+          run_id: result.model.run_id,
+          checkpoint: result.model.checkpoint,
+          checkpoint_epoch: result.model.checkpoint_epoch,
+        },
+        image: { width: result.image.width, height: result.image.height },
+        processing_ms: result.processing_ms,
+      });
+      result.diagnosis_id = String(saved._id);
+    } else {
+      result.diagnosis_id = null;
+    }
+    return result;
   },
 });
 
