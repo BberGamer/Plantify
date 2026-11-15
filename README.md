@@ -59,6 +59,39 @@ active và liên kết với cây qua `common_disease_ids`. Không có mapping t
 thị gợi ý model nhưng không bịa nội dung bệnh/phác đồ hay MongoDB ID. Không tự áp
 dụng lịch điều trị từ ảnh; luồng chọn cây/phác đồ và xác nhận điều trị vẫn riêng biệt.
 
+### Phác đồ điều trị từ kết quả AI
+
+Kết quả AI đủ chắc chắn và khớp duy nhất với cây/bệnh trong danh mục được lưu làm
+bằng chứng chẩn đoán. Customer có thể chọn một cây cùng loài trong vườn, xem các
+phác đồ đã được Manager phê duyệt cho đúng cặp cây–bệnh, tạo lịch xem trước rồi xác
+nhận áp dụng. AI không tự tạo thuốc hoặc liều lượng; nội dung điều trị chỉ lấy từ
+phác đồ đã xác minh để tránh hướng dẫn không an toàn.
+
+Manager quản lý phác đồ tại tab **Điều trị**: chọn bệnh, các cây áp dụng, thời lượng,
+giai đoạn/ngày, nhiệm vụ, hóa chất hoặc liều lượng, lưu ý và hướng dẫn an toàn; có
+thể lưu nháp hoặc phê duyệt. Khi sửa phác đồ đã duyệt, backend tạo phiên bản mới và
+ngừng phiên bản cũ; lịch đã tạo giữ snapshot nên không bị thay đổi ngược.
+
+Mỗi cây chỉ có một lịch `in_progress`. Khi bắt đầu, backend tạm dừng lịch chăm sóc
+thường, đánh dấu cây đang điều trị và tạo nhắc việc theo từng ngày. Khi kết thúc,
+lịch chăm sóc từng bị hệ thống tạm dừng được khôi phục; các lịch vốn đã tạm dừng thủ
+công vẫn giữ nguyên. API customer nằm dưới `/api/treatments`; API Manager nằm dưới
+`/api/treatments/manager`.
+
+Kiểm tra logic không cần database:
+
+```powershell
+node --test backend/src/services/__tests__/treatment-generation.test.cjs mobile/src/utils/__tests__/treatmentLogic.test.cjs
+```
+
+Kiểm tra integration đầy đủ cần `backend/.env` trỏ tới MongoDB hỗ trợ transaction.
+Test tạo dữ liệu có hậu tố ngẫu nhiên và tự xóa đúng các bản ghi test sau khi chạy:
+
+```powershell
+cd backend
+node --test src/services/__tests__/treatment-api.integration.test.cjs
+```
+
 Cần chạy cả Python, Express và Expo. Tại root repo, mở terminal Python:
 
 ```powershell
