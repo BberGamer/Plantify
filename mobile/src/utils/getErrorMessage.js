@@ -1,5 +1,8 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  FAQ_NOT_FOUND: "Không tìm thấy FAQ. Vui lòng tải lại danh sách.",
+  FAQ_DUPLICATE: "Câu hỏi hoặc câu hỏi tương đương đã tồn tại trong FAQ khác.",
+  FAQ_VERSION_CONFLICT: "FAQ đã được thay đổi. Hãy đóng form và tải lại danh sách trước khi thao tác.",
   NOTIFICATION_NOT_FOUND: "Thông báo không còn khả dụng. Vui lòng tải lại danh sách.",
   CARE_UNAVAILABLE: "Lịch đã dừng, cây đã lưu trữ hoặc đang điều trị. Vui lòng tải lại lịch.",
   CARE_NOT_FOUND: "Không tìm thấy lịch chăm sóc. Vui lòng tải lại lịch.",

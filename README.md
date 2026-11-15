@@ -106,6 +106,38 @@ trỏ vào Express, không gọi thẳng Python. Chi tiết API, cấu hình và
 
 ## Tiến độ hiện tại
 
+### Quản trị FAQ chat (15/11/2026)
+
+Manager có tab **FAQ** với hai ô: **Tất cả** đọc FAQ tiếng Việt từ `chat_faqs`,
+**Chat người dùng** đọc các lượt câu hỏi–trả lời từ `chat_turns` (không phải `chat_turn`).
+Giữ nút **Tạo FAQ**; bỏ hai bộ lọc Nháp/Đã duyệt trên danh sách. Cả hai nguồn có
+tìm kiếm và phân trang riêng theo ô đang chọn; lượt chat hiển thị câu hỏi, câu trả lời,
+nguồn trả lời, thời gian và mã người dùng, chỉ xem, không tự chuyển thành FAQ.
+Ô Tất cả có thao tác **Sửa** và **Xóa** (thay nút Xem/Duyệt). Xóa cần xác nhận,
+xóa vĩnh viễn đúng FAQ và giữ nguyên lịch sử chat; danh sách tải lại sau khi xóa.
+API `DELETE /api/chat-faqs/manager/:id` nhận body `{ version }`, kiểm tra quyền và
+phiên bản hiện tại trước khi xóa. API duyệt/gỡ duyệt vẫn giữ cho caller hiện có.
+Câu hỏi chính tối đa 1000 ký tự, câu trả lời
+tối đa 12000 ký tự, tối đa 30 câu hỏi tương đương. Tạo mới luôn lưu nháp; sửa FAQ
+đã duyệt sẽ chuyển về nháp. Manager mở **Xem / Duyệt** để đọc toàn bộ nội dung và
+xác nhận duyệt, hoặc **Xem / Gỡ duyệt** để ngừng sử dụng trong chat.
+
+API nằm dưới `/api/chat-faqs/manager`: `GET /`, `GET /:id`, `POST /`, `PUT /:id`,
+`PATCH /:id/approve`, `PATCH /:id/unapprove`. Cập nhật/duyệt/gỡ duyệt yêu cầu
+`version` hiện tại, tránh ghi đè hoặc duyệt nhầm nội dung đã bị người khác sửa.
+Backend xác minh tài khoản hoạt động và quyền Manager/Admin từ database.
+`GET /api/chat-faqs/manager/chat-turns` đọc các lượt chat cho khu vực quản lý,
+tìm theo câu hỏi/câu trả lời, phân trang và không trả metadata nội bộ của prompt.
+FAQ cũ thiếu version hoặc lưu version không phải số nguyên dương được hiển thị là
+phiên bản 1; lần sửa/duyệt tiếp theo lưu phiên bản số, đối chiếu nguyên giá trị cũ
+trong thao tác cập nhật nguyên tử. Không cần sửa hàng loạt dữ liệu MongoDB trước.
+
+Câu hỏi/alias được kiểm tra trùng bằng cùng quy tắc chuẩn hóa mà chat sử dụng.
+Unique sparse multikey index `match_keys` bảo vệ ghi đồng thời cho các FAQ quản lý
+mới/cập nhật; cần quyền tạo index MongoDB. FAQ cũ được đối chiếu khi thao tác nhưng
+không tự sửa/import dữ liệu cũ. Chat tiếp tục chỉ dùng FAQ `approved`, `language=vi`;
+`AI_FAQ_ENABLED=false` vẫn tắt tra cứu FAQ. Nguồn tham khảo đã có được giữ nguyên.
+
 ### Trang chủ theo tài khoản (15/11/2026)
 
 Các ô “Nhận diện cây”, “Vườn của tôi” và chuông thông báo đã có điều hướng.

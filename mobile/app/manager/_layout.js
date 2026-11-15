@@ -56,6 +56,16 @@ export default function ManagerLayout() {
         }}
       />
       <Tabs.Screen
+        name="faqs"
+        options={{
+          title: "FAQ chat",
+          tabBarLabel: "FAQ",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubbles-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Hồ sơ",
