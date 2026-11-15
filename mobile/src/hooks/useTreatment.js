@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import treatmentService from "../services/treatmentService";
+import gardenService from "../services/gardenService";
 import getErrorMessage from "../utils/getErrorMessage";
 import treatmentLogic from "../utils/treatmentLogic.cjs";
 import useScreenScope from "./useScreenScope";
@@ -68,8 +69,16 @@ function useTreatmentResource(loader, contextKey) {
   return { data, setData, loading, refreshing, error, retry: load, refresh: () => load(true), capture, isActive };
 }
 
-export function useTreatmentPreview({ diseaseId, userPlantId, diagnosisId, startDate }) {
+export function useTreatmentPreview({
+  diseaseId,
+  plantId,
+  userPlantId,
+  diagnosisId,
+  startDate,
+}) {
   const [protocols, setProtocols] = useState([]);
+  const [gardenPlants, setGardenPlants] = useState([]);
+  const [selectedUserPlantId, setSelectedUserPlantId] = useState(userPlantId || "");
   const [selectedProtocolId, setSelectedProtocolId] = useState("");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -81,7 +90,7 @@ export function useTreatmentPreview({ diseaseId, userPlantId, diagnosisId, start
   const [generating, setGenerating] = useState(false);
   const [applyError, setApplyError] = useState("");
   const [generateError, setGenerateError] = useState("");
-  const contextKey = `${diseaseId || ""}:${userPlantId || ""}:${diagnosisId || ""}`;
+  const contextKey = `${diseaseId || ""}:${plantId || ""}:${userPlantId || ""}:${diagnosisId || ""}`;
   const { capture, isActive } = useScreenScope(
     () => loadRef.current?.(),
     () => ++request.current,
@@ -90,10 +99,11 @@ export function useTreatmentPreview({ diseaseId, userPlantId, diagnosisId, start
 
   const load = useCallback(async () => {
     if (!isActive()) return;
-    if (!diseaseId || !userPlantId) {
+    if (!diseaseId || !plantId) {
       setLoading(false);
       setProtocols([]);
-      setError("Cần chọn cây trong vườn và bệnh đã chẩn đoán để tạo phác đồ.");
+      setGardenPlants([]);
+      setError("Kết quả chẩn đoán chưa có đủ thông tin cây và bệnh để tạo phác đồ.");
       return;
     }
     const requestId = ++request.current;
@@ -102,10 +112,31 @@ export function useTreatmentPreview({ diseaseId, userPlantId, diagnosisId, start
     setLoading(true);
     setError("");
     try {
-      const response = await treatmentService.getApprovedProtocols(diseaseId);
+      const plants = [];
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const gardenResponse = await gardenService.getPlants({ page, limit: 100 });
+        if (!isCurrent()) return;
+        plants.push(...gardenResponse.data.items);
+        totalPages = gardenResponse.data.pagination.totalPages;
+        page += 1;
+      } while (page <= totalPages);
+      const compatiblePlants = plants.filter(
+        (item) => String(item.plant_id || "") === String(plantId),
+      );
+      const response = await treatmentService.getApprovedProtocols(diseaseId, plantId);
       const items = response?.data?.protocols;
       if (response?.success !== true || !Array.isArray(items)) throw invalidResponse();
       if (!isCurrent()) return;
+      setGardenPlants(compatiblePlants);
+      setSelectedUserPlantId((current) =>
+        compatiblePlants.some(
+          (item) => item._id === current && !item.active_treatment,
+        )
+          ? current
+          : compatiblePlants.find((item) => !item.active_treatment)?._id || "",
+      );
       setProtocols(items);
       setSelectedProtocolId((current) =>
         items.some((item) => item._id === current) ? current : items[0]?._id || "",
@@ -115,18 +146,25 @@ export function useTreatmentPreview({ diseaseId, userPlantId, diagnosisId, start
     } finally {
       if (isCurrent()) setLoading(false);
     }
-  }, [capture, diseaseId, isActive, userPlantId]);
+  }, [capture, diseaseId, isActive, plantId]);
   loadRef.current = load;
 
   const generate = useCallback(async () => {
-    if (mutation.current || !selectedProtocolId || !diseaseId || !userPlantId || !isActive()) return null;
+    if (
+      mutation.current ||
+      !selectedProtocolId ||
+      !diseaseId ||
+      !selectedUserPlantId ||
+      !isActive()
+    )
+      return null;
     const isCurrent = capture();
     mutation.current = true;
     setGenerating(true);
     setGenerateError("");
     try {
       const response = await treatmentService.generateSchedule({
-        userPlantId,
+        userPlantId: selectedUserPlantId,
         diseaseId,
         treatmentProtocolId: selectedProtocolId,
         diagnosisId,
@@ -143,7 +181,15 @@ export function useTreatmentPreview({ diseaseId, userPlantId, diagnosisId, start
       mutation.current = false;
       if (isCurrent()) setGenerating(false);
     }
-  }, [capture, diagnosisId, diseaseId, isActive, selectedProtocolId, startDate, userPlantId]);
+  }, [
+    capture,
+    diagnosisId,
+    diseaseId,
+    isActive,
+    selectedProtocolId,
+    selectedUserPlantId,
+    startDate,
+  ]);
 
   const apply = useCallback(async () => {
     if (mutation.current || !data || !treatmentLogic.canApplyTreatment(data) || !isActive()) return null;
@@ -168,6 +214,8 @@ export function useTreatmentPreview({ diseaseId, userPlantId, diagnosisId, start
   return {
     data,
     protocols,
+    gardenPlants,
+    selectedUserPlantId,
     selectedProtocolId,
     loading,
     error,
@@ -175,9 +223,10 @@ export function useTreatmentPreview({ diseaseId, userPlantId, diagnosisId, start
     generateError,
     applying,
     applyError,
-    canGenerate: Boolean(selectedProtocolId && diseaseId && userPlantId),
+    canGenerate: Boolean(selectedProtocolId && diseaseId && selectedUserPlantId),
     canApply: treatmentLogic.canApplyTreatment(data),
     selectProtocol: setSelectedProtocolId,
+    selectGardenPlant: setSelectedUserPlantId,
     retry: load,
     generate,
     apply,
