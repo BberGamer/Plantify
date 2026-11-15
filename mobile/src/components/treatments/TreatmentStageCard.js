@@ -29,6 +29,9 @@ export default function TreatmentStageCard({ stage, initiallyExpanded = false })
             <Text style={styles.body}>{instruction}</Text>
           </View>
         ))}
+        {!!stage.dosage_note && (
+          <Text style={styles.dosage}>Hóa chất / liều lượng: {stage.dosage_note}</Text>
+        )}
         {!!stage.important_note && <Text style={styles.note}>Lưu ý: {stage.important_note}</Text>}
       </View>}
     </View>
@@ -47,4 +50,5 @@ const styles = StyleSheet.create({
   instruction: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
   body: { ...typography.body, flex: 1, color: colors.textSecondary },
   note: { ...typography.caption, color: "#946017", backgroundColor: colors.warmPeachBg, borderRadius: radius.sm, padding: spacing.md },
+  dosage: { ...typography.label, color: colors.primaryLight, backgroundColor: colors.lightMint, borderRadius: radius.sm, padding: spacing.md },
 });
