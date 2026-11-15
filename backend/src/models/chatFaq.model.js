@@ -10,6 +10,10 @@ const chatFaqSchema = new mongoose.Schema({
   version: { type: Number, default: 1 },
   sources: { type: [mongoose.Schema.Types.Mixed], default: [] },
   status: { type: String, enum: ["draft", "approved"], default: "draft" },
+  match_keys: { type: [String], default: undefined },
 });
+
+// Multikey unique index bảo vệ câu hỏi/alias của các FAQ quản lý mới khi ghi đồng thời.
+chatFaqSchema.index({ match_keys: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model("ChatFaq", chatFaqSchema, "chat_faqs");
