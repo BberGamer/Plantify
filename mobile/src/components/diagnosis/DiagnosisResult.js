@@ -20,6 +20,7 @@ export default function DiagnosisResult({
   onBack,
   onRetake,
   onImageError,
+  onCreateTreatment,
 }) {
   const identified = result.status === "identified";
   const uncertain = result.status === "uncertain";
@@ -158,6 +159,19 @@ export default function DiagnosisResult({
           Nếu cây tiếp tục xấu đi, hãy nhờ người có chuyên môn kiểm tra.
         </Text>
         <View style={styles.actions}>
+          {identified &&
+            !prediction.is_healthy &&
+            result.diagnosis_id &&
+            prediction.plant_id &&
+            prediction.disease_id && (
+              <Button
+                mode="contained"
+                icon="clipboard-pulse-outline"
+                onPress={onCreateTreatment}
+              >
+                Tạo phác đồ điều trị
+              </Button>
+            )}
           <Button mode="outlined" onPress={onBack}>
             Xem lại ảnh
           </Button>
