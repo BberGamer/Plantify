@@ -10,7 +10,7 @@ import { validateGardenDate } from "../utils/gardenDate";
 
 const emptyDraft = () => ({ plant_nickname: "", custom_species_name: "", placement_location: "", pot_type_size: "", acquisition_date: "" });
 
-export default function useAddGardenPlant(plantId, gardenPlantId) {
+export default function useAddGardenPlant(plantId, gardenPlantId, treatmentReturn) {
   const router = useRouter();
   const editing = gardenPlantId !== undefined;
   const [draft, setDraft] = useState(emptyDraft);
@@ -119,7 +119,22 @@ export default function useAddGardenPlant(plantId, gardenPlantId) {
       if (!response?.success || !response.data?._id) throw new Error("Phản hồi lưu cây không hợp lệ.");
       if (current()) {
         if (editing) router.back();
-        else router.replace({ pathname: "/customer/garden", params: { addedPlant: response.data._id } });
+        else if (treatmentReturn?.diseaseId && treatmentReturn?.plantId) {
+          router.replace({
+            pathname: "/customer/treatments/preview",
+            params: {
+              diseaseId: treatmentReturn.diseaseId,
+              plantId: treatmentReturn.plantId,
+              userPlantId: response.data._id,
+              ...(treatmentReturn.diagnosisId
+                ? { diagnosisId: treatmentReturn.diagnosisId }
+                : {}),
+              ...(treatmentReturn.startDate
+                ? { startDate: treatmentReturn.startDate }
+                : {}),
+            },
+          });
+        } else router.replace({ pathname: "/customer/garden", params: { addedPlant: response.data._id } });
       }
     } catch (failure) {
       if (current()) {
