@@ -4,7 +4,19 @@ import GardenPlantForm from "../../../src/components/plants/GardenPlantForm";
 
 export default function AddGardenPlantScreen() {
   const params = useLocalSearchParams();
-  const plantId = typeof params.plantId === "string" ? params.plantId : undefined;
-  const form = useAddGardenPlant(plantId);
+  const value = (input) => (typeof input === "string" ? input : undefined);
+  const plantId = value(params.plantId);
+  const treatmentReturn =
+    value(params.returnTo) === "treatmentPreview" &&
+    value(params.diseaseId) &&
+    plantId
+      ? {
+          diseaseId: value(params.diseaseId),
+          plantId,
+          diagnosisId: value(params.diagnosisId),
+          startDate: value(params.startDate),
+        }
+      : undefined;
+  const form = useAddGardenPlant(plantId, undefined, treatmentReturn);
   return <GardenPlantForm form={form} />;
 }
