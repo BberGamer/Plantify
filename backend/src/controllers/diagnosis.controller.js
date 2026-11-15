@@ -14,7 +14,10 @@ const predict = async (req, res, next) => {
   req.once("aborted", abort);
   res.once("close", disconnected);
   try {
-    const data = await diagnosis.diagnose(req.file, { signal: controller.signal });
+    const data = await diagnosis.diagnose(req.file, {
+      signal: controller.signal,
+      userId: req.user.id,
+    });
     if (!controller.signal.aborted && !res.destroyed)
       return success(res, data.message, data);
   } catch (error) {
