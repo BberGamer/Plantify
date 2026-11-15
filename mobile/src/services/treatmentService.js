@@ -1,9 +1,9 @@
 import api from "./api";
 
 const treatmentService = {
-  getApprovedProtocols: async (diseaseId) => {
+  getApprovedProtocols: async (diseaseId, plantId) => {
     const response = await api.get("/treatments/protocols", {
-      params: { disease_id: diseaseId },
+      params: { disease_id: diseaseId, plant_id: plantId },
     });
     return response.data;
   },
@@ -50,6 +50,18 @@ const treatmentService = {
     });
     return response.data;
   },
+
+  getManagerProtocols: async (params = {}) =>
+    (await api.get("/treatments/manager", { params })).data,
+
+  createProtocol: async (payload) =>
+    (await api.post("/treatments/manager", payload)).data,
+
+  updateProtocol: async (id, payload) =>
+    (await api.put(`/treatments/manager/${id}`, payload)).data,
+
+  deprecateProtocol: async (id) =>
+    (await api.patch(`/treatments/manager/${id}/deprecate`)).data,
 };
 
 export default treatmentService;
