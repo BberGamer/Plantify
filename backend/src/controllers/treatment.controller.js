@@ -12,7 +12,8 @@ const handle = (action, message, statusCode = 200) => async (req, res, next) => 
 
 module.exports = {
   protocols: handle(
-    (req) => treatment.getApprovedProtocols(req.query.disease_id),
+    (req) =>
+      treatment.getApprovedProtocols(req.query.disease_id, req.query.plant_id),
     "Lấy danh sách phác đồ điều trị thành công.",
   ),
   generate: handle(
@@ -46,5 +47,26 @@ module.exports = {
   finish: handle(
     (req) => treatment.finishSchedule(req.user.id, req.params.id, req.body),
     "Kết thúc điều trị thành công.",
+  ),
+  managerList: handle(
+    (req) => treatment.getManagerProtocols(req.query),
+    "Lấy danh sách phác đồ điều trị thành công.",
+  ),
+  managerDetail: handle(
+    (req) => treatment.getManagerProtocol(req.params.id),
+    "Lấy phác đồ điều trị thành công.",
+  ),
+  managerCreate: handle(
+    (req) => treatment.createProtocol(req.user.id, req.body),
+    "Tạo phác đồ điều trị thành công.",
+    201,
+  ),
+  managerUpdate: handle(
+    (req) => treatment.updateProtocol(req.user.id, req.params.id, req.body),
+    "Cập nhật phác đồ điều trị thành công.",
+  ),
+  managerDeprecate: handle(
+    (req) => treatment.deprecateProtocol(req.params.id),
+    "Ngừng sử dụng phác đồ điều trị thành công.",
   ),
 };
