@@ -99,8 +99,15 @@ const create = async (userId, input) => {
     const group = data.category_id ? await category(data.category_id) : null;
     snapshot = { common_name: data.custom_species_name, category_name: group?.category_name || "", plant_image_url: "" };
   }
-  const plant = await UserPlant.create({ ...data, user_id: userId, species_snapshot: snapshot });
-  return present(plant.toObject(), null);
+  await UserPlant.init();
+  const { withMembership, quotaSlot } = require("./membership.service");
+  return withMembership(userId, async (user, session) => {
+    const slot = require("../utils/vip").isVip(user) ? {} : {
+      free_slot: await quotaSlot(UserPlant, userId, { archived_at: null }, 3, "GARDEN_LIMIT_REACHED", session),
+    };
+    const [plant] = await UserPlant.create([{ ...data, ...slot, user_id: userId, species_snapshot: snapshot }], { session });
+    return present(plant.toObject(), null);
+  });
 };
 const detail = async (userId, id) => {
   v.id(id);

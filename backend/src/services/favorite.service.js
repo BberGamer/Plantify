@@ -40,28 +40,16 @@ const add = async (userId, plantId) => {
   if (!await Plant.exists({ _id: plantId, is_published: true }))
     throw new AppError("PLANT_NOT_FOUND", 404, "Cây không còn trong danh mục công khai.");
   await FavoritePlant.init();
-  if (await FavoritePlant.exists({ user_id: userId, plant_id: plantId })) {
-    return { plant_id: plantId, is_favorite: true };
-  }
-  const saved = await FavoritePlant.find({ user_id: userId }).select("free_slot").lean();
-  // Bản ghi cũ chưa có slot vẫn chiếm hạn mức, không cần sửa dữ liệu cũ.
-  const legacyCount = saved.filter((item) => item.free_slot === undefined).length;
-  const occupied = new Set(saved.map((item) => item.free_slot));
-  for (let slot = legacyCount; slot < 5 && saved.length < 5; slot++) {
-    if (occupied.has(slot)) continue;
-    try {
-      await FavoritePlant.create({ user_id: userId, plant_id: plantId, free_slot: slot });
+  const { withMembership, quotaSlot } = require("./membership.service");
+  return withMembership(userId, async (user, session) => {
+    if (await FavoritePlant.exists({ user_id: userId, plant_id: plantId }).session(session)) {
       return { plant_id: plantId, is_favorite: true };
-    } catch (error) {
-      if (error.code !== 11000) throw error;
-      // Unique index chặn hai yêu cầu khác cây chiếm cùng slot.
-      if (await FavoritePlant.exists({ user_id: userId, plant_id: plantId })) {
-        return { plant_id: plantId, is_favorite: true };
-      }
     }
-  }
-  throw new AppError("FAVORITE_LIMIT_REACHED", 409,
-    "Tài khoản Free chỉ được lưu tối đa 5 cây yêu thích. Hãy bỏ một cây trước khi thêm cây mới.");
+    const vip = require("../utils/vip").isVip(user);
+    const slot = vip ? undefined : await quotaSlot(FavoritePlant, userId, {}, 5, "FAVORITE_LIMIT_REACHED", session);
+    await FavoritePlant.create([{ user_id: userId, plant_id: plantId, ...(!vip ? { free_slot: slot } : {}) }], { session });
+    return { plant_id: plantId, is_favorite: true };
+  });
 };
 
 const remove = async (userId, plantId) => {
