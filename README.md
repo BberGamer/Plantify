@@ -4,6 +4,152 @@
 
 README được đối chiếu với source ngày **31/10/2026**. Trạng thái dưới đây mô tả phần đã triển khai trong mã nguồn, không đồng nghĩa đã kiểm thử tích hợp hoặc sẵn sàng production.
 
+### AI diagnosis (2026-11-17)
+
+Đã bỏ màn hình/API Admin cấu hình AI. Backend đọc metadata đúng checkpoint và
+mapping ObjectId theo run/hash/class trong collection `diagnosis_mappings`.
+Không còn cơ chế policy hoặc truy vấn collection `diagnosis_models`.
+
+Ngưỡng lấy từ `backend/.env`: `DIAGNOSIS_MIN_CONFIDENCE`, `DIAGNOSIS_MIN_MARGIN`,
+`DIAGNOSIS_UNRECOGNIZED_BELOW`. Thiếu, rỗng hoặc sai phạm vi thì trả 503;
+không dùng ngưỡng fallback. URL và timeout dùng `DIAGNOSIS_INFERENCE_URL`, `DIAGNOSIS_TIMEOUT_MS`.
+Mobile chỉ hiển thị quyết định backend, không tính lại confidence/margin.
+
+Hai tính năng dùng chung model và camera nhưng có quyết định riêng:
+
+- Homepage **Nhận diện cây** mở `/customer/identification`, gọi API `/identification`.
+  Python trả đủ `class_scores` theo thứ tự checkpoint; backend gom toàn bộ điểm theo
+  `plant_id` từ mapping DB rồi so cây đứng đầu với cây thứ hai. Response có
+  `result_kind=plant`, tên cây từ DB; không kết luận bệnh/healthy, không tạo lịch sử bệnh.
+- **Chẩn đoán bệnh** mở `/customer/diagnosis`, gọi API `/diagnosis`; vẫn xét từng nhãn
+  cây–bệnh, giữ điều kiện lưu lịch sử và tạo phác đồ hiện có.
+- Nút **Camera** ở navbar mở hộp chọn hai tính năng. Màn camera cũng có nút chuyển
+  chế độ; chuyển chế độ bắt đầu lượt chụp mới và bị khóa trong lúc đang xử lý.
+
+Ngưỡng nhận diện cây bắt buộc đặt riêng trong `backend/.env`:
+`IDENTIFICATION_MIN_CONFIDENCE`, `IDENTIFICATION_MIN_MARGIN`, `IDENTIFICATION_UNRECOGNIZED_BELOW`.
+Không lấy ngưỡng chẩn đoán bệnh để thay thế khi thiếu. Giá trị mẫu cũng chỉ là ngưỡng
+ban đầu, cần đánh giá riêng; tổng điểm theo cây chưa phải xác suất nhận diện đúng.
+Mapping pending bệnh vẫn dùng được cho nhận diện cây nếu `plant_id` đã xác định;
+thiếu mapping cây hoặc metadata sai phải báo lỗi dữ liệu, không tự đoán tên từ nhãn.
+Sau cập nhật phải khởi động lại Python để có đủ điểm class, và backend để nạp ngưỡng mới.
+
+Customer xem **Lịch sử chẩn đoán** từ Tài khoản hoặc biểu tượng lịch sử ở màn
+Chẩn đoán bệnh. API `GET /api/diagnosis/history?page=1&limit=20` yêu cầu đăng nhập
+và tài khoản customer còn hoạt động, không yêu cầu VIP còn hạn. Backend luôn lọc
+theo user trong JWT, sắp xếp mới nhất trước, phân trang tối đa 100 bản ghi/lần.
+Danh sách dùng dữ liệu `disease_diagnoses` hiện có; tên cây/bệnh lấy từ DB.
+Giữ bản ghi nếu danh mục bị xóa/ẩn và hiển thị thông tin không còn khả dụng.
+Card bấm mở chi tiết, ảnh của lần chẩn đoán nằm bên phải card và xem lớn trong chi tiết.
+Chẩn đoán bệnh accepted mới lưu một bản ảnh JPEG đã bỏ EXIF, tối đa 1600×1600;
+bytes dùng inference không thay đổi. `DIAGNOSIS_PHOTO_STORAGE=cloudinary` lưu asset
+ở chế độ authenticated, upload ký SHA-256 bằng credential backend. DB chỉ lưu
+`image.storage`, `image.public_id`, `image.asset_id`; không lưu khóa bí mật hoặc URL ký số.
+Nếu ghi DB thất bại thì xóa đúng asset vừa upload. Cloudinary lỗi không tự chuyển sang local.
+Chế độ `local` lưu trong `backend/uploads/diagnoses`, DB lưu `image.filename`.
+Không đặt provider giữ local để tương thích cấu hình cũ; giá trị provider sai trả lỗi cấu hình.
+Ảnh đã lưu được đọc theo provider trong bản ghi, nên đổi sang cloud không làm mất ảnh local cũ.
+`GET /api/diagnosis/history/:id` trả chi tiết; `GET /api/diagnosis/history/:id/image`
+trả ảnh sau khi kiểm tra chủ tài khoản, không có URL ảnh công khai và không cần PUBLIC_BASE_URL.
+Native gửi Authorization trong nguồn ảnh; web tải blob qua Axios chung và giải phóng object URL.
+Bản ghi cũ không có ảnh hiện “Không có ảnh lưu”; ảnh mất/hỏng hiện không còn khả dụng,
+không lấy ảnh danh mục làm ảnh của lần chẩn đoán. Không tự cập nhật dữ liệu cũ.
+Ảnh cloud được backend tải bằng request ký số sau khi kiểm tra chủ tài khoản, rồi trả
+JPEG qua cùng API ảnh; frontend không nhận URL có chữ ký hoặc credential Cloudinary.
+Khi dùng local cần giữ thư mục uploads trên ổ lưu trữ bền vững. Healthy, nhận diện cây
+và lần bị từ chối vẫn không tạo lịch sử bệnh hoặc ảnh lưu.
+Màn hình hỗ trợ trạng thái tải/rỗng/lỗi, thử lại, kéo để tải lại và chuyển trang;
+tận dụng `usePaginatedList` để loại phản hồi cũ khi đổi trang, rời màn hoặc đổi phiên.
+
+Cấu hình Cloudinary trong `backend/.env` (không commit):
+
+```dotenv
+DIAGNOSIS_PHOTO_STORAGE=cloudinary
+CLOUDINARY_CLOUD_NAME=<cloud-name>
+CLOUDINARY_API_KEY=<api-key>
+CLOUDINARY_API_SECRET=<api-secret>
+```
+
+Khởi động lại backend sau khi đổi cấu hình. Không đưa API Secret vào mobile.
+Tích hợp dùng [Upload API](https://cloudinary.com/documentation/image_upload_api_reference)
+và asset authenticated của Cloudinary, không thêm SDK/dependency. Đã thử upload,
+đọc và xóa một ảnh mẫu thật; không tạo bản ghi DB thử hoặc chuyển ảnh cũ lên cloud.
+
+Các ngưỡng trong `.env.example` chỉ là giá trị ban đầu, cần hiệu chỉnh bằng dữ liệu
+đánh giá. `DIAGNOSIS_REQUIRE_INPUT_GUARD=true` bắt buộc bộ lọc đầu vào;
+`false` hoặc chưa đặt thì không bật. Khi bật, phải đặt thêm
+`DIAGNOSIS_GUARD_MIN_SIMILARITY` và `DIAGNOSIS_GUARD_MIN_MARGIN` trong `backend/.env`,
+không có fallback. `.env.example` dùng lần lượt `0.23` và `0.025` làm điểm bắt đầu,
+không phải ngưỡng đã được hiệu chỉnh. Giá trị sai hoặc thiếu trả lỗi cấu hình.
+
+Danh mục và mapping được lưu trong DB. Runtime không dùng danh sách seed hoặc
+đoán lại tên/alias để lấp mapping thiếu.
+
+Ngày 17/11/2026 đã dùng lại 29 cây, thêm 45 bệnh unverified, 78 mapping (74 ready,
+4 pending), 48 liên kết cây–bệnh. Chạy lại apply không tạo thêm bản ghi/liên kết.
+Không tạo bệnh healthy, không tạo/phê duyệt phác đồ hoặc bịa triệu chứng/nguyên nhân.
+Định danh mapping ready độc lập với việc nội dung điều trị đã được xác minh.
+
+Thiếu/pending/sai mapping, bệnh inactive hoặc mất liên kết trả lỗi dữ liệu riêng;
+không gom thành `uncertain`. Không đạt ngưỡng/chất lượng ảnh mới trả `uncertain`.
+Các trường hợp bị từ chối không có evidence ID và không mở điều trị. Nhãn khỏe chỉ được chấp nhận khi
+đúng nhãn model, vượt ngưỡng và có mapping cây hợp lệ; không tạo disease_id.
+Màn kết quả chỉ hiện tên bệnh hoặc trạng thái chưa phát hiện bệnh; không hiển thị
+điểm mô hình, triệu chứng hay nội dung chăm sóc. Chỉ mở điều trị khi có phác đồ
+approved đầy đủ, qua kiểm tra schema ở cả danh sách và lúc tạo lịch.
+Kết quả chưa xác định/ảnh không phù hợp hiển thị lý do ngay dưới tiêu đề trong khung
+kết quả hiện có, kèm nút **Chụp lại**; không chuyển sang màn từ chối riêng.
+
+Bộ lọc đầu vào dùng [MobileCLIP2-S0](https://huggingface.co/timm/MobileCLIP2-S0-OpenCLIP)
+chạy cục bộ qua OpenCLIP. Revision, hash weights/config và mô tả ảnh nằm riêng trong
+`inference/input_guard.json`; đây là cấu hình so khớp ảnh, không phải danh mục cây/bệnh.
+Ảnh được so với nhóm mô tả lá cây thật, quả đang trên cây và nhóm ngoài phạm vi. Guard trả `passed`,
+`unsupported` hoặc `uncertain`; hai trạng thái sau dừng trước model bệnh và không tạo lịch sử.
+Chỉ `unsupported` đổi thành `unsupported_image`; phân vân giữ `uncertain`.
+Nếu guard bắt buộc nhưng model thiếu, hỏng hoặc dịch vụ không chạy, backend không bỏ qua.
+Khi không bật, response ghi rõ `input_check.status=disabled`.
+Lỗi cấu hình, mapping thiếu/pending, danh mục không hợp lệ và lỗi lưu lịch sử có
+mã lỗi riêng. Lịch sử giữ status identified và metadata model, không ghi policy.
+Identification và kết quả healthy không tạo evidence như trước. Không sửa/xóa dữ liệu DB cũ.
+Confidence/margin không bảo đảm từ chối mọi ảnh ngoài phạm vi; điểm mô hình không
+phải xác suất nhận diện đúng. Metadata class giữ đúng thứ tự checkpoint.
+
+Thiết lập guard từ thư mục gốc (weights khoảng 300 MB, không commit):
+
+```powershell
+# Trên Windows không có C++ Build Tools, dùng PyYAML thuần Python.
+$env:PYYAML_FORCE_LIBYAML="0"
+inference/.venv/Scripts/python.exe -m pip install -r inference/requirements.txt
+inference/.venv/Scripts/python.exe -c "from huggingface_hub import snapshot_download; snapshot_download('timm/MobileCLIP2-S0-OpenCLIP', revision='095906d28bf54d7584dc411e8ffe448f34289e05', allow_patterns=['open_clip_model.safetensors','open_clip_config.json','README.md'], local_dir='inference/input_guard_model')"
+```
+
+Model/tokenizer dùng cách nạp [OpenCLIP chính thức của Apple](https://github.com/apple/ml-mobileclip#openclip-support).
+Giữ model card và license `apple-amlr` của checkpoint. Runtime chỉ đọc file cục bộ,
+kiểm SHA-256 rồi nạp model một lần; không tải model hoặc gọi API ngoài khi nhận ảnh.
+Có thể đặt `PLANTIFY_GUARD_MODEL_DIR`, `PLANTIFY_GUARD_CONFIG` cho Python nếu đổi đường dẫn.
+Khởi động lại Python inference và backend sau khi thiết lập.
+
+Kiểm thử hồi quy (mock, không thay đánh giá model):
+
+```powershell
+node --test backend/src/integrations/ai/input-guard.test.cjs
+node --test backend/src/integrations/cloudinary-photo.test.cjs
+node --test backend/src/services/__tests__/identification.test.cjs
+node --test backend/src/services/__tests__/diagnosis-history.test.cjs
+node --test mobile/src/services/__tests__/recognition.test.cjs
+# Dependency riêng cho FastAPI TestClient, không cần để phục vụ inference.
+inference/.venv/Scripts/python.exe -m pip install httpx==0.28.1
+inference/.venv/Scripts/python.exe -m unittest inference.test_input_guard -v
+```
+
+Smoke test ngày 17/11/2026 với model thật: lá khỏe/lá bệnh được guard cho qua;
+anime bị từ chối; xe/người/đồ ăn trả uncertain và không chạy model bệnh; ảnh hỏng
+trả INVALID_IMAGE. Đã kiểm tra mapping DB chỉ đọc, không tạo lịch sử. Bộ mẫu nhỏ này
+không chứng minh độ chính xác: ảnh lá cà chua mẫu vẫn bị classifier bệnh đoán thành
+khoai tây. Guard không xác minh loài/bệnh, không bảo đảm phát hiện mọi ảnh ngoài phạm vi.
+Cần tập đánh giá riêng gồm ảnh thực địa, ảnh không liên quan và các trường hợp khó
+để đo tỷ lệ ảnh sai lọt qua/ảnh hợp lệ bị chặn và hiệu chỉnh cả prompt lẫn ngưỡng.
+
 Chat lưu câu hỏi–trả lời theo tài khoản/hội thoại trong `chat_turns`, tải lại lịch sử
 gần nhất và hiển thị thời gian phản hồi. Đã bỏ tự chấm và bảng CCC khỏi màn chat;
 API chấm CCC đã được gỡ; chat không đọc file kiến thức hoặc rubric từ backend/data.
@@ -110,7 +256,7 @@ Kiểm tra chức năng: chạy `node --test tests/garden-create.test.cjs` trong
 Luồng đã nối: **chụp/chọn ảnh → mobile → `POST /api/diagnosis` → Python YOLO → kết quả**.
 Backend xác thực customer đang hoạt động và VIP còn hạn trước khi nhận ảnh. Ảnh JPEG/PNG/WebP tĩnh,
 tối đa 10 MiB và 25 megapixel, được chuyển nguyên bytes/EXIF sang Python; không lưu
-ảnh hoặc kết quả chẩn đoán vào database. Model nạp một lần từ
+ảnh. Chỉ kết quả accepted có mapping bệnh hợp lệ được lưu làm bằng chứng chẩn đoán. Model nạp một lần từ
 `inference/model/weights/best_macro_f1.pt`, đúng 78 class và pad 384×384 của notebook.
 Bộ model hiện tại là run `PlantWild78_YOLO26m_20261111T094602654958Z_2b02c35f`,
 train 95 epoch; checkpoint được chọn theo validation Macro F1 tại epoch 63.
@@ -119,15 +265,15 @@ Mapping gồm 78 class (ID 0–77), đã đồng bộ với taxonomy tiếng Vi�
 App hiển thị kết quả thật bằng tiếng Việt, trạng thái phân tích và lỗi/thử lại. Kết quả
 yếu hoặc phân vân **không được trình bày như kết luận bệnh**; ảnh quá nhỏ, gần như
 trống hoặc quá tối/sáng yêu cầu chụp lại. Chỉ khi kết quả vượt ngưỡng mới hiển thị
-gợi ý nhận diện. Các ngưỡng mặc định là quy tắc tạm thời, chưa được hiệu chỉnh:
-top-1 từ 0.70, chênh top-1/top-2 từ 0.15; dưới 0.35 chuyển sang chưa nhận diện được.
+gợi ý nhận diện. Ngưỡng lấy bắt buộc từ `backend/.env`, không có fallback
+trong source. Thiếu cấu hình hợp lệ thì chưa cho chẩn đoán.
 Điểm mô hình không phải độ chính xác hay xác suất đã hiệu chỉnh. Classifier chỉ có
 78 class, vẫn có thể tự tin với ảnh không phải cây; đây không phải bộ phát hiện OOD.
 
-Tên cây/bệnh lấy từ taxonomy kiểm tra theo mapping model. Thông tin triệu chứng/chăm
-sóc chỉ lấy từ danh mục database khi khớp duy nhất theo alias chính xác, bệnh còn
-active và liên kết với cây qua `common_disease_ids`. Không có mapping thì vẫn hiển
-thị gợi ý model nhưng không bịa nội dung bệnh/phác đồ hay MongoDB ID. Không tự áp
+Tên cây/bệnh, triệu chứng/chăm sóc lấy từ danh mục database qua mapping ObjectId
+đúng phiên bản model; bệnh phải còn active và liên kết với cây qua
+`common_disease_ids`. Không có mapping hợp lệ thì trả lỗi dữ liệu riêng, không hiển thị
+bệnh từ tên nhãn kỹ thuật của model. Không tự áp
 dụng lịch điều trị từ ảnh; luồng chọn cây/phác đồ và xác nhận điều trị vẫn riêng biệt.
 
 ### Phác đồ điều trị từ kết quả AI
@@ -172,8 +318,8 @@ inference/.venv/Scripts/python.exe -m inference
 Terminal khác chạy backend như thường lệ (`cd backend; npm run dev`), rồi mobile
 (`cd mobile; npm start`). Backend mặc định gọi `http://127.0.0.1:8001`; khi tách máy/
 container, đặt `DIAGNOSIS_INFERENCE_URL`. Mobile vẫn chỉ dùng `EXPO_PUBLIC_API_URL`
-trỏ vào Express, không gọi thẳng Python. Chi tiết API, cấu hình và kiểm thử:
-[backend/DIAGNOSIS_API.md](backend/DIAGNOSIS_API.md), [inference/README.md](inference/README.md).
+trỏ vào Express, không gọi thẳng Python. Cấu hình và giới hạn kiểm thử được ghi
+trong phần luồng chẩn đoán của README này.
 
 ## Tiến độ hiện tại
 
@@ -247,7 +393,7 @@ từ chối vẫn cho phép chọn album. Camera/album và hiển thị cần ki
 
 Sau khi lấy code mới, chạy `npm ci` trong `mobile/` và khởi động lại Expo. Với development build, cần build lại app để áp dụng module native và cấu hình quyền mới; camera cần kiểm thử trên điện thoại thật. Triển khai dựa trên [Expo Camera](https://docs.expo.dev/versions/v58.0.0/sdk/camera/) và [Expo ImagePicker](https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/).
 
-Kiểm tra luồng chẩn đoán theo [DIAGNOSIS_API.md](backend/DIAGNOSIS_API.md). Test hook/service dùng mock thiết bị và phiên; không thay kiểm thử camera/album thực tế.
+Test hook/service của luồng chẩn đoán dùng mock thiết bị và phiên; không thay kiểm thử camera/album thực tế.
 
 | Phạm vi | Đã triển khai | Giới hạn / phần còn lại |
 | --- | --- | --- |
@@ -329,7 +475,7 @@ npm run dev
 
 `npm start` chạy server bằng Node, không dùng nodemon. Backend chỉ mở cổng sau khi kết nối MongoDB thành công. Health check: `GET http://localhost:5000/health`; API prefix: `/api`.
 
-Script `npm run seed` có khai báo nhưng `backend/src/scripts/seed.js` chưa tồn tại. Repository chưa có bước seed hoặc tạo Admin đầu tiên tự động; cần chuẩn bị tài khoản quản trị/dữ liệu ban đầu riêng. Đăng ký qua OTP tạo tài khoản Customer.
+Repository không cung cấp script seed hoặc tạo Admin đầu tiên tự động; cần chuẩn bị tài khoản quản trị/dữ liệu ban đầu riêng. Đăng ký qua OTP tạo tài khoản Customer.
 
 Các biến AI/weather/payment/FCM/refresh trong `.env.example` chưa chứng minh có tích hợp tương ứng.
 
