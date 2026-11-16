@@ -15,6 +15,13 @@ const DISEASE_STATUSES = ["active", "inactive"];
 
 const diseaseSchema = new mongoose.Schema(
   {
+    catalog_key: { type: String, trim: true },
+    identity_sources: [String],
+    content_status: {
+      type: String,
+      enum: ["unverified", "verified"],
+      default: "unverified",
+    },
     disease_name: {
       type: String,
       required: [true, "Tên bệnh là bắt buộc"],
@@ -27,6 +34,7 @@ const diseaseSchema = new mongoose.Schema(
       maxlength: [200, "Tên khoa học không được vượt quá 200 ký tự"],
       default: "",
     },
+    diagnosis_aliases: [{ type: String, trim: true, maxlength: 200 }],
     pathogen_type: {
       type: String,
       enum: {
@@ -37,14 +45,20 @@ const diseaseSchema = new mongoose.Schema(
     },
     typical_symptoms: {
       type: String,
-      required: [true, "Triệu chứng điển hình là bắt buộc"],
+      required: function () {
+        return this.content_status === "verified";
+      },
+      default: "",
       trim: true,
       maxlength: [5000, "Triệu chứng điển hình không được vượt quá 5000 ký tự"],
     },
     environmental_cause: {
       type: String,
       trim: true,
-      maxlength: [5000, "Nguyên nhân môi trường không được vượt quá 5000 ký tự"],
+      maxlength: [
+        5000,
+        "Nguyên nhân môi trường không được vượt quá 5000 ký tự",
+      ],
       default: "",
     },
     disease_image_url: {
@@ -76,6 +90,7 @@ const diseaseSchema = new mongoose.Schema(
 );
 
 // Tên bệnh không được trùng, không phân biệt chữ hoa/thường.
+diseaseSchema.index({ catalog_key: 1 }, { unique: true, sparse: true });
 diseaseSchema.index(
   { disease_name: 1 },
   { unique: true, collation: { locale: "vi", strength: 2 } },

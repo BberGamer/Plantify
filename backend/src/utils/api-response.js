@@ -26,7 +26,7 @@ const error = (res, message, statusCode = 500, options = {}) => {
   return res.status(statusCode).json({
     success: false,
     message,
-    data: null,
+    data: options.data || null,
     ...(options.code ? { code: options.code } : {}),
     ...(options.errors ? { errors: options.errors } : {}),
   });
