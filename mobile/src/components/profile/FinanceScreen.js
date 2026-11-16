@@ -107,7 +107,7 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
           {f.order.status === "pending" && <Text>Còn lại: {Math.floor(f.remainingSeconds / 60)} phút {f.remainingSeconds % 60} giây</Text>}
           {f.order.status === "pending" && !f.order.expired && f.remainingSeconds > 0 && <>
             {f.order.qr_url && <Image source={{ uri: f.order.qr_url }} style={styles.qr} resizeMode="contain" accessibilityLabel="QR chuyển khoản" />}
-            <Text selectable>{f.order.bank_code} · {f.order.account_number} · {f.order.account_name}</Text>
+            <Text selectable>{f.order.bank_code} · {f.order.receiving_account || f.order.virtual_account || f.order.account_number} · {f.order.account_name}</Text>
             <Text selectable>Nội dung bắt buộc: {f.order.code}</Text>
           </>}
           <Button onPress={f.closeOrder}>Đóng thông tin đơn</Button>
@@ -170,7 +170,7 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
           <Text>Hạn: {date(viewedOrder.expires_at)}</Text>
           {viewedOrder.status === "pending" && !viewedOrder.expired && f.remainingSeconds > 0 && <>
             {viewedOrder.qr_url && <Image source={{ uri: viewedOrder.qr_url }} style={styles.qr} resizeMode="contain" />}
-            <Text selectable>{viewedOrder.bank_code} · {viewedOrder.account_number} · {viewedOrder.account_name}</Text>
+            <Text selectable>{viewedOrder.bank_code} · {viewedOrder.receiving_account || viewedOrder.virtual_account || viewedOrder.account_number} · {viewedOrder.account_name}</Text>
             <Text selectable>Nội dung: {viewedOrder.code}</Text>
           </>}
         </> : <>
