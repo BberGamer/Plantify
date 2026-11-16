@@ -13,10 +13,19 @@
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.plantify.app"
+      "package": "com.plantify.app",
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "plugins": [
       "expo-router",
+      [
+        "react-native-nitro-google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.238677633473-5irbpqgjre603gjamhjqgvi5d7dth7v3"
+        }
+      ],
       [
         "expo-camera",
         {
@@ -40,6 +49,16 @@
           "backgroundColor": "#ffffff"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "2ac2679e-cdc9-404d-8a9f-09fe8830381e"
+      }
+    }
   }
 }
