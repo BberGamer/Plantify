@@ -40,7 +40,7 @@ export default function ProfileContent({ onBack, showNavbar = false, onOpenFavor
         </View>}
         {onOpenFinance && <View style={styles.favorites}>
           <Text variant="titleMedium" style={styles.sectionTitle}>Tài khoản VIP và Tài chính</Text>
-          <List.Item title="Tài khoản VIP" description={finance?.isproaccount ? `Đang sử dụng ${finance.vip_plan}` : "Xem quyền lợi và nâng cấp VIP"}
+          <List.Item title="Tài khoản VIP" description={!finance ? "Xem thông tin gói tài khoản" : finance.isproaccount ? `Đang sử dụng ${finance.vip_plan}` : "Đang dùng Free · Mua gói VIP để mở rộng quyền lợi"}
             onPress={() => onOpenFinance("vip")} disabled={profile.isLoggingOut} style={styles.favoriteLink}
             left={(props) => <List.Icon {...props} icon="crown-outline" color="#A47820" />}
             right={(props) => <List.Icon {...props} icon="chevron-right" color={colors.primary} />} />

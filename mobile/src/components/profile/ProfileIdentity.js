@@ -44,6 +44,7 @@ export default function ProfileIdentity({ user, finance }) {
             />
           )}
           {vip && <View style={styles.vipBadge}><Ionicons name="ribbon" size={16} color="#795413" /><Text style={styles.vipLabel}>PLANTIFY {finance.vip_plan}</Text></View>}
+          {finance && !vip && <Text style={styles.freeLabel}>Tài khoản Free</Text>}
           <Text style={[styles.name, vip && styles.vipName]}>{fullName || "Chưa cập nhật họ tên"}</Text>
           <Text style={[styles.email, vip && styles.vipEmail]}>{email || "Chưa cập nhật email"}</Text>
           {vip && <Text style={styles.vipEmail}>Đặc quyền đến {new Date(new Date(finance.vip_expires_at).getTime() - 1).toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</Text>}
@@ -57,6 +58,7 @@ vipCard: { borderWidth: 1, borderColor: "#D6BA71" },
 vipAvatar: { borderColor: "#F2D790", backgroundColor: "#32745A" },
 vipBadge: { flexDirection: "row", gap: 5, marginTop: 14, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: "#F2D790", borderRadius: 20 },
 vipLabel: { color: "#64470F", fontWeight: "800", fontSize: 12 },
+freeLabel: { marginTop: 14, color: colors.primary, fontWeight: "700" },
 vipName: { color: "#FFF5D8" }, vipEmail: { color: "#DBEBDD", marginTop: 5, textAlign: "center" },
 identityCard: {
     alignItems: "center",
