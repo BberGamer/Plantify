@@ -9,6 +9,7 @@ const order = new Schema({
   status: { type: String, enum: ["pending", "success", "rejected"], default: "pending" },
   expires_at: { type: Date, required: true },
   bank_code: String, account_number: String, account_name: String,
+  virtual_account: { type: String, maxlength: 100 },
   reviewed_by: { type: oid, ref: "User" }, reason: String, completed_at: Date,
 }, { timestamps: true });
 order.index({ user_id: 1, request_key: 1 }, { unique: true });
@@ -28,6 +29,7 @@ const event = new Schema({
   provider_id: { type: String, required: true, unique: true },
   payload_hash: { type: String, required: true },
   amount: Number, content: String, account_number: String,
+  virtual_account: { type: String, maxlength: 100 },
   order_id: { type: oid, ref: "TopupOrder" },
   status: { type: String, enum: ["credited", "review", "already_processed"], required: true },
   reason: String,

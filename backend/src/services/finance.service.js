@@ -30,13 +30,15 @@ async function account(id, session, role = "customer", optional = false) {
   return user;
 }
 const bank = () => ({ bank_code: process.env.SEPAY_BANK_CODE || "",
-  account_number: process.env.SEPAY_ACCOUNT_NUMBER || "", account_name: process.env.SEPAY_ACCOUNT_NAME || "" });
+  account_number: process.env.SEPAY_ACCOUNT_NUMBER || "", account_name: process.env.SEPAY_ACCOUNT_NAME || "",
+  virtual_account: process.env.SEPAY_VIRTUAL_ACCOUNT?.trim() || "" });
 function presentOrder(doc) {
   const item = doc.toObject ? doc.toObject() : doc;
   const configured = Boolean(item.bank_code && item.account_number && item.account_name);
-  return { ...item, expired: item.status === "pending" && new Date(item.expires_at) <= new Date(),
+  const receivingAccount = item.virtual_account || item.account_number;
+  return { ...item, receiving_account: receivingAccount, expired: item.status === "pending" && new Date(item.expires_at) <= new Date(),
     qr_url: configured ? `https://qr.sepay.vn/img?${new URLSearchParams({ bank: item.bank_code,
-      acc: item.account_number, amount: String(item.amount), des: item.code })}` : null };
+      acc: receivingAccount, amount: String(item.amount), des: item.code })}` : null };
 }
 async function summary(userId) {
   const user = await User.findOne({ _id: userId, role: "customer", status: true }).lean();
@@ -46,7 +48,7 @@ async function summary(userId) {
   if (!active && user.isproaccount) await User.updateOne({ _id: userId, vip_expires_at: { $lte: new Date() } }, { $set: { isproaccount: false } });
   return { balance: user.balance || 0, isproaccount: active, vip_plan: user.vip_plan || null,
     vip_expires_at: user.vip_expires_at || null, plans: PLANS,
-    payment_configured: Object.values(bank()).every(Boolean) };
+    payment_configured: Boolean(bank().bank_code && bank().account_number && bank().account_name && process.env.SEPAY_WEBHOOK_SECRET?.trim()) };
 }
 async function createTopup(userId, input) {
   v.fields(input, ["amount", "request_key"]);
@@ -139,12 +141,17 @@ async function adjust(adminId, input) {
   });
 }
 async function webhook(payload) {
-  if (!payload || !Number.isSafeInteger(payload.id) || payload.id < 1 ||
+  if (!payload || !Number.isSafeInteger(payload.id) || payload.id < 0 ||
       !Number.isSafeInteger(payload.transferAmount) || payload.transferAmount <= 0 ||
       typeof payload.accountNumber !== "string" || !payload.accountNumber.trim() || payload.accountNumber.length > 100 ||
       typeof payload.gateway !== "string" || !payload.gateway.trim() || payload.gateway.length > 100 ||
       typeof payload.content !== "string" || payload.content.length > 2000 ||
+      (payload.subAccount != null && (typeof payload.subAccount !== "string" || payload.subAccount.length > 100)) ||
       !["in", "out"].includes(payload.transferType)) v.fail("Dữ liệu giao dịch SePay không hợp lệ.");
+  // SePay dùng id=0 cho nút Gửi thử. Controller đã xác minh HMAC trước bước này.
+  // Chỉ xác nhận kết nối; tuyệt đối không mở transaction, tìm đơn hoặc ghi số dư.
+  if (payload.id === 0) return { test: true, credited: false, status: "test_received",
+    message: "Đã nhận webhook thử SePay. Không phát sinh giao dịch hoặc thay đổi số dư." };
   const hash = crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
   return transaction(async (session) => {
     const old = await Event.findOne({ provider_id: String(payload.id) }).session(session);
@@ -155,16 +162,26 @@ async function webhook(payload) {
     const codes = payload.content.toUpperCase().match(/\bPLANTIFY[A-F0-9]{16}\b/g) || [];
     const order = codes.length === 1 ? await Order.findOne({ code: codes[0] }).session(session) : null;
     const event = { provider_id: String(payload.id), payload_hash: hash, amount: payload.transferAmount,
-      content: payload.content, account_number: payload.accountNumber, order_id: order?._id,
+      content: payload.content, account_number: payload.accountNumber, virtual_account: payload.subAccount || "", order_id: order?._id,
       status: "review", reason: "Không khớp đơn hoặc giao dịch cần đối soát." };
-    if (order && payload.transferType === "in" && order.account_number && order.account_number === payload.accountNumber &&
-        order.bank_code && String(payload.gateway || "").toLowerCase() === order.bank_code.toLowerCase() &&
-        payload.transferAmount === order.amount) {
+    if (payload.transferType !== "in") event.reason = "Giao dịch tiền ra; không cộng ví.";
+    else if (codes.length !== 1) event.reason = "Nội dung cần chứa đúng một mã đơn PLANTIFY hợp lệ.";
+    else if (!order) event.reason = "Không tìm thấy đơn nạp tương ứng mã chuyển khoản.";
+    else if (!order.account_number || order.account_number !== payload.accountNumber)
+      event.reason = "Tài khoản ngân hàng nhận tiền không khớp đơn nạp.";
+    else if (order.virtual_account && order.virtual_account !== payload.subAccount)
+      event.reason = "Tài khoản ảo VA nhận tiền không khớp đơn nạp.";
+    else if (!order.bank_code || payload.gateway.toLowerCase() !== order.bank_code.toLowerCase())
+      event.reason = "Ngân hàng nhận tiền không khớp đơn nạp.";
+    else if (payload.transferAmount !== order.amount) event.reason = "Số tiền chuyển khoản không khớp số tiền đơn nạp.";
+    else {
       // Chỉ bên nhận được đơn pending mới được cộng tiền.
       const user = await account(String(order.user_id), session, "customer", true);
       if (!user) event.reason = "Tài khoản nhận số dư không còn hoạt động; cần đối soát.";
       else if (order.status === "success") { event.status = "already_processed"; event.reason = "Đơn đã được cộng tiền."; }
-      else if (order.status === "pending" && order.expires_at > new Date()) {
+      else if (order.status === "rejected") event.reason = "Đơn đã bị từ chối; cần Admin đối soát khoản tiền nhận được.";
+      else if (order.expires_at <= new Date()) event.reason = "Tiền đến sau hạn thanh toán của đơn; cần Admin đối soát.";
+      else if (order.status === "pending") {
         const claimed = await Order.findOneAndUpdate({ _id: order._id, status: "pending",
           expires_at: { $gt: new Date() } }, { $set: { status: "success", completed_at: new Date(), reason: "SePay xác nhận" } },
         { new: true, session, runValidators: true });
