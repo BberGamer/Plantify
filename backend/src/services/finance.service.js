@@ -69,7 +69,7 @@ async function createTopup(userId, input) {
 async function purchase(userId, input) {
   v.fields(input, ["plan", "request_key"]);
   const plan = PLANS.find((p) => p.code === input.plan);
-  if (!plan) v.fail("Gói VIP không hợp lệ.");
+  if (!plan) v.fail("Gói VIP không hợp lệ.", "plan");
   const key = `purchase_${v.key(input.request_key)}`;
   return transaction(async (session) => {
     const user = await account(userId, session);
@@ -106,7 +106,7 @@ async function review(adminId, id, input) {
   v.fields(input, ["status", "reason", "request_key"]);
   if (input.request_key !== undefined) v.key(input.request_key);
   common.id(id);
-  if (!["success", "rejected"].includes(input.status)) v.fail("Trạng thái không hợp lệ.");
+  if (!["success", "rejected"].includes(input.status)) v.fail("Trạng thái không hợp lệ.", "status");
   const reason = v.reason(input.reason);
   return transaction(async (session) => {
     await account(adminId, session, "admin");
