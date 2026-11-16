@@ -48,6 +48,7 @@ export default function AdminLayout() {
         }}
       />
       <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="finance" options={{ title: "Tài chính", tabBarIcon: ({ color, size }) => <Ionicons name="wallet-outline" color={color} size={size} /> }} />
     </Tabs>
   );
 }
