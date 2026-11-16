@@ -194,9 +194,5 @@ export default function useDiagnosisCapture(operationLock) {
       setReady(false);
       setCameraError("");
     },
-    // Mục đích: Thông báo ảnh đã chọn không đọc được.
-    // Cách chạy: Đặt lỗi để giao diện yêu cầu chụp hoặc chọn lại.
-    onImageError: () =>
-      setError("Không đọc được ảnh. Vui lòng chụp hoặc chọn lại."),
   };
 }
