@@ -1,9 +1,10 @@
+import { useEffect, useState } from "react";
 import { spacing } from "../../theme/tokens";
 import { colors } from "../../theme/colors";
 
 import { View, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Text } from "react-native-paper";
+import { Button, Dialog, Portal, Text } from "react-native-paper";
 import { usePathname, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,7 +28,7 @@ const ITEMS = [
     href: "/plants",
   },
   {
-    label: "Chẩn đoán",
+    label: "Camera",
     icon: "camera",
     camera: true,
     path: "/customer/diagnosis",
@@ -53,12 +54,36 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const [choosingCamera, setChoosingCamera] = useState(false);
+  useEffect(() => setChoosingCamera(false), [pathname]);
+  const openCamera = (href) => {
+    setChoosingCamera(false);
+    router.navigate(href);
+  };
   return (
+    <>
+      <Portal>
+        <Dialog visible={choosingCamera} onDismiss={() => setChoosingCamera(false)}>
+          <Dialog.Title>Chọn tính năng camera</Dialog.Title>
+          <Dialog.Content>
+            <Button icon="leaf-outline" onPress={() => openCamera("/customer/identification")}>
+              Nhận diện cây
+            </Button>
+            <Button icon="stethoscope" onPress={() => openCamera("/customer/diagnosis")}>
+              Chẩn đoán bệnh
+            </Button>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setChoosingCamera(false)}>Hủy</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     <View style={[styles.navbar, { paddingBottom: insets.bottom }]}>
       {ITEMS.map((item) => {
         // Dựa vào trang thực tế, không cố định Home đang active như bản cũ.
         const isActive = pathname === item.path ||
-          (item.path === "/customer/profile" && pathname === "/customer/favorites");
+          (item.camera && pathname === "/customer/identification") ||
+          (item.path === "/customer/profile" && ["/customer/favorites", "/customer/diagnosis-history"].includes(pathname));
         const canNavigate = Boolean(item.href);
         return (
           <Pressable
@@ -72,12 +97,13 @@ export default function Navbar() {
             accessibilityRole="button"
             accessibilityLabel={item.label.replace("\n", " ")}
             accessibilityHint={
-              item.camera ? "Mở giao diện chẩn đoán bệnh cây" : undefined
+              item.camera ? "Chọn nhận diện cây hoặc chẩn đoán bệnh" : undefined
             }
             accessibilityState={{ selected: isActive, disabled: !canNavigate }}
             // navigate tái sử dụng trang trong stack khi có thể, tránh push lặp trang.
             onPress={() => {
-              if (canNavigate && !isActive) router.navigate(item.href);
+              if (item.camera) setChoosingCamera(true);
+              else if (canNavigate && !isActive) router.navigate(item.href);
             }}
           >
             <View style={[styles.iconSlot, item.camera && styles.cameraSlot]}>
@@ -111,6 +137,7 @@ export default function Navbar() {
         );
       })}
     </View>
+    </>
   );
 }
 

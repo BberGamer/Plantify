@@ -13,6 +13,7 @@ export default function DiagnosisPreview({
   onPickPhoto,
   onImageError,
   onAnalyze,
+  identification = false,
 }) {
   return (
     <View style={styles.card}>
@@ -41,7 +42,7 @@ export default function DiagnosisPreview({
         disabled={busy || imageInvalid}
         style={styles.resultButton}
       >
-        {analyzing ? "Đang phân tích ảnh…" : "Phân tích ảnh"}
+        {analyzing ? "Đang phân tích ảnh…" : identification ? "Nhận diện cây" : "Chẩn đoán bệnh"}
       </Button>
       {analyzing && (
         <Text style={styles.progress} accessibilityLiveRegion="polite">

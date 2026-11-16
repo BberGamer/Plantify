@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { IconButton, Text } from "react-native-paper";
+import { IconButton, SegmentedButtons, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors, spacing, typography } from "../../theme";
@@ -20,11 +20,10 @@ export default function AnalysisScreen({ identification = false }) {
   const capture = useDiagnosisCapture(operationLock);
   const diagnosis = useDiagnosis(capture.photo, operationLock, identification);
   const scroll = useRef(null);
-  const showResult = !!diagnosis.result && !diagnosis.imageInvalid;
+  const showResult = !!diagnosis.result;
   const busy = capture.busy || diagnosis.busy;
-  // Mục đích: Đồng bộ lỗi ảnh giữa hai hook.
-  // Cách chạy: Gọi xử lý lỗi của camera và phân tích để ngừng dùng ảnh hỏng.
-  const onImageError = () => { capture.onImageError(); diagnosis.onImageError(); };
+  // Lỗi giải mã ảnh hiển thị ngay trong khung kết quả, không lặp lỗi ở phần camera.
+  const onImageError = diagnosis.onImageError;
   // Mục đích: Đưa người dùng về đầu kết quả mới.
   // Cách chạy: Cuộn lên đầu khi state kết quả thay đổi và có dữ liệu.
   useEffect(() => {
@@ -34,7 +33,8 @@ export default function AnalysisScreen({ identification = false }) {
   // Cách chạy: Chặn khi bận; lần lượt đóng kết quả, bỏ ảnh hoặc điều hướng về màn trước.
   const handleBack = () => {
     if (operationLock.current) return;
-    if (showResult) diagnosis.clearResult();
+    if (showResult && diagnosis.result.result_status === "invalid_image") capture.retake();
+    else if (showResult) diagnosis.clearResult();
     else if (capture.photo) capture.retake();
     else if (router.canGoBack()) router.back();
     else router.replace("/customer/home");
@@ -51,7 +51,21 @@ export default function AnalysisScreen({ identification = false }) {
           accessibilityLabel="Quay lại"
         />
         <Text style={styles.title}>{identification ? (showResult ? "Kết quả nhận diện cây" : "Nhận diện cây") : (showResult ? "Kết quả chẩn đoán" : "Chẩn đoán bệnh")}</Text>
+        {!identification && <IconButton icon="history" accessibilityLabel="Xem lịch sử chẩn đoán"
+          disabled={busy} onPress={() => router.push("/customer/diagnosis-history")} />}
       </View>
+      <SegmentedButtons
+        value={identification ? "plant" : "disease"}
+        onValueChange={(value) => {
+          if (busy || value === (identification ? "plant" : "disease")) return;
+          router.replace(value === "plant" ? "/customer/identification" : "/customer/diagnosis");
+        }}
+        buttons={[
+          { value: "plant", label: "Nhận diện cây", icon: "leaf-outline", disabled: busy },
+          { value: "disease", label: "Chẩn đoán bệnh", icon: "stethoscope", disabled: busy },
+        ]}
+        style={styles.modeSelector}
+      />
       <ScrollView
         ref={scroll}
         style={styles.body}
@@ -61,10 +75,10 @@ export default function AnalysisScreen({ identification = false }) {
         {identification && !showResult && <Text>Chụp hoặc chọn ảnh lá rõ nét để gợi ý tên cây trong bộ nhãn được hỗ trợ.</Text>}
         {showResult && identification ? (
           <IdentificationResult photo={capture.photo} result={diagnosis.result}
-            onBack={diagnosis.clearResult} onRetake={capture.retake} onImageError={onImageError} />
+            onRetake={capture.retake} onImageError={onImageError} />
         ) : showResult ? (
           <DiagnosisResult
-            photo={capture.photo} result={diagnosis.result} onBack={diagnosis.clearResult}
+            photo={capture.photo} result={diagnosis.result}
             onRetake={capture.retake} onImageError={onImageError}
             onCreateTreatment={() =>
               router.push({
@@ -83,6 +97,7 @@ export default function AnalysisScreen({ identification = false }) {
             imageInvalid={diagnosis.imageInvalid} onRetake={capture.retake}
             onPickPhoto={capture.pickPhoto} onImageError={onImageError}
             onAnalyze={diagnosis.analyze}
+            identification={identification}
           />
         ) : (
           <DiagnosisCapture
@@ -105,6 +120,7 @@ export default function AnalysisScreen({ identification = false }) {
 }
 
 const styles = StyleSheet.create({
+  modeSelector: { marginHorizontal: spacing.lg, marginBottom: spacing.sm },
   screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: "row",
