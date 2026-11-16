@@ -83,6 +83,7 @@ function adaptList(envelope, domain) {
 export const adaptUsersList = (envelope) => adaptList(envelope, "users");
 export const adaptPlantsList = (envelope) => adaptList(envelope, "plants");
 export const adaptDiseasesList = (envelope) => adaptList(envelope, "diseases");
+export const adaptDiagnosisHistoryList = (envelope) => adaptList(envelope, "diagnoses");
 
 export function mapUsersParams({
   page = 1,
