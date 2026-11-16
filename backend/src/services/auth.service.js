@@ -33,6 +33,7 @@ const createSession = (user) => {
   delete userObj.resetPasswordOTP;
   delete userObj.resetPasswordOTPExpires;
   delete userObj.googleSub;
+  userObj.isproaccount = require("../utils/vip").isVip(userObj);
   return { user: userObj, token: generateJwtToken(user) };
 };
 

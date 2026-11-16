@@ -5,6 +5,6 @@ const { uploadDiagnosisPhoto } = require("../middlewares/diagnosis-upload.middle
 const controller = require("../controllers/diagnosis.controller");
 
 // Kiểm tra phiên/quyền trước khi đọc và giữ file upload trong bộ nhớ.
-router.post("/", authenticate, authorizeActiveCustomer, uploadDiagnosisPhoto, controller.predict);
+router.post("/", authenticate, authorizeActiveCustomer, require("../services/membership.service").requireVip, uploadDiagnosisPhoto, controller.predict);
 
 module.exports = router;

@@ -11,6 +11,9 @@ app.use(cors());
 app.use("/uploads/plants", express.static(require("./middlewares/garden-upload.middleware").uploadDirectory, {
   dotfiles: "deny", index: false, setHeaders: (res) => res.set("X-Content-Type-Options", "nosniff"),
 }));
+// Webhook phải nhận bytes gốc trước express.json để xác minh HMAC.
+app.post(["/api/v1/commerce/payment/webhook/sepay", "/api/commerce/payment/webhook/sepay"],
+  express.raw({ type: "application/json", limit: "64kb" }), require("./controllers/finance.controller").webhook);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
