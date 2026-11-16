@@ -107,7 +107,10 @@ export default function useFinance(admin = false, section = "history") {
       if (!scope()) return false;
       keys.current.delete(fingerprint);
       if (operation === "topup") { orderRequest.current++; setOrder(value); }
-      setMessage(operation === "purchase" ? "Nâng cấp VIP thành công!" : operation === "topup" ? "Đã tạo đơn nạp tiền." : "Đã ghi nhận giao dịch.");
+      setMessage(operation === "purchase" ? "Đã mua/gia hạn gói VIP thành công. Quyền lợi đã được cập nhật." :
+        operation === "topup" ? "Đã tạo đơn nạp. Vui lòng chuyển đúng số tiền và nội dung trước hạn để hoàn tất nạp ví." :
+        operation === "review" && payload.status === "rejected" ? "Đã từ chối đơn nạp và lưu lý do xử lý. Không cộng tiền vào ví." :
+        "Đã cộng tiền vào ví và lưu lịch sử giao dịch.");
       await refresh();
       return true;
     } catch (e) {

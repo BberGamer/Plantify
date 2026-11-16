@@ -8,6 +8,7 @@ import useFinance from "../../hooks/useFinance";
 import useScreenScope from "../../hooks/useScreenScope";
 import userService from "../../services/userService";
 import getErrorMessage from "../../utils/getErrorMessage";
+import { amountError, reasonError } from "../../utils/financeValidation";
 
 const money = (value) => `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "—";
@@ -44,6 +45,7 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
   const [amount, setAmount] = useState(!admin && section === "wallet" && typeof params.amount === "string" && /^\d{5,8}$/.test(params.amount) ? params.amount : "");
   const [dialog, setDialog] = useState(null);
   const [reason, setReason] = useState("");
+  const [validationError, setValidationError] = useState("");
   const [search, setSearch] = useState("");
   const [customers, setCustomers] = useState([]);
   const [customer, setCustomer] = useState(null);
@@ -58,6 +60,9 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
     } catch (e) { if (scope() && version === searchVersion.current) setSearchError(getErrorMessage(e)); }
   };
   const confirm = async () => {
+    if (!dialog || f.busy) return;
+    const invalid = dialog.adjust ? amountError(amount) || reasonError(reason) : !dialog.plan ? reasonError(reason) : "";
+    if (invalid) { setValidationError(invalid); return; }
     let ok;
     if (dialog.plan) ok = await f.run("purchase", { plan: dialog.plan.code });
     else if (dialog.adjust) ok = await f.run("adjust", { user_id: customer?._id, amount: Number(amount), reason });
@@ -72,33 +77,40 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       {!admin && !showHistory && <LinearGradient colors={["#103B2D", "#247855"]} style={styles.hero}>
         <Icon source={showVip ? "crown" : "wallet-outline"} color="#F8D884" size={30} />
-        <Text style={styles.heroTitle}>{showWallet ? "Ví Plantify của bạn" : f.summary?.isproaccount ? `Plantify ${f.summary.vip_plan}` : "Khu vườn của bạn, nhiều hơn nữa"}</Text>
-        <Text style={styles.light}>Số dư ví</Text><Text style={styles.balance}>{money(f.summary?.balance)}</Text>
+        <Text style={styles.heroTitle}>{showWallet ? "Ví Plantify của bạn" : !f.summary ? "Thông tin gói tài khoản" : f.summary.isproaccount ? `Plantify ${f.summary.vip_plan}` : "Tài khoản Free"}</Text>
+        <Text style={styles.light}>Số dư ví</Text><Text style={styles.balance}>{f.summary ? money(f.summary.balance) : "—"}</Text>
         {showVip && f.summary?.isproaccount && <Text style={styles.light}>Hết hạn: {date(new Date(new Date(f.summary.vip_expires_at).getTime() - 1))}</Text>}
-        <Text style={styles.light}>{showVip ? "VIP mở khóa AI, không giới hạn cây trong vườn và cây yêu thích." : "Nạp tiền để mua gói VIP. Ví không tự động gia hạn."}</Text>
+        {showVip && f.summary && <Text style={styles.light}>{f.summary.isproaccount
+          ? "VIP còn hạn: được nhận diện, chẩn đoán AI và không giới hạn cây trong vườn, cây yêu thích."
+          : "Free: tối đa 3 cây trong vườn, 5 cây yêu thích; chưa được nhận diện hoặc chẩn đoán AI. Mua gói VIP để mở rộng quyền lợi."}</Text>}
+        {showWallet && <Text style={styles.light}>Nạp tiền để mua gói VIP. Nạp ví không tự kích hoạt hoặc gia hạn VIP.</Text>}
       </LinearGradient>}
       {!!f.message && <Text accessibilityRole="alert" style={styles.notice}>{f.message}</Text>}
       {f.loading && <ActivityIndicator />}
       {showVip && <>
-        <Text variant="titleLarge" style={styles.heading}>Chọn gói VIP</Text>
+        <Text variant="titleLarge" style={styles.heading}>{f.summary?.isproaccount ? "Gia hạn gói VIP" : "Chọn gói VIP"}</Text>
         {f.summary?.plans?.map((plan) => <Card key={plan.code} style={styles.card}>
           <Card.Content style={styles.row}><View style={styles.flex}>
             <Text variant="titleMedium">{plan.name}</Text><Text>{plan.days} ngày · {money(plan.price)}</Text>
           </View><Button mode="contained" disabled={f.busy} onPress={() => {
             if (f.summary.balance < plan.price) router.push({ pathname: "/customer/wallet", params: { amount: String(Math.max(10000, plan.price - f.summary.balance)) } });
             else setDialog({ plan });
-          }}>{f.summary.balance < plan.price ? "Nạp để mua" : "Mua gói"}</Button></Card.Content>
+          }}>{f.summary.balance < plan.price ? "Nạp để mua" : f.summary.isproaccount ? "Gia hạn" : "Mua gói"}</Button></Card.Content>
         </Card>)}
         <Button icon="wallet-outline" disabled={f.busy} onPress={() => router.push("/customer/wallet")}>Đến ví tiền</Button>
-        <Button disabled={f.busy} onPress={() => router.navigate("/customer/profile")}>Xem hồ sơ VIP của tôi</Button>
+        <Button disabled={f.busy} onPress={() => router.navigate("/customer/profile")}>Về hồ sơ của tôi</Button>
       </>}
       {showWallet && <>
         <Card style={styles.card}><Card.Content style={styles.gap}>
           <Text variant="titleLarge">Nạp tiền vào ví</Text>
           <Text>Từ 10.000 đến 10.000.000 VND. Số dư không tự động gia hạn VIP.</Text>
-          {!f.summary?.payment_configured && <Text style={styles.notice}>SePay chưa được cấu hình. Đơn vẫn được lưu để Admin xử lý; chưa có thông tin chuyển khoản.</Text>}
+          {f.summary && !f.summary.payment_configured && <Text style={styles.notice}>Nạp tiền tự động chưa sẵn sàng. Đơn vẫn được lưu để Admin kiểm tra; chưa tự động cộng ví.</Text>}
           <TextInput ref={topupField} mode="outlined" label="Số tiền (VND)" keyboardType="number-pad" value={amount} onChangeText={setAmount} disabled={f.busy} />
-          <Button mode="contained" disabled={f.busy} onPress={() => f.run("topup", { amount: Number(amount) })}>Tạo đơn nạp</Button>
+          <Button mode="contained" loading={f.busy} disabled={f.busy} onPress={() => {
+            const invalid = amountError(amount);
+            if (invalid) setValidationError(invalid);
+            else f.run("topup", { amount: Number(amount) });
+          }}>Tạo đơn nạp</Button>
         </Card.Content></Card>
         {f.order && <Card style={styles.card}><Card.Content style={styles.gap}>
           <Text variant="titleMedium">{f.order.code}</Text>
@@ -120,8 +132,12 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
         <Button disabled={f.busy} onPress={findCustomers}>Tìm người dùng</Button>
         {!!searchError && <Text>{searchError}</Text>}
         {customers.map((u) => <Button key={u._id} mode={customer?._id === u._id ? "contained" : "text"} onPress={() => setCustomer(u)}>{u.fullName} · {u.email}</Button>)}
-        <TextInput label="Số tiền cộng (VND)" keyboardType="number-pad" value={amount} onChangeText={setAmount} />
-        <Button disabled={!customer || f.busy} onPress={() => { setReason(""); setDialog({ adjust: true }); }}>Tiếp tục cộng tiền</Button>
+        <TextInput label="Số tiền cộng (VND)" keyboardType="number-pad" value={amount} onChangeText={setAmount} disabled={f.busy} />
+        <Button disabled={f.busy} onPress={() => {
+          const invalid = !customer ? "Vui lòng tìm và chọn người dùng cần cộng tiền." : amountError(amount);
+          if (invalid) setValidationError(invalid);
+          else { setReason(""); setDialog({ adjust: true }); }
+        }}>Tiếp tục cộng tiền</Button>
       </Card.Content></Card>}
       {showHistory && <>
       <View style={styles.wrap}>{["orders", "transactions", ...(admin ? ["events"] : [])].map((kind) =>
@@ -162,7 +178,7 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
         <Button disabled={f.page >= f.list.totalPages || f.busy} onPress={() => f.changePage(f.page + 1)}>Sau</Button></View>
       </>}
     </ScrollView>
-    <Portal><Dialog visible={!!dialog} onDismiss={() => { if (!f.busy) setDialog(null); }}>
+    <Portal><Dialog visible={!!dialog && !validationError} dismissable={!f.busy} dismissableBackButton={!f.busy} onDismiss={() => { if (!f.busy) setDialog(null); }}>
       <Dialog.Title>{dialog?.view ? "Chi tiết đơn nạp" : "Xác nhận giao dịch"}</Dialog.Title>
       <Dialog.ScrollArea><ScrollView contentContainerStyle={styles.gap}>
         {dialog?.view ? <>
@@ -180,7 +196,13 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
         </>}
       </ScrollView></Dialog.ScrollArea>
       <Dialog.Actions><Button disabled={f.busy} onPress={() => setDialog(null)}>Đóng</Button>
-        {!dialog?.view && <Button loading={f.busy} disabled={f.busy || (!dialog?.plan && reason.trim().length < 5)} onPress={confirm}>Xác nhận</Button>}</Dialog.Actions>
+        {!dialog?.view && <Button loading={f.busy} disabled={f.busy} onPress={confirm}>Xác nhận</Button>}</Dialog.Actions>
+    </Dialog>
+    <Dialog visible={!!validationError} onDismiss={() => setValidationError("")}>
+      <Dialog.Icon icon="alert-circle-outline" color="#A33027" />
+      <Dialog.Title>Kiểm tra thông tin</Dialog.Title>
+      <Dialog.Content><Text accessibilityRole="alert">{validationError}</Text></Dialog.Content>
+      <Dialog.Actions><Button onPress={() => setValidationError("")}>Đã hiểu</Button></Dialog.Actions>
     </Dialog></Portal>
   </SafeAreaView>;
 }

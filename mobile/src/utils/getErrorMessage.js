@@ -1,14 +1,14 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
-  FINANCE_VALIDATION: "Thông tin tài chính không hợp lệ. Nạp từ 10.000 đến 10.000.000 VND, lý do từ 5 đến 500 ký tự.",
+  FINANCE_VALIDATION: "Thông tin giao dịch chưa hợp lệ. Vui lòng kiểm tra nội dung đã nhập.",
   INSUFFICIENT_BALANCE: "Số dư không đủ. Vui lòng nạp tiền vào ví để mua gói VIP.",
   ORDER_NOT_FOUND: "Không tìm thấy đơn nạp tiền.",
   ORDER_FINAL: "Đơn đã thành công hoặc bị từ chối, không thể sửa lại.",
   IDEMPOTENCY_CONFLICT: "Mã giao dịch đã được sử dụng. Vui lòng tải lại màn hình.",
-  BALANCE_LIMIT: "Số dư vượt giới hạn lưu trữ. Vui lòng liên hệ quản trị viên.",
+  BALANCE_LIMIT: "Không thể cập nhật số dư ví. Vui lòng liên hệ quản trị viên để kiểm tra.",
   PAYMENT_NOT_CONFIGURED: "Hệ thống chưa cấu hình SePay.",
-  GARDEN_LIMIT_REACHED: "Gói Free chỉ cho phép 3 cây trong vườn. Nâng cấp VIP để thêm cây.",
-  VIP_REQUIRED: "Nhận diện và chẩn đoán AI chỉ dành cho tài khoản VIP còn hạn.",
+  GARDEN_LIMIT_REACHED: "Tài khoản Free được thêm tối đa 3 cây trong vườn. Hãy lưu trữ một cây hoặc mua gói VIP để thêm cây mới.",
+  VIP_REQUIRED: "Nhận diện và chẩn đoán AI cần gói VIP còn hạn. Hãy vào Tài khoản → Tài khoản VIP để mua hoặc gia hạn gói.",
   FAQ_NOT_FOUND: "Không tìm thấy FAQ. Vui lòng tải lại danh sách.",
   FAQ_DUPLICATE: "Câu hỏi hoặc câu hỏi tương đương đã tồn tại trong FAQ khác.",
   FAQ_VERSION_CONFLICT: "FAQ đã được thay đổi. Hãy đóng form và tải lại danh sách trước khi thao tác.",
@@ -16,7 +16,7 @@ const ERROR_MESSAGES = {
   CARE_UNAVAILABLE: "Lịch đã dừng, cây đã lưu trữ hoặc đang điều trị. Vui lòng tải lại lịch.",
   CARE_NOT_FOUND: "Không tìm thấy lịch chăm sóc. Vui lòng tải lại lịch.",
   AI_INCOMPLETE_RESPONSE: "AI chưa hoàn tất câu trả lời. Vui lòng thử lại với câu hỏi cụ thể hơn.",
-  FAVORITE_LIMIT_REACHED: "Bạn đã đạt giới hạn 5 cây yêu thích của gói Free. Hãy bỏ một cây trước khi thêm cây mới.",
+  FAVORITE_LIMIT_REACHED: "Tài khoản Free được lưu tối đa 5 cây yêu thích. Hãy bỏ yêu thích một cây hoặc mua gói VIP để lưu thêm.",
   GOOGLE_NOT_CONFIGURED: "Chưa cấu hình đăng nhập Google. Vui lòng thử lại sau.",
   GOOGLE_TOKEN_INVALID: "Không xác minh được tài khoản Google. Vui lòng chọn tài khoản lại.",
   GOOGLE_FLOW_EXPIRED: "Phiên xác thực Google đã hết hạn. Vui lòng quay lại chọn tài khoản Google.",
@@ -80,6 +80,15 @@ const ERROR_MESSAGES = {
   FORBIDDEN: "Bạn không có quyền thực hiện thao tác này.",
   PAYLOAD_TOO_LARGE: "Dữ liệu gửi lên quá lớn.",
   INTERNAL_ERROR: "Máy chủ đang gặp sự cố. Vui lòng thử lại sau.",
+};
+
+const FINANCE_FIELD_MESSAGES = {
+  amount: "Số tiền phải là số nguyên từ 10.000 đến 10.000.000 đồng.",
+  reason: "Lý do phải có từ 5 đến 500 ký tự và không chứa ký tự không hợp lệ.",
+  plan: "Gói VIP được chọn không hợp lệ. Vui lòng tải lại danh sách gói.",
+  request_key: "Không thể xác nhận mã yêu cầu giao dịch. Vui lòng tải lại màn hình.",
+  page: "Trang giao dịch không hợp lệ. Vui lòng tải lại danh sách.",
+  status: "Trạng thái xử lý đơn không hợp lệ. Vui lòng tải lại đơn nạp.",
 };
 
 // Giữ allowlist hữu hạn cho backend đã triển khai nhưng chưa xác nhận rollout code.
@@ -160,6 +169,11 @@ export default function getErrorMessage(
   }
   const data = error?.response?.data;
   const code = data?.code || error?.code;
+  if (code === "FINANCE_VALIDATION" && data?.errors && typeof data.errors === "object") {
+    const field = Object.keys(FINANCE_FIELD_MESSAGES).find((key) =>
+      Object.prototype.hasOwnProperty.call(data.errors, key));
+    if (field) return FINANCE_FIELD_MESSAGES[field];
+  }
   if (code === "VALIDATION_ERROR" && typeof data?.errors?.phone === "string") {
     return data.errors.phone;
   }
