@@ -47,8 +47,19 @@ không quá 5 phút. Backend cần `SEPAY_WEBHOOK_SECRET`, `SEPAY_BANK_CODE`,
 `SEPAY_ACCOUNT_NUMBER`, `SEPAY_ACCOUNT_NAME`. Mã ngân hàng phải khớp giá trị `gateway`
 SePay gửi và được QR SePay hỗ trợ. Mã chuyển khoản là `PLANTIFY` + 16 ký tự hex.
 Bank details được chụp lại khi tạo đơn; sau khi cấu hình cần tạo đơn mới.
+Nếu dùng VA chính thức, giữ `SEPAY_ACCOUNT_NUMBER` là số tài khoản chính và thêm
+`SEPAY_VIRTUAL_ACCOUNT` là số VA nhận tiền. QR và trường `receiving_account` trả
+cho app dùng số VA; webhook phải đồng thời khớp `accountNumber` với tài khoản
+chính và `subAccount` với VA đã lưu trong đơn. Không dùng biến này cho mã TKP
+nội dung. Đơn cũ không tự đổi tài khoản nhận khi cập nhật `.env`.
 Không có cấu hình ngân hàng vẫn tạo được đơn để Admin duyệt, nhưng không có QR.
 Không có secret thì webhook từ chối xử lý. Không có khóa SePay nào đưa vào mobile.
+
+Nút Gửi thử của SePay gửi payload mẫu có `id: 0`: sau khi xác minh HMAC và định
+dạng, API trả `success: true`, `data.test: true`, `data.credited: false` và
+`data.status: test_received`. Bản thử không ghi MongoDB hoặc cộng ví, kể cả nội
+dung trùng mã đơn thật. Giao dịch thật cần ID số nguyên dương và phải khớp đầy đủ
+đơn nạp; các trường hợp cần đối soát có lý do riêng để Admin kiểm tra.
 
 Khi test local, dùng URL HTTPS ngrok trỏ tới backend port 5000 để SePay truy cập.
 Chọn sự kiện tiền vào, HMAC-SHA256, JSON và bật retry khi HTTP ngoài 2xx.
