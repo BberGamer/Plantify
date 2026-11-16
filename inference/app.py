@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, File, Request, UploadFile
+from fastapi import FastAPI, File, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException
 
 from .config import Settings
 from .predictor import InferenceError, PlantClassifier
+from .input_guard import InputGuard
 
 
 LOGGER = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ class UploadBodyLimit:
     # Mục đích: Chặn request ảnh vượt dung lượng trước khi đọc multipart.
     # Cách chạy: Kiểm tra Content-Length và đếm bytes thực nhận rồi chuyển body hợp lệ vào app.
     async def __call__(self, scope, receive, send):
-        if scope["type"] != "http" or scope["method"] != "POST" or scope["path"] != "/predict":
+        if scope["type"] != "http" or scope["method"] != "POST" or scope["path"] not in {"/predict", "/check-image"}:
             return await self.app(scope, receive, send)
         headers = dict(scope.get("headers", []))
         try:
@@ -73,7 +74,7 @@ class UploadBodyLimit:
 
 # Mục đích: Tạo API nhận diện ảnh.
 # Cách chạy: Chuẩn bị cấu hình, vòng đời model, giới hạn upload và các route xử lý lỗi.
-def create_app(settings=None, predictor_factory=PlantClassifier):
+def create_app(settings=None, predictor_factory=PlantClassifier, guard_factory=InputGuard):
     settings = settings or Settings.from_env()
 
     # Mục đích: Quản lý model theo vòng đời server.
@@ -82,12 +83,18 @@ def create_app(settings=None, predictor_factory=PlantClassifier):
     async def lifespan(app):
         app.state.classifier = await run_in_threadpool(predictor_factory, settings)
         try:
+            app.state.input_guard = await run_in_threadpool(guard_factory, settings)
+        except Exception:
+            LOGGER.exception("Bộ kiểm tra ảnh chưa sẵn sàng; /check-image sẽ trả 503.")
+        try:
             yield
         finally:
             app.state.classifier = None
+            app.state.input_guard = None
 
     app = FastAPI(title="Plantify Inference", version="1.0.0", lifespan=lifespan)
     app.state.classifier = None
+    app.state.input_guard = None
     app.add_middleware(UploadBodyLimit, max_bytes=settings.max_file_bytes + 64 * 1024)
 
     # Mục đích: Trả lỗi nghiệp vụ nhận diện.
@@ -125,24 +132,35 @@ def create_app(settings=None, predictor_factory=PlantClassifier):
         if classifier is None:
             raise InferenceError(503, "MODEL_NOT_READY", "Model chưa sẵn sàng.")
         return {"success": True, "message": "Model đã sẵn sàng.",
-                "data": {"status": "ready", "model": classifier.info}}
+                "data": {"status": "ready", "model": classifier.info,
+                         "input_guard": {"status": "ready" if app.state.input_guard else "unavailable",
+                                         "model": app.state.input_guard.info if app.state.input_guard else None}}}
 
     # Mục đích: Nhận ảnh và trả dự đoán model.
     # Cách chạy: Kiểm tra một file photo, gọi classifier trong thread và luôn đóng dữ liệu upload.
-    @app.post("/predict")
-    async def predict(request: Request, photo: UploadFile = File(description="Ảnh JPEG/PNG/WebP, tối đa 10 MiB")):
+    async def process_upload(request, photo, service, method, *args):
         form = await request.form()
         try:
             if len(form.multi_items()) != 1 or len(form.getlist("photo")) != 1:
                 raise InferenceError(422, "INVALID_UPLOAD", "Chỉ gửi đúng một file ảnh trong trường photo.")
-            classifier = app.state.classifier
-            if classifier is None:
-                raise InferenceError(503, "MODEL_NOT_READY", "Model chưa sẵn sàng.")
+            if service is None:
+                code = "INPUT_GUARD_NOT_READY" if method == "check" else "MODEL_NOT_READY"
+                raise InferenceError(503, code, "Model chưa sẵn sàng.")
             content = await photo.read(settings.max_file_bytes + 1)
-            data = await run_in_threadpool(classifier.predict, content, photo.content_type)
+            data = await run_in_threadpool(getattr(service, method), content, photo.content_type, *args)
             return {"success": True, "message": "Phân tích ảnh thành công.", "data": data}
         finally:
             await form.close()
+
+    @app.post("/predict")
+    async def predict(request: Request, photo: UploadFile = File(description="Ảnh JPEG/PNG/WebP, tối đa 10 MiB")):
+        return await process_upload(request, photo, app.state.classifier, "predict")
+
+    @app.post("/check-image")
+    async def check_image(request: Request, photo: UploadFile = File(),
+                          min_similarity: float = Query(gt=0, le=1),
+                          min_margin: float = Query(gt=0, le=1)):
+        return await process_upload(request, photo, app.state.input_guard, "check", min_similarity, min_margin)
 
     return app
 
