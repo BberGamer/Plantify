@@ -242,6 +242,31 @@ const getOwnedPlant = async (userId, plantId, session) => {
   return plant;
 };
 
+// Xác minh cả trạng thái và nội dung thật, kể cả bản ghi được nhập trực tiếp vào DB.
+const isUsableProtocol = async protocol => {
+  if (!protocol || protocol.status !== "approved") return false;
+  try {
+    const doc = protocol instanceof mongoose.Document ? protocol : new TreatmentProtocol(protocol);
+    await doc.validate();
+    return true;
+  } catch { return false; }
+};
+
+const findApprovedProtocols = (diseaseId, plantId) => TreatmentProtocol.find({
+  disease_id: diseaseId,
+  status: "approved",
+  ...(plantId ? { plant_ids: plantId } : {}),
+}).sort({ version: -1, updated_at: -1 }).lean();
+
+// Caller chẩn đoán đã kiểm tra bệnh và quan hệ cây; chỉ truy vấn phác đồ một lần.
+const hasApprovedProtocol = async (diseaseId, plantId) => {
+  v.id(diseaseId, "disease_id");
+  v.id(plantId, "plant_id");
+  const protocols = await findApprovedProtocols(diseaseId, plantId);
+  for (const protocol of protocols) if (await isUsableProtocol(protocol)) return true;
+  return false;
+};
+
 const getApprovedProtocols = async (diseaseId, plantId) => {
   v.id(diseaseId, "disease_id");
   if (plantId) v.id(plantId, "plant_id");
@@ -250,15 +275,9 @@ const getApprovedProtocols = async (diseaseId, plantId) => {
     .lean();
   if (!disease)
     throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy bệnh cây đang hoạt động.");
-  const filter = {
-    disease_id: diseaseId,
-    status: "approved",
-  };
-  if (plantId) filter.plant_ids = plantId;
-  const protocols = await TreatmentProtocol.find(filter)
-    .sort({ version: -1, updated_at: -1 })
-    .lean();
-  return { disease, protocols };
+  const protocols = await findApprovedProtocols(diseaseId, plantId);
+  const usable = await Promise.all(protocols.map(isUsableProtocol));
+  return { disease, protocols: protocols.filter((_, index) => usable[index]) };
 };
 
 const assertDiagnosis = async (diagnosisId, userId, diseaseId, session) => {
@@ -292,7 +311,7 @@ const generateSchedule = async (userId, input) => {
         plant_ids: plant.plant_id,
         status: "approved",
       }).session(session);
-      if (!protocol)
+      if (!await isUsableProtocol(protocol))
         throw new AppError(
           "APPROVED_PROTOCOL_NOT_FOUND",
           404,
@@ -866,6 +885,7 @@ const deprecateProtocol = async (id) => {
 };
 
 module.exports = {
+  hasApprovedProtocol,
   getApprovedProtocols,
   generateSchedule,
   getSchedule,

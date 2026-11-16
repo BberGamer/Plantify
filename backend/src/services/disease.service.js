@@ -17,6 +17,7 @@ const PATHOGEN_TYPES = [
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 const DISEASE_FIELDS = [
+  "diagnosis_aliases",
   "disease_name",
   "scientific_name",
   "pathogen_type",
@@ -180,6 +181,10 @@ const normalizeDiseaseInput = (input = {}) => {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     throw createError("Dữ liệu bệnh cây không hợp lệ.", 400);
   }
+  if (input.diagnosis_aliases !== undefined &&
+      (!Array.isArray(input.diagnosis_aliases) || input.diagnosis_aliases.length > 50 ||
+       input.diagnosis_aliases.some(x => typeof x !== "string" || !x.trim() || x.length > 200)))
+    throw createError("Tên đối chiếu chẩn đoán không hợp lệ.", 400);
 
   const requiredFields = ["disease_name", "typical_symptoms"];
   for (const field of requiredFields) {

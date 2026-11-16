@@ -13,6 +13,10 @@ from PIL import Image, ImageOps, ImageStat, UnidentifiedImageError
 
 from .config import Settings
 
+# Giữ decoder Pillow cho định dạng hỗ trợ trước khi Ultralytics vá Image.open
+# và thử import plugin HEIF cả với bytes hỏng.
+PILLOW_OPEN = Image.open
+
 
 LOGGER = logging.getLogger(__name__)
 ULTRALYTICS_VERSION = "8.4.198"
@@ -97,6 +101,7 @@ def verify_bundle(settings):
         raise ValueError("Mapping có folder trùng.")
     return weights, mapping, {
         "name": summary["model"], "run_id": run_id, "checkpoint": CHECKPOINT,
+        "sha256": checkpoint["sha256"],
         "checkpoint_epoch": epoch, "epochs_completed": completed,
         "classes": CLASS_COUNT, "image_size": IMAGE_SIZE,
     }
@@ -140,7 +145,7 @@ def image_quality(image):
 
 # Mục đích: Đọc và kiểm tra ảnh đầu vào.
 # Cách chạy: Kiểm tra bytes, định dạng, số pixel và ảnh động rồi trả ảnh đã chuẩn bị.
-def decode_image(content, content_type, settings):
+def decode_image(content, content_type, settings, *, prepare=True):
     if not content:
         raise InferenceError(400, "EMPTY_IMAGE", "Ảnh tải lên rỗng.")
     if len(content) > settings.max_file_bytes:
@@ -151,7 +156,7 @@ def decode_image(content, content_type, settings):
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
-            with Image.open(io.BytesIO(content)) as image:
+            with PILLOW_OPEN(io.BytesIO(content)) as image:
                 if image.format not in IMAGE_FORMATS or IMAGE_FORMATS[image.format] != mime:
                     raise InferenceError(415, "UNSUPPORTED_IMAGE", "Nội dung ảnh không khớp định dạng khai báo.")
                 if image.width * image.height > settings.max_image_pixels:
@@ -160,12 +165,12 @@ def decode_image(content, content_type, settings):
                     raise InferenceError(415, "ANIMATED_IMAGE", "Vui lòng gửi ảnh tĩnh.")
                 image.verify()
             # Mở lại sau verify để giải mã toàn bộ và xử lý EXIF từ ảnh gốc.
-            with Image.open(io.BytesIO(content)) as image:
+            with PILLOW_OPEN(io.BytesIO(content)) as image:
                 image.load()
                 oriented = ImageOps.exif_transpose(image)
                 dimensions = {"width": oriented.width, "height": oriented.height,
                               "quality": image_quality(oriented)}
-                prepared = prepare_image(oriented)
+                prepared = prepare_image(oriented) if prepare else oriented.convert("RGB")
         return prepared, dimensions
     except InferenceError:
         raise
@@ -245,6 +250,8 @@ class PlantClassifier:
                 })
             return {
                 "prediction": candidates[0], "top5": candidates,
+                # Đủ điểm theo đúng thứ tự class để backend gộp theo cây từ mapping DB.
+                "class_scores": [float(score) for score in probabilities.data],
                 "image": dimensions, "model": dict(self.info),
                 "processing_ms": round((time.perf_counter() - started) * 1000, 2),
             }

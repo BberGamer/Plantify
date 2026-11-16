@@ -8,6 +8,19 @@ const errorHandler = (err, req, res, next) => {
     return error(res, err.message, err.statusCode, {
       code: err.code,
       errors: err.errors,
+      ...(err.code === "DIAGNOSIS_INVALID_PHOTO"
+        ? {
+            data: {
+              status: "unrecognized",
+              result_status: "invalid_image",
+              reason: err.errors?.reason || err.code,
+              message: err.message,
+              prediction: null,
+              alternatives: [],
+              diagnosis_id: null,
+            },
+          }
+        : {}),
     });
   }
   if (

@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import api from "./api";
+import { adaptDiagnosisHistoryList } from "./listAdapters";
 import {
   getSessionContext,
   isSessionCurrent,
@@ -7,32 +8,34 @@ import {
 } from "./sessionAccess";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-// Mục đích: Báo ảnh hoặc kết quả không hợp lệ.
-// Cách chạy: Ném lỗi kèm code để hook chọn thông báo phù hợp.
 const invalid = (code = "DIAGNOSIS_INVALID_RESPONSE") => {
   throw Object.assign(new Error("Dữ liệu chẩn đoán không hợp lệ."), { code });
 };
-// Mục đích: Kiểm tra chuỗi có nội dung.
-// Cách chạy: Chỉ chấp nhận chuỗi còn ký tự sau khi bỏ khoảng trắng hai đầu.
 const text = (value) => typeof value === "string" && value.trim().length > 0;
-// Mục đích: Kiểm tra trường văn bản có thể thiếu.
-// Cách chạy: Chấp nhận null hoặc chuỗi.
 const optionalText = (value) => value === null || typeof value === "string";
-// Mục đích: Kiểm tra ID database có thể thiếu.
-// Cách chạy: Chấp nhận null hoặc chuỗi ObjectId gồm 24 ký tự hex.
 const optionalId = (value) =>
   value === null || (typeof value === "string" && /^[a-f\d]{24}$/i.test(value));
+const plantCandidateValid = (item) => item && optionalId(item.plant_id) && !!item.plant_id &&
+  text(item.plant_name) && text(item.display_name) && optionalText(item.scientific_name) &&
+  Number.isFinite(item.confidence) && item.confidence >= 0 && item.confidence <= 1;
 
-// Mục đích: Kiểm tra một gợi ý nhận diện.
-// Cách chạy: Đối chiếu ID nhãn, tên, điểm và các trường danh mục với kiểu dữ liệu yêu cầu.
+const historyValid = item => item && optionalId(item._id) && !!item._id &&
+  optionalId(item.plant_id) && optionalId(item.disease_id) &&
+  optionalText(item.plant_name) && optionalText(item.disease_name) && item.status === "identified" &&
+  (item.has_image === undefined || typeof item.has_image === "boolean") &&
+  (item.created_at === null || (typeof item.created_at === "string" && Number.isFinite(Date.parse(item.created_at))));
+const historyPath = id => {
+  if (!id || !optionalId(id)) invalid();
+  return `/diagnosis/history/${id}`;
+};
+
 const candidateValid = (item) =>
   item &&
   Number.isInteger(item.class_id) &&
   item.class_id >= 0 &&
-  item.class_id < 78 &&
   text(item.class_name) &&
-  text(item.display_name) &&
-  text(item.plant_name) &&
+  optionalText(item.display_name) &&
+  optionalText(item.plant_name) &&
   optionalText(item.disease_name) &&
   typeof item.is_healthy === "boolean" &&
   Number.isFinite(item.confidence) &&
@@ -41,113 +44,52 @@ const candidateValid = (item) =>
   optionalId(item.plant_id) &&
   optionalId(item.disease_id) &&
   optionalText(item.symptoms) &&
-  optionalText(item.care_advice);
+  optionalText(item.care_advice) &&
+  (item.treatment_available === undefined || typeof item.treatment_available === "boolean");
 
-// Mục đích: Chặn kết quả API sai hoặc mâu thuẫn.
-// Cách chạy: Kiểm tra metadata, top 5 và tính lại trạng thái từ chất lượng ảnh cùng ngưỡng.
-function validateResponse(envelope) {
+// Kiểm tra hợp đồng để render an toàn; không tính lại ngưỡng, margin hoặc trạng thái.
+export function validateResponse(envelope) {
   const data = envelope?.data;
-  if (
-    envelope?.success !== true ||
-    !["identified", "uncertain", "unrecognized"].includes(data?.status) ||
-    !text(data.message) ||
-    !Array.isArray(data.alternatives) ||
-    data.alternatives.length !== 5 ||
-    data.alternatives.some((item) => !candidateValid(item)) ||
-    (data.status === "identified"
-      ? !candidateValid(data.prediction)
-      : data.prediction !== null) ||
-    !Number.isInteger(data.image?.width) ||
-    data.image.width <= 0 ||
-    !Number.isInteger(data.image?.height) ||
-    data.image.height <= 0 ||
-    data.model?.classes !== 78 ||
-    data.model?.name !== "yolo26m-cls.pt" ||
-    data.model?.checkpoint !== "best_macro_f1.pt" ||
-    data.model?.image_size !== 384 ||
-    !text(data.model?.run_id) ||
-    !Number.isInteger(data.model?.checkpoint_epoch) ||
-    data.model.checkpoint_epoch < 1 ||
-    !Number.isInteger(data.model?.epochs_completed) ||
-    data.model.checkpoint_epoch > data.model.epochs_completed ||
-    !Number.isFinite(data.processing_ms) ||
-    data.processing_ms < 0 ||
-    !optionalId(data.diagnosis_id)
-  )
-    invalid();
-  const thresholds = data.thresholds;
-  if (
-    !thresholds ||
-    thresholds.calibrated !== false ||
-    ![
-      thresholds.min_confidence,
-      thresholds.min_margin,
-      thresholds.unrecognized_below,
-    ].every((value) => Number.isFinite(value) && value >= 0 && value <= 1) ||
-    thresholds.unrecognized_below >= thresholds.min_confidence
-  )
-    invalid();
-  const quality = data.image.quality;
-  const reasons = ["too_small", "too_dark", "too_bright", "low_detail"];
-  if (
-    !quality ||
-    typeof quality.usable !== "boolean" ||
-    !Array.isArray(quality.reasons) ||
-    quality.reasons.some((reason) => !reasons.includes(reason)) ||
-    quality.usable !== (quality.reasons.length === 0)
-  )
-    invalid();
-  if (
-    new Set(data.alternatives.map((item) => item.class_id)).size !== 5 ||
-    data.alternatives.some(
-      (item, index) =>
-        index > 0 &&
-        item.confidence > data.alternatives[index - 1].confidence + 1e-8,
-    ) ||
-    data.alternatives.reduce((sum, item) => sum + item.confidence, 0) > 1.001
-  )
-    invalid();
-  const top = data.alternatives[0];
-  const margin = top.confidence - data.alternatives[1].confidence;
-  // Không hiển thị kết luận nếu trạng thái server mâu thuẫn với bằng chứng gửi kèm.
-  const expected = !quality.usable
-    ? ["unrecognized", "poor_image_quality"]
-    : top.confidence < thresholds.unrecognized_below
-      ? ["unrecognized", "low_confidence"]
-      : margin + 1e-9 < thresholds.min_margin
-        ? ["uncertain", "ambiguous"]
-        : top.confidence < thresholds.min_confidence
-          ? ["uncertain", "low_confidence"]
-          : ["identified", "confident"];
-  if (data.status !== expected[0] || data.reason !== expected[1]) invalid();
-  if (
-    data.status === "identified" &&
-    [
-      "class_id",
-      "class_name",
-      "display_name",
-      "plant_name",
-      "disease_name",
-      "is_healthy",
-      "confidence",
-    ].some((key) => data.prediction[key] !== top[key])
-  )
-    invalid();
-  if (
-    data.status === "identified" &&
-    !data.prediction.is_healthy &&
-    data.prediction.plant_id &&
-    data.prediction.disease_id &&
-    !data.diagnosis_id
-  )
-    invalid();
-  return envelope;
+  const legacyStates = { identified: "accepted", uncertain: "uncertain", unrecognized: "uncertain" };
+  const state = data?.result_status ?? legacyStates[data?.status];
+  if (envelope?.success !== true || !["accepted", "uncertain", "invalid_image", "unsupported_image"].includes(state) ||
+      !text(data.message) || !text(data.reason) || !Array.isArray(data.alternatives) ||
+      !optionalId(data.diagnosis_id ?? null)) invalid();
+  if (state === "accepted") {
+    const prediction = data.prediction;
+    if (data.result_kind === "plant") {
+      if (!plantCandidateValid(prediction) || data.diagnosis_id != null) invalid();
+    } else if (!candidateValid(prediction) || !text(prediction.plant_name) || !text(prediction.display_name) ||
+        !prediction.plant_id || (!prediction.is_healthy && (!prediction.disease_id || !text(prediction.disease_name)))) invalid();
+  } else if (data.prediction !== null || data.diagnosis_id != null) invalid();
+  return { ...envelope, data: { ...data, result_status: state, diagnosis_id: data.diagnosis_id ?? null } };
 }
-
 export default {
-  // Mục đích: Gửi ảnh để chẩn đoán.
-  // Cách chạy: Kiểm tra ảnh/phiên, tạo multipart phù hợp nền tảng rồi gọi API và xác minh kết quả.
-  async analyze(photo, { sessionContext = getSessionContext(), signal, identification = false } = {}) {
+  async history({ page = 1, limit = 20 } = {}) {
+    const response = await api.get("/diagnosis/history", { params: { page, limit } });
+    const envelope = adaptDiagnosisHistoryList(response.data);
+    if (envelope.data.items.some(item => !historyValid(item))) invalid();
+    return envelope;
+  },
+  async historyDetail(id, { signal } = {}) {
+    const response = await api.get(historyPath(id), { signal });
+    if (response.data?.success !== true || !historyValid(response.data.data) || response.data.data._id !== id) invalid();
+    return response.data;
+  },
+  historyImageUrl(id) {
+    return api.getUri({ url: `${historyPath(id)}/image` });
+  },
+  async historyImage(id, { signal } = {}) {
+    return (await api.get(`${historyPath(id)}/image`, { signal, responseType: "blob" })).data;
+  },
+  async analyze(
+    photo,
+    {
+      sessionContext = getSessionContext(),
+      signal,
+      identification = false,
+    } = {},
+  ) {
     if (!photo || !text(photo.uri)) invalid("DIAGNOSIS_INVALID_PHOTO");
     if (photo.fileSize > 10 * 1024 * 1024) invalid("DIAGNOSIS_IMAGE_TOO_LARGE");
     if (!sessionContext?.token) throw sessionError("AUTH_REQUIRED");
@@ -155,6 +97,7 @@ export default {
       throw sessionError("SESSION_CHANGED");
     if (signal?.aborted)
       throw Object.assign(new Error(), { code: "ERR_CANCELED" });
+    if (photo.mimeType != null && typeof photo.mimeType !== "string") invalid("DIAGNOSIS_INVALID_PHOTO");
     let mime = photo.mimeType?.toLowerCase();
     if (mime === "image/jpg") mime = "image/jpeg";
     if (mime && !ALLOWED_TYPES.includes(mime))
@@ -200,12 +143,25 @@ export default {
       });
     }
     // Không để JSON header mặc định hoặc tự đặt boundary cho multipart.
-    const response = await api.post(identification ? "/identification" : "/diagnosis", body, {
-      signal,
-      sessionContext,
-      timeout: 30000,
-      headers: { "Content-Type": null },
-    });
+    let response;
+    try {
+      response = await api.post(
+        identification ? "/identification" : "/diagnosis",
+        body,
+        {
+          signal,
+          sessionContext,
+          timeout: 30000,
+          headers: { "Content-Type": null },
+        },
+      );
+    } catch (error) {
+      const rejected = error?.response?.data?.data;
+      if (rejected?.result_status === "invalid_image") {
+        error.diagnosisResult = validateResponse({ success: true, data: rejected }).data;
+      }
+      throw error;
+    }
     return validateResponse(response.data);
   },
 };
