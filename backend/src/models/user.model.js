@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema(
     notification_preferences: {
       treatment_reminders: { type: Boolean, default: true },
     },
+    isproaccount: { type: Boolean, default: false },
+    balance: { type: Number, default: 0, min: 0, max: Number.MAX_SAFE_INTEGER, validate: Number.isSafeInteger },
+    vip_plan: { type: String, enum: ["VIP1", "VIP3", "VIP12", null], default: null },
+    vip_expires_at: { type: Date, default: null },
     // Phan biet tai khoan dang ky qua Google va tai khoan email thuong
     isGoogleAccount: {
       type: Boolean,

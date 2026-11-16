@@ -8,9 +8,11 @@ import ProfileLogout from "./ProfileLogout";
 import Navbar from "../navigation/Navbar";
 import useProfile from "../../hooks/useProfile";
 import { colors } from "../../theme/colors";
+import { useFinanceSummary } from "../../hooks/useFinance";
 
-export default function ProfileContent({ onBack, showNavbar = false, onOpenFavorites }) {
+export default function ProfileContent({ onBack, showNavbar = false, onOpenFavorites, onOpenFinance }) {
   const profile = useProfile();
+  const finance = useFinanceSummary(profile.user?.role === "customer");
 
   return (
     <SafeAreaView
@@ -24,7 +26,7 @@ export default function ProfileContent({ onBack, showNavbar = false, onOpenFavor
         contentContainerStyle={[styles.content, showNavbar && styles.navContent]}
         showsVerticalScrollIndicator={false}
       >
-        <ProfileIdentity user={profile.user} />
+        <ProfileIdentity user={profile.user} finance={finance} />
         <ProfileDetails user={profile.user} editing={profile.editing}
           isLoggingOut={profile.isLoggingOut} startEditing={profile.startEditing}
           message={profile.message} form={profile.form} changeField={profile.changeField}
@@ -34,6 +36,21 @@ export default function ProfileContent({ onBack, showNavbar = false, onOpenFavor
           <List.Item title="Cây yêu thích của tôi" onPress={onOpenFavorites}
             disabled={profile.isLoggingOut} style={styles.favoriteLink}
             left={(props) => <List.Icon {...props} icon="heart-outline" color={colors.primary} />}
+            right={(props) => <List.Icon {...props} icon="chevron-right" color={colors.primary} />} />
+        </View>}
+        {onOpenFinance && <View style={styles.favorites}>
+          <Text variant="titleMedium" style={styles.sectionTitle}>Tài khoản VIP và Tài chính</Text>
+          <List.Item title="Tài khoản VIP" description={finance?.isproaccount ? `Đang sử dụng ${finance.vip_plan}` : "Xem quyền lợi và nâng cấp VIP"}
+            onPress={() => onOpenFinance("vip")} disabled={profile.isLoggingOut} style={styles.favoriteLink}
+            left={(props) => <List.Icon {...props} icon="crown-outline" color="#A47820" />}
+            right={(props) => <List.Icon {...props} icon="chevron-right" color={colors.primary} />} />
+          <List.Item title="Ví tiền" description={finance ? `Số dư: ${finance.balance.toLocaleString("vi-VN")} ₫` : "Số dư và nạp tiền"}
+            onPress={() => onOpenFinance("wallet")} disabled={profile.isLoggingOut} style={styles.favoriteLink}
+            left={(props) => <List.Icon {...props} icon="wallet-outline" color={colors.primary} />}
+            right={(props) => <List.Icon {...props} icon="chevron-right" color={colors.primary} />} />
+          <List.Item title="Lịch sử giao dịch" description="Đơn nạp, mua VIP và các thay đổi số dư"
+            onPress={() => onOpenFinance("history")} disabled={profile.isLoggingOut} style={styles.favoriteLink}
+            left={(props) => <List.Icon {...props} icon="history" color={colors.primary} />}
             right={(props) => <List.Icon {...props} icon="chevron-right" color={colors.primary} />} />
         </View>}
         <ProfileLogout isLoggingOut={profile.isLoggingOut} saving={profile.saving}

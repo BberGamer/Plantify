@@ -6,6 +6,7 @@ export default function CustomerProfileRoute() {
   const router = useRouter();
   return (
     <ProfileContent onBack={() => router.navigate("/customer/home")} showNavbar
-      onOpenFavorites={() => router.push("/customer/favorites")} />
+      onOpenFavorites={() => router.push("/customer/favorites")}
+      onOpenFinance={(section) => router.push({ vip: "/customer/vip", wallet: "/customer/wallet", history: "/customer/transactions" }[section])} />
   );
 }

@@ -1,4 +1,4 @@
-﻿# Plantify
+# Plantify
 
 Ứng dụng chăm sóc cây gồm mobile React Native/Expo và REST API Node.js/Express, lưu dữ liệu bằng MongoDB. Có ba vai trò `customer`, `manager`, `admin`; khu vực quản trị nằm trong ứng dụng mobile, chưa có web CMS riêng.
 
@@ -14,11 +14,82 @@ Chat hiện có thêm tra cứu bộ câu hỏi–đáp chuẩn trong MongoDB co
 Chỉ bản ghi `approved`, ngôn ngữ `vi` được sử dụng; câu khớp chính xác hoặc alias
 trả nguyên đáp án, câu khác gọi AI như trước.
 
+### Tài khoản VIP và Tài chính
+
+Trong Profile, Customer có ba mục riêng: **Tài khoản VIP** để xem quyền lợi và mua
+gói, **Ví tiền** để xem số dư và tạo đơn nạp, **Lịch sử giao dịch** để xem biến động
+số dư, lọc giao dịch và tra cứu chi tiết đơn nạp. Lịch sử không hiển thị trong màn
+VIP hoặc Ví tiền. Các gói gồm VIP1 (50.000 VND/30 ngày), VIP3 (120.000 VND/90 ngày),
+VIP12 (499.000 VND/365 ngày).
+Giá và thời hạn hiện cố định trong `backend/src/utils/vip.js`.
+Ngày kích hoạt là ngày thứ nhất, hết hạn ở 00:00 ngày kế tiếp ngày cuối theo UTC+7.
+Mua thêm nối tiếp kỳ VIP còn hạn; không tự gia hạn hoặc tự trừ ví khi hết hạn.
+Free giới hạn 3 cây đang hoạt động trong vườn, 5 cây yêu thích, không được gọi AI
+nhận diện/chẩn đoán. VIP mở các giới hạn này. Hết VIP giữ dữ liệu, áp dụng lại Free.
+Profile VIP có nền xanh đậm, viền avatar vàng, tên gói và ngày hết hạn lấy từ API.
+
+Nạp ví từ 10.000 đến 10.000.000 VND/lần; đơn pending có hạn chuyển khoản 15 phút.
+Admin có tab **Tài chính** để lọc đơn/giao dịch, duyệt hoặc từ chối đơn pending,
+và cộng ví thủ công cho Customer với lý do bắt buộc. Giao dịch lưu trong
+`wallet_transactions`, đơn trong `topup_orders`, giao dịch ngân hàng trong `payment_events`.
+Một đơn chỉ được cộng một lần kể cả Admin duyệt và webhook đến đồng thời.
+Đơn success/rejected không có API sửa hoặc xóa. Các lần điều chỉnh là giao dịch mới.
+
+API có prefix `/api/v1/commerce` (cũng hỗ trợ `/api/commerce`):
+`GET /me`, `GET/POST /orders`, `GET /orders/:id`, `GET /transactions`,
+`POST /vip/purchase`; Admin: `GET /admin/orders`, `GET /admin/transactions`,
+`GET /admin/events`, `PATCH /admin/orders/:id`, `POST /admin/adjustments`.
+Các thao tác POST dùng `request_key` để retry không cộng/trừ tiền lặp.
+
+Webhook: `POST /api/v1/commerce/payment/webhook/sepay`, JSON và HMAC-SHA256 trên
+`timestamp.raw_body`, header `X-SePay-Timestamp`/`X-SePay-Signature`, timestamp lệch
+không quá 5 phút. Backend cần `SEPAY_WEBHOOK_SECRET`, `SEPAY_BANK_CODE`,
+`SEPAY_ACCOUNT_NUMBER`, `SEPAY_ACCOUNT_NAME`. Mã ngân hàng phải khớp giá trị `gateway`
+SePay gửi và được QR SePay hỗ trợ. Mã chuyển khoản là `PLANTIFY` + 16 ký tự hex.
+Bank details được chụp lại khi tạo đơn; sau khi cấu hình cần tạo đơn mới.
+Nếu dùng VA chính thức, giữ `SEPAY_ACCOUNT_NUMBER` là số tài khoản chính và thêm
+`SEPAY_VIRTUAL_ACCOUNT` là số VA nhận tiền. QR và trường `receiving_account` trả
+cho app dùng số VA; webhook phải đồng thời khớp `accountNumber` với tài khoản
+chính và `subAccount` với VA đã lưu trong đơn. Không dùng biến này cho mã TKP
+nội dung. Đơn cũ không tự đổi tài khoản nhận khi cập nhật `.env`.
+Không có cấu hình ngân hàng vẫn tạo được đơn để Admin duyệt, nhưng không có QR.
+Không có secret thì webhook từ chối xử lý. Không có khóa SePay nào đưa vào mobile.
+
+Nút Gửi thử của SePay gửi payload mẫu có `id: 0`: sau khi xác minh HMAC và định
+dạng, API trả `success: true`, `data.test: true`, `data.credited: false` và
+`data.status: test_received`. Bản thử không ghi MongoDB hoặc cộng ví, kể cả nội
+dung trùng mã đơn thật. Giao dịch thật cần ID số nguyên dương và phải khớp đầy đủ
+đơn nạp; các trường hợp cần đối soát có lý do riêng để Admin kiểm tra.
+
+Khi test local, dùng URL HTTPS ngrok trỏ tới backend port 5000 để SePay truy cập.
+Chọn sự kiện tiền vào, HMAC-SHA256, JSON và bật retry khi HTTP ngoài 2xx.
+Tiền sai, chuyển muộn, không có mã đơn hoặc đơn rejected được lưu để đối soát;
+không tự cấp VIP/hoàn tiền. Admin đối chiếu và tạo điều chỉnh có lý do nếu cần.
+Chưa có tự động gọi API SePay để bù webhook thất lạc; dùng gửi lại từ dashboard.
+
+MongoDB phải hỗ trợ transaction (Atlas hoặc replica set). Giao dịch tiền dùng
+transaction, cập nhật số dư có điều kiện, unique index và idempotency. Đảm bảo backend có quyền tạo
+index; không tự sửa balance/isproaccount từ MongoDB Compass. User cũ thiếu các field
+được hiểu là số dư 0 và Free; các field được lưu khi phát sinh giao dịch.
+Không dùng bộ đếm revision trên user. Ví dùng `$inc` có điều kiện số dư/giới hạn số
+nguyên an toàn; cộng đơn nạp chỉ sau khi nhận được trạng thái pending. Unique index
+trên giao dịch của đơn là lớp chống cộng trùng bổ sung. Request tài chính chỉ nhận
+các trường được phép, từ chối giá/số dư/trạng thái do client tự chèn vào sai endpoint.
+Vườn Free sử dụng slot 0–2 (chỉ cây chưa lưu trữ), yêu thích Free dùng slot 0–4.
+Bản ghi cũ hoặc được tạo khi VIP không có slot vẫn chiếm hạn mức khi về Free.
+Slot được giữ bởi unique index, có retry khi hai request cùng chọn một slot;
+không sửa dữ liệu cũ để đánh lại số slot hoặc xóa cây khi hết VIP.
+Khởi động backend sẽ đồng bộ cờ VIP hết hạn mỗi phút; API luôn kiểm tra ngày hết hạn.
+
+SePay/ngrok thực tế phải cấu hình và kiểm thử riêng trước khi nhận tiền thật.
+
 ### Cây yêu thích của customer
 
 Trong danh mục hoặc chi tiết cây, customer bấm trái tim để lưu/bỏ yêu thích. Tại **Tài khoản → Cây yêu thích của tôi**, có tổng số cây, chỉnh sửa danh sách, xem chi tiết, thêm vào vườn qua form hiện có và khám phá thêm cây. Dữ liệu lưu theo tài khoản trong `favorite_plants`; cây bị ẩn/xóa không hiển thị trong danh sách.
 
-Theo BR-25 trong Report 3, tài khoản Free lưu tối đa 5 cây. Hiện chưa có hệ thống xác thực gói Pro nên backend áp dụng hạn mức Free cho mọi customer. Unique index theo tài khoản/slot bảo vệ các yêu cầu thêm đồng thời; dữ liệu cũ vẫn được tính vào hạn mức. Backend cần quyền tạo index MongoDB. Chưa triển khai mua/nâng cấp Pro.
+Theo BR-25 trong Report 3, tài khoản Free lưu tối đa 5 cây; VIP còn hạn không giới hạn.
+Backend kiểm tra gói từ database, dùng slot với unique index trong transaction để chống vượt hạn mức
+khi thêm đồng thời; dữ liệu cũ vẫn được tính vào hạn mức. Backend cần quyền tạo index MongoDB.
 
 API customer đang hoạt động: `GET /api/favorites/plants` (page/limit), `GET /api/favorites/plants/status?ids=...`, `PUT /api/favorites/plants/:plantId`, `DELETE /api/favorites/plants/:plantId`. PUT/DELETE có thể gọi lại an toàn; vượt hạn mức trả 409 với code `FAVORITE_LIMIT_REACHED`.
 
@@ -37,7 +108,7 @@ Kiểm tra chức năng: chạy `node --test tests/garden-create.test.cjs` trong
 ## Chẩn đoán ảnh thật (cập nhật 10/11/2026)
 
 Luồng đã nối: **chụp/chọn ảnh → mobile → `POST /api/diagnosis` → Python YOLO → kết quả**.
-Backend xác thực customer đang hoạt động trước khi nhận ảnh. Ảnh JPEG/PNG/WebP tĩnh,
+Backend xác thực customer đang hoạt động và VIP còn hạn trước khi nhận ảnh. Ảnh JPEG/PNG/WebP tĩnh,
 tối đa 10 MiB và 25 megapixel, được chuyển nguyên bytes/EXIF sang Python; không lưu
 ảnh hoặc kết quả chẩn đoán vào database. Model nạp một lần từ
 `inference/model/weights/best_macro_f1.pt`, đúng 78 class và pad 384×384 của notebook.

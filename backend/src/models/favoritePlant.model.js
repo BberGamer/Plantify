@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const favoritePlantSchema = new mongoose.Schema({
   user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   plant_id: { type: mongoose.Schema.Types.ObjectId, ref: "Plant", required: true },
-  free_slot: { type: Number, min: 0, max: 4 },
+  free_slot: { type: Number, min: 0, max: 4, validate: Number.isInteger },
 }, { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } });
 
 favoritePlantSchema.index({ user_id: 1, plant_id: 1 }, { unique: true });

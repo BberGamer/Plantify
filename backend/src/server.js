@@ -11,6 +11,12 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   await connectDB();
+  const expireVip = () => require("./models/user.model").updateMany(
+    { isproaccount: true, vip_expires_at: { $lte: new Date() } },
+    { $set: { isproaccount: false } },
+  ).catch(() => console.error("[VIP] Không đồng bộ được trạng thái hết hạn."));
+  await expireVip();
+  setInterval(expireVip, 60000).unref();
   app.listen(PORT, () => {
     console.log(`[Server] Plantify API dang chay tai port ${PORT}`);
     console.log(`[Server] Moi truong: ${process.env.NODE_ENV || 'development'}`);

@@ -7,6 +7,7 @@ const plantRoutes = require("./plant.routes");
 const diseaseRoutes = require("./disease.routes");
 
 router.use("/auth", authRoutes);
+router.use("/commerce", require("./finance.routes"));
 router.use("/users", userRoutes);
 router.use("/admin/users", userRoutes);
 router.use("/plants", plantRoutes);
