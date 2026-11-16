@@ -1,5 +1,14 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
+  FINANCE_VALIDATION: "Thông tin tài chính không hợp lệ. Nạp từ 10.000 đến 10.000.000 VND, lý do từ 5 đến 500 ký tự.",
+  INSUFFICIENT_BALANCE: "Số dư không đủ. Vui lòng nạp tiền vào ví để mua gói VIP.",
+  ORDER_NOT_FOUND: "Không tìm thấy đơn nạp tiền.",
+  ORDER_FINAL: "Đơn đã thành công hoặc bị từ chối, không thể sửa lại.",
+  IDEMPOTENCY_CONFLICT: "Mã giao dịch đã được sử dụng. Vui lòng tải lại màn hình.",
+  BALANCE_LIMIT: "Số dư vượt giới hạn lưu trữ. Vui lòng liên hệ quản trị viên.",
+  PAYMENT_NOT_CONFIGURED: "Hệ thống chưa cấu hình SePay.",
+  GARDEN_LIMIT_REACHED: "Gói Free chỉ cho phép 3 cây trong vườn. Nâng cấp VIP để thêm cây.",
+  VIP_REQUIRED: "Nhận diện và chẩn đoán AI chỉ dành cho tài khoản VIP còn hạn.",
   FAQ_NOT_FOUND: "Không tìm thấy FAQ. Vui lòng tải lại danh sách.",
   FAQ_DUPLICATE: "Câu hỏi hoặc câu hỏi tương đương đã tồn tại trong FAQ khác.",
   FAQ_VERSION_CONFLICT: "FAQ đã được thay đổi. Hãy đóng form và tải lại danh sách trước khi thao tác.",
