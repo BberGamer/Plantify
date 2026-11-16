@@ -22,9 +22,12 @@ const userPlantSchema = new mongoose.Schema(
     is_under_treatment: { type: Boolean, default: false },
     acquisition_date: { type: Date, default: null },
     archived_at: { type: Date, default: null },
+    free_slot: { type: Number, min: 0, max: 2, validate: Number.isInteger },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );
 
 userPlantSchema.index({ user_id: 1, archived_at: 1, created_at: -1, _id: -1 });
+userPlantSchema.index({ user_id: 1, free_slot: 1 }, { unique: true,
+  partialFilterExpression: { free_slot: { $type: "number" }, archived_at: null } });
 module.exports = mongoose.model("UserPlant", userPlantSchema, "user_plants");
