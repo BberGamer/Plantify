@@ -1,6 +1,7 @@
 import { Image, StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { colors, spacing, typography } from "../../theme";
+import DiseaseDetails from "./DiseaseDetails";
 
 export default function DiagnosisResult({
   photo,
@@ -37,6 +38,7 @@ export default function DiagnosisResult({
         <Text style={styles.title} accessibilityRole="header">
           {title}
         </Text>
+        {hasDisease && <DiseaseDetails disease={prediction.disease_details} />}
         {!identified && (
           <Text style={styles.body} accessibilityRole="alert">
             {result.message}

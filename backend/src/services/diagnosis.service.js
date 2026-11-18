@@ -179,7 +179,7 @@ const createCatalogEnricher = ({
       plantModel.findOne({ _id: mapping.plant_id, is_published: true })
         .select("_id common_name common_disease_ids care_requirements").lean(),
       entry.is_healthy ? null : diseaseModel.findOne({ _id: mapping.disease_id, status: "active" })
-        .select("_id disease_name typical_symptoms content_status").lean(),
+        .select("_id catalog_key identity_sources content_status disease_name scientific_name diagnosis_aliases pathogen_type typical_symptoms environmental_cause disease_image_url status treatment_protocol created_at __v").lean(),
     ]);
     if (!hasText(plant?.common_name) || (!entry.is_healthy &&
         (!hasText(disease?.disease_name) || !Array.isArray(plant.common_disease_ids) ||
@@ -196,6 +196,10 @@ const createCatalogEnricher = ({
       display_name: disease ? `${plant.common_name} - ${disease.disease_name}` : plant.common_name,
       symptoms: disease?.content_status === "verified" ? disease.typical_symptoms || null : null,
       content_status: disease?.content_status || "unverified",
+      disease_details: disease ? {
+        ...disease,
+        _id: String(disease._id),
+      } : null,
       treatment_available: treatmentAvailable,
       care_advice: careText(plant.care_requirements),
     };
