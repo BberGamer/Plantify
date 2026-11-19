@@ -156,9 +156,8 @@ API chấm CCC đã được gỡ; chat không đọc file kiến thức hoặc 
 Bộ [30 test case, đo thời gian và xuất CSV](backend/CHAT_TEST_REPORT.md)
 hỗ trợ báo cáo thủ công trước/sau.
 
-Chat hiện có thêm tra cứu bộ câu hỏi–đáp chuẩn trong MongoDB collection `chat_faqs`.
-Chỉ bản ghi `approved`, ngôn ngữ `vi` được sử dụng; câu khớp chính xác hoặc alias
-trả nguyên đáp án, câu khác gọi AI như trước.
+Chat sử dụng RAG + LLM: truy xuất kiến thức cây, bệnh và phác đồ từ MongoDB,
+đưa trích đoạn vào prompt cho model trả lời. Xem phần Chat RAG bên dưới.
 
 ### Tài khoản VIP và Tài chính
 
@@ -328,37 +327,51 @@ trong phần luồng chẩn đoán của README này.
 
 ## Tiến độ hiện tại
 
-### Quản trị FAQ chat (15/11/2026)
+### Chat RAG + LLM (19/11/2026)
 
-Manager có tab **FAQ** với hai ô: **Tất cả** đọc FAQ tiếng Việt từ `chat_faqs`,
-**Chat người dùng** đọc các lượt câu hỏi–trả lời từ `chat_turns` (không phải `chat_turn`).
-Giữ nút **Tạo FAQ**; bỏ hai bộ lọc Nháp/Đã duyệt trên danh sách. Cả hai nguồn có
-tìm kiếm và phân trang riêng theo ô đang chọn; lượt chat hiển thị câu hỏi, câu trả lời,
-nguồn trả lời, thời gian và mã người dùng, chỉ xem, không tự chuyển thành FAQ.
-Ô Tất cả có thao tác **Sửa** và **Xóa** (thay nút Xem/Duyệt). Xóa cần xác nhận,
-xóa vĩnh viễn đúng FAQ và giữ nguyên lịch sử chat; danh sách tải lại sau khi xóa.
-API `DELETE /api/chat-faqs/manager/:id` nhận body `{ version }`, kiểm tra quyền và
-phiên bản hiện tại trước khi xóa. API duyệt/gỡ duyệt vẫn giữ cho caller hiện có.
-Câu hỏi chính tối đa 1000 ký tự, câu trả lời
-tối đa 12000 ký tự, tối đa 30 câu hỏi tương đương. Tạo mới luôn lưu nháp; sửa FAQ
-đã duyệt sẽ chuyển về nháp. Manager mở **Xem / Duyệt** để đọc toàn bộ nội dung và
-xác nhận duyệt, hoặc **Xem / Gỡ duyệt** để ngừng sử dụng trong chat.
+Đã gỡ cơ chế/API/màn quản lý FAQ; không đọc `chat_faqs`, không dùng `AI_FAQ_ENABLED`.
+Giữ lịch sử `chat_turns` cũ; enum `faq` chỉ để tương thích lịch sử.
+Manager có tab **Chat** xem/tìm/phân trang chat người dùng qua
+`GET /api/chat/manager/turns`, kiểm tra vai trò và trạng thái từ DB.
+Kiến thức tiếp tục được quản lý ở các tab Cây trồng, Bệnh cây, Điều trị.
 
-API nằm dưới `/api/chat-faqs/manager`: `GET /`, `GET /:id`, `POST /`, `PUT /:id`,
-`PATCH /:id/approve`, `PATCH /:id/unapprove`. Cập nhật/duyệt/gỡ duyệt yêu cầu
-`version` hiện tại, tránh ghi đè hoặc duyệt nhầm nội dung đã bị người khác sửa.
-Backend xác minh tài khoản hoạt động và quyền Manager/Admin từ database.
-`GET /api/chat-faqs/manager/chat-turns` đọc các lượt chat cho khu vực quản lý,
-tìm theo câu hỏi/câu trả lời, phân trang và không trả metadata nội bộ của prompt.
-FAQ cũ thiếu version hoặc lưu version không phải số nguyên dương được hiển thị là
-phiên bản 1; lần sửa/duyệt tiếp theo lưu phiên bản số, đối chiếu nguyên giá trị cũ
-trong thao tác cập nhật nguyên tử. Không cần sửa hàng loạt dữ liệu MongoDB trước.
+Luồng chat: xác thực → đọc danh mục hiện tại → chia đoạn → xếp hạng BM25 → đưa
+tối đa 6 đoạn/12.000 ký tự vào prompt → gọi LLM hiện có. Đây là RAG từ khóa,
+chuẩn hóa tiếng Việt không dấu; chưa có embedding/vector search hoặc reranker ngữ nghĩa.
+Không thêm dependency, dịch vụ vector hoặc migration. Tên cây/tên khoa học/alias giới hạn
+nguồn theo cây; câu nối tiếp ngắn có thể kế thừa chủ thể từ câu hỏi người dùng gần nhất.
+Lịch sử AI không phải nguồn kiến thức đã xác minh.
 
-Câu hỏi/alias được kiểm tra trùng bằng cùng quy tắc chuẩn hóa mà chat sử dụng.
-Unique sparse multikey index `match_keys` bảo vệ ghi đồng thời cho các FAQ quản lý
-mới/cập nhật; cần quyền tạo index MongoDB. FAQ cũ được đối chiếu khi thao tác nhưng
-không tự sửa/import dữ liệu cũ. Chat tiếp tục chỉ dùng FAQ `approved`, `language=vi`;
-`AI_FAQ_ENABLED=false` vẫn tắt tra cứu FAQ. Nguồn tham khảo đã có được giữ nguyên.
+Nguồn: `plants.is_published=true`; `plant_diseases.status=active` và
+`content_status=verified`; phác đồ `approved`, không phải `ai_unverified`, qua validation
+schema, thuộc bệnh đã xác minh và còn liên kết với cây xuất bản. Không dùng trường
+`disease.treatment_protocol` legacy làm nguồn thuốc/liều lượng. Không đọc dữ liệu cá nhân
+của vườn/tài khoản/ví cho RAG. Đọc lại danh mục mỗi lượt để phản ánh thay đổi/gỡ duyệt.
+Giới hạn 2.000 bản ghi mỗi loại và 20.000 đoạn; vượt giới hạn hoặc DB lỗi trả
+`CHAT_RETRIEVAL_UNAVAILABLE` (503), không âm thầm gọi model khi truy xuất bị lỗi.
+
+Không có nguồn phù hợp: model phải nói thiếu dữ liệu Plantify, có thể giải thích chăm sóc
+chung nhưng không tự tạo thuốc/liều lượng/phác đồ. Nguồn bệnh không phải chẩn đoán cho
+người dùng. Chat không tạo hoặc áp dụng lịch điều trị. Prompt yêu cầu dẫn nguồn `[1]`,
+`[2]`; server chặn số nguồn không tồn tại. Prompt không thay thế kiểm chứng chuyên môn.
+
+Response/lịch sử có `sources` (số nguồn, loại, ID, tiêu đề, phần trích, phiên bản/thời điểm,
+hash nội dung); `answer_source=rag` khi có nguồn, `model` khi không có nguồn.
+Mobile hiển thị tài liệu đã tra cứu dưới câu trả lời, kể cả tải lại lịch sử.
+Đây là tài liệu truy xuất, không bảo đảm model dùng đúng từng đoạn.
+CSV thêm nguồn/trạng thái retrieval; prompt hash bao gồm dữ liệu truy xuất.
+Giữ cấu hình `AI_API_KEY`, `AI_MODEL`, `AI_BASE_URL`, `AI_TIMEOUT_MS` hiện có.
+Khởi động lại backend và tải lại Expo sau cập nhật.
+
+Kiểm tra local (mock DB/provider, không chứng minh chất lượng model thực tế):
+
+```powershell
+cd backend
+npx.cmd --no-install jest --runInBand src/services/__tests__/chat-rag-api.test.js src/services/__tests__/chat-rag-retrieval.test.js
+```
+
+Test RAG mới ở `src/services/__tests__/`, không thuộc ignore của `tests/` hiện có.
+Cần kiểm thử thêm MongoDB thật, model thật và thiết bị trước triển khai.
 
 ### Trang chủ theo tài khoản (15/11/2026)
 
