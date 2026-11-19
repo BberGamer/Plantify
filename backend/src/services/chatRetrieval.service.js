@@ -35,10 +35,13 @@ const split = (text, size = 1600) => {
 
 const buildDocuments = async (plants, diseases, protocols, validProtocol) => {
   const published = plants.filter((plant) => plant.is_published === true);
-  const verified = diseases.filter((disease) => disease.status === "active" && disease.content_status === "verified");
+  const activeDiseases = diseases.filter((disease) => disease.status === "active");
+  const verified = activeDiseases.filter((disease) => disease.content_status === "verified");
   const plantMap = new Map(published.map((plant) => [String(plant._id), plant]));
-  const diseaseMap = new Map(verified.map((disease) => [String(disease._id), disease]));
+  // Duyệt phác đồ độc lập với xác minh mô tả bệnh; chỉ dùng bệnh active để nối tên/ID.
+  const diseaseMap = new Map(activeDiseases.map((disease) => [String(disease._id), disease]));
   const documents = [];
+  const protocolCatalog = [];
   const add = (type, row, title, plantIds, names, sections) => {
     for (const [section, value] of sections) {
       const text = textOf(value).trim();
@@ -71,6 +74,11 @@ const buildDocuments = async (plants, diseases, protocols, validProtocol) => {
       .filter((plant) => plant && (plant.common_disease_ids || []).some((id) => String(id) === String(protocol.disease_id)));
     if (!disease || !related.length || !await validProtocol(protocol)) continue;
     const title = `${protocol.protocol_name} — ${disease.disease_name} — ${related.map((plant) => plant.common_name).join(", ")}`;
+    protocolCatalog.push({ id: String(protocol._id), title, version: protocol.version,
+      updated_at: protocol.updated_at || protocol.created_at || null,
+      disease: { id: String(disease._id), name: disease.disease_name },
+      plants: related.map((plant) => ({ id: String(plant._id), name: plant.common_name })),
+    });
     const safety = textOf(protocol.safety_guidelines);
     const sections = [
       ["Tổng quan phác đồ", `${protocol.description}\nThời lượng: ${protocol.duration_days} ngày.\nHướng dẫn đã duyệt: ${textOf(protocol.approved_instructions)}\nAn toàn: ${safety}`],
@@ -82,7 +90,41 @@ const buildDocuments = async (plants, diseases, protocols, validProtocol) => {
     add("protocol", protocol, title, related.map((plant) => String(plant._id)),
       [protocol.protocol_name, disease.disease_name], sections);
   }
-  return { documents, plants: published };
+  return { documents, plants: published, protocolCatalog };
+};
+
+const isProtocolListing = (message) => {
+  const query = normalize(message);
+  return /\b(phac do|dieu tri)\b/.test(query) &&
+    /\b(cay nao|loai nao|nhung cay|nhung loai|cac loai cay|danh sach|liet ke|tat ca|toan bo|bao nhieu)\b/.test(query);
+};
+
+// Câu hỏi liệt kê cần tổng hợp toàn bộ danh mục, không dùng top-k đoạn văn.
+const protocolListing = (corpus, message) => {
+  const query = normalize(message);
+  const ids = /\b(tat ca|toan bo)\b/.test(query) ? [] : namedPlants(message, corpus.plants);
+  const entries = corpus.protocolCatalog.filter((entry) => !ids.length || entry.plants.some((plant) => ids.includes(plant.id)));
+  const sources = entries.map((entry, index) => ({ number: index + 1, type: "protocol", id: entry.id,
+    title: entry.title, section: "Danh mục cây và bệnh áp dụng", version: entry.version,
+    updated_at: entry.updated_at, content_hash: hash(JSON.stringify(entry)),
+  }));
+  const groups = new Map();
+  entries.forEach((entry, index) => {
+    for (const plant of entry.plants) {
+      if (ids.length && !ids.includes(plant.id)) continue;
+      if (!groups.has(plant.id)) groups.set(plant.id, { name: plant.name, diseases: new Map() });
+      const diseases = groups.get(plant.id).diseases;
+      if (!diseases.has(entry.disease.id)) diseases.set(entry.disease.id, { name: entry.disease.name, sources: [] });
+      diseases.get(entry.disease.id).sources.push(index + 1);
+    }
+  });
+  const rows = [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, "vi"));
+  const catalogReply = rows.length
+    ? `Plantify hiện có ${entries.length} phác đồ đã duyệt hợp lệ, áp dụng cho ${rows.length} loại cây${ids.length ? " trong các cây bạn hỏi" : ""}:\n` +
+      rows.map((plant, index) => `${index + 1}. ${plant.name}: ${[...plant.diseases.values()]
+        .map((disease) => `${disease.name} ${disease.sources.map((number) => `[${number}]`).join(" ")}`).join("; ")}`).join("\n")
+    : "Plantify hiện chưa có phác đồ đã duyệt hợp lệ cho các cây trong phạm vi tra cứu.";
+  return { sources, content: JSON.stringify(entries), method: "catalog", status: rows.length ? "matched" : "no_match", catalogReply };
 };
 
 const namedPlants = (message, plants) => {
@@ -93,6 +135,7 @@ const namedPlants = (message, plants) => {
 };
 
 const rank = (documents, message, history = [], plants = []) => {
+  const treatmentIntent = /\b(phac do|dieu tri|chua benh|tri benh|thuoc|lieu luong|giai doan)\b/.test(normalize(message));
   const current = new Set(tokens(message));
   if (!current.size) return [];
   let plantIds = namedPlants(message, plants);
@@ -122,7 +165,9 @@ const rank = (documents, message, history = [], plants = []) => {
         (count + 1.2 * (0.25 + 0.75 * words.length / (average || 1)));
     }
     return { ...doc, score: hits ? score : 0 };
-  }).filter((doc) => doc.score > 0).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+  }).filter((doc) => doc.score > 0).sort((a, b) =>
+    (treatmentIntent ? Number(b.type === "protocol") - Number(a.type === "protocol") : 0) ||
+    b.score - a.score || a.id.localeCompare(b.id));
 };
 
 const createRetriever = ({ plantModel = Plant, diseaseModel = Disease, protocolModel = TreatmentProtocol } = {}) => async (message, history = []) => {
@@ -132,7 +177,7 @@ const createRetriever = ({ plantModel = Plant, diseaseModel = Disease, protocolM
       .limit(2001).maxTimeMS(4000).lean();
     const [plants, diseases, protocols] = await Promise.all([
       read(plantModel, { is_published: true }, "common_name scientific_name diagnosis_aliases botanical_family description care_requirements common_disease_ids is_published updated_at"),
-      read(diseaseModel, { status: "active", content_status: "verified" }, "disease_name scientific_name diagnosis_aliases pathogen_type typical_symptoms environmental_cause status content_status created_at"),
+      read(diseaseModel, { status: "active" }, "disease_name scientific_name diagnosis_aliases pathogen_type typical_symptoms environmental_cause status content_status created_at"),
       read(protocolModel, { status: "approved", instruction_source: { $ne: "ai_unverified" } }, "-reference_material -ai_generation"),
     ]);
     if ([plants, diseases, protocols].some((items) => items.length > 2000)) throw new Error("Catalog capacity exceeded");
@@ -140,6 +185,7 @@ const createRetriever = ({ plantModel = Plant, diseaseModel = Disease, protocolM
       if (row.status !== "approved" || row.instruction_source === "ai_unverified") return false;
       try { await new TreatmentProtocol(row).validate(); return true; } catch { return false; }
     });
+    if (isProtocolListing(message)) return protocolListing(corpus, message);
     if (corpus.documents.length > 20000) throw new Error("Chunk capacity exceeded");
     const selected = [];
     let length = 0;
@@ -161,4 +207,5 @@ const createRetriever = ({ plantModel = Plant, diseaseModel = Disease, protocolM
   }
 };
 
-module.exports = { retrieve: createRetriever(), createRetriever, buildDocuments, rank, normalize };
+module.exports = { retrieve: createRetriever(), createRetriever, buildDocuments, rank, normalize,
+  isProtocolListing, protocolListing };

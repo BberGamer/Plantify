@@ -39,7 +39,12 @@ export default function ChatScreen() {
                 onLayout={message.role === "assistant" ? () => chat.markDisplayed(message.id) : undefined}
                 style={[styles.bubble, message.role === "user" ? styles.user : styles.assistant]}>
                 <Text style={styles.speaker}>{message.role === "user" ? "Bạn" : "Trợ lý AI"}</Text>
-                <Text selectable style={styles.message}>{message.content}</Text>
+                <Text selectable style={styles.message}>
+                  {message.role === "assistant"
+                    ? message.content.replace(/\\?\*\\?\*/g, "")
+                      .replace(/[ \t]*\[\d+\]/g, "")
+                    : message.content}
+                </Text>
                 {message.role === "assistant" && message.sources?.length > 0 && <View>
                   <Text style={styles.speaker}>Tài liệu Plantify đã tra cứu</Text>
                   {message.sources.map((source) => <Text selectable style={styles.timing}

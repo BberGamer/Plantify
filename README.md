@@ -344,11 +344,19 @@ Lịch sử AI không phải nguồn kiến thức đã xác minh.
 
 Nguồn: `plants.is_published=true`; `plant_diseases.status=active` và
 `content_status=verified`; phác đồ `approved`, không phải `ai_unverified`, qua validation
-schema, thuộc bệnh đã xác minh và còn liên kết với cây xuất bản. Không dùng trường
+schema, thuộc bệnh đang active và còn liên kết với cây xuất bản. Việc duyệt phác đồ
+độc lập với `content_status` của nội dung mô tả bệnh; mô tả bệnh chưa xác minh vẫn không
+được đưa vào RAG. Câu hỏi về phác đồ/điều trị ưu tiên các đoạn phác đồ phù hợp. Không dùng trường
 `disease.treatment_protocol` legacy làm nguồn thuốc/liều lượng. Không đọc dữ liệu cá nhân
 của vườn/tài khoản/ví cho RAG. Đọc lại danh mục mỗi lượt để phản ánh thay đổi/gỡ duyệt.
 Giới hạn 2.000 bản ghi mỗi loại và 20.000 đoạn; vượt giới hạn hoặc DB lỗi trả
 `CHAT_RETRIEVAL_UNAVAILABLE` (503), không âm thầm gọi model khi truy xuất bị lỗi.
+
+Câu hỏi liệt kê cây có phác đồ dùng tổng hợp toàn bộ danh mục hợp lệ, nhóm theo ID cây/bệnh,
+không dùng top 6 đoạn và không lặp cây theo từng giai đoạn. Backend dựng danh sách trực tiếp
+để LLM không bỏ sót tên do giới hạn đầu ra; lịch sử ghi retrieval `method=catalog`, không gọi model.
+Câu hỏi chi tiết vẫn dùng BM25 + LLM. Danh sách chỉ bao gồm phác đồ đã duyệt hợp lệ;
+bản nháp/ngừng dùng, cây ẩn, bệnh inactive và quan hệ sai vẫn bị loại.
 
 Không có nguồn phù hợp: model phải nói thiếu dữ liệu Plantify, có thể giải thích chăm sóc
 chung nhưng không tự tạo thuốc/liều lượng/phác đồ. Nguồn bệnh không phải chẩn đoán cho
@@ -358,6 +366,7 @@ người dùng. Chat không tạo hoặc áp dụng lịch điều trị. Prompt
 Response/lịch sử có `sources` (số nguồn, loại, ID, tiêu đề, phần trích, phiên bản/thời điểm,
 hash nội dung); `answer_source=rag` khi có nguồn, `model` khi không có nguồn.
 Mobile hiển thị tài liệu đã tra cứu dưới câu trả lời, kể cả tải lại lịch sử.
+Phần hiển thị câu trả lời AI bỏ dấu in đậm Markdown `**` (kể cả dạng escape), áp dụng cả lịch sử cũ.
 Đây là tài liệu truy xuất, không bảo đảm model dùng đúng từng đoạn.
 CSV thêm nguồn/trạng thái retrieval; prompt hash bao gồm dữ liệu truy xuất.
 Giữ cấu hình `AI_API_KEY`, `AI_MODEL`, `AI_BASE_URL`, `AI_TIMEOUT_MS` hiện có.
