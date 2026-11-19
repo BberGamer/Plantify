@@ -110,6 +110,23 @@ const protocol = (input) => {
   return result;
 };
 
+const aiDraft = (input) => {
+  v.object(input);
+  for (const key of Object.keys(input))
+    if (!["disease_id", "plant_ids", "reference_material"].includes(key))
+      v.invalid(key, `Trường ${key} không được hỗ trợ.`);
+  if (!Array.isArray(input.plant_ids) || !input.plant_ids.length)
+    v.invalid("plant_ids", "Vui lòng chọn ít nhất một cây áp dụng.");
+  const referenceMaterial = v.text(input.reference_material, "reference_material");
+  if (referenceMaterial.length < 50 || referenceMaterial.length > 12000)
+    v.invalid("reference_material", "Dữ liệu tham chiếu phải có từ 50 đến 12000 ký tự.");
+  return {
+    disease_id: v.id(input.disease_id, "disease_id"),
+    plant_ids: [...new Set(input.plant_ids.map((id) => v.id(id, "plant_ids")))],
+    reference_material: referenceMaterial,
+  };
+};
+
 const generate = (input) => {
   v.object(input);
   for (const key of Object.keys(input)) {
@@ -169,4 +186,4 @@ const rescheduleTask = (input) => {
   return { scheduled_date: scheduledDate };
 };
 
-module.exports = { generate, finish, rescheduleTask, protocol };
+module.exports = { generate, finish, rescheduleTask, protocol, aiDraft };
