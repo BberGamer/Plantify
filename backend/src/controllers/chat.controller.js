@@ -29,4 +29,9 @@ const exportReport = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-module.exports = { send, list, recordTiming, exportReport };
+const listManager = async (req, res, next) => {
+  try { return success(res, "Lấy chat người dùng thành công.", await history.listManager(req.user.id, req.query)); }
+  catch (error) { next(error); }
+};
+
+module.exports = { send, list, recordTiming, exportReport, listManager };

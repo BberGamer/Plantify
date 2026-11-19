@@ -61,7 +61,7 @@ export default function useChat() {
         { id: `${turn.id}-user`, role: "user", content: turn.question },
         { id: turn.id, role: "assistant", content: turn.answer,
           client_response_ms: turn.client_response_ms,
-          saved: true, answerSource: turn.answer_source },
+          saved: true, answerSource: turn.answer_source, sources: turn.sources || [] },
       ]));
     } catch (failure) {
       if (current() && !controller.signal.aborted)
@@ -96,7 +96,7 @@ export default function useChat() {
       updateMessages([...conversation.current,
         { id: `${id}-user`, role: "user", content: message },
         { id, role: "assistant", content: reply, saved: data.saved,
-          sentAt },
+          sentAt, answerSource: data.answer_source, sources: data.sources || [] },
       ].slice(-40));
       setDraft("");
     } catch (failure) {

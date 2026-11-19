@@ -13,6 +13,7 @@ const assertActive = async (userId) => {
 const publicTurn = (turn) => ({
   id: String(turn._id), conversation_id: String(turn.conversation_id),
   question: turn.question, answer: turn.answer, answer_source: turn.answer_source,
+  sources: turn.sources || [], retrieval: turn.retrieval,
   model: turn.model, prompt_version: turn.prompt_version,
   created_at: turn.created_at, evaluation_enabled: false,
   backend_answer_ms: turn.backend_answer_ms, client_response_ms: turn.client_response_ms,
@@ -57,4 +58,30 @@ const list = async (userId, query) => {
     turns: page.reverse().map(publicTurn) };
 };
 
-module.exports = { assertActive, assertConversation, saveTurn, getTurn, publicTurn, list };
+const listManager = async (userId, query = {}) => {
+  v.id(userId);
+  const user = await User.findById(userId).select("role status").lean();
+  if (!user) throw new AppError("SESSION_INVALID", 401, "Phiên đăng nhập không hợp lệ.");
+  if (!user.status) throw new AppError("ACCOUNT_LOCKED", 403, "Tài khoản đã bị khóa.");
+  if (!["admin", "manager"].includes(user.role))
+    throw new AppError("FORBIDDEN", 403, "Bạn không có quyền xem chat người dùng.");
+  const page = v.positiveInteger(query.page, 1, "page", 100000);
+  const limit = v.positiveInteger(query.limit, 20, "limit", 50);
+  const filter = {};
+  if (query.search !== undefined) {
+    const search = v.text(query.search, "search", false);
+    if (search.length > 200) v.invalid("search");
+    if (search) filter.$or = ["question", "answer"].map((field) => ({ [field]: new RegExp(v.escapeRegex(search), "i") }));
+  }
+  const [items, total] = await Promise.all([
+    ChatTurn.find(filter).select("question answer answer_source created_at user_id sources")
+      .populate("user_id", "fullName").sort({ _id: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    ChatTurn.countDocuments(filter),
+  ]);
+  const totalPages = Math.ceil(total / limit);
+  return { items: items.map((item) => ({ ...item, user_id: item.user_id?._id || null,
+    user_name: item.user_id?.fullName || "Người dùng không còn tồn tại" })),
+  pagination: { page, limit, total, totalPages, hasNextPage: page < totalPages, hasPrevPage: page > 1 && total > 0 } };
+};
+
+module.exports = { assertActive, assertConversation, saveTurn, getTurn, publicTurn, list, listManager };

@@ -19,4 +19,9 @@ const recordTiming = async (id, ms, sessionContext, signal) => {
   return response.data;
 };
 
-export default { sendMessage, loadHistory, recordTiming };
+const listManager = async (params) => {
+  const response = await api.get("/chat/manager/turns", { params });
+  return response.data;
+};
+
+export default { sendMessage, loadHistory, recordTiming, listManager };

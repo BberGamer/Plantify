@@ -51,10 +51,8 @@ const ERROR_MESSAGES = {
     "Tài khoản Free được thêm tối đa 3 cây trong vườn. Hãy lưu trữ một cây hoặc mua gói VIP để thêm cây mới.",
   VIP_REQUIRED:
     "Nhận diện và chẩn đoán AI cần gói VIP còn hạn. Hãy vào Tài khoản → Tài khoản VIP để mua hoặc gia hạn gói.",
-  FAQ_NOT_FOUND: "Không tìm thấy FAQ. Vui lòng tải lại danh sách.",
-  FAQ_DUPLICATE: "Câu hỏi hoặc câu hỏi tương đương đã tồn tại trong FAQ khác.",
-  FAQ_VERSION_CONFLICT:
-    "FAQ đã được thay đổi. Hãy đóng form và tải lại danh sách trước khi thao tác.",
+  CHAT_RETRIEVAL_UNAVAILABLE:
+    "Chưa thể tra cứu kiến thức Plantify. Vui lòng thử lại sau.",
   NOTIFICATION_NOT_FOUND:
     "Thông báo không còn khả dụng. Vui lòng tải lại danh sách.",
   CARE_UNAVAILABLE:

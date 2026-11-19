@@ -32,14 +32,15 @@ const cell = (value) => {
 const toCsv = (turns) => {
   const columns = ["Test Case ID (manual)", "Condition", "Question", "Expected Answer (manual)", "Actual Answer", "Answer Source", "Accuracy 0-2 (manual)",
     "SLA seconds (manual)", "App Response seconds", "Pass/Fail (manual)", "Notes (manual)",
-    "Tester (manual)", "Experiment ID", "Message ID", "Created At", "Backend Answer seconds", "Prompt Hash", "History Count", "FAQ Enabled", "Answer Model", "Generation Settings", "History Hash"];
+    "Tester (manual)", "Experiment ID", "Message ID", "Created At", "Backend Answer seconds", "Prompt Hash", "History Count", "Retrieval Status", "Answer Model", "Generation Settings", "History Hash", "Retrieved Sources"];
   const rows = turns.map((turn) => {
     return [turn.test_case_id, turn.experiment_condition, turn.question, null,
       turn.answer, turn.answer_source, null, null, typeof turn.client_response_ms === "number" ? turn.client_response_ms / 1000 : null,
       null, null, null, turn.experiment_id, String(turn._id), turn.created_at?.toISOString?.() || turn.created_at,
       typeof turn.backend_answer_ms === "number" ? turn.backend_answer_ms / 1000 : null,
-      turn.prompt_hash, turn.history_count, turn.faq_enabled, turn.model,
-      turn.generation_settings ? JSON.stringify(turn.generation_settings) : null, turn.history_hash];
+      turn.prompt_hash, turn.history_count, turn.retrieval?.status, turn.model,
+      turn.generation_settings ? JSON.stringify(turn.generation_settings) : null, turn.history_hash,
+      JSON.stringify(turn.sources || [])];
   });
   return "\uFEFF" + [columns, ...rows].map((row) => row.map(cell).join(",")).join("\r\n");
 };

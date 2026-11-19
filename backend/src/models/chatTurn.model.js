@@ -5,10 +5,16 @@ const chatTurnSchema = new mongoose.Schema({
   conversation_id: { type: mongoose.Schema.Types.ObjectId, required: true },
   question: { type: String, required: true },
   answer: { type: String, required: true },
-  answer_source: { type: String, enum: ["faq", "model"], required: true },
+  // Giữ giá trị lịch sử cũ; lượt mới chỉ ghi rag hoặc model.
+  answer_source: { type: String, enum: ["faq", "model", "rag"], required: true },
+  sources: { type: [new mongoose.Schema({
+    number: Number, type: { type: String, enum: ["plant", "disease", "protocol"] },
+    id: String, title: String, section: String, version: Number,
+    updated_at: Date, content_hash: String,
+  }, { _id: false })], default: () => [] },
+  retrieval: { method: String, status: String },
   model: String,
   prompt_version: String,
-  faq_enabled: Boolean,
   test_case_id: String,
   experiment_id: String,
   experiment_condition: String,
