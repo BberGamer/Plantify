@@ -256,7 +256,7 @@ const findApprovedProtocols = (diseaseId, plantId) => TreatmentProtocol.find({
   disease_id: diseaseId,
   status: "approved",
   ...(plantId ? { plant_ids: plantId } : {}),
-}).sort({ version: -1, updated_at: -1 }).lean();
+}).select("-reference_material -ai_generation").sort({ version: -1, updated_at: -1 }).lean();
 
 // Caller chẩn đoán đã kiểm tra bệnh và quan hệ cây; chỉ truy vấn phác đồ một lần.
 const hasApprovedProtocol = async (diseaseId, plantId) => {
@@ -764,10 +764,10 @@ const assertProtocolReferences = async (data, session) => {
   return { disease, plants };
 };
 
-const approvalFields = (data, userId) =>
+const approvalFields = (data, userId, currentSource = "manager_verified") =>
   data.status === "approved"
     ? {
-        instruction_source: "manager_verified",
+        instruction_source: currentSource,
         approved_by: userId,
         approved_at: new Date(),
       }
@@ -867,7 +867,7 @@ const updateProtocol = async (userId, id, input) => {
       );
       return replacement.toObject();
     }
-    Object.assign(current, data, approvalFields(data, userId));
+    Object.assign(current, data, approvalFields(data, userId, current.instruction_source));
     await current.save({ session });
     return current.toObject();
   });

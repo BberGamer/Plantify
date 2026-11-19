@@ -57,6 +57,9 @@ const treatmentService = {
   createProtocol: async (payload) =>
     (await api.post("/treatments/manager", payload)).data,
 
+  generateAiDraft: async (payload) =>
+    (await api.post("/treatments/manager/ai-draft", payload, { timeout: 70000 })).data,
+
   updateProtocol: async (id, payload) =>
     (await api.put(`/treatments/manager/${id}`, payload)).data,
 

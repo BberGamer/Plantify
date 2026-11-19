@@ -61,6 +61,11 @@ module.exports = {
     "Tạo phác đồ điều trị thành công.",
     201,
   ),
+  managerAiDraft: handle(
+    (req) => require("../services/treatment-ai.service").generateDraft(req.user.id, req.body),
+    "AI đã tạo bản nháp phác đồ để Manager xác minh.",
+    201,
+  ),
   managerUpdate: handle(
     (req) => treatment.updateProtocol(req.user.id, req.params.id, req.body),
     "Cập nhật phác đồ điều trị thành công.",

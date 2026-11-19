@@ -87,6 +87,11 @@ const treatmentProtocolSchema = new mongoose.Schema(
       enum: INSTRUCTION_SOURCES,
       default: "ai_unverified",
     },
+    reference_material: { type: String, trim: true, maxlength: 12000, default: "" },
+    ai_generation: {
+      model: { type: String, trim: true, maxlength: 200, default: "" },
+      generated_at: { type: Date, default: null },
+    },
     status: {
       type: String,
       enum: PROTOCOL_STATUSES,
