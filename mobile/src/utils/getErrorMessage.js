@@ -88,6 +88,8 @@ const ERROR_MESSAGES = {
   AI_UNAVAILABLE: "Không thể kết nối trợ lý AI. Vui lòng thử lại sau.",
   AI_INVALID_RESPONSE:
     "Trợ lý AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.",
+  AI_REFERENCE_INCOMPLETE: "Dữ liệu nguồn chưa đủ để tạo phác đồ 14 ngày.",
+  AI_UNGROUNDED_RESPONSE: "AI đã tạo nội dung không có trong dữ liệu nguồn nên bản nháp không được lưu.",
   APPROVED_PROTOCOL_NOT_FOUND: "Chưa có phác đồ được phê duyệt cho bệnh này.",
   ACTIVE_TREATMENT_EXISTS: "Cây đang có một đợt điều trị hoạt động.",
   INVALID_TREATMENT_TRANSITION:

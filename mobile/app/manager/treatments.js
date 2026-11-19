@@ -59,7 +59,7 @@ function ProtocolCard({ item, busy, onEdit, onDeprecate }) {
 }
 
 function ProtocolForm({ manager }) {
-  const locked = manager.saving;
+  const locked = manager.saving || manager.generatingAi;
   return (
     <Modal
       visible={manager.visible}
@@ -127,6 +127,20 @@ function ProtocolForm({ manager }) {
               disabled={locked || !manager.form.disease_id}
             />
           ))}
+
+          {!manager.editing && (
+            <View style={styles.aiBox}>
+              <Text style={styles.sectionTitle}>Tạo bản nháp 14 ngày bằng AI</Text>
+              <Text style={styles.muted}>Dữ liệu nguồn phải ghi rõ giờ, lượng nước/thuốc, đơn vị, dụng cụ và an toàn. Nội dung ngoài nguồn sẽ bị từ chối.</Text>
+              <FormField label="Dữ liệu tham chiếu *" value={manager.form.reference_material}
+                onChangeText={(value) => manager.changeField("reference_material", value)}
+                disabled={locked} multiline maxLength={12000}
+                hint="Ví dụ: 07:00 tưới 250 ml bằng ca đong..." />
+              <Button mode="contained-tonal" icon="creation" onPress={manager.generateAiDraft}
+                loading={manager.generatingAi} disabled={locked}>Tạo và lưu bản nháp</Button>
+              <Text style={styles.muted}>Manager phải kiểm tra và phê duyệt trước khi Customer sử dụng.</Text>
+            </View>
+          )}
 
           <Text style={styles.sectionTitle}>Các giai đoạn điều trị</Text>
           {manager.form.stages.map((stage, index) => (
@@ -301,6 +315,7 @@ const styles = StyleSheet.create({
   empty: { flexGrow: 1 },
   card: { backgroundColor: colors.white, borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm, borderWidth: 1, borderColor: colors.border },
   stage: { backgroundColor: colors.softMintBg, borderRadius: radius.card, padding: spacing.lg, borderWidth: 1, borderColor: colors.border },
+  aiBox: { backgroundColor: "#F1F7F2", borderRadius: radius.card, padding: spacing.lg, gap: spacing.md, borderWidth: 1, borderColor: colors.border },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   days: { flexDirection: "row", gap: spacing.md },
   actions: { flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", gap: spacing.sm },
