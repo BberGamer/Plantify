@@ -5,7 +5,7 @@ const complete = async (messages, options = {}) => {
   const key = process.env.AI_API_KEY?.trim();
   const model = options.model || process.env.AI_MODEL?.trim();
   const maxTokens = options.maxTokens || 1200;
-  if (!Number.isInteger(maxTokens) || maxTokens < 1 || maxTokens > 2000)
+  if (!Number.isInteger(maxTokens) || maxTokens < 1 || maxTokens > 6000)
     throw new Error("Invalid AI output limit");
   const base = process.env.AI_BASE_URL?.trim() || "https://platform.beeknoee.com/api/v1";
   const timeout = Number(options.timeoutMs ?? process.env.AI_TIMEOUT_MS ?? 30000);
@@ -40,7 +40,7 @@ const complete = async (messages, options = {}) => {
     const reply = data?.choices?.[0]?.message?.content;
     if (data?.choices?.[0]?.finish_reason === "length")
       throw new AppError("AI_INCOMPLETE_RESPONSE", 502, "AI chưa hoàn tất câu trả lời. Vui lòng thử lại với câu hỏi cụ thể hơn.");
-    if (typeof reply !== "string" || !reply.trim() || reply.length > 12000)
+    if (typeof reply !== "string" || !reply.trim() || reply.length > 30000)
       throw new AppError("AI_INVALID_RESPONSE", 502, "Trợ lý AI trả về dữ liệu không hợp lệ.");
     return reply.trim();
   } catch (error) {
