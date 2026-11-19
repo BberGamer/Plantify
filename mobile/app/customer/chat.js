@@ -40,6 +40,14 @@ export default function ChatScreen() {
                 style={[styles.bubble, message.role === "user" ? styles.user : styles.assistant]}>
                 <Text style={styles.speaker}>{message.role === "user" ? "Bạn" : "Trợ lý AI"}</Text>
                 <Text selectable style={styles.message}>{message.content}</Text>
+                {message.role === "assistant" && message.sources?.length > 0 && <View>
+                  <Text style={styles.speaker}>Tài liệu Plantify đã tra cứu</Text>
+                  {message.sources.map((source) => <Text selectable style={styles.timing}
+                    key={`${source.type}-${source.id}-${source.number}`}>
+                    [{source.number}] {source.title} · {source.section}
+                    {source.version ? ` · Phiên bản ${source.version}` : ""}
+                  </Text>)}
+                </View>}
                 {message.role === "assistant" && Number.isFinite(message.client_response_ms) &&
                   <Text style={styles.timing}>Thời gian trả lời: {(message.client_response_ms / 1000).toFixed(2)} giây</Text>}
                 {message.timing_error && <Text style={styles.timing}>Chưa lưu được thời gian đo; bạn có thể ghi lại thủ công.</Text>}
