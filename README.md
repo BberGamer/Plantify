@@ -289,6 +289,11 @@ giai đoạn/ngày, nhiệm vụ, hóa chất hoặc liều lượng, lưu ý v�
 thể lưu nháp hoặc phê duyệt. Khi sửa phác đồ đã duyệt, backend tạo phiên bản mới và
 ngừng phiên bản cũ; lịch đã tạo giữ snapshot nên không bị thay đổi ngược.
 
+Manager có thể nhập dữ liệu chuyên môn để AI tạo bản nháp 14 ngày qua
+`POST /api/treatments/manager/ai-draft`. Backend chỉ chấp nhận giờ, định lượng,
+đơn vị và dụng cụ có đoạn nguồn nguyên văn tương ứng; bản AI luôn là
+`ai_unverified` cho tới khi Manager kiểm tra và phê duyệt.
+
 Mỗi cây chỉ có một lịch `in_progress`. Khi bắt đầu, backend tạm dừng lịch chăm sóc
 thường, đánh dấu cây đang điều trị và tạo nhắc việc theo từng ngày. Khi kết thúc,
 lịch chăm sóc từng bị hệ thống tạm dừng được khôi phục; các lịch vốn đã tạm dừng thủ
