@@ -1,4 +1,4 @@
-const { buildDocuments, rank, createRetriever } = require("../chatRetrieval.service");
+const { buildDocuments, rank, createRetriever, isProtocolListing } = require("../chatRetrieval.service");
 const Plant = require("../../models/plant.model");
 const Disease = require("../../models/disease.model");
 const Protocol = require("../../models/treatmentProtocol.model");
@@ -75,6 +75,30 @@ test("valid approved protocol supplies treatment stages and safety with versione
   expect(result.sources.length).toBeLessThanOrEqual(6);
 });
 
+test("approved protocol is retrievable independently of disease content verification", async () => {
+  const pid = "507f1f77bcf86cd799439011", did = "507f1f77bcf86cd799439012", tid = "507f1f77bcf86cd799439013";
+  jest.spyOn(Plant, "find").mockReturnValue(chain([{ ...plants[0], _id: pid, common_disease_ids: [did] }]));
+  const lookup = jest.spyOn(Disease, "find").mockReturnValue(chain([{ ...diseases[0], _id: did,
+    content_status: "unverified", typical_symptoms: "UNVERIFIED_SECRET" }]));
+  jest.spyOn(Protocol, "find").mockReturnValue(chain([{ ...protocols[0], _id: tid,
+    disease_id: did, plant_ids: [pid], created_by: pid, approved_by: pid, approved_at: new Date() }]));
+  const result = await createRetriever()("Phác đồ điều trị thối rễ trầu bà");
+  expect(lookup).toHaveBeenCalledWith({ status: "active" });
+  expect(result.sources[0]).toMatchObject({ type: "protocol", id: tid });
+  expect(result.sources.some((source) => source.type === "disease")).toBe(false);
+  expect(result.content).not.toContain("UNVERIFIED_SECRET");
+  lookup.mockReturnValue(chain([{ ...diseases[0], _id: did, status: "inactive" }]));
+  expect((await createRetriever()("Phác đồ điều trị thối rễ trầu bà")).sources
+    .some((source) => source.type === "protocol")).toBe(false);
+});
+
+test("treatment questions reserve top results for matching protocols ahead of short care chunks", async () => {
+  const corpus = await buildDocuments(plants, diseases, protocols, async () => true);
+  const rows = rank(corpus.documents, "Phác đồ điều trị trầu bà", [], corpus.plants);
+  expect(rows[0].type).toBe("protocol");
+  expect(rows.some((row) => row.id === "p2")).toBe(false);
+});
+
 test("reads current data each turn, no stale approved knowledge cache", async () => {
   const lookup = jest.spyOn(Plant, "find").mockReturnValue(chain(plants));
   jest.spyOn(Disease, "find").mockReturnValue(chain([]));
@@ -92,4 +116,40 @@ test("database failures and capacity overflow return safe retrieval error", asyn
   jest.spyOn(Disease, "find").mockReturnValue(chain([]));
   jest.spyOn(Protocol, "find").mockReturnValue(chain([]));
   await expect(createRetriever()("Tưới cây")).rejects.toMatchObject({ code: "CHAT_RETRIEVAL_UNAVAILABLE" });
+});
+
+test("protocol plant listing includes every eligible plant beyond top six and deduplicates stages", async () => {
+  const names = ["Táo", "Chuối", "Húng quế", "Súp lơ xanh", "Cà rốt", "Đậu", "Cà phê", "Ngô", "Cần tây", "Cây có múi"];
+  const id = (number) => number.toString(16).padStart(24, "0");
+  const plantRows = names.map((name, index) => ({ ...plants[0], _id: id(index + 1), common_name: name,
+    scientific_name: "", common_disease_ids: [id(index + 101)] }));
+  const diseaseRows = names.map((name, index) => ({ ...diseases[0], _id: id(index + 101), disease_name: `Bệnh ở ${name}` }));
+  const protocolRows = names.map((name, index) => ({ ...protocols[0], _id: id(index + 201),
+    protocol_name: `Phác đồ ${name}`, plant_ids: [id(index + 1)], disease_id: id(index + 101),
+    approved_by: id(900), created_by: id(900), approved_at: new Date() }));
+  // Cùng cây/bệnh có thêm phác đồ: vẫn chỉ liệt kê cây và tên bệnh một lần.
+  protocolRows.push({ ...protocolRows[0], _id: id(800), protocol_name: "Phác đồ táo bổ sung" });
+  jest.spyOn(Plant, "find").mockReturnValue(chain(plantRows));
+  jest.spyOn(Disease, "find").mockReturnValue(chain(diseaseRows));
+  jest.spyOn(Protocol, "find").mockReturnValue(chain(protocolRows));
+  const retrieve = createRetriever();
+  const result = await retrieve("Plantify có phác đồ điều trị cho những loại cây nào?", [{ role: "user", content: "Tưới táo?" }]);
+  expect(result.method).toBe("catalog");
+  expect(result.sources).toHaveLength(11);
+  for (const name of names) expect(result.catalogReply).toContain(name);
+  expect(result.catalogReply).toContain("10 loại cây");
+  expect(result.catalogReply.split("\n").filter((line) => /^\d+\./.test(line))).toHaveLength(10);
+  expect(result.sources.every((source) => !source.section.includes("Giai đoạn"))).toBe(true);
+  const scoped = await retrieve("Liệt kê phác đồ điều trị cho cây Táo");
+  expect(scoped.catalogReply).toContain("1 loại cây");
+  expect(scoped.catalogReply).not.toContain("Cà rốt");
+  protocolRows[0].status = "draft";
+  protocolRows[protocolRows.length - 1].status = "deprecated";
+  expect((await retrieve("Liệt kê tất cả phác đồ điều trị")).catalogReply).not.toContain("1. Táo:");
+});
+
+test("listing routing leaves detailed treatment questions on chunk retrieval", () => {
+  expect(isProtocolListing("Có những cây nào có phác đồ điều trị?")).toBe(true);
+  expect(isProtocolListing("liet ke tat ca phac do")).toBe(true);
+  expect(isProtocolListing("Điều trị thối rễ ở táo thế nào?")).toBe(false);
 });

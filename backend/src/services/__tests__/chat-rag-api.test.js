@@ -73,6 +73,17 @@ test("retrieval outage does not silently produce an ungrounded answer", async ()
   expect(global.fetch).not.toHaveBeenCalled();
 });
 
+test("complete protocol catalog is returned unchanged without LLM dropping plant names", async () => {
+  const reply = "Có phác đồ cho Táo, Chuối, Húng quế, Súp lơ xanh, Cà rốt, Đậu, Ngô.";
+  retrieval.retrieve.mockResolvedValueOnce({ sources: [], content: "[]", method: "catalog", status: "matched", catalogReply: reply });
+  const response = await send({ message: "Những cây nào có phác đồ điều trị?" });
+  expect(response.status).toBe(200);
+  expect(response.body.data.reply).toBe(reply);
+  expect(global.fetch).not.toHaveBeenCalled();
+  expect(ChatTurn.create.mock.calls[0][0]).toMatchObject({ model: null, answer_source: "rag",
+    generation_settings: { mode: "catalog", model_call: false } });
+});
+
 test("manager chat history checks live DB role rather than JWT role", async () => {
   const response = await request(app).get("/api/chat/manager/turns").set("Authorization", `Bearer ${token()}`);
   expect(response.status).toBe(403);
