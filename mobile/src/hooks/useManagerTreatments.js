@@ -24,6 +24,7 @@ const emptyForm = () => ({
   approved_instructions: "",
   safety_guidelines: "",
   status: "draft",
+  reference_material: "",
   stages: [emptyStage()],
 });
 
@@ -103,6 +104,7 @@ export default function useManagerTreatments() {
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [generatingAi, setGeneratingAi] = useState(false);
   const [deprecatingId, setDeprecatingId] = useState("");
   const request = useRef(0);
   const mutation = useRef(false);
@@ -284,6 +286,31 @@ export default function useManagerTreatments() {
     }
   };
 
+  const generateAiDraft = async () => {
+    if (mutation.current) return;
+    if (!form.disease_id || !form.plant_ids.length || form.reference_material.trim().length < 50) {
+      setFormError("Hãy chọn bệnh, cây và nhập dữ liệu nguồn có giờ, định lượng, dụng cụ cùng hướng dẫn an toàn.");
+      return;
+    }
+    mutation.current = true;
+    setGeneratingAi(true);
+    setFormError("");
+    try {
+      const response = await treatmentService.generateAiDraft({ disease_id: form.disease_id,
+        plant_ids: form.plant_ids, reference_material: form.reference_material.trim() });
+      if (response?.success !== true) throw new Error("Không thể tạo bản nháp AI.");
+      setVisible(false);
+      setEditing(null);
+      setForm(emptyForm());
+      await load();
+    } catch (failure) {
+      setFormError(getErrorMessage(failure, "Không thể tạo bản nháp từ dữ liệu tham chiếu."));
+    } finally {
+      mutation.current = false;
+      setGeneratingAi(false);
+    }
+  };
+
   const deprecate = async (id) => {
     if (mutation.current) return;
     mutation.current = true;
@@ -311,6 +338,7 @@ export default function useManagerTreatments() {
     form,
     formError,
     saving,
+    generatingAi,
     deprecatingId,
     refresh: load,
     openCreate,
@@ -323,6 +351,7 @@ export default function useManagerTreatments() {
     removeStage,
     moveStage,
     save,
+    generateAiDraft,
     deprecate,
   };
 }
