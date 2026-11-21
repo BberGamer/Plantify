@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Button, List, Switch, Text } from "react-native-paper";
+import { Button, Switch, Text } from "react-native-paper";
+import ProfileInfoRow from "./ProfileInfoRow";
 import useScreenScope from "../../hooks/useScreenScope";
 import notificationService from "../../services/notificationService";
 import getErrorMessage from "../../utils/getErrorMessage";
@@ -30,8 +31,10 @@ export default function NotificationPreferences({ disabled }) {
   }
 
   return <>
-    <List.Item title="Nhắc điều trị" description="Nhận lời nhắc cho công việc điều trị đến hạn"
-      right={() => <Switch accessibilityLabel="Nhắc điều trị" value={enabled === true}
+    <ProfileInfoRow icon="notifications-outline" label="Nhắc điều trị"
+      value={enabled === null ? (error ? "Chưa tải được tùy chọn" : "Đang tải…") : enabled ? "Đang bật" : "Đang tắt"}
+      last
+      action={<Switch accessibilityLabel="Nhắc điều trị" value={enabled === true}
         disabled={disabled || busy || enabled === null} onValueChange={load} />} />
     {!!error && <Text accessibilityRole="alert">{error}</Text>}
     {!!error && enabled === null && <Button disabled={disabled || busy} onPress={() => load()}>Thử lại</Button>}

@@ -5,7 +5,6 @@ import ProfileHeader from "./ProfileHeader";
 import ProfileIdentity from "./ProfileIdentity";
 import ProfileDetails from "./ProfileDetails";
 import ProfileLogout from "./ProfileLogout";
-import NotificationPreferences from "./NotificationPreferences";
 import Navbar from "../navigation/Navbar";
 import useProfile from "../../hooks/useProfile";
 import { colors } from "../../theme/colors";
@@ -32,7 +31,6 @@ export default function ProfileContent({ onBack, showNavbar = false, onOpenFavor
           isLoggingOut={profile.isLoggingOut} startEditing={profile.startEditing}
           message={profile.message} form={profile.form} changeField={profile.changeField}
           saving={profile.saving} cancelEditing={profile.cancelEditing} saveProfile={profile.saveProfile} />
-        {profile.user?.role === "customer" && <NotificationPreferences disabled={profile.isLoggingOut} />}
         {onOpenDiagnosisHistory && <View style={styles.favorites}>
           <List.Item title="Lịch sử chẩn đoán" description="Xem các kết quả chẩn đoán bệnh đã lưu"
             onPress={onOpenDiagnosisHistory} disabled={profile.isLoggingOut} style={styles.favoriteLink}
