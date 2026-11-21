@@ -18,7 +18,7 @@ export default function TreatmentTaskCard({ task, busy, onComplete }) {
         <Ionicons name={icon} size={22} color={color} />
         <View style={styles.content}>
           <Text style={styles.title}>{task.title}</Text>
-          <Text style={[styles.status, { color }]}>{label} · {new Intl.DateTimeFormat("vi-VN").format(new Date(task.scheduled_date))}</Text>
+          <Text style={[styles.status, { color }]}>{label} · {new Intl.DateTimeFormat("vi-VN").format(new Date(task.scheduled_date))} · {task.time || "08:00"}</Text>
           {!!task.instructions && <Text style={styles.body}>{task.instructions}</Text>}
           {!!task.dosage_note && (
             <Text style={styles.dosage}>Liều lượng: {task.dosage_note}</Text>
