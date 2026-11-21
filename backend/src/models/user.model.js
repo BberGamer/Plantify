@@ -41,6 +41,7 @@ const userSchema = new mongoose.Schema(
     },
     notification_preferences: {
       treatment_reminders: { type: Boolean, default: true },
+      treatment_reminders_enabled_at: Date,
     },
     isproaccount: { type: Boolean, default: false },
     balance: { type: Number, default: 0, min: 0, max: Number.MAX_SAFE_INTEGER, validate: Number.isSafeInteger },

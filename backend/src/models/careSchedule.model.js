@@ -37,5 +37,6 @@ const careScheduleSchema = new mongoose.Schema(
 
 careScheduleSchema.index({ user_plant_id: 1, is_active: 1, is_paused: 1 });
 careScheduleSchema.index({ user_id: 1, created_at: -1 });
+careScheduleSchema.index({ is_active: 1, is_paused: 1, start_date: 1 });
 
 module.exports = mongoose.model("CareSchedule", careScheduleSchema, "care_schedules");

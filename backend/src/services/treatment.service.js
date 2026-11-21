@@ -8,7 +8,6 @@ const Disease = require("../models/disease.model");
 const DiseaseDiagnosis = require("../models/diseaseDiagnosis.model");
 const CareSchedule = require("../models/careSchedule.model");
 const Notification = require("../models/notification.model");
-const User = require("../models/user.model");
 const validate = require("../validators/treatment.validator");
 const v = require("../validators/common");
 const treatmentAI = require("./treatment-ai.service");
@@ -77,6 +76,7 @@ const createReminderOperations = (schedule) =>
           message: task.title,
           scheduled_for: task.scheduled_date,
           status: "scheduled",
+          dispatch_managed: true,
           dedupe_key: `treatment:${schedule._id}:task:${task._id}`,
         },
       },
@@ -506,15 +506,9 @@ const activateSchedule = async (userId, scheduleId) => {
         { $set: { health_status: "treatment", is_under_treatment: true } },
         { session, runValidators: true },
       );
-      const user = await User.findById(userId)
-        .select("notification_preferences.treatment_reminders")
-        .session(session)
-        .lean();
-      if (user?.notification_preferences?.treatment_reminders !== false) {
-        const operations = createReminderOperations(schedule);
-        if (operations.length)
-          await Notification.bulkWrite(operations, { session, ordered: false });
-      }
+      const operations = createReminderOperations(schedule);
+      if (operations.length)
+        await Notification.bulkWrite(operations, { session, ordered: false });
       return presentSchedule(schedule, session);
     });
   } catch (error) {
@@ -656,16 +650,15 @@ const rescheduleTask = async (userId, scheduleId, taskId, input) => {
       note: `${result.scheduled_date.toISOString().slice(0, 10)} ${task.time || "08:00"}`,
     });
     await schedule.save({ session });
-    // Sent/cancelled reminders remain historical and are never resurrected.
-    await Notification.updateOne(
-      {
-        treatment_schedule_id: schedule._id,
-        treatment_task_id: task._id,
-        status: "scheduled",
-      },
+    const updatedReminder = await Notification.updateOne(
+      { treatment_schedule_id: schedule._id, treatment_task_id: task._id, status: "scheduled" },
       { $set: { scheduled_for: task.scheduled_date } },
       { session },
     );
+    if (!updatedReminder.matchedCount) {
+      const reminders = createReminderOperations({ _id: schedule._id, user_id: userId, tasks: [task] });
+      await Notification.bulkWrite(reminders, { session });
+    }
     return presentSchedule(schedule, session);
   });
 };
