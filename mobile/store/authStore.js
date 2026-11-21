@@ -6,9 +6,11 @@ import sessionStorage, {
   normalizeSessionUser,
 } from "../src/services/sessionStorage";
 import { bindSessionAccess, sessionError } from "../src/services/sessionAccess";
+import { clearPushBinding } from "../src/services/notificationDevice";
 
 const emptySession = { user: null, token: null, isAuthenticated: false };
 const cancelled = () => ({ success: false, cancelled: true });
+const detachNotifications = () => Promise.resolve(clearPushBinding()).catch(() => {});
 
 const useAuthStore = create((set, get) => {
   let hydration = null;
@@ -56,6 +58,7 @@ const useAuthStore = create((set, get) => {
         success: false,
         error: getErrorMessage(sessionError("REQUEST_IN_PROGRESS")),
       };
+    if (get().user) void detachNotifications();
     const attempt = { context: reset({ isLoggingIn: loggingIn, googleRegistration: registration }) };
     authentication = attempt;
     const cleanup = sessionStorage.clear();
@@ -216,19 +219,21 @@ const useAuthStore = create((set, get) => {
     logout: async () => {
       const origin = context();
       const signedOut = reset(); // Xóa trong bộ nhớ ngay, trước mọi await hoặc lỗi storage/server.
+      const device = origin.userId ? detachNotifications() : Promise.resolve();
       const cleanup = sessionStorage.clear();
       const remote = origin.token
         ? Promise.resolve()
             .then(() => authService.logout(origin))
             .catch(() => {})
         : Promise.resolve();
-      const [cacheCleared] = await Promise.all([cleanup, remote]);
+      const [cacheCleared] = await Promise.all([cleanup, remote, device]);
       return { success: true, cacheCleared, context: signedOut };
     },
 
     expireSession: (origin) => {
       if (!origin?.token || !matches(origin)) return false;
       reset();
+      void detachNotifications();
       void sessionStorage.clear();
       return true;
     },

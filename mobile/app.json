@@ -21,6 +21,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-notifications",
+        {
+          "enableRemoteNotifications": false
+        }
+      ],
+      [
         "react-native-nitro-google-signin",
         {
           "iosUrlScheme": "com.googleusercontent.apps.238677633473-5irbpqgjre603gjamhjqgvi5d7dth7v3"
