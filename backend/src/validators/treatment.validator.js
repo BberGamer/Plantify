@@ -49,6 +49,7 @@ const protocol = (input) => {
         ![
           "order",
           "title",
+          "time",
           "start_day",
           "end_day",
           "instructions",
@@ -76,6 +77,12 @@ const protocol = (input) => {
     return {
       order: index + 1,
       title,
+      time: (() => {
+        const value = stage.time || "08:00";
+        if (typeof value !== "string" || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value))
+          v.invalid(`stages.${index}.time`, "Giờ thực hiện phải có định dạng HH:mm.");
+        return value;
+      })(),
       start_day: startDay,
       end_day: endDay,
       instructions: textList(stage.instructions, `stages.${index}.instructions`),
@@ -130,14 +137,15 @@ const aiDraft = (input) => {
 const generate = (input) => {
   v.object(input);
   for (const key of Object.keys(input)) {
-    if (!["user_plant_id", "disease_id", "treatment_protocol_id", "diagnosis_id", "start_date"].includes(key))
+    if (!["user_plant_id", "disease_id", "preview_token", "diagnosis_id", "start_date"].includes(key))
       v.invalid(key, `Trường ${key} không được hỗ trợ.`);
   }
   const result = {
     user_plant_id: v.id(input.user_plant_id, "user_plant_id"),
     disease_id: v.id(input.disease_id, "disease_id"),
-    treatment_protocol_id: v.id(input.treatment_protocol_id, "treatment_protocol_id"),
+    preview_token: v.text(input.preview_token, "preview_token"),
   };
+  if (result.preview_token.length > 50000) v.invalid("preview_token", "Bản xem trước phác đồ quá lớn.");
   if (input.diagnosis_id !== undefined && input.diagnosis_id !== null)
     result.diagnosis_id = v.id(input.diagnosis_id, "diagnosis_id");
   if (input.start_date !== undefined) {
