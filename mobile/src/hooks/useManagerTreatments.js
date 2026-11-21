@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as DocumentPicker from "expo-document-picker";
 import useAuthStore from "../../store/authStore";
 import diseaseService from "../services/diseaseService";
 import plantService from "../services/plantService";
@@ -8,6 +9,7 @@ import getErrorMessage from "../utils/getErrorMessage";
 const emptyStage = (order = 1) => ({
   order,
   title: "",
+  time: "08:00",
   start_day: String(order),
   end_day: String(order),
   instructions: "",
@@ -24,7 +26,7 @@ const emptyForm = () => ({
   approved_instructions: "",
   safety_guidelines: "",
   status: "draft",
-  reference_material: "",
+  document: null,
   stages: [emptyStage()],
 });
 
@@ -46,6 +48,7 @@ const toForm = (item) => ({
   stages: (item.stages || []).map((stage, index) => ({
     order: index + 1,
     title: stage.title || "",
+    time: stage.time || "08:00",
     start_day: String(stage.start_day || index + 1),
     end_day: String(stage.end_day || index + 1),
     instructions: (stage.instructions || []).join("\n"),
@@ -66,6 +69,7 @@ const payload = (form) => ({
   stages: form.stages.map((stage, index) => ({
     order: index + 1,
     title: stage.title.trim(),
+    time: stage.time,
     start_day: Number(stage.start_day),
     end_day: Number(stage.end_day),
     instructions: lines(stage.instructions),
@@ -252,14 +256,14 @@ export default function useManagerTreatments() {
       data.stages.some(
         (stage) =>
           !stage.title ||
+          !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(stage.time) ||
           !stage.instructions.length ||
           !Number.isInteger(stage.start_day) ||
           !Number.isInteger(stage.end_day) ||
           stage.start_day < 1 ||
           stage.end_day < stage.start_day ||
           stage.end_day > data.duration_days,
-      ) ||
-      (data.status === "approved" && !data.approved_instructions.length)
+      )
     ) {
       setFormError(
         "Vui lòng điền đủ thông tin, cây áp dụng, hướng dẫn an toàn và ngày hợp lệ cho từng giai đoạn.",
@@ -288,8 +292,8 @@ export default function useManagerTreatments() {
 
   const generateAiDraft = async () => {
     if (mutation.current) return;
-    if (!form.disease_id || !form.plant_ids.length || form.reference_material.trim().length < 50) {
-      setFormError("Hãy chọn bệnh, cây và nhập dữ liệu nguồn có giờ, định lượng, dụng cụ cùng hướng dẫn an toàn.");
+    if (!form.disease_id || !form.plant_ids.length) {
+      setFormError("Hãy chọn bệnh và ít nhất một cây áp dụng.");
       return;
     }
     mutation.current = true;
@@ -297,8 +301,8 @@ export default function useManagerTreatments() {
     setFormError("");
     try {
       const response = await treatmentService.generateAiDraft({ disease_id: form.disease_id,
-        plant_ids: form.plant_ids, reference_material: form.reference_material.trim() });
-      if (response?.success !== true) throw new Error("Không thể tạo bản nháp AI.");
+        plant_ids: form.plant_ids, document: form.document });
+      if (response?.success !== true) throw new Error("Không thể tạo phác đồ AI.");
       setVisible(false);
       setEditing(null);
       setForm(emptyForm());
@@ -308,6 +312,32 @@ export default function useManagerTreatments() {
     } finally {
       mutation.current = false;
       setGeneratingAi(false);
+    }
+  };
+
+  const chooseDocument = async () => {
+    if (mutation.current) return;
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (!result.canceled && result.assets?.[0]) {
+        const document = result.assets[0];
+        if (!document.name?.toLowerCase().endsWith(".docx")) {
+          setFormError("Tài liệu tham chiếu phải là file DOCX.");
+          return;
+        }
+        if ((document.size || 0) > 10 * 1024 * 1024) {
+          setFormError("File DOCX không được vượt quá 10 MB.");
+          return;
+        }
+        setForm((current) => ({ ...current, document }));
+        setFormError("");
+      }
+    } catch (failure) {
+      setFormError(getErrorMessage(failure, "Không thể chọn file DOCX."));
     }
   };
 
@@ -352,6 +382,7 @@ export default function useManagerTreatments() {
     moveStage,
     save,
     generateAiDraft,
+    chooseDocument,
     deprecate,
   };
 }
