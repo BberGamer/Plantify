@@ -42,8 +42,11 @@ const userService = {
    * @param {string} userId
    * @param {boolean} status
    */
-  updateUserStatus: async (userId, status) => {
-    const response = await api.patch(`/users/${userId}/status`, { status });
+  updateUserStatus: async (userId, status, reason) => {
+    const response = await api.patch(`/users/${userId}/status`, {
+      status,
+      ...(status === false ? { reason } : {}),
+    });
     return response.data;
   },
 

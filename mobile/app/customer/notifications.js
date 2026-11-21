@@ -5,15 +5,24 @@ import { useRouter } from "expo-router";
 import useNotifications from "../../src/hooks/useNotifications";
 import ListPagination from "../../src/components/common/ListPagination";
 import { colors } from "../../src/theme/colors";
+import notificationService from "../../src/services/notificationService";
+import useScreenScope from "../../src/hooks/useScreenScope";
+import { notificationRoute } from "../../src/utils/notificationRoute";
 
 export default function NotificationsScreen() {
   const router = useRouter();
   const notifications = useNotifications();
+  const scope = useScreenScope();
   const open = async (item) => {
-    if (await notifications.markRead(item)) router.push({
-      pathname: "/customer/treatments/TreatmentList",
-      params: { treatmentId: item.treatment_schedule_id },
-    });
+    const current = scope.capture();
+    if (!(await notifications.markRead(item)) || !current()) return;
+    try {
+      const { data } = await notificationService.detail(item._id);
+      const route = notificationRoute(data);
+      if (current() && typeof route === "object") router.push(route);
+    } catch {
+      // Keep the inbox open if the target disappeared.
+    }
   };
   return <SafeAreaView style={styles.screen}>
     <View style={styles.header}>
@@ -25,7 +34,7 @@ export default function NotificationsScreen() {
         <Text accessibilityRole="alert">{notifications.error}</Text>
         <Button onPress={notifications.retry}>Thử lại</Button>
       </> : <>
-        {!notifications.items.length && <Text>Bạn chưa có thông báo nhắc điều trị đến hạn.</Text>}
+        {!notifications.items.length && <Text>Bạn chưa có thông báo đến hạn.</Text>}
         {!!notifications.actionError && <Text accessibilityRole="alert">{notifications.actionError}</Text>}
         {notifications.items.map(item => <Card key={item._id} style={styles.card}>
           <Card.Content>
@@ -36,7 +45,9 @@ export default function NotificationsScreen() {
           </Card.Content>
           <Card.Actions>
             {!item.is_read && <Button disabled={!!notifications.busyId || notifications.refreshing} loading={notifications.busyId === item._id} onPress={() => notifications.markRead(item)}>Đánh dấu đã đọc</Button>}
-            <Button disabled={!!notifications.busyId || notifications.refreshing} onPress={() => open(item)}>Xem lịch điều trị</Button>
+            <Button disabled={!!notifications.busyId || notifications.refreshing} onPress={() => open(item)}>
+              {item.type === "care" ? "Xem lịch chăm sóc" : "Xem lịch điều trị"}
+            </Button>
           </Card.Actions>
         </Card>)}
         <ListPagination pagination={notifications.pagination} onPageChange={notifications.load} disabled={!!notifications.busyId || notifications.refreshing} />

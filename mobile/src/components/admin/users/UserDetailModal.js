@@ -12,7 +12,7 @@ import {
   Platform,
 } from "react-native";
 import FormField from "../../common/FormField";
-import { Button } from "react-native-paper";
+import { Button, HelperText } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../theme/colors";
 import { garden, getRoleMeta, leafShape } from "./theme";
@@ -31,6 +31,10 @@ export default function UserDetailModal({
   onChangeRole,
   status,
   onChangeStatus,
+  lockReason,
+  lockReasonError,
+  onChangeLockReason,
+  submitError,
   submitting,
   onClose,
   onSave,
@@ -192,6 +196,18 @@ export default function UserDetailModal({
                     </TouchableOpacity>
                   </View>
                 </View>
+                {!permissionsReadOnly && user.status !== false && status === false && (
+                  <FormField
+                    label="Lý do khóa tài khoản"
+                    value={lockReason}
+                    onChangeText={onChangeLockReason}
+                    error={lockReasonError}
+                    hint="Lý do sẽ được gửi đến email của người dùng."
+                    multiline
+                    disabled={submitting}
+                  />
+                )}
+                {!!submitError && <HelperText type="error" accessibilityRole="alert">{submitError}</HelperText>}
               </>
             ) : null}
           </ScrollView>

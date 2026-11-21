@@ -7,6 +7,8 @@ import useAuthStore from "../../store/authStore";
 import useDebouncedValue from "./useDebouncedValue";
 import useScreenScope from "./useScreenScope";
 
+const lockEmailWarning = "Tài khoản đã bị khóa, nhưng không gửi được email thông báo.";
+
 export default function useAdminUsers() {
   const currentAdmin = useAuthStore((state) => state.user);
   const sessionVersion = useAuthStore((state) => state.sessionVersion);
@@ -26,6 +28,9 @@ export default function useAdminUsers() {
   const [editPhone, setEditPhone] = useState("");
   const [editRole, setEditRole] = useState("customer");
   const [editStatus, setEditStatus] = useState(true);
+  const [lockReason, setLockReason] = useState("");
+  const [lockReasonError, setLockReasonError] = useState("");
+  const [userMutationError, setUserMutationError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [roleModalVisible, setRoleModalVisible] = useState(false);
   const [targetUserForRole, setTargetUserForRole] = useState(null);
@@ -77,6 +82,47 @@ export default function useAdminUsers() {
     }, 3500);
   }, [capture, isActive]);
 
+  const resetLockForm = () => {
+    setLockReason("");
+    setLockReasonError("");
+    setUserMutationError("");
+  };
+
+  const changeLockReason = (value) => {
+    if (mutationPending.current) return;
+    setLockReason(value);
+    setLockReasonError("");
+    setUserMutationError("");
+  };
+
+  const validateLockReason = () => {
+    const reason = lockReason.trim();
+    if (reason && reason.length <= 500) return reason;
+    setLockReasonError("Nhập lý do khóa tài khoản từ 1 đến 500 ký tự.");
+    return null;
+  };
+
+  const showUserMutationResult = (response, fallback) => {
+    if (response.data?.lockEmailStatus === "failed") {
+      showToast(lockEmailWarning, "error");
+    } else {
+      showToast(response.message || fallback);
+    }
+  };
+
+  const handleUserMutationError = async (error, fallback, closeModal) => {
+    const message = getErrorMessage(error, fallback);
+    if (error.response?.data?.code === "USER_STATUS_CONFLICT") {
+      closeModal(false);
+      showToast(message, "error");
+      await userList.refresh();
+    } else if (typeof error.response?.data?.errors?.reason === "string") {
+      setLockReasonError(error.response.data.errors.reason);
+    } else {
+      setUserMutationError(message);
+    }
+  };
+
   useEffect(() => {
     if (userList.error) showToast(userList.error, "error");
   }, [userList.error, showToast]);
@@ -100,6 +146,7 @@ export default function useAdminUsers() {
     setTargetUserForStatus(null);
     setEditFullName("");
     setEditPhone("");
+    resetLockForm();
     setToast({ visible: false, message: "", type: "success" });
   }, [sessionVersion]);
   const changeSearch = (value) => {
@@ -179,6 +226,11 @@ export default function useAdminUsers() {
       showToast("Họ và tên không được để trống.", "error");
       return;
     }
+    setUserMutationError("");
+    const statusChanged = editStatus !== (selectedUser.status !== false);
+    const locking = statusChanged && !editStatus;
+    const reason = locking ? validateLockReason() : undefined;
+    if (locking && !reason) return;
     mutationPending.current = true;
     setSubmitting(true);
     try {
@@ -186,26 +238,28 @@ export default function useAdminUsers() {
         fullName: editFullName.trim(),
         phone: editPhone.trim(),
         ...(editRole !== selectedUser.role ? { role: editRole } : {}),
-        ...(editStatus !== (selectedUser.status !== false) ? { status: editStatus } : {}),
+        ...(statusChanged ? { status: editStatus } : {}),
+        ...(locking ? { reason } : {}),
       };
       const response = await userService.updateUser(selectedUser._id, payload);
       if (!response?.success)
         throw new Error(response?.message || "Cập nhật thông tin thất bại.");
       if (!isCurrent()) return;
+      const { fullName, phone, role, status } = response.data;
       setUsers((previous) =>
         previous.map((user) =>
-          user._id === selectedUser._id ? { ...user, ...payload } : user,
+          user._id === selectedUser._id
+            ? { ...user, fullName, phone, role, status }
+            : user,
         ),
       );
       setDetailModalVisible(false);
-      showToast(response.message || "Cập nhật thông tin thành công!");
+      resetLockForm();
+      showUserMutationResult(response, "Cập nhật thông tin thành công!");
       await userList.refresh();
     } catch (error) {
       if (isCurrent())
-        showToast(
-          getErrorMessage(error, "Cập nhật thông tin thất bại."),
-          "error",
-        );
+        await handleUserMutationError(error, "Cập nhật thông tin thất bại.", setDetailModalVisible);
     } finally {
       mutationPending.current = false;
       if (mounted.current) setSubmitting(false);
@@ -235,12 +289,15 @@ export default function useAdminUsers() {
       return;
     }
     const isCurrent = capture();
-    mutationPending.current = true;
-    setStatusLoading(true);
     const target = targetUserForStatus;
     const status = target.status === false;
+    setUserMutationError("");
+    const reason = status ? undefined : validateLockReason();
+    if (!status && !reason) return;
+    mutationPending.current = true;
+    setStatusLoading(true);
     try {
-      const response = await userService.updateUserStatus(target._id, status);
+      const response = await userService.updateUserStatus(target._id, status, reason);
       if (!response?.success)
         throw new Error(response?.message || "Thao tác thất bại.");
       if (!isCurrent()) return;
@@ -251,11 +308,12 @@ export default function useAdminUsers() {
       );
       setConfirmModalVisible(false);
       setTargetUserForStatus(null);
-      showToast(response.message || "Cập nhật trạng thái thành công!");
+      resetLockForm();
+      showUserMutationResult(response, "Cập nhật trạng thái thành công!");
       await userList.refresh();
     } catch (error) {
       if (isCurrent())
-        showToast(getErrorMessage(error, "Thao tác thất bại."), "error");
+        await handleUserMutationError(error, "Thao tác thất bại.", setConfirmModalVisible);
     } finally {
       mutationPending.current = false;
       if (mounted.current) setStatusLoading(false);
@@ -328,6 +386,7 @@ export default function useAdminUsers() {
     setSelectedUser(null);
     setEditFullName("");
     setEditPhone("");
+    resetLockForm();
   };
   const closeRole = () => {
     if (mutationPending.current) return;
@@ -338,12 +397,14 @@ export default function useAdminUsers() {
     if (mutationPending.current) return;
     setConfirmModalVisible(false);
     setTargetUserForStatus(null);
+    resetLockForm();
   };
   const changeField = (key, value) => {
     if (mutationPending.current || !detailModalVisible) return;
     if (selectedUser?.role === "admin" && (
       selectedUser._id !== currentAdminId || !["fullName", "phone"].includes(key)
     )) return;
+    if (key === "status" && value === true) resetLockForm();
     const actions = { fullName: setEditFullName, phone: setEditPhone, role: setEditRole, status: setEditStatus };
     if (Object.prototype.hasOwnProperty.call(actions, key)) actions[key](value);
   };
@@ -377,6 +438,10 @@ export default function useAdminUsers() {
     selectedStatus,
     selectStatus,
     toast,
+    lockReason,
+    lockReasonError,
+    changeLockReason,
+    userMutationError,
     fetchUsers,
     handleRefresh,
     handleSearchSubmit,

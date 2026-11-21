@@ -41,6 +41,10 @@ export default function AdminUsersScreen() {
     selectedStatus,
     selectStatus,
     toast,
+    lockReason,
+    lockReasonError,
+    changeLockReason,
+    userMutationError,
     fetchUsers,
     handleRefresh,
     handleSearchSubmit,
@@ -168,6 +172,10 @@ export default function AdminUsersScreen() {
         onChangeRole={(value) => changeField("role", value)}
         status={editStatus}
         onChangeStatus={(value) => changeField("status", value)}
+        lockReason={lockReason}
+        lockReasonError={lockReasonError}
+        onChangeLockReason={changeLockReason}
+        submitError={userMutationError}
         submitting={submitting}
         onClose={closeDetail}
         onSave={handleSaveUserInfo}
@@ -189,6 +197,10 @@ export default function AdminUsersScreen() {
         visible={confirmModalVisible}
         targetUser={targetUserForStatus}
         loading={statusLoading}
+        lockReason={lockReason}
+        lockReasonError={lockReasonError}
+        onChangeLockReason={changeLockReason}
+        submitError={userMutationError}
         onClose={closeStatus}
         onConfirm={handleConfirmStatusChange}
       />

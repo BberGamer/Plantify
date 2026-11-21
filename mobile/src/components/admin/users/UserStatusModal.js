@@ -8,8 +8,11 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { Button } from "react-native-paper";
+import { Button, HelperText } from "react-native-paper";
+import FormField from "../../common/FormField";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../theme/colors";
 import { garden, leafShape } from "./theme";
@@ -18,6 +21,10 @@ export default function UserStatusModal({
   visible,
   targetUser,
   loading,
+  lockReason,
+  lockReasonError,
+  onChangeLockReason,
+  submitError,
   onClose,
   onConfirm,
 }) {
@@ -31,7 +38,10 @@ export default function UserStatusModal({
       animationType="fade"
       onRequestClose={close}
     >
-      <View style={styles.modalOverlay}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.modalOverlay}
+      >
         <SafeAreaView edges={["bottom", "left", "right"]} style={styles.modalCard}>
           {/* HEADER */}
           <View style={styles.modalHeader}>
@@ -87,6 +97,17 @@ export default function UserStatusModal({
               </Text>
             </View>
 
+            {isCurrentlyActive && (
+              <FormField
+                label="Lý do khóa tài khoản"
+                value={lockReason}
+                onChangeText={onChangeLockReason}
+                error={lockReasonError}
+                hint="Lý do sẽ được gửi đến email của người dùng."
+                multiline
+                disabled={loading}
+              />
+            )}
             <View
               style={[
                 styles.noteBox,
@@ -104,6 +125,7 @@ export default function UserStatusModal({
                   : "Sau khi kích hoạt, tài khoản này có thể đăng nhập và sử dụng ứng dụng bình thường."}
               </Text>
             </View>
+            {!!submitError && <HelperText type="error" accessibilityRole="alert">{submitError}</HelperText>}
           </ScrollView>
 
           {/* FOOTER */}
@@ -114,7 +136,7 @@ export default function UserStatusModal({
             </Button>
           </View>
         </SafeAreaView>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

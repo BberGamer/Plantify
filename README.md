@@ -407,13 +407,32 @@ nhận diện mọi loài cây. `POST /api/identification` nhận multipart `pho
 bằng phiên Customer đang hoạt động như chẩn đoán nhưng không lưu bằng chứng bệnh
 để áp dụng điều trị. Kết quả có liên kết chi tiết khi khớp cây trong danh mục.
 
-Chuông mở `/customer/notifications`: danh sách nhắc điều trị đã đến hạn của tài
-khoản, phân trang, kéo làm mới, đánh dấu đã đọc và mở lịch điều trị. API gồm
-`GET /api/notifications?page=1&limit=20` và `PATCH /api/notifications/:id/read`;
-chỉ Customer đang hoạt động được truy cập, chỉ đọc/sửa thông báo của chính mình.
-Thông báo tương lai hoặc đã hủy không hiển thị. Đây là hộp thông báo trong ứng dụng;
-chưa có worker gửi push/FCM hoặc thông báo trên hệ điều hành. Nút “Xem lịch chăm sóc”
-tiếp tục mở màn `/customer/care` đã có.
+Chuông mở `/customer/notifications` để xem lời nhắc chăm sóc và điều trị,
+đánh dấu đã đọc và mở lịch tương ứng. Khách hàng quản lý nhắc điều trị trong
+Hồ sơ. Hộp thư có trên Android, iOS và web. Push qua Firebase Cloud Messaging
+được triển khai trên Android.
+
+#### Chạy thông báo lịch
+
+1. Chạy backend với MongoDB replica set như luồng điều trị. Backend kiểm tra lịch
+   mỗi phút và gửi bù lời nhắc còn hiệu lực trong 24 giờ. Đồng bộ đồng hồ của máy
+   backend. Giờ đặt lịch và hiển thị là `Asia/Ho_Chi_Minh`, còn MongoDB lưu UTC.
+2. Trong project Firebase của Plantify, đăng ký app Android `com.plantify.app`
+   và bật Firebase Cloud Messaging API. Cấu hình `GOOGLE_SERVICES_JSON` ở môi
+   trường build mobile trỏ tới file `google-services.json`. Ví dụ PowerShell tại
+   `mobile/` dùng `$env:GOOGLE_SERVICES_JSON = "./google-services.json"` trước
+   khi chạy `npx expo run:android`. Với EAS dùng biến kiểu file cùng tên trong
+   môi trường build. Cài development build mới trên điện thoại.
+3. Ở môi trường backend đặt `FCM_ENABLED=true` và cấu hình Application Default
+   Credentials cho Firebase Admin SDK. Khi chạy local bằng service account,
+   đặt `GOOGLE_APPLICATION_CREDENTIALS` tới đường dẫn tuyệt đối của file khóa
+   bên ngoài repo. Khi tắt FCM, tác vụ vẫn cập nhật hộp thư.
+4. Trên điện thoại thật, đặt `EXPO_PUBLIC_API_URL` đến địa chỉ backend mà máy
+   truy cập được. Đăng nhập, cấp quyền thông báo và tạo lịch trước giờ nhắc.
+   Kiểm tra cả lúc app đang mở, chạy nền, đã đóng và sau khi đăng xuất.
+
+Chạy test tích hợp MongoDB từ `backend/` với
+`node --test src/services/__tests__/notification.integration.test.cjs`.
 
 Trang chủ lấy tổng số cây và số cây khỏe mạnh từ API vườn theo phiên đăng nhập,
 không tính cây đã lưu trữ. Số cây đang điều trị là phần còn lại theo hai trạng thái

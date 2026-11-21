@@ -4,6 +4,7 @@ import { View, StyleSheet } from "react-native";
 import { Text, Button } from "react-native-paper";
 import ProfileInfoRow from "./ProfileInfoRow";
 import ProfileEditForm from "./ProfileEditForm";
+import NotificationPreferences from "./NotificationPreferences";
 import { colors } from "../../theme/colors";
 
 export default function ProfileDetails({ user, editing, isLoggingOut, startEditing, message,
@@ -11,6 +12,7 @@ export default function ProfileDetails({ user, editing, isLoggingOut, startEditi
   const fullName = user?.fullName?.trim() || "";
   const email = user?.email?.trim() || "";
   const phone = user?.phone?.trim() || "";
+  const showReminders = user?.role === "customer";
   return (<>
         <View style={styles.sectionHeading}>
           <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
@@ -45,10 +47,11 @@ export default function ProfileDetails({ user, editing, isLoggingOut, startEditi
                 icon="call-outline"
                 label="Số điện thoại"
                 value={phone || "Chưa cập nhật"}
-                last
+                last={!showReminders}
               />
             </>
           )}
+          {showReminders && <NotificationPreferences disabled={isLoggingOut} />}
         </View>
         {!!message && (
           <Text style={styles.formMessage} accessibilityRole="alert">

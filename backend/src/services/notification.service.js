@@ -1,11 +1,38 @@
 const Notification = require("../models/notification.model");
+const Treatment = require("../models/treatmentSchedule.model");
+const Care = require("../models/careSchedule.model");
+const Plant = require("../models/userPlant.model");
+const User = require("../models/user.model");
 const AppError = require("../utils/app-error");
 const v = require("../validators/common");
+const subscribers = new Map();
 
+function subscribe(userId, listener) {
+  const key = String(userId);
+  const listeners = subscribers.get(key) || new Set();
+  listeners.add(listener);
+  subscribers.set(key, listeners);
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) subscribers.delete(key);
+  };
+}
+
+function notifyChanged(userId) {
+  for (const listener of subscribers.get(String(userId)) || []) listener();
+}
+
+const fields = "title message scheduled_for is_read type treatment_schedule_id care_schedule_id user_plant_id occurrence_date";
 const visible = (userId) => ({
   user_id: userId,
-  status: { $in: ["scheduled", "sent"] },
   scheduled_for: { $lte: new Date() },
+  // A previously read legacy reminder is already part of the user's history.
+  $or: [
+    { status: { $in: ["published", "sent"] } },
+    { is_read: true },
+    { status: "scheduled", dispatch_managed: { $exists: false },
+      scheduled_for: { $lt: new Date(Date.now() - 86400000) } },
+  ],
 });
 
 const list = async (userId, query = {}) => {
@@ -13,8 +40,7 @@ const list = async (userId, query = {}) => {
   const limit = v.positiveInteger(query.limit, 20, "limit", 50);
   const filter = visible(userId);
   const [items, total] = await Promise.all([
-    Notification.find(filter)
-      .select("title message scheduled_for is_read treatment_schedule_id")
+    Notification.find(filter).select(fields)
       .sort({ scheduled_for: -1, _id: -1 }).skip((page - 1) * limit).limit(limit).lean(),
     Notification.countDocuments(filter),
   ]);
@@ -23,13 +49,48 @@ const list = async (userId, query = {}) => {
     hasNextPage: page < totalPages, hasPrevPage: page > 1 && total > 0 } };
 };
 
+async function unreadCount(userId) {
+  const count = await Notification.countDocuments({ ...visible(userId), is_read: { $ne: true } });
+  return { count };
+}
+
+async function detail(userId, id) {
+  v.id(id);
+  const item = await Notification.findOne({ ...visible(userId), _id: id }).select(fields).lean();
+  if (!item) throw new AppError("NOTIFICATION_NOT_FOUND", 404, "Không tìm thấy thông báo.");
+  const schedule = item.type === "care"
+    ? await Care.findOne({ _id: item.care_schedule_id, user_id: userId, is_active: true }).select("user_plant_id").lean()
+    : await Treatment.findOne({ _id: item.treatment_schedule_id, user_id: userId }).select("user_plant_id").lean();
+  const available = schedule && await Plant.exists({
+    _id: schedule.user_plant_id, user_id: userId, archived_at: null,
+  });
+  return { ...item, target_available: !!available };
+}
+
 const markRead = async (userId, id) => {
   v.id(id);
   const item = await Notification.findOneAndUpdate(
     { ...visible(userId), _id: id }, { $set: { is_read: true } }, { new: true },
   ).select("_id is_read").lean();
   if (!item) throw new AppError("NOTIFICATION_NOT_FOUND", 404, "Không tìm thấy thông báo.");
+  notifyChanged(userId);
   return item;
 };
 
-module.exports = { list, markRead };
+async function preferences(userId) {
+  const user = await User.findById(userId).select("notification_preferences").lean();
+  return { treatment_reminders: user?.notification_preferences?.treatment_reminders !== false };
+}
+
+async function updatePreferences(userId, input) {
+  v.object(input);
+  const enabled = input.treatment_reminders;
+  if (typeof enabled !== "boolean") v.invalid("treatment_reminders");
+  const field = "notification_preferences.treatment_reminders";
+  const update = { [field]: enabled };
+  if (enabled) update["notification_preferences.treatment_reminders_enabled_at"] = new Date();
+  await User.updateOne({ _id: userId, [field]: enabled ? false : { $ne: false } }, { $set: update });
+  return preferences(userId);
+}
+
+module.exports = { list, unreadCount, detail, markRead, preferences, updatePreferences, subscribe, notifyChanged };

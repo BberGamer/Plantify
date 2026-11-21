@@ -138,6 +138,7 @@ const ERROR_MESSAGES = {
   RESOURCE_NOT_FOUND: "Không tìm thấy tài nguyên.",
   DUPLICATE_RESOURCE: "Dữ liệu đã được sử dụng.",
   SELF_LOCK_FORBIDDEN: "Bạn không thể tự khóa tài khoản của chính mình.",
+  USER_STATUS_CONFLICT: "Trạng thái tài khoản đã thay đổi. Vui lòng thực hiện lại.",
   SELF_ROLE_CHANGE_FORBIDDEN:
     "Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình.",
   AUTH_REQUIRED: "Vui lòng đăng nhập để tiếp tục.",

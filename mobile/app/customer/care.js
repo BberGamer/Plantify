@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Dialog, Portal, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -30,10 +30,20 @@ export default function CareScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const plantId = typeof params.plantId === "string" ? params.plantId : undefined;
+  const requestedDate = typeof params.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(params.date)
+    && Number.isFinite(Date.parse(params.date))
+    && new Date(params.date).toISOString().slice(0, 10) === params.date ? params.date : undefined;
   const today = gardenToday();
-  const [day, setDay] = useState(gardenToday);
+  const [day, setDay] = useState(requestedDate ?? today);
   const [week, setWeek] = useState(false);
   const [filter, setFilter] = useState("all");
+  useEffect(() => {
+    if (requestedDate) {
+      setDay(requestedDate);
+      setWeek(false);
+      setFilter("all");
+    }
+  }, [requestedDate, plantId]);
   const firstDay = startOfWeek(day);
   const days = Array.from({ length: 7 }, (_, i) => shiftDay(firstDay, i));
   const care = useCareTasks(week ? firstDay : day, week ? shiftDay(firstDay, 6) : day, plantId);

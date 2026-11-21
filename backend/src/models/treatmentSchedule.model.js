@@ -246,6 +246,7 @@ treatmentScheduleSchema.index(
   },
 );
 treatmentScheduleSchema.index({ user_id: 1, status: 1, created_at: -1 });
+treatmentScheduleSchema.index({ status: 1, "tasks.scheduled_date": 1 });
 treatmentScheduleSchema.index({ user_plant_id: 1, created_at: -1 });
 treatmentScheduleSchema.index({ treatment_protocol_id: 1, created_at: -1 });
 treatmentScheduleSchema.index(

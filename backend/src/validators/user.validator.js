@@ -12,8 +12,16 @@ const update = (input) => {
     result.fullName = v.text(input.fullName, "fullName");
   if (input.phone !== undefined) result.phone = v.phone(input.phone);
   if (input.role !== undefined) result.role = role(input.role);
-  if (input.status !== undefined)
+  if (input.status !== undefined) {
     result.status = v.boolean(input.status, "status");
+    if (!result.status) {
+      const reason = typeof input.reason === "string" ? input.reason.trim() : "";
+      if (!reason || reason.length > 500) {
+        v.invalid("reason", "Nhập lý do khóa tài khoản từ 1 đến 500 ký tự.");
+      }
+      result.reason = reason;
+    }
+  }
   return result;
 };
 const query = (input = {}) => {
