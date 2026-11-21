@@ -14,6 +14,7 @@ const snapshotStageSchema = new mongoose.Schema(
     source_stage_id: { type: mongoose.Schema.Types.ObjectId, default: null },
     order: { type: Number, required: true, min: 1 },
     title: { type: String, required: true, trim: true, maxlength: 150 },
+    time: { type: String, required: true, default: "08:00", match: /^(?:[01]\d|2[0-3]):[0-5]\d$/ },
     start_day: { type: Number, required: true, min: 1 },
     end_day: { type: Number, required: true, min: 1 },
     instructions: {
@@ -40,6 +41,12 @@ const protocolSnapshotSchema = new mongoose.Schema(
       type: [{ type: String, required: true, trim: true, maxlength: 2000 }],
       required: true,
     },
+    reference_status: {
+      type: String,
+      enum: ["document_assisted", "ai_unverified"],
+      default: "ai_unverified",
+    },
+    reference_notice: { type: String, trim: true, maxlength: 500, default: "" },
     stages: { type: [snapshotStageSchema], required: true },
   },
   { _id: false, id: false },
@@ -56,6 +63,7 @@ const treatmentTaskSchema = new mongoose.Schema(
       immutable: true,
     },
     scheduled_date: { type: Date, required: true },
+    time: { type: String, required: true, default: "08:00", match: /^(?:[01]\d|2[0-3]):[0-5]\d$/ },
     instructions: {
       type: [{ type: String, required: true, trim: true, maxlength: 2000 }],
       required: true,

@@ -72,6 +72,11 @@ export default function TreatmentListScreen() {
         <TreatmentTimeline stages={data.stages} currentStageOrder={data.current_stage_order} />
       </View>
       <TreatmentSafetyNotice>{data.protocol.safety_note}</TreatmentSafetyNotice>
+      {!!data.protocol.reference_notice && (
+        <Text style={styles.notice} accessibilityRole="alert">
+          {data.protocol.reference_notice}
+        </Text>
+      )}
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Lịch sử điều trị</Text>
         {data.history.map((item) => <View key={item._id} style={styles.history}>
@@ -103,6 +108,7 @@ const styles = StyleSheet.create({
   success: { backgroundColor: colors.lightMint, borderRadius: radius.md, padding: spacing.md },
   successText: { ...typography.body, color: colors.primaryLight, textAlign: "center" },
   error: { ...typography.body, color: colors.statusError, textAlign: "center" },
+  notice: { ...typography.body, color: "#946017", backgroundColor: colors.warmPeachBg, borderRadius: radius.md, padding: spacing.md },
   summary: { flexDirection: "row", gap: spacing.lg, paddingBottom: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
   image: { width: 108, height: 108, borderRadius: radius.card, backgroundColor: colors.lightMint },
   summaryText: { flex: 1, minWidth: 0, justifyContent: "center", gap: spacing.xs },

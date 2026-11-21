@@ -16,6 +16,14 @@ module.exports = {
       treatment.getApprovedProtocols(req.query.disease_id, req.query.plant_id),
     "Lấy danh sách phác đồ điều trị thành công.",
   ),
+  preview: handle(
+    (req) => require("../services/treatment-ai.service").createCustomerPreview(
+      req.user.id,
+      req.body,
+    ),
+    "Đã tạo bản xem trước phác đồ điều trị.",
+    201,
+  ),
   generate: handle(
     (req) => treatment.generateSchedule(req.user.id, req.body),
     "Tạo lịch điều trị thành công.",
@@ -62,8 +70,12 @@ module.exports = {
     201,
   ),
   managerAiDraft: handle(
-    (req) => require("../services/treatment-ai.service").generateDraft(req.user.id, req.body),
-    "AI đã tạo bản nháp phác đồ để Manager xác minh.",
+    (req) => require("../services/treatment-ai.service").generateFromDocument(
+      req.user.id,
+      req.body,
+      req.file,
+    ),
+    "Đã tạo phác đồ từ tài liệu DOCX.",
     201,
   ),
   managerUpdate: handle(
