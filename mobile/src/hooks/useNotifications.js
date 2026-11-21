@@ -1,14 +1,22 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import notificationService from "../services/notificationService";
 import usePaginatedList from "./usePaginatedList";
 import useScreenScope from "./useScreenScope";
 import getErrorMessage from "../utils/getErrorMessage";
+import { getSessionContext } from "../services/sessionAccess";
+import useAuthStore from "../../store/authStore";
 
 export default function useNotifications() {
   const list = usePaginatedList(notificationService.list, { limit: 20 });
   const [busyId, setBusyId] = useState(null);
   const [actionError, setActionError] = useState("");
   const lock = useRef(false);
+  const sessionVersion = useAuthStore(state => state.sessionVersion);
+  const reload = list.refresh;
+  useFocusEffect(useCallback(() => notificationService.subscribe(getSessionContext(), () => {
+    if (!lock.current) void reload();
+  }), [reload, sessionVersion]));
   const scope = useScreenScope(() => { setBusyId(null); setActionError(""); });
   const markRead = async (item) => {
     if (lock.current) return false;

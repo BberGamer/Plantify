@@ -1,12 +1,12 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Avatar, IconButton, Text } from "react-native-paper";
+import { Avatar, Badge, IconButton, Text } from "react-native-paper";
 import useHomeHeader from "../../hooks/useHomeHeader";
 import { colors } from "../../theme/colors";
 
 export default function HomeHeader() {
-  const { user, openAdmin, openAccountMenu, openNotifications, isLoggingOut, logoutError, roleLabel } = useHomeHeader();
+  const { user, openAdmin, openAccountMenu, openNotifications, unreadCount, isLoggingOut, logoutError, roleLabel } = useHomeHeader();
 
   const initials = user?.fullName
     ? user.fullName
@@ -39,7 +39,14 @@ export default function HomeHeader() {
               <Text style={styles.adminBadgeBtnText}>{roleLabel}</Text>
             </TouchableOpacity>
           )}
-          <IconButton icon="bell-outline" accessibilityLabel="Mở thông báo" onPress={openNotifications} iconColor="#183B2B" size={20} style={styles.bellButton} />
+          <View style={styles.bellContainer}>
+            <IconButton icon="bell-outline"
+              accessibilityLabel={unreadCount > 0 ? `Mở thông báo, ${unreadCount} mục chưa đọc` : "Mở thông báo"}
+              onPress={openNotifications} iconColor="#183B2B" size={20} style={styles.bellButton} />
+            {unreadCount > 0 && <View pointerEvents="none" style={styles.unreadBadge}>
+              <Badge size={18}>{unreadCount > 99 ? "99+" : unreadCount}</Badge>
+            </View>}
+          </View>
           <TouchableOpacity onPress={openAccountMenu} disabled={isLoggingOut} activeOpacity={0.8}>
             <Avatar.Text
               size={38}
@@ -126,6 +133,8 @@ const styles = StyleSheet.create({
     margin: 0,
     marginRight: 10,
   },
+  bellContainer: { position: "relative" },
+  unreadBadge: { position: "absolute", top: -3, right: 4 },
   avatarButton: {
     width: 38,
     height: 38,

@@ -5,6 +5,22 @@ const Plant = require("../models/userPlant.model");
 const User = require("../models/user.model");
 const AppError = require("../utils/app-error");
 const v = require("../validators/common");
+const subscribers = new Map();
+
+function subscribe(userId, listener) {
+  const key = String(userId);
+  const listeners = subscribers.get(key) || new Set();
+  listeners.add(listener);
+  subscribers.set(key, listeners);
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) subscribers.delete(key);
+  };
+}
+
+function notifyChanged(userId) {
+  for (const listener of subscribers.get(String(userId)) || []) listener();
+}
 
 const fields = "title message scheduled_for is_read type treatment_schedule_id care_schedule_id user_plant_id occurrence_date";
 const visible = (userId) => ({
@@ -33,6 +49,11 @@ const list = async (userId, query = {}) => {
     hasNextPage: page < totalPages, hasPrevPage: page > 1 && total > 0 } };
 };
 
+async function unreadCount(userId) {
+  const count = await Notification.countDocuments({ ...visible(userId), is_read: { $ne: true } });
+  return { count };
+}
+
 async function detail(userId, id) {
   v.id(id);
   const item = await Notification.findOne({ ...visible(userId), _id: id }).select(fields).lean();
@@ -52,6 +73,7 @@ const markRead = async (userId, id) => {
     { ...visible(userId), _id: id }, { $set: { is_read: true } }, { new: true },
   ).select("_id is_read").lean();
   if (!item) throw new AppError("NOTIFICATION_NOT_FOUND", 404, "Không tìm thấy thông báo.");
+  notifyChanged(userId);
   return item;
 };
 
@@ -71,4 +93,4 @@ async function updatePreferences(userId, input) {
   return preferences(userId);
 }
 
-module.exports = { list, detail, markRead, preferences, updatePreferences };
+module.exports = { list, unreadCount, detail, markRead, preferences, updatePreferences, subscribe, notifyChanged };

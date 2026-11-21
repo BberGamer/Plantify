@@ -8,6 +8,7 @@ const Treatment = require("../models/treatmentSchedule.model");
 const User = require("../models/user.model");
 const Plant = require("../models/userPlant.model");
 const recurrence = require("./careRecurrence");
+const { notifyChanged } = require("./notification.service");
 
 const DAY = 86400000;
 const VIETNAM_OFFSET = 7 * 3600000;
@@ -105,8 +106,9 @@ async function publish(from, now, pushEnabled) {
       const result = await Notification.updateOne({
         _id: item._id, status: "scheduled", scheduled_for: item.scheduled_for,
       }, { $set: { status: "published", published_at: now, dispatch_managed: true } });
-      if (result.modifiedCount) published++;
-      else continue;
+      if (!result.modifiedCount) continue;
+      published++;
+      notifyChanged(item.user_id);
     }
     if (!pushEnabled) continue;
     const devices = await Device.find({ user_id: item.user_id, revoked: false, token: { $exists: true } })
@@ -215,7 +217,11 @@ async function start() {
     }
   }
   void run();
-  setInterval(run, INTERVAL).unref();
+  // Lịch đặt theo phút, nên chạy tại đầu phút thay vì theo giây backend khởi động.
+  setTimeout(() => {
+    void run();
+    setInterval(run, INTERVAL).unref();
+  }, INTERVAL - Date.now() % INTERVAL).unref();
 }
 
 module.exports = { start, tick };

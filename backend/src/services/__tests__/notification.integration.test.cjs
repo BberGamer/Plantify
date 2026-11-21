@@ -2,6 +2,9 @@ const assert = require("node:assert/strict");
 const { randomUUID } = require("node:crypto");
 const { test, before, after } = require("node:test");
 const mongoose = require("mongoose");
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const { once } = require("node:events");
 const { MongoMemoryReplSet } = require("mongodb-memory-server");
 const Care = require("../../models/careSchedule.model");
 const Completion = require("../../models/careCompletion.model");
@@ -79,9 +82,12 @@ test("uses the Vietnam calendar, checks current eligibility, and protects the in
   // Visibility uses real UTC time, so use a past due time to assert API ownership.
   await Notification.updateOne({ _id: item._id }, { $set: { scheduled_for: new Date(0) } });
   const key = String(item._id);
+  assert.deepEqual(await inbox.unreadCount(owner), { count: 1 });
+  assert.deepEqual(await inbox.unreadCount(id()), { count: 0 });
   assert.equal((await inbox.detail(owner, key)).target_available, true);
   await assert.rejects(inbox.markRead(id(), key), { code: "NOTIFICATION_NOT_FOUND" });
   assert.equal((await inbox.markRead(owner, key)).is_read, true);
+  assert.deepEqual(await inbox.unreadCount(owner), { count: 0 });
   await Care.updateOne({ _id: item.care_schedule_id }, { $set: { is_active: false } });
   assert.equal((await inbox.detail(owner, key)).target_available, false);
 
@@ -167,4 +173,40 @@ test("offline revocation protects both account switches and requests in flight",
   await devices.revoke(installationId, inFlight);
   await assert.rejects(devices.register(next, installationId, inFlight),
     { code: "DEVICE_BINDING_INACTIVE" });
+});
+
+test("streams inbox changes only to the authenticated customer", async () => {
+  const { owner, plant } = await seed("stream@test.local");
+  const app = express();
+  app.use("/notifications", require("../../routes/notification.routes"));
+  const server = app.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const abort = new AbortController();
+  try {
+    const url = `http://127.0.0.1:${server.address().port}/notifications/events`;
+    assert.equal((await fetch(url)).status, 401);
+    const token = jwt.sign({ id: String(owner) }, process.env.JWT_SECRET || "plantify_secret_key", { expiresIn: "1m" });
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.any([abort.signal, AbortSignal.timeout(5000)]),
+    });
+    assert.match(response.headers.get("content-type"), /^text\/event-stream/);
+    const reader = response.body.getReader();
+    const read = async () => Buffer.from((await reader.read()).value).toString();
+    assert.equal(await read(), "data: changed\n\n");
+    inbox.notifyChanged(id());
+    const local = new Date(Date.now() - 60000 + 7 * 3600000).toISOString();
+    await care(owner, plant, { start_date: local.slice(0, 10), time: local.slice(11, 16) });
+    await tick();
+    assert.equal(await read(), "data: changed\n\n");
+    assert.deepEqual(await inbox.unreadCount(owner), { count: 1 });
+    const item = await Notification.findOne({ user_id: owner }).lean();
+    await inbox.markRead(owner, String(item._id));
+    assert.equal(await read(), "data: changed\n\n");
+    assert.deepEqual(await inbox.unreadCount(owner), { count: 0 });
+  } finally {
+    abort.abort();
+    server.closeAllConnections();
+    await new Promise(resolve => server.close(resolve));
+  }
 });
