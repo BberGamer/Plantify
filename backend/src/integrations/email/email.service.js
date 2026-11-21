@@ -40,6 +40,61 @@ const sendMailWithTimeout = async (transporter, mailOptions, timeoutMs = 50000) 
   }
 };
 
+const renderEmailLayout = (heading, content) => `
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>${heading}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f0fdf4;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#16a34a,#15803d);padding:36px 40px;text-align:center;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <div style="width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
+                      <span style="font-size:28px;">🌿</span>
+                    </div>
+                    <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;letter-spacing:-0.5px;">Plantify</h1>
+                    <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Nền tảng cây xanh thông minh</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <h2 style="margin:0 0 16px;color:#111827;font-size:22px;font-weight:700;">${heading}</h2>
+              ${content}
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center;">
+              <p style="margin:0 0 6px;color:#9ca3af;font-size:12px;">
+                Email này được gửi tự động từ hệ thống Plantify. Vui lòng không trả lời email này.
+              </p>
+              <p style="margin:0;color:#9ca3af;font-size:12px;">
+                © 2026 Plantify. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+
 /**
  * Gửi email chứa mã OTP (dùng cho cả đặt lại mật khẩu lẫn xác thực đăng ký)
  * @param {string} toEmail - Email người nhận
@@ -72,80 +127,29 @@ const sendOTPEmail = async (toEmail, otp, type = 'register') => {
     from: `"Plantify 🌿" <${process.env.EMAIL_USER}>`,
     to: toEmail,
     subject,
-    html: `
-      <!DOCTYPE html>
-      <html lang="vi">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <title>${heading}</title>
-      </head>
-      <body style="margin:0;padding:0;background-color:#f0fdf4;font-family:'Segoe UI',Arial,sans-serif;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;padding:40px 0;">
-          <tr>
-            <td align="center">
-              <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-                <!-- Header -->
-                <tr>
-                  <td style="background:linear-gradient(135deg,#16a34a,#15803d);padding:36px 40px;text-align:center;">
-                    <table width="100%" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td align="center">
-                          <div style="width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
-                            <span style="font-size:28px;">🌿</span>
-                          </div>
-                          <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;letter-spacing:-0.5px;">Plantify</h1>
-                          <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Nền tảng cây xanh thông minh</p>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <!-- Body -->
-                <tr>
-                  <td style="padding:40px 40px 32px;">
-                    <h2 style="margin:0 0 16px;color:#111827;font-size:22px;font-weight:700;">${heading}</h2>
-                    <p style="margin:0 0 20px;color:#4b5563;font-size:15px;line-height:1.6;">
-                      ${bodyText}
-                      Mã này sẽ hết hạn sau <strong>5 phút</strong>.
-                    </p>
-                    <!-- OTP Box -->
-                    <table width="100%" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td align="center" style="padding:12px 0 24px;">
-                          <div style="display:inline-block;background:#f0fdf4;border:2px dashed #16a34a;border-radius:12px;padding:16px 36px;">
-                            <span style="font-family:'Courier New',Courier,monospace;font-size:36px;font-weight:bold;letter-spacing:6px;color:#15803d;">${otp}</span>
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-                    <!-- Warning box -->
-                    <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
-                      <p style="margin:0;color:#92400e;font-size:13px;line-height:1.5;">
-                        ⚠️ <strong>Lưu ý bảo mật:</strong> Tuyệt đối không chia sẻ mã xác thực này với bất kỳ ai để tránh mất tài khoản.
-                        ${warningText}
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-                <!-- Footer -->
-                <tr>
-                  <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center;">
-                    <p style="margin:0 0 6px;color:#9ca3af;font-size:12px;">
-                      Email này được gửi tự động từ hệ thống Plantify. Vui lòng không trả lời email này.
-                    </p>
-                    <p style="margin:0;color:#9ca3af;font-size:12px;">
-                      © 2026 Plantify. All rights reserved.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-      </html>
-    `,
+    html: renderEmailLayout(heading, `
+      <p style="margin:0 0 20px;color:#4b5563;font-size:15px;line-height:1.6;">
+        ${bodyText}
+        Mã này sẽ hết hạn sau <strong>5 phút</strong>.
+      </p>
+      <!-- OTP Box -->
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="center" style="padding:12px 0 24px;">
+            <div style="display:inline-block;background:#f0fdf4;border:2px dashed #16a34a;border-radius:12px;padding:16px 36px;">
+              <span style="font-family:'Courier New',Courier,monospace;font-size:36px;font-weight:bold;letter-spacing:6px;color:#15803d;">${otp}</span>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <!-- Warning box -->
+      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
+        <p style="margin:0;color:#92400e;font-size:13px;line-height:1.5;">
+          ⚠️ <strong>Lưu ý bảo mật:</strong> Tuyệt đối không chia sẻ mã xác thực này với bất kỳ ai để tránh mất tài khoản.
+          ${warningText}
+        </p>
+      </div>
+    `),
   };
 
   try {
@@ -159,11 +163,25 @@ const sendOTPEmail = async (toEmail, otp, type = 'register') => {
 
 const sendAccountLockEmail = async (email, reason) => {
   const transporter = createTransporter({ requireTLS: true, tls: { rejectUnauthorized: true } });
+  const heading = "Tài khoản đã bị khóa";
+  const bodyText = "Tài khoản Plantify của bạn đã bị khóa.";
+  const reasonHtml = reason.replace(/[&<>]/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+  })[character]).replace(/\r\n?|\n/g, "<br>");
   const info = await sendMailWithTimeout(transporter, {
-    from: { name: "Plantify", address: process.env.EMAIL_USER },
+    from: { name: "Plantify 🌿", address: process.env.EMAIL_USER },
     to: { address: email },
     subject: "Plantify thông báo khóa tài khoản",
-    text: `Tài khoản Plantify của bạn đã bị khóa.\n\nLý do khóa tài khoản\n${reason}\n\nPlantify`,
+    text: `${bodyText}\n\nLý do khóa tài khoản\n${reason}\n\nPlantify`,
+    html: renderEmailLayout(heading, `
+      <p style="margin:0 0 20px;color:#4b5563;font-size:15px;line-height:1.6;">${bodyText}</p>
+      <div style="background:#f0fdf4;border:2px dashed #16a34a;border-radius:12px;padding:16px 20px;margin-bottom:24px;">
+        <p style="margin:0 0 8px;color:#15803d;font-size:15px;font-weight:700;">Lý do khóa tài khoản</p>
+        <p style="margin:0;color:#4b5563;font-size:15px;line-height:1.6;overflow-wrap:anywhere;word-break:break-word;">${reasonHtml}</p>
+      </div>
+    `),
   }, 20000);
   if (!info.accepted?.length) throw new Error("SMTP rejected recipient");
 };
