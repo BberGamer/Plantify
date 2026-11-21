@@ -11,6 +11,7 @@ const Notification = require("../models/notification.model");
 const User = require("../models/user.model");
 const validate = require("../validators/treatment.validator");
 const v = require("../validators/common");
+const treatmentAI = require("./treatment-ai.service");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const terminalStatuses = ["recovered", "failed", "cancelled"];
@@ -84,6 +85,10 @@ const createReminderOperations = (schedule) =>
   }));
 
 const addDays = (date, days) => new Date(date.getTime() + days * DAY_MS);
+const withVietnamTime = (date, time) => {
+  const [hours, minutes] = time.split(":").map(Number);
+  return new Date(date.getTime() + (hours - 7) * 60 * 60 * 1000 + minutes * 60 * 1000);
+};
 const utcToday = () => {
   const now = new Date();
   const vietnam = new Date(now.getTime() + 7 * 60 * 60 * 1000);
@@ -103,10 +108,14 @@ const createProtocolSnapshot = (protocol) => ({
   version: protocol.version,
   approved_instructions: [...protocol.approved_instructions],
   safety_guidelines: [...protocol.safety_guidelines],
+  reference_status: protocol.reference_status ||
+    (protocol.instruction_source === "ai_unverified" ? "ai_unverified" : "document_assisted"),
+  reference_notice: protocol.reference_notice || "",
   stages: protocol.stages.map((stage) => ({
     source_stage_id: stage._id,
     order: stage.order,
     title: stage.title,
+    time: stage.time || "08:00",
     start_day: stage.start_day,
     end_day: stage.end_day,
     instructions: [...stage.instructions],
@@ -123,7 +132,8 @@ const createTasks = (protocol, startDate) =>
         tasks.push({
           stage_order: stage.order,
           title: stage.title,
-          scheduled_date: addDays(startDate, day - 1),
+          scheduled_date: withVietnamTime(addDays(startDate, day - 1), stage.time || "08:00"),
+          time: stage.time || "08:00",
           instructions: [...stage.instructions],
           dosage_note: stage.dosage_note || "",
           important_note: stage.important_note || "",
@@ -189,6 +199,8 @@ const presentSchedule = async (schedule, session) => {
       safety_note: value.protocol_snapshot.safety_guidelines.join(" "),
       safety_guidelines: value.protocol_snapshot.safety_guidelines,
       approved_instructions: value.protocol_snapshot.approved_instructions,
+      reference_status: value.protocol_snapshot.reference_status,
+      reference_notice: value.protocol_snapshot.reference_notice,
     },
     stages: value.protocol_snapshot.stages.map((stage) => ({
       ...stage,
@@ -256,7 +268,7 @@ const findApprovedProtocols = (diseaseId, plantId) => TreatmentProtocol.find({
   disease_id: diseaseId,
   status: "approved",
   ...(plantId ? { plant_ids: plantId } : {}),
-}).select("-reference_material -ai_generation").sort({ version: -1, updated_at: -1 }).lean();
+}).select("-reference_material -source_document -ai_generation").sort({ version: -1, updated_at: -1 }).lean();
 
 // Caller chẩn đoán đã kiểm tra bệnh và quan hệ cây; chỉ truy vấn phác đồ một lần.
 const hasApprovedProtocol = async (diseaseId, plantId) => {
@@ -302,21 +314,17 @@ const assertDiagnosis = async (diagnosisId, userId, diseaseId, session) => {
 const generateSchedule = async (userId, input) => {
   v.id(userId, "user_id");
   const data = validate.generate(input);
+  const preview = treatmentAI.verifyCustomerPreview(data.preview_token, userId);
+  if (String(preview.disease_id) !== String(data.disease_id) ||
+      String(preview.diagnosis_id || "") !== String(data.diagnosis_id || ""))
+    throw new AppError("TREATMENT_PREVIEW_MISMATCH", 400,
+      "Bản xem trước không khớp kết quả chẩn đoán đã chọn.");
   try {
     return await withTransactionResult(async (session) => {
       const plant = await getOwnedPlant(userId, data.user_plant_id, session);
-      const protocol = await TreatmentProtocol.findOne({
-        _id: data.treatment_protocol_id,
-        disease_id: data.disease_id,
-        plant_ids: plant.plant_id,
-        status: "approved",
-      }).session(session);
-      if (!await isUsableProtocol(protocol))
-        throw new AppError(
-          "APPROVED_PROTOCOL_NOT_FOUND",
-          404,
-          "Không tìm thấy phác đồ đã được phê duyệt cho bệnh này.",
-        );
+      if (String(preview.plant_id) !== String(plant.plant_id))
+        throw new AppError("TREATMENT_PREVIEW_MISMATCH", 400,
+          "Cây trong vườn không khớp bản xem trước phác đồ.");
       const diagnosis = await assertDiagnosis(
         data.diagnosis_id,
         userId,
@@ -369,6 +377,19 @@ const generateSchedule = async (userId, input) => {
           409,
           "Cây đang có một đợt điều trị hoạt động.",
         );
+      const latest = await TreatmentProtocol.findOne({ disease_id: data.disease_id,
+        protocol_name: preview.protocol.protocol_name }).sort({ version: -1 })
+        .select("version").session(session).lean();
+      const [protocol] = await TreatmentProtocol.create([{
+        ...preview.protocol,
+        disease_id: data.disease_id,
+        plant_ids: [plant.plant_id],
+        version: (latest?.version || 0) + 1,
+        status: "approved",
+        created_by: null,
+        approved_by: null,
+        approved_at: new Date(),
+      }], { session });
       const startDate = data.start_date || utcToday();
       const endDate = addDays(startDate, protocol.duration_days - 1);
       const [schedule] = await TreatmentSchedule.create(
@@ -513,7 +534,7 @@ const completeTask = async (userId, scheduleId, taskId) => {
   v.id(taskId, "task_id");
   return withTransactionResult(async (session) => {
     const now = new Date();
-    const availableThrough = utcToday();
+    const availableThrough = new Date();
     const schedule = await TreatmentSchedule.findOneAndUpdate(
       {
         _id: scheduleId,
@@ -620,22 +641,19 @@ const rescheduleTask = async (userId, scheduleId, taskId, input) => {
         409,
         "Không thể đổi lịch công việc đã hoàn thành.",
       );
-    if (
-      result.scheduled_date < schedule.start_date ||
-      result.scheduled_date > schedule.end_date
-    )
+    if (result.scheduled_date < schedule.start_date || result.scheduled_date > schedule.end_date)
       throw new AppError(
         "TASK_DATE_OUT_OF_RANGE",
         400,
         "Ngày thực hiện phải nằm trong thời gian điều trị.",
       );
 
-    task.scheduled_date = result.scheduled_date;
+    task.scheduled_date = withVietnamTime(result.scheduled_date, task.time || "08:00");
     schedule.history.push({
       event: "task_rescheduled",
       task_id: task._id,
       occurred_at: new Date(),
-      note: result.scheduled_date.toISOString().slice(0, 10),
+      note: `${result.scheduled_date.toISOString().slice(0, 10)} ${task.time || "08:00"}`,
     });
     await schedule.save({ session });
     // Sent/cancelled reminders remain historical and are never resurrected.
@@ -645,7 +663,7 @@ const rescheduleTask = async (userId, scheduleId, taskId, input) => {
         treatment_task_id: task._id,
         status: "scheduled",
       },
-      { $set: { scheduled_for: result.scheduled_date } },
+      { $set: { scheduled_for: task.scheduled_date } },
       { session },
     );
     return presentSchedule(schedule, session);
