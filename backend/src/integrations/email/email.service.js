@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer');
 /**
  * Tạo transporter Nodemailer kết nối Gmail qua port 465 (SSL) / 587 (STARTTLS)
  */
-const createTransporter = () => {
+const createTransporter = (options = {}) => {
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -19,16 +19,26 @@ const createTransporter = () => {
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
+    ...options,
   });
 };
 
-const sendMailWithTimeout = (transporter, mailOptions, timeoutMs = 50000) =>
-  Promise.race([
-    transporter.sendMail(mailOptions),
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`SMTP timeout sau ${timeoutMs / 1000}s`)), timeoutMs)
-    ),
-  ]);
+const sendMailWithTimeout = async (transporter, mailOptions, timeoutMs = 50000) => {
+  let timeout;
+  try {
+    return await Promise.race([
+      transporter.sendMail(mailOptions),
+      new Promise((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error(`SMTP timeout sau ${timeoutMs / 1000}s`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeout);
+  }
+};
 
 /**
  * Gửi email chứa mã OTP (dùng cho cả đặt lại mật khẩu lẫn xác thực đăng ký)
@@ -147,4 +157,15 @@ const sendOTPEmail = async (toEmail, otp, type = 'register') => {
   }
 };
 
-module.exports = { sendOTPEmail };
+const sendAccountLockEmail = async (email, reason) => {
+  const transporter = createTransporter({ requireTLS: true, tls: { rejectUnauthorized: true } });
+  const info = await sendMailWithTimeout(transporter, {
+    from: { name: "Plantify", address: process.env.EMAIL_USER },
+    to: { address: email },
+    subject: "Plantify thông báo khóa tài khoản",
+    text: `Tài khoản Plantify của bạn đã bị khóa.\n\nLý do khóa tài khoản\n${reason}\n\nPlantify`,
+  }, 20000);
+  if (!info.accepted?.length) throw new Error("SMTP rejected recipient");
+};
+
+module.exports = { sendOTPEmail, sendAccountLockEmail };

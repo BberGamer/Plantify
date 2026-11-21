@@ -70,12 +70,13 @@ const updateUser = async (req, res, next) => {
 const updateUserStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = v.object(req.body);
+    const { status, reason } = v.object(req.body);
     const currentAdminId = req.user?.id;
     const updatedUser = await userService.updateUserStatus(
       id,
       status,
       currentAdminId,
+      reason,
     );
     const msg = updatedUser.status
       ? "Kích hoạt tài khoản thành công"

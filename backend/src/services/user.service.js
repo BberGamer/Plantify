@@ -4,6 +4,7 @@ const v = require("../validators/common");
 const validate = require("../validators/user.validator");
 const User = require("../models/user.model");
 const bcrypt = require("bcryptjs");
+const { sendAccountLockEmail } = require("../integrations/email/email.service");
 
 const createUser = async (input) => {
   const data = validate.create(input);
@@ -184,8 +185,16 @@ const updateUserInfoAndStatus = async (
     );
   }
 
-  const { fullName, phone, status, role } = updateData;
+  const { fullName, phone, status, role, reason } = updateData;
+  const wasLocked = user.status === false;
   const isSelf = user._id.toString() === currentAdminId?.toString();
+  if (isSelf && status === false) {
+    throw new AppError(
+      "SELF_LOCK_FORBIDDEN",
+      400,
+      "Bạn không thể tự khóa tài khoản của chính mình.",
+    );
+  }
   if (!isSelf || role !== undefined || status !== undefined) assertUserEditable(user);
 
   // Cap nhat ho ten
@@ -214,24 +223,12 @@ const updateUserInfoAndStatus = async (
 
   // Cap nhat trang thai (Active / Banned)
   if (status !== undefined) {
-    const parsedStatus =
-      status === "true" || status === true
-        ? true
-        : status === "false" || status === false
-          ? false
-          : null;
-
-    if (
-      userId.toString() === currentAdminId?.toString() &&
-      parsedStatus === false
-    ) {
-      throw new AppError(
-        "SELF_LOCK_FORBIDDEN",
-        400,
-        "Bạn không thể tự khóa tài khoản của chính mình.",
-      );
-    }
-    user.status = parsedStatus;
+    user.$where = {
+      status: wasLocked ? false : { $ne: false },
+      role: { $ne: "admin" },
+    };
+    user.status = status;
+    user.markModified("status");
   }
 
   // Cap nhat vai tro (Role: customer / manager / admin)
@@ -251,12 +248,35 @@ const updateUserInfoAndStatus = async (
     user.role = normalizedRole;
   }
 
-  await user.save();
+  let savedUser = user;
+  try {
+    await user.save();
+  } catch (error) {
+    if (status === undefined || error.name !== "DocumentNotFoundError") throw error;
+    const current = await User.findById(userId);
+    if (!current) {
+      throw new AppError("USER_NOT_FOUND", 404, "Không tìm thấy người dùng với ID này.");
+    }
+    assertUserEditable(current);
+    if (current.status !== status || fullName !== undefined || phone !== undefined || role !== undefined) {
+      throw new AppError("USER_STATUS_CONFLICT", 409, "Trạng thái tài khoản đã thay đổi. Vui lòng thực hiện lại.");
+    }
+    savedUser = current;
+  }
 
-  const userObj = user.toObject();
+  const userObj = savedUser.toObject();
   delete userObj.password;
   delete userObj.resetPasswordOTP;
   delete userObj.resetPasswordOTPExpires;
+  if (savedUser === user && status === false && !wasLocked) {
+    try {
+      await sendAccountLockEmail(user.email, reason);
+      userObj.lockEmailStatus = "sent";
+    } catch {
+      console.error("Không gửi được email thông báo khóa tài khoản.");
+      userObj.lockEmailStatus = "failed";
+    }
+  }
 
   return userObj;
 };
@@ -266,50 +286,15 @@ const updateUserInfoAndStatus = async (
  * @param {string} userId - ID nguoi dung
  * @param {boolean} status - true (Active) hoac false (Banned / Deactivated)
  * @param {string} currentAdminId - ID Admin dang thuc hien
+ * @param {string} [reason] - Lý do bắt buộc khi khóa tài khoản
  * @returns {Promise<object>} Thong tin user sau cap nhat
  */
-const updateUserStatus = async (userId, status, currentAdminId) => {
-  status = v.boolean(status, "status");
-  v.id(userId);
-
-  const parsedStatus =
-    status === "true" || status === true
-      ? true
-      : status === "false" || status === false
-        ? false
-        : null;
-
-  if (
-    userId.toString() === currentAdminId?.toString() &&
-    parsedStatus === false
-  ) {
-    throw new AppError(
-      "SELF_LOCK_FORBIDDEN",
-      400,
-      "Bạn không thể tự khóa tài khoản của chính mình.",
-    );
-  }
-
-  const user = await User.findById(userId);
-  if (!user) {
-    throw new AppError(
-      "USER_NOT_FOUND",
-      404,
-      "Không tìm thấy người dùng với ID này.",
-    );
-  }
-
-  assertUserEditable(user);
-  user.status = parsedStatus;
-  await user.save();
-
-  const userObj = user.toObject();
-  delete userObj.password;
-  delete userObj.resetPasswordOTP;
-  delete userObj.resetPasswordOTPExpires;
-
-  return userObj;
-};
+const updateUserStatus = (userId, status, currentAdminId, reason) =>
+  updateUserInfoAndStatus(
+    userId,
+    { status: v.boolean(status, "status"), reason },
+    currentAdminId,
+  );
 
 /**
  * 3. Quan ly vai tro he thong (Manage System Roles: customer / manager / admin)
