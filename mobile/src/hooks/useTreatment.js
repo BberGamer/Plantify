@@ -80,6 +80,7 @@ export function useTreatmentPreview({
   const [gardenPlants, setGardenPlants] = useState([]);
   const [selectedUserPlantId, setSelectedUserPlantId] = useState(userPlantId || "");
   const [selectedProtocolId, setSelectedProtocolId] = useState("");
+  const [previewToken, setPreviewToken] = useState("");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -111,6 +112,7 @@ export function useTreatmentPreview({
     const isCurrent = () => inScope() && requestId === request.current;
     setLoading(true);
     setError("");
+    setPreviewToken("");
     try {
       const plants = [];
       let page = 1;
@@ -125,9 +127,11 @@ export function useTreatmentPreview({
       const compatiblePlants = plants.filter(
         (item) => String(item.plant_id || "") === String(plantId),
       );
-      const response = await treatmentService.getApprovedProtocols(diseaseId, plantId);
-      const items = response?.data?.protocols;
-      if (response?.success !== true || !Array.isArray(items)) throw invalidResponse();
+      const response = await treatmentService.createPreview({ diseaseId, plantId, diagnosisId });
+      const protocol = response?.data?.protocol;
+      const token = response?.data?.preview_token;
+      if (response?.success !== true || !protocol || typeof token !== "string") throw invalidResponse();
+      const items = [protocol];
       if (!isCurrent()) return;
       setGardenPlants(compatiblePlants);
       setSelectedUserPlantId((current) =>
@@ -138,6 +142,7 @@ export function useTreatmentPreview({
           : compatiblePlants.find((item) => !item.active_treatment)?._id || "",
       );
       setProtocols(items);
+      setPreviewToken(token);
       setSelectedProtocolId((current) =>
         items.some((item) => item._id === current) ? current : items[0]?._id || "",
       );
@@ -146,13 +151,13 @@ export function useTreatmentPreview({
     } finally {
       if (isCurrent()) setLoading(false);
     }
-  }, [capture, diseaseId, isActive, plantId]);
+  }, [capture, diagnosisId, diseaseId, isActive, plantId]);
   loadRef.current = load;
 
   const generate = useCallback(async () => {
     if (
       mutation.current ||
-      !selectedProtocolId ||
+      !previewToken ||
       !diseaseId ||
       !selectedUserPlantId ||
       !isActive()
@@ -166,7 +171,7 @@ export function useTreatmentPreview({
       const response = await treatmentService.generateSchedule({
         userPlantId: selectedUserPlantId,
         diseaseId,
-        treatmentProtocolId: selectedProtocolId,
+        previewToken,
         diagnosisId,
         startDate,
       });
@@ -186,7 +191,7 @@ export function useTreatmentPreview({
     diagnosisId,
     diseaseId,
     isActive,
-    selectedProtocolId,
+    previewToken,
     selectedUserPlantId,
     startDate,
   ]);
@@ -223,7 +228,7 @@ export function useTreatmentPreview({
     generateError,
     applying,
     applyError,
-    canGenerate: Boolean(selectedProtocolId && diseaseId && selectedUserPlantId),
+    canGenerate: Boolean(previewToken && diseaseId && selectedUserPlantId),
     canApply: treatmentLogic.canApplyTreatment(data),
     selectProtocol: setSelectedProtocolId,
     selectGardenPlant: setSelectedUserPlantId,

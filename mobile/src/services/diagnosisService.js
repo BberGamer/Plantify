@@ -151,7 +151,7 @@ export default {
         {
           signal,
           sessionContext,
-          timeout: 30000,
+          timeout: identification ? 30000 : 100000,
           headers: { "Content-Type": null },
         },
       );

@@ -3,7 +3,6 @@ const AppError = require("../utils/app-error");
 const Plant = require("../models/plant.model");
 const Disease = require("../models/disease.model");
 const DiagnosisMapping = require("../models/diagnosisMapping.model");
-const treatment = require("./treatment.service");
 const DiseaseDiagnosis = require("../models/diseaseDiagnosis.model");
 const inference = require("../integrations/ai/diagnosis.service");
 const inputGuard = require("../integrations/ai/input-guard.service");
@@ -154,7 +153,6 @@ const createCatalogEnricher = ({
   plantModel = Plant,
   diseaseModel = Disease,
   mappingModel = DiagnosisMapping,
-  protocolProvider = treatment.hasApprovedProtocol,
 } = {}) => async (candidate, entry, model) => {
   if (!model?.run_id || !model.sha256) throw new AppError("DIAGNOSIS_NOT_CONFIGURED", 503,
     "Chưa có metadata model hợp lệ để đọc mapping.");
@@ -187,8 +185,7 @@ const createCatalogEnricher = ({
       throw new AppError("DIAGNOSIS_CATALOG_INCOMPLETE", 503,
         "Danh mục cây/bệnh đã bị ẩn, thiếu nội dung định danh hoặc thiếu liên kết hợp lệ.");
     }
-    const treatmentAvailable = disease
-      ? await protocolProvider(String(disease._id), String(plant._id)) : false;
+    const treatmentAvailable = Boolean(disease);
     return {
       ...candidate,
       plant_id: String(plant._id), plant_name: plant.common_name,

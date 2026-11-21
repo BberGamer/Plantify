@@ -9,7 +9,12 @@ const controller = require("../controllers/treatment.controller");
 router.use(authenticate);
 router.get("/manager", authorizeManager, controller.managerList);
 router.post("/manager", authorizeManager, controller.managerCreate);
-router.post("/manager/ai-draft", authorizeManager, controller.managerAiDraft);
+router.post(
+  "/manager/ai-draft",
+  authorizeManager,
+  require("../middlewares/treatment-document.middleware").uploadTreatmentDocument,
+  controller.managerAiDraft,
+);
 router.get("/manager/:id", authorizeManager, controller.managerDetail);
 router.put("/manager/:id", authorizeManager, controller.managerUpdate);
 router.patch(
@@ -19,6 +24,7 @@ router.patch(
 );
 
 router.use(authorizeCustomer);
+router.post("/preview", controller.preview);
 router.get("/protocols", controller.protocols);
 router.post("/schedules", controller.generate);
 router.get("/schedules/:id", controller.detail);

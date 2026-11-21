@@ -279,22 +279,38 @@ dụng lịch điều trị từ ảnh; luồng chọn cây/phác đồ và xác
 
 Kết quả AI đủ chắc chắn và khớp duy nhất với cây/bệnh trong danh mục được lưu làm
 bằng chứng chẩn đoán. Customer có thể chọn một cây cùng loài trong vườn, xem các
-phác đồ đã được Manager phê duyệt cho đúng cặp cây–bệnh, tạo lịch xem trước rồi xác
-nhận áp dụng. AI không tự tạo thuốc hoặc liều lượng; nội dung điều trị chỉ lấy từ
-phác đồ đã xác minh để tránh hướng dẫn không an toàn.
+phác đồ đang hoạt động cho đúng cặp cây–bệnh, tạo lịch xem trước rồi xác nhận áp dụng.
 
-Manager quản lý phác đồ tại tab **Điều trị**: chọn bệnh, các cây áp dụng, thời lượng,
-giai đoạn/ngày, nhiệm vụ, hóa chất hoặc liều lượng, lưu ý và hướng dẫn an toàn; có
-thể lưu nháp hoặc phê duyệt. Khi sửa phác đồ đã duyệt, backend tạo phiên bản mới và
-ngừng phiên bản cũ; lịch đã tạo giữ snapshot nên không bị thay đổi ngược.
+Manager quản lý phác đồ tại tab **Điều trị**. Mỗi công việc có ngày và giờ Việt Nam
+để tạo thông báo đúng thời điểm. Khi sửa phác đồ đã duyệt, backend tạo phiên bản mới
+và ngừng phiên bản cũ; lịch đã tạo giữ snapshot nên không bị thay đổi ngược.
 
-Manager có thể nhập dữ liệu chuyên môn để AI tạo bản nháp 14 ngày qua
-`POST /api/treatments/manager/ai-draft`. Backend chỉ chấp nhận giờ, định lượng,
-đơn vị và dụng cụ có đoạn nguồn nguyên văn tương ứng; bản AI luôn là
-`ai_unverified` cho tới khi Manager kiểm tra và phê duyệt.
+Manager chọn bệnh/cây và có thể tải một file DOCX tối đa 10 MB qua multipart field
+`document` tới `POST /api/treatments/manager/ai-draft`; `plant_ids` là mảng JSON.
+Backend dùng Mammoth trích xuất văn bản, chia đoạn và xếp hạng các đoạn liên quan
+trước khi gọi chung Chat Completions API hiện có. AI ưu tiên tài liệu và có thể bổ
+sung kiến thức chăm sóc phổ biến khi tài liệu thiếu. Kết quả hợp lệ được lưu ở trạng
+thái `approved` và dùng ngay, không có bước Manager duyệt cuối. Nếu không có DOCX,
+AI vẫn tạo từ dữ liệu danh mục và kiến thức model; phác đồ sẽ hiển thị cảnh báo chưa
+được kiểm chứng và chỉ mang tính tham khảo. File gốc không được lưu; DB chỉ giữ tên
+file và số ký tự đã trích xuất.
+
+Bộ 29 file DOCX tham khảo cho 54 nhóm cây/bệnh của model nằm tại
+`backend/data/treatment-templates`. Mỗi file ghi nguồn Extension/IPM/APS tương ứng,
+lịch mẫu an toàn và cảnh báo không thay thế chẩn đoán hoặc nhãn thuốc địa phương.
+Chạy `node backend/scripts/generate-treatment-templates.js` từ root để tái tạo sau
+khi cập nhật nguồn/nội dung trong script; không sửa file nhị phân bằng tay.
+
+Khi Customer mở màn hình xem trước sau chẩn đoán, backend luôn đọc DOCX theo tên cây và
+gọi AI để tạo một phác đồ mới; không truy vấn lại phác đồ cũ và chưa ghi phác đồ mới vào
+MongoDB. Nội dung xem trước được đặt trong token ký xác thực, gắn với đúng tài khoản,
+cây, bệnh và kết quả chẩn đoán trong 30 phút. Chỉ khi người dùng đã thêm/chọn cây trong
+vườn và bấm tạo lịch, backend mới lưu phác đồ cùng lịch điều trị trong một transaction.
+Nếu không có DOCX tương ứng, AI vẫn sinh từ dữ liệu danh mục và gắn cảnh báo chưa được
+kiểm chứng. Luồng này không cần Manager tải file hoặc duyệt lại.
 
 Mỗi cây chỉ có một lịch `in_progress`. Khi bắt đầu, backend tạm dừng lịch chăm sóc
-thường, đánh dấu cây đang điều trị và tạo nhắc việc theo từng ngày. Khi kết thúc,
+thường, đánh dấu cây đang điều trị và tạo nhắc việc theo đúng ngày/giờ. Khi kết thúc,
 lịch chăm sóc từng bị hệ thống tạm dừng được khôi phục; các lịch vốn đã tạm dừng thủ
 công vẫn giữ nguyên. API customer nằm dưới `/api/treatments`; API Manager nằm dưới
 `/api/treatments/manager`.

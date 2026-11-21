@@ -7,6 +7,12 @@ const treatmentStageSchema = new mongoose.Schema(
   {
     order: { type: Number, required: true, min: 1 },
     title: { type: String, required: true, trim: true, maxlength: 150 },
+    time: {
+      type: String,
+      required: true,
+      default: "08:00",
+      match: /^(?:[01]\d|2[0-3]):[0-5]\d$/,
+    },
     start_day: { type: Number, required: true, min: 1 },
     end_day: { type: Number, required: true, min: 1 },
     instructions: {
@@ -87,10 +93,31 @@ const treatmentProtocolSchema = new mongoose.Schema(
       enum: INSTRUCTION_SOURCES,
       default: "ai_unverified",
     },
-    reference_material: { type: String, trim: true, maxlength: 12000, default: "" },
+    source_document: {
+      name: { type: String, trim: true, maxlength: 255, default: "" },
+      extracted_characters: { type: Number, min: 0, default: 0 },
+      sha256: { type: String, trim: true, maxlength: 64, default: "" },
+    },
+    reference_status: {
+      type: String,
+      enum: ["document_assisted", "ai_unverified"],
+      default: "ai_unverified",
+    },
+    reference_notice: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: "",
+    },
     ai_generation: {
       model: { type: String, trim: true, maxlength: 200, default: "" },
       generated_at: { type: Date, default: null },
+    },
+    generation_source: {
+      type: String,
+      enum: ["manual", "manager_document", "bundled_document", "ai_only"],
+      default: "manual",
+      index: true,
     },
     status: {
       type: String,
@@ -102,7 +129,11 @@ const treatmentProtocolSchema = new mongoose.Schema(
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required() {
+        return !(this.generation_source === "bundled_document" ||
+          (this.generation_source === "ai_only" && !this.created_by));
+      },
+      default: null,
       immutable: true,
     },
     approved_by: {
@@ -162,20 +193,12 @@ treatmentProtocolSchema.pre("validate", function validateProtocol(next) {
         "stages",
         "Phác đồ được phê duyệt phải có giai đoạn liên tục và bao phủ đủ toàn bộ thời lượng.",
       );
-    if (this.instruction_source === "ai_unverified")
-      this.invalidate(
-        "instruction_source",
-        "Hướng dẫn do AI tạo phải được Manager xác minh trước khi phê duyệt.",
-      );
-    if (!this.approved_by)
+    const systemGenerated = this.generation_source === "bundled_document" ||
+      (this.generation_source === "ai_only" && !this.created_by);
+    if (!this.approved_by && !systemGenerated)
       this.invalidate("approved_by", "Phác đồ được phê duyệt cần người phê duyệt.");
     if (!this.approved_at)
       this.invalidate("approved_at", "Phác đồ được phê duyệt cần thời điểm phê duyệt.");
-    if (!this.approved_instructions?.length)
-      this.invalidate(
-        "approved_instructions",
-        "Phác đồ được phê duyệt cần hướng dẫn đã xác minh.",
-      );
   }
   next();
 });

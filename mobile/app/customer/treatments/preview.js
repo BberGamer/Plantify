@@ -110,8 +110,8 @@ export default function TreatmentPreviewScreen() {
           )}
         </View>
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Chọn phác đồ đã phê duyệt</Text>
-          <Text style={styles.body}>Phác đồ sẽ được dùng để tạo lịch xem trước. Điều trị chỉ bắt đầu sau khi bạn xác nhận áp dụng.</Text>
+          <Text style={styles.sectionTitle}>Phác đồ AI vừa tạo</Text>
+          <Text style={styles.body}>Phác đồ này chưa được lưu. Hệ thống chỉ lưu khi bạn chọn cây trong vườn và tạo lịch điều trị.</Text>
         </View>
         {treatment.protocols.length ? treatment.protocols.map((protocol) => {
           const selected = treatment.selectedProtocolId === protocol._id;
@@ -129,7 +129,7 @@ export default function TreatmentPreviewScreen() {
             <Text style={styles.body}>{protocol.description}</Text>
             <Text style={styles.protocolMeta}>{protocol.duration_days} ngày · Phiên bản {protocol.version}</Text>
           </Pressable>;
-        }) : <TreatmentStateView empty="Chưa có phác đồ đã phê duyệt cho bệnh này." />}
+        }) : <TreatmentStateView empty="Chưa tạo được phác đồ cho bệnh này." />}
         {!!selectedProtocol && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Chi tiết phác đồ</Text>
@@ -154,6 +154,11 @@ export default function TreatmentPreviewScreen() {
               <TreatmentSafetyNotice>
                 {selectedProtocol.safety_guidelines.join(" ")}
               </TreatmentSafetyNotice>
+            )}
+            {!!selectedProtocol.reference_notice && (
+              <Text style={styles.referenceNotice} accessibilityRole="alert">
+                {selectedProtocol.reference_notice}
+              </Text>
             )}
           </View>
         )}
@@ -189,6 +194,11 @@ export default function TreatmentPreviewScreen() {
           {data.stages.map((stage, index) => <TreatmentStageCard key={stage._id} stage={stage} initiallyExpanded={index === 0} />)}
         </View>
         <TreatmentSafetyNotice>{data.protocol.safety_note}</TreatmentSafetyNotice>
+        {!!data.protocol.reference_notice && (
+          <Text style={styles.referenceNotice} accessibilityRole="alert">
+            {data.protocol.reference_notice}
+          </Text>
+        )}
         {!!treatment.applyError && <Text style={styles.error} accessibilityRole="alert">{treatment.applyError}</Text>}
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
@@ -235,6 +245,7 @@ const styles = StyleSheet.create({
   radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.inputBorder },
   radioSelected: { borderWidth: 6, borderColor: colors.primaryLight },
   error: { ...typography.body, color: colors.statusError, textAlign: "center" },
+  referenceNotice: { ...typography.body, color: "#946017", backgroundColor: colors.warmPeachBg, borderRadius: radius.md, padding: spacing.md },
   missingPlant: { gap: spacing.md },
   footer: { backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.lg, paddingTop: spacing.md },
   buttonContent: { minHeight: 48 },

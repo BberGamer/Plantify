@@ -130,15 +130,13 @@ function ProtocolForm({ manager }) {
 
           {!manager.editing && (
             <View style={styles.aiBox}>
-              <Text style={styles.sectionTitle}>Tạo bản nháp 14 ngày bằng AI</Text>
-              <Text style={styles.muted}>Dữ liệu nguồn phải ghi rõ giờ, lượng nước/thuốc, đơn vị, dụng cụ và an toàn. Nội dung ngoài nguồn sẽ bị từ chối.</Text>
-              <FormField label="Dữ liệu tham chiếu *" value={manager.form.reference_material}
-                onChangeText={(value) => manager.changeField("reference_material", value)}
-                disabled={locked} multiline maxLength={12000}
-                hint="Ví dụ: 07:00 tưới 250 ml bằng ca đong..." />
+              <Text style={styles.sectionTitle}>Tạo phác đồ từ DOCX bằng AI</Text>
+              <Text style={styles.muted}>DOCX là tùy chọn. AI ưu tiên tài liệu nếu có; nếu không có, phác đồ được tạo từ dữ liệu cây/bệnh và sẽ có cảnh báo chưa kiểm chứng.</Text>
+              <Button mode="outlined" icon="file-word-outline" onPress={manager.chooseDocument}
+                disabled={locked}>Chọn file DOCX</Button>
+              {!!manager.form.document && <Text style={styles.body}>{manager.form.document.name}</Text>}
               <Button mode="contained-tonal" icon="creation" onPress={manager.generateAiDraft}
-                loading={manager.generatingAi} disabled={locked}>Tạo và lưu bản nháp</Button>
-              <Text style={styles.muted}>Manager phải kiểm tra và phê duyệt trước khi Customer sử dụng.</Text>
+                loading={manager.generatingAi} disabled={locked}>Tạo phác đồ</Button>
             </View>
           )}
 
@@ -178,6 +176,13 @@ function ProtocolForm({ manager }) {
                 onChangeText={(value) => manager.changeStage(index, "title", value)}
                 disabled={locked}
               />
+              <FormField
+                label="Giờ thông báo (HH:mm) *"
+                value={stage.time}
+                onChangeText={(value) => manager.changeStage(index, "time", value)}
+                disabled={locked}
+                placeholder="08:00"
+              />
               <View style={styles.days}>
                 <FormField
                   containerStyle={styles.flex}
@@ -203,33 +208,11 @@ function ProtocolForm({ manager }) {
                 disabled={locked}
                 multiline
               />
-              <FormField
-                label="Hóa chất / liều lượng"
-                value={stage.dosage_note}
-                onChangeText={(value) => manager.changeStage(index, "dosage_note", value)}
-                disabled={locked}
-                multiline
-              />
-              <FormField
-                label="Lưu ý quan trọng"
-                value={stage.important_note}
-                onChangeText={(value) => manager.changeStage(index, "important_note", value)}
-                disabled={locked}
-                multiline
-              />
             </View>
           ))}
           <Button mode="outlined" icon="plus" onPress={manager.addStage} disabled={locked}>
             Thêm giai đoạn
           </Button>
-          <FormField
-            label="Hướng dẫn đã xác minh (mỗi dòng một mục)"
-            value={manager.form.approved_instructions}
-            onChangeText={(value) => manager.changeField("approved_instructions", value)}
-            disabled={locked}
-            multiline
-            hint="Bắt buộc khi phê duyệt."
-          />
           <FormField
             label="Hướng dẫn an toàn (mỗi dòng một mục) *"
             value={manager.form.safety_guidelines}
