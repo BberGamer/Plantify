@@ -8,17 +8,23 @@ const treatmentService = {
     return response.data;
   },
 
+  createPreview: async ({ diseaseId, plantId, diagnosisId }) => {
+    const payload = { disease_id: diseaseId, plant_id: plantId };
+    if (diagnosisId) payload.diagnosis_id = diagnosisId;
+    return (await api.post("/treatments/preview", payload, { timeout: 70000 })).data;
+  },
+
   generateSchedule: async ({
     userPlantId,
     diseaseId,
-    treatmentProtocolId,
+    previewToken,
     diagnosisId,
     startDate,
   }) => {
     const payload = {
       user_plant_id: userPlantId,
       disease_id: diseaseId,
-      treatment_protocol_id: treatmentProtocolId,
+      preview_token: previewToken,
     };
     if (diagnosisId) payload.diagnosis_id = diagnosisId;
     if (startDate) payload.start_date = startDate;
@@ -57,8 +63,20 @@ const treatmentService = {
   createProtocol: async (payload) =>
     (await api.post("/treatments/manager", payload)).data,
 
-  generateAiDraft: async (payload) =>
-    (await api.post("/treatments/manager/ai-draft", payload, { timeout: 70000 })).data,
+  generateAiDraft: async ({ disease_id, plant_ids, document }) => {
+    const form = new FormData();
+    form.append("disease_id", disease_id);
+    form.append("plant_ids", JSON.stringify(plant_ids));
+    if (document) form.append("document", document.file || {
+        uri: document.uri,
+        name: document.name,
+        type: document.mimeType || "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+    return (await api.post("/treatments/manager/ai-draft", form, {
+      timeout: 70000,
+      headers: { "Content-Type": "multipart/form-data" },
+    })).data;
+  },
 
   updateProtocol: async (id, payload) =>
     (await api.put(`/treatments/manager/${id}`, payload)).data,
