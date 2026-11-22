@@ -1,7 +1,5 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
-  DIAGNOSIS_PHOTO_NOT_CONFIGURED: "Nơi lưu ảnh chẩn đoán chưa được cấu hình đầy đủ. Vui lòng liên hệ hỗ trợ.",
-  DIAGNOSIS_PHOTO_STORAGE_UNAVAILABLE: "Chưa lưu hoặc tải được ảnh chẩn đoán. Vui lòng thử lại.",
   DIAGNOSIS_PHOTO_NOT_CONFIGURED: "Nơi lưu ảnh chẩn đoán chưa được cấu hình. Vui lòng liên hệ hỗ trợ.",
   DIAGNOSIS_PHOTO_STORAGE_UNAVAILABLE: "Chưa lưu hoặc tải được ảnh chẩn đoán. Vui lòng thử lại.",
   DIAGNOSIS_HISTORY_NOT_FOUND: "Không tìm thấy chẩn đoán trong lịch sử của bạn.",
@@ -81,8 +79,14 @@ const ERROR_MESSAGES = {
   EVALUATION_DISABLED: "Chế độ đánh giá AI đang tắt.",
   INVALID_PHOTO:
     "Vui lòng chọn một ảnh JPG hoặc PNG hợp lệ, tối đa 10 MB (tối đa 40 triệu điểm ảnh).",
-  UPLOAD_NOT_CONFIGURED:
+  GARDEN_PHOTO_NOT_CONFIGURED:
     "Máy chủ chưa cấu hình lưu ảnh. Bạn có thể bỏ ảnh để lưu cây trước.",
+  PLANT_PHOTO_NOT_CONFIGURED:
+    "Máy chủ chưa cấu hình lưu ảnh. Bạn có thể bỏ ảnh để lưu cây trước.",
+  GARDEN_PHOTO_STORAGE_UNAVAILABLE: "Chưa tải được ảnh vườn lên. Vui lòng thử lại.",
+  PLANT_PHOTO_STORAGE_UNAVAILABLE: "Chưa tải được ảnh cây lên. Vui lòng thử lại.",
+  DISEASE_PHOTO_NOT_CONFIGURED: "Máy chủ chưa cấu hình lưu ảnh bệnh.",
+  DISEASE_PHOTO_STORAGE_UNAVAILABLE: "Chưa tải được ảnh bệnh lên. Vui lòng thử lại.",
   AI_NOT_CONFIGURED: "Trợ lý AI chưa được cấu hình. Vui lòng thử lại sau.",
   AI_TIMEOUT: "AI trả lời quá lâu. Vui lòng thử lại.",
   AI_BUSY: "Trợ lý AI đang bận. Vui lòng thử lại sau.",

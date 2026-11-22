@@ -155,7 +155,7 @@ const getDiseases = async (query = {}, managerView = false) => {
   };
 };
 
-const getDiseaseById = async (id, managerView = false) => {
+const getDiseaseById = async (id, managerView = false, session = null) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw createError("Định dạng ID bệnh không hợp lệ.", 400);
   }
@@ -163,7 +163,7 @@ const getDiseaseById = async (id, managerView = false) => {
   const filter = { _id: id };
   if (!managerView) filter.status = "active";
 
-  const disease = await Disease.findOne(filter).lean();
+  const disease = await Disease.findOne(filter).session(session).lean();
   if (!disease) throw createError("Không tìm thấy bệnh cây này.", 404);
 
   const plantFilter = { common_disease_ids: disease._id };
@@ -172,6 +172,7 @@ const getDiseaseById = async (id, managerView = false) => {
   const plants = await Plant.find(plantFilter)
     .select("common_name scientific_name plant_image is_published")
     .sort({ common_name: 1 })
+    .session(session)
     .lean();
 
   return { ...disease, plants };
@@ -292,7 +293,11 @@ const synchronizeDiseasePlants = async (diseaseId, plantIds, session) => {
 
 const runDiseaseMutation = async (operation) => {
   try {
-    return await mongoose.connection.transaction(operation);
+    let result;
+    await mongoose.connection.transaction(async (session) => {
+      result = await operation(session);
+    });
+    return result;
   } catch (error) {
     if (error?.code === 11000) {
       throw createError("Tên bệnh đã tồn tại.", 409);
@@ -303,18 +308,14 @@ const runDiseaseMutation = async (operation) => {
 
 const createDisease = async (input) => {
   const { diseaseData, plantIds } = normalizeDiseaseInput(input);
-  let diseaseId;
-
-  await runDiseaseMutation(async (session) => {
+  return runDiseaseMutation(async (session) => {
     await assertDiseaseNameAvailable(diseaseData.disease_name, null, session);
     await assertPlantsExist(plantIds, session);
 
     const [disease] = await Disease.create([diseaseData], { session });
-    diseaseId = disease._id;
-    await synchronizeDiseasePlants(diseaseId, plantIds, session);
+    await synchronizeDiseasePlants(disease._id, plantIds, session);
+    return getDiseaseById(disease._id, true, session);
   });
-
-  return getDiseaseById(diseaseId, true);
 };
 
 const updateDisease = async (id, input) => {
@@ -323,7 +324,7 @@ const updateDisease = async (id, input) => {
   }
   const { diseaseData, plantIds } = normalizeDiseaseInput(input);
 
-  await runDiseaseMutation(async (session) => {
+  return runDiseaseMutation(async (session) => {
     const disease = await Disease.findById(id).session(session);
     if (!disease) throw createError("Không tìm thấy bệnh cây này.", 404);
 
@@ -333,9 +334,8 @@ const updateDisease = async (id, input) => {
     Object.assign(disease, diseaseData);
     await disease.save({ session });
     await synchronizeDiseasePlants(disease._id, plantIds, session);
+    return getDiseaseById(id, true, session);
   });
-
-  return getDiseaseById(id, true);
 };
 
 const deleteDisease = async (id) => {

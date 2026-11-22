@@ -50,7 +50,7 @@ Chế độ `local` lưu trong `backend/uploads/diagnoses`, DB lưu `image.filen
 Không đặt provider giữ local để tương thích cấu hình cũ; giá trị provider sai trả lỗi cấu hình.
 Ảnh đã lưu được đọc theo provider trong bản ghi, nên đổi sang cloud không làm mất ảnh local cũ.
 `GET /api/diagnosis/history/:id` trả chi tiết; `GET /api/diagnosis/history/:id/image`
-trả ảnh sau khi kiểm tra chủ tài khoản, không có URL ảnh công khai và không cần PUBLIC_BASE_URL.
+trả ảnh riêng tư sau khi kiểm tra chủ tài khoản.
 Native gửi Authorization trong nguồn ảnh; web tải blob qua Axios chung và giải phóng object URL.
 Bản ghi cũ không có ảnh hiện “Không có ảnh lưu”; ảnh mất/hỏng hiện không còn khả dụng,
 không lấy ảnh danh mục làm ảnh của lần chẩn đoán. Không tự cập nhật dữ liệu cũ.
@@ -244,9 +244,9 @@ Kiểm tra: tại `backend/`, chạy `node --test src/services/__tests__/favorit
 
 Customer có thể chọn **Thêm cây** trong My Garden hoặc **Thêm vào vườn cây** từ chi tiết cây thư viện. Form lưu biệt danh, loài, vị trí, chậu và ngày nhận cây; ảnh JPG/PNG tối đa 10 MB là tùy chọn. Ngày nhận cây chọn bằng lịch, hiển thị DD/MM/YYYY, có thể để trống/xóa và không được sau hôm nay (theo múi giờ Việt Nam). Cây nhập tay không cần danh mục; cây thư viện giữ danh mục có sẵn. Chưa tạo lịch chăm sóc trong luồng này.
 
-Backend cần biến môi trường `PUBLIC_BASE_URL` là địa chỉ gốc công khai, ví dụ `http://192.168.1.10:5000` (không thêm `/api`). Mobile dùng `EXPO_PUBLIC_API_URL=http://192.168.1.10:5000/api`. Khi dùng thiết bị thật, thay IP bằng địa chỉ máy chạy backend mà điện thoại truy cập được. Thiếu `PUBLIC_BASE_URL` vẫn lưu cây không ảnh, nhưng upload trả lỗi 503.
+Backend dùng `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` và `CLOUDINARY_API_SECRET` để tải ảnh mới trong My Garden và Quản lý cây lên Cloudinary. MongoDB lưu URL HTTPS công khai. Khi dùng thiết bị thật, đặt `EXPO_PUBLIC_API_URL` thành địa chỉ API mà điện thoại truy cập được, ví dụ `http://192.168.1.10:5000/api`.
 
-File ảnh nằm trong `backend/uploads/plants`, được phục vụ tại `/uploads/plants/...`; MongoDB chỉ lưu URL. Cần volume bền vững và sao lưu thư mục này khi triển khai. URL ảnh công khai; backend tự đặt tên ngẫu nhiên và loại metadata ảnh. `POST /api/garden/plants` hỗ trợ JSON như trước và multipart với một trường file `photo`.
+Backend tự đặt tên ngẫu nhiên và loại metadata ảnh. API thêm và sửa cây hỗ trợ JSON và multipart với một trường file `photo`. URL ảnh đã lưu trước đây dưới `/uploads/plants/...` vẫn được phục vụ từ `backend/uploads/plants`.
 
 Kiểm tra chức năng: chạy `node --test tests/garden-create.test.cjs` trong `backend/` và `node --test tests/addGardenPlant.test.cjs` trong `mobile/`. Test backend mock truy vấn database; không thay thế kiểm thử MongoDB và thiết bị thật.
 
@@ -598,6 +598,11 @@ Mobile mới dùng prefix `/api`. Backend cũng hỗ trợ alias `/api/v1` để
 | GET, POST | `/garden/plants` | Customer đang hoạt động |
 | GET, PATCH | `/garden/plants/:id` | Customer sở hữu cây |
 | PATCH | `/garden/plants/:id/archive` | Customer sở hữu cây |
+
+Manager có thể chọn ảnh bệnh JPG hoặc PNG tối đa 10 MB từ thiết bị. POST và PUT
+bệnh cây vẫn nhận JSON. Khi gửi ảnh, API nhận multipart với `payload` là JSON
+dạng chuỗi và `photo` là tệp ảnh. Backend tải ảnh lên Cloudinary và lưu URL HTTPS
+công khai trong `disease_image_url`. URL ảnh đã lưu trước đó vẫn hiển thị trong form.
 
 `/admin/users` là alias backend của `/users`, có cùng middleware. Admin tạo tài khoản bằng `POST /users`: tài khoản hoạt động ngay, không cần OTP; API không cấp token mới hoặc thay phiên của Admin.
 

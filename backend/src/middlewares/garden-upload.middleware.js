@@ -1,7 +1,5 @@
 const multer = require("multer");
 const path = require("node:path");
-const fs = require("node:fs/promises");
-const { randomUUID } = require("node:crypto");
 const AppError = require("../utils/app-error");
 const sharp = require("sharp");
 
@@ -35,20 +33,4 @@ const upload = (req, res, next) => parse(req, res, async (error) => {
   next();
 });
 
-async function savePhoto(file) {
-  const base = process.env.PUBLIC_BASE_URL;
-  if (!base || !/^https?:\/\//i.test(base))
-    throw new AppError("UPLOAD_NOT_CONFIGURED", 503, "Máy chủ chưa cấu hình địa chỉ ảnh công khai.");
-  const name = `${randomUUID()}.${imageExtension(file.buffer)}`;
-  await fs.mkdir(uploadDirectory, { recursive: true });
-  const filename = path.join(uploadDirectory, name);
-  try {
-    await fs.writeFile(filename, file.buffer, { flag: "wx" });
-  } catch (error) {
-    if (error.code !== "EEXIST") await fs.unlink(filename).catch(() => {});
-    throw error;
-  }
-  return { filename, url: `${base.replace(/\/$/, "")}/uploads/plants/${name}` };
-}
-
-module.exports = { upload, savePhoto, uploadDirectory, imageExtension };
+module.exports = { upload, uploadDirectory, imageExtension };

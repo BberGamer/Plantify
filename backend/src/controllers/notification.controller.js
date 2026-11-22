@@ -35,6 +35,7 @@ module.exports = {
   events,
   detail: handle(req => service.detail(req.user.id, req.params.id)),
   markRead: handle(req => service.markRead(req.user.id, req.params.id)),
+  markAllRead: handle(req => service.markAllRead(req.user.id)),
   preferences: handle(req => service.preferences(req.user.id)),
   updatePreferences: handle(req => service.updatePreferences(req.user.id, req.body)),
   registerDevice: handle(req => devices.register(req.user.id, req.params.installationId, req.body)),
