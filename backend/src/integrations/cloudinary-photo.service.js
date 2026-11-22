@@ -2,11 +2,12 @@ const { createHash, randomUUID } = require("node:crypto");
 const AppError = require("../utils/app-error");
 
 const unavailable = () => new AppError("DIAGNOSIS_PHOTO_STORAGE_UNAVAILABLE", 503, "Chưa kết nối được nơi lưu ảnh chẩn đoán. Vui lòng thử lại.");
-const configured = env => {
+const notConfigured = () => new AppError("DIAGNOSIS_PHOTO_NOT_CONFIGURED", 503, "Nơi lưu ảnh chẩn đoán chưa được cấu hình đầy đủ.");
+const configured = (env, configurationError = notConfigured) => {
   const text = key => typeof env[key] === "string" ? env[key].trim() : "";
   const cloud = text("CLOUDINARY_CLOUD_NAME"), key = text("CLOUDINARY_API_KEY"), secret = text("CLOUDINARY_API_SECRET");
   if (!cloud || !/^[\w-]+$/.test(cloud) || !key || !secret)
-    throw new AppError("DIAGNOSIS_PHOTO_NOT_CONFIGURED", 503, "Nơi lưu ảnh chẩn đoán chưa được cấu hình đầy đủ.");
+    throw configurationError();
   return { cloud, key, secret };
 };
 const sign = (params, secret) => createHash("sha256")
@@ -32,14 +33,17 @@ const bodyBytes = async (response, limit) => {
   } finally { reader.releaseLock(); }
 };
 
-const createCloudinaryPhotos = ({ env = process.env, fetchImpl = globalThis.fetch } = {}) => {
-  const post = async (action, params, content, timeout = 20000) => {
-    const config = configured(env);
+const createImagePost = (fetchImpl, getConfig, storageError) =>
+  async (action, params, file, timeout = 20000) => {
+    const config = getConfig();
     const signed = { ...params, timestamp: Math.floor(Date.now() / 1000) };
     const form = new FormData();
     for (const [key, value] of Object.entries(signed)) form.append(key, String(value));
     form.append("api_key", config.key); form.append("signature", sign(signed, config.secret));
-    if (content) form.append("file", new Blob([content], { type: "image/jpeg" }), "diagnosis.jpg");
+    if (file) {
+      const mimeType = file.extension === "png" ? "image/png" : "image/jpeg";
+      form.append("file", new Blob([file.content], { type: mimeType }), file.name);
+    }
     try {
       const response = await fetchImpl(`https://api.cloudinary.com/v1_1/${config.cloud}/image/${action}`, {
         method: "POST", body: form, signal: AbortSignal.timeout(timeout), redirect: "error",
@@ -47,8 +51,11 @@ const createCloudinaryPhotos = ({ env = process.env, fetchImpl = globalThis.fetc
       const data = JSON.parse((await bodyBytes(response, 65536)).toString("utf8"));
       if (!response.ok) throw unavailable();
       return data;
-    } catch { throw unavailable(); }
+    } catch { throw storageError(); }
   };
+
+const createCloudinaryPhotos = ({ env = process.env, fetchImpl = globalThis.fetch } = {}) => {
+  const post = createImagePost(fetchImpl, () => configured(env), unavailable);
   const remove = async image => {
     if (!validPublicId(image.public_id)) throw unavailable();
     const result = await post("destroy", { public_id: image.public_id, type: "authenticated", invalidate: true }, null, 5000);
@@ -59,7 +66,9 @@ const createCloudinaryPhotos = ({ env = process.env, fetchImpl = globalThis.fetc
       configured(env);
       const publicId = `plantify/diagnoses/${randomUUID()}`;
       try {
-        const result = await post("upload", { public_id: publicId, type: "authenticated", overwrite: false }, content);
+        const result = await post("upload", { public_id: publicId, type: "authenticated", overwrite: false }, {
+          content, extension: "jpg", name: "diagnosis.jpg",
+        });
         if (result.public_id !== publicId || result.type !== "authenticated" || result.resource_type !== "image" ||
             result.format !== "jpg" || typeof result.asset_id !== "string" || !/^[\w-]{1,128}$/.test(result.asset_id)) throw unavailable();
         return { storage: "cloudinary", public_id: publicId, asset_id: result.asset_id };
@@ -92,4 +101,37 @@ const createCloudinaryPhotos = ({ env = process.env, fetchImpl = globalThis.fetc
   };
 };
 
-module.exports = { ...createCloudinaryPhotos(), createCloudinaryPhotos };
+const gardenUnavailable = () => new AppError("GARDEN_PHOTO_STORAGE_UNAVAILABLE", 503, "Chưa kết nối được nơi lưu ảnh vườn. Vui lòng thử lại.");
+const gardenNotConfigured = () => new AppError("GARDEN_PHOTO_NOT_CONFIGURED", 503, "Nơi lưu ảnh vườn chưa được cấu hình đầy đủ.");
+
+const createGardenPhotos = ({ env = process.env, fetchImpl = globalThis.fetch } = {}) => {
+  const getConfig = () => configured(env, gardenNotConfigured);
+  const post = createImagePost(fetchImpl, getConfig, gardenUnavailable);
+  const remove = async ({ publicId }) => {
+    if (typeof publicId !== "string" || !/^plantify\/garden\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(publicId))
+      throw gardenUnavailable();
+    const result = await post("destroy", { public_id: publicId, type: "upload", invalidate: true }, null, 5000);
+    if (!["ok", "not found"].includes(result?.result)) throw gardenUnavailable();
+  };
+  return {
+    async save(content, extension) {
+      getConfig();
+      const publicId = `plantify/garden/${randomUUID()}`;
+      try {
+        const result = await post("upload", { public_id: publicId, type: "upload", overwrite: false }, {
+          content, extension, name: `garden.${extension}`,
+        });
+        if (result?.public_id !== publicId || result.type !== "upload" || result.resource_type !== "image" ||
+            typeof result.secure_url !== "string" || !/^https:\/\/[^\s/]+\/\S+$/i.test(result.secure_url))
+          throw gardenUnavailable();
+        return { publicId, url: result.secure_url };
+      } catch (error) {
+        await remove({ publicId }).catch(() => console.error("[Garden] Không dọn được ảnh vừa tải lên Cloudinary."));
+        throw error;
+      }
+    },
+    remove,
+  };
+};
+
+module.exports = { ...createCloudinaryPhotos(), createCloudinaryPhotos, createGardenPhotos };

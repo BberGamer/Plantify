@@ -1,33 +1,24 @@
 const garden = require("../services/garden.service");
 const { success } = require("../utils/api-response");
-const { savePhoto } = require("../middlewares/garden-upload.middleware");
-const fs = require("node:fs/promises");
+const { imageExtension } = require("../middlewares/garden-upload.middleware");
+const { createGardenPhotos } = require("../integrations/cloudinary-photo.service");
 
-const create = async (req) => {
-  let photo;
+const photos = createGardenPhotos();
+
+const withPhoto = async (req, savePlant) => {
+  if (!req.file) return savePlant(req.body);
+  const { buffer } = req.file;
+  const photo = await photos.save(buffer, imageExtension(buffer));
   try {
-    if (req.file) photo = await savePhoto(req.file);
-    return await garden.create(req.user.id, {
-      ...req.body, ...(photo ? { plant_image_url: photo.url } : {}),
-    });
+    return await savePlant({ ...req.body, plant_image_url: photo.url });
   } catch (error) {
-    if (photo) await fs.unlink(photo.filename).catch(() => console.error("[Upload] Cleanup failed"));
+    await photos.remove(photo).catch(() => console.error("[Garden] Không dọn được ảnh sau khi lưu cây thất bại."));
     throw error;
   }
 };
 
-const update = async (req) => {
-  let photo;
-  try {
-    if (req.file) photo = await savePhoto(req.file);
-    return await garden.update(req.user.id, req.params.id, {
-      ...req.body, ...(photo ? { plant_image_url: photo.url } : {}),
-    });
-  } catch (error) {
-    if (photo) await fs.unlink(photo.filename).catch(() => console.error("[Upload] Cleanup failed"));
-    throw error;
-  }
-};
+const create = req => withPhoto(req, input => garden.create(req.user.id, input));
+const update = req => withPhoto(req, input => garden.update(req.user.id, req.params.id, input));
 
 const handle = (action, message, status = 200) => async (req, res, next) => {
   try {
