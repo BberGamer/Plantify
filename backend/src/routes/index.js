@@ -20,5 +20,6 @@ router.use("/diagnosis", require("./diagnosis.routes"));
 router.use("/care-schedules", require("./care.routes"));
 router.use("/notifications", require("./notification.routes"));
 router.use("/identification", require("./identification.routes"));
+router.use("/feedback", require("./feedback.routes"));
 
 module.exports = router;

@@ -10,7 +10,7 @@ import useProfile from "../../hooks/useProfile";
 import { colors } from "../../theme/colors";
 import { useFinanceSummary } from "../../hooks/useFinance";
 
-export default function ProfileContent({ onBack, showNavbar = false, onOpenFavorites, onOpenFinance, onOpenDiagnosisHistory }) {
+export default function ProfileContent({ onBack, showNavbar = false, onOpenFavorites, onOpenFinance, onOpenDiagnosisHistory, onOpenFeedback }) {
   const profile = useProfile();
   const finance = useFinanceSummary(profile.user?.role === "customer");
 
@@ -31,11 +31,16 @@ export default function ProfileContent({ onBack, showNavbar = false, onOpenFavor
           isLoggingOut={profile.isLoggingOut} startEditing={profile.startEditing}
           message={profile.message} form={profile.form} changeField={profile.changeField}
           saving={profile.saving} cancelEditing={profile.cancelEditing} saveProfile={profile.saveProfile} />
-        {onOpenDiagnosisHistory && <View style={styles.favorites}>
-          <List.Item title="Lịch sử chẩn đoán" description="Xem các kết quả chẩn đoán bệnh đã lưu"
+        {(onOpenDiagnosisHistory || onOpenFeedback) && <View style={styles.favorites}>
+          <Text variant="titleMedium" style={styles.sectionTitle}>Chẩn đoán bệnh cây và phản hồi</Text>
+          {onOpenDiagnosisHistory && <List.Item title="Lịch sử chẩn đoán" description="Xem các kết quả chẩn đoán bệnh đã lưu"
             onPress={onOpenDiagnosisHistory} disabled={profile.isLoggingOut} style={styles.favoriteLink}
             left={(props) => <List.Icon {...props} icon="history" color={colors.primary} />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" color={colors.primary} />} />
+            right={(props) => <List.Icon {...props} icon="chevron-right" color={colors.primary} />} />}
+          {onOpenFeedback && <List.Item title="Đóng góp ý kiến" onPress={onOpenFeedback}
+            disabled={profile.isLoggingOut} style={styles.favoriteLink}
+            left={(props) => <List.Icon {...props} icon="message-text-outline" color={colors.primary} />}
+            right={(props) => <List.Icon {...props} icon="chevron-right" color={colors.primary} />} />}
         </View>}
         {onOpenFavorites && <View style={styles.favorites}>
           <Text variant="titleMedium" style={styles.sectionTitle}>Cây yêu thích</Text>

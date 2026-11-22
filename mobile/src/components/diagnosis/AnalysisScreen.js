@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { IconButton, SegmentedButtons, Text } from "react-native-paper";
+import { Button, IconButton, SegmentedButtons, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors, spacing, typography } from "../../theme";
@@ -108,6 +108,15 @@ export default function AnalysisScreen({ identification = false }) {
             onEnableCamera={capture.enableCamera} onRetryCamera={capture.retryCamera}
             onCapture={capture.takePhoto} onPickPhoto={capture.pickPhoto}
           />
+        )}
+        {!!diagnosis.result?.diagnosis_id && (
+          <Button mode="outlined" icon="message-text-outline" disabled={busy}
+            onPress={() => router.push({
+              pathname: "/customer/feedback/new",
+              params: { diagnosisId: diagnosis.result.diagnosis_id },
+            })}>
+            Đóng góp ý kiến
+          </Button>
         )}
         {!!(diagnosis.error || capture.error) && (
           <Text style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
