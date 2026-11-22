@@ -22,7 +22,7 @@ export default function PlantDirectoryScreen() {
       style={styles.safeArea}
       edges={["top", "left", "right"]}
     >
-      <PlantDirectoryHeader onBack={() => router.back()} />
+      <PlantDirectoryHeader onBack={() => router.replace("/customer/home")} />
       <PlantDirectoryFilters
         categories={directory.categories}
         activeCategoryId={directory.activeCatId}

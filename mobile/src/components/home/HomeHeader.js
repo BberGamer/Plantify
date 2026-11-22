@@ -6,7 +6,7 @@ import useHomeHeader from "../../hooks/useHomeHeader";
 import { colors } from "../../theme/colors";
 
 export default function HomeHeader() {
-  const { user, openAdmin, openAccountMenu, openNotifications, unreadCount, isLoggingOut, logoutError, roleLabel } = useHomeHeader();
+  const { user, openAdmin, openProfile, openNotifications, unreadCount, roleLabel } = useHomeHeader();
 
   const initials = user?.fullName
     ? user.fullName
@@ -47,7 +47,12 @@ export default function HomeHeader() {
               <Badge size={18}>{unreadCount > 99 ? "99+" : unreadCount}</Badge>
             </View>}
           </View>
-          <TouchableOpacity onPress={openAccountMenu} disabled={isLoggingOut} activeOpacity={0.8}>
+          <TouchableOpacity
+            onPress={openProfile}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Mở hồ sơ cá nhân"
+          >
             <Avatar.Text
               size={38}
               label={initials}
@@ -59,7 +64,6 @@ export default function HomeHeader() {
         </View>
       </View>
 
-      {!!logoutError && <Text accessibilityRole="alert">{logoutError}</Text>}
       {/* GREETING */}
       <View style={styles.greetingSection}>
         <Text style={styles.greetingSub}>
@@ -99,7 +103,7 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontSize: 22,
-    fontWeight: "800",
+    fontWeight: "700",
     color: "#183B2B",
     marginLeft: 8,
     letterSpacing: -0.3,
@@ -157,7 +161,7 @@ const styles = StyleSheet.create({
   },
   greetingMain: {
     fontSize: 24,
-    fontWeight: "800",
+    fontWeight: "700",
     color: "#183B2B",
     lineHeight: 32,
     letterSpacing: -0.4,

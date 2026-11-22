@@ -37,16 +37,6 @@ export default function AdminLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Hồ sơ",
-          tabBarLabel: "Hồ sơ",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" color={color} size={size} />
-          ),
-        }}
-      />
       <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen
         name="finance"
@@ -54,6 +44,16 @@ export default function AdminLayout() {
           title: "Tài chính",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="wallet-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Hồ sơ",
+          tabBarLabel: "Hồ sơ",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" color={color} size={size} />
           ),
         }}
       />
