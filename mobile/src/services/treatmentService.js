@@ -49,6 +49,14 @@ const treatmentService = {
     return response.data;
   },
 
+  editTask: async (scheduleId, taskId, payload) => {
+    const response = await api.patch(
+      `/treatments/schedules/${scheduleId}/tasks/${taskId}`,
+      payload,
+    );
+    return response.data;
+  },
+
   finishSchedule: async (id, status, note) => {
     const response = await api.patch(`/treatments/schedules/${id}/finish`, {
       status,

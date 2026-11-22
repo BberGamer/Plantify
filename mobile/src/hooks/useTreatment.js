@@ -242,6 +242,7 @@ export function useActiveTreatment(id) {
   const resource = useTreatmentResource(() => treatmentService.getSchedule(id), id);
   const mutation = useRef(false);
   const [completingTaskId, setCompletingTaskId] = useState(null);
+  const [editingTaskId, setEditingTaskId] = useState(null);
   const [mutationError, setMutationError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const progress = useMemo(() => treatmentLogic.calculateTreatmentProgress(resource.data), [resource.data]);
@@ -272,14 +273,50 @@ export function useActiveTreatment(id) {
     }
   }, [resource]);
 
+  const editTask = useCallback(async (taskId, payload) => {
+    if (mutation.current || !resource.data || !resource.isActive()) return false;
+    const task = resource.data.task_progress?.find((item) => item._id === taskId);
+    if (!task) return false;
+    const isCurrent = resource.capture();
+    mutation.current = true;
+    setEditingTaskId(taskId);
+    setMutationError("");
+    setSuccessMessage("");
+    try {
+      const response = await treatmentService.editTask(
+        resource.data._id,
+        taskId,
+        payload,
+      );
+      if (!isCurrent()) return false;
+      if (response?.success !== true || !response.data)
+        throw new Error("Không thể lưu thay đổi phác đồ.");
+      resource.setData(response.data);
+      setSuccessMessage(response.message || "Đã cập nhật công việc điều trị.");
+      return true;
+    } catch (failure) {
+      if (isCurrent())
+        setMutationError(
+          getErrorMessage(failure, "Không thể lưu thay đổi phác đồ."),
+        );
+      return false;
+    } finally {
+      mutation.current = false;
+      if (isCurrent()) setEditingTaskId(null);
+    }
+  }, [resource]);
+
   return {
     ...resource,
     progress,
     completingTaskId,
+    editingTaskId,
     mutationError,
     successMessage,
     clearMessage: () => setSuccessMessage(""),
+    clearMutationError: () => setMutationError(""),
     completeTask,
+    editTask,
   };
 }
 

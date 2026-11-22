@@ -42,6 +42,16 @@ module.exports = {
       treatment.completeTask(req.user.id, req.params.id, req.params.taskId),
     "Hoàn thành công việc điều trị thành công.",
   ),
+  editTask: handle(
+    (req) =>
+      treatment.editTask(
+        req.user.id,
+        req.params.id,
+        req.params.taskId,
+        req.body,
+      ),
+    "Đã cập nhật công việc điều trị.",
+  ),
   rescheduleTask: handle(
     (req) =>
       treatment.rescheduleTask(

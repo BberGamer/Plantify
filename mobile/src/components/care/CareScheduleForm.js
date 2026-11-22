@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
 import { gardenToday } from "../../hooks/useCareTasks";
+import DateTimePickerField from "../common/DateTimePickerField";
 
 const INPUT_THEME = { roundness: 14, colors: { background: "#FBFCFA", outline: "#E2E9E2" } };
 function Field(props) {
@@ -69,13 +70,35 @@ export default function CareScheduleForm({ visible, onClose, plants, plantId, pl
             <Field disabled={busy} label="Tên công việc (tùy chọn)" placeholder={action === "watering" ? "Ví dụ: Tưới nhẹ quanh gốc" : "Ví dụ: Bón phân hữu cơ"} value={title} onChangeText={setTitle} maxLength={200} />
           </Section>
           <Section number="03" title="Lên một nhịp chăm sóc">
-            <View style={s.row}><View style={s.flex}><Field disabled={busy} label="Ngày bắt đầu" placeholder="YYYY-MM-DD" value={start} onChangeText={setStart} maxLength={10} autoCapitalize="none" left={<TextInput.Icon icon="calendar-outline" />} /></View><View style={s.time}><Field disabled={busy} label="Vào lúc" placeholder="08:00" value={time} onChangeText={setTime} maxLength={5} keyboardType="numbers-and-punctuation" /></View></View>
-            <Text style={s.help}>Ngày theo dạng năm-tháng-ngày · Giờ Việt Nam</Text>
+            <View style={s.row}>
+              <View style={s.flex}>
+                <DateTimePickerField
+                  type="date"
+                  label="Ngày bắt đầu"
+                  value={start}
+                  disabled={busy}
+                  onChange={(value) => {
+                    setStart(value);
+                    if (hasEnd && end < value) setEnd(value);
+                  }}
+                />
+              </View>
+              <View style={s.time}>
+                <DateTimePickerField
+                  type="time"
+                  label="Vào lúc"
+                  value={time}
+                  disabled={busy}
+                  onChange={setTime}
+                />
+              </View>
+            </View>
+            <Text style={s.help}>Chọn ngày và giờ Việt Nam</Text>
             <Text style={s.label}>Lặp lại</Text>
             <View style={s.wrap}>{[1, 2, 7, 14, 30].map(n => <Pressable key={n} disabled={busy} accessibilityRole="button" accessibilityState={{ selected: repeat === String(n), disabled: busy }} onPress={() => setRepeat(String(n))} style={[s.preset, repeat === String(n) && s.presetSelected]}><Text style={[s.presetText, repeat === String(n) && s.presetTextSelected]}>{n === 1 ? "Hằng ngày" : `${n} ngày`}</Text></Pressable>)}</View>
             <Field disabled={busy} label="Hoặc tùy chỉnh số ngày lặp" value={repeat} onChangeText={setRepeat} keyboardType="number-pad" maxLength={3} right={<TextInput.Affix text="ngày" />} />
-            <View style={s.switchRow}><View style={s.flex}><Text style={s.label}>Đặt ngày kết thúc</Text><Text style={s.help}>Tắt để duy trì lịch chăm sóc liên tục</Text></View><Switch value={hasEnd} onValueChange={setHasEnd} disabled={busy} color={colors.primaryLight} accessibilityLabel="Đặt ngày kết thúc" /></View>
-            {hasEnd && <Field disabled={busy} label="Ngày kết thúc" placeholder="YYYY-MM-DD" value={end} onChangeText={setEnd} maxLength={10} left={<TextInput.Icon icon="calendar-outline" />} />}
+            <View style={s.switchRow}><View style={s.flex}><Text style={s.label}>Đặt ngày kết thúc</Text><Text style={s.help}>Tắt để duy trì lịch chăm sóc liên tục</Text></View><Switch value={hasEnd} onValueChange={(value) => { setHasEnd(value); if (value && !end) setEnd(start); }} disabled={busy} color={colors.primaryLight} accessibilityLabel="Đặt ngày kết thúc" /></View>
+            {hasEnd && <DateTimePickerField type="date" label="Ngày kết thúc" value={end || start} minimum={start} disabled={busy} onChange={setEnd} />}
           </Section>
           <Section number="04" title="Một chút lưu ý"><Field disabled={busy} label="Ghi chú (tùy chọn)" placeholder="Lượng nước, loại phân bón hoặc điều cần nhớ…" value={notes} onChangeText={setNotes} multiline numberOfLines={3} maxLength={1000} /></Section>
           <View style={s.info}><Ionicons name="shield-checkmark-outline" size={18} color={colors.primaryLight} /><Text style={s.infoText}>Lịch thường sẽ tự tạm dừng khi cây bước vào đợt điều trị.</Text></View>
@@ -91,7 +114,7 @@ const s = StyleSheet.create({
   sheet: { width: "100%", maxWidth: 640, height: "94%", maxHeight: "100%", backgroundColor: "#FFFFFF", borderTopLeftRadius: 30, borderTopRightRadius: 30, overflow: "hidden", flexShrink: 1 },
   handle: { width: 38, height: 4, borderRadius: 3, backgroundColor: "#DDE6DD", alignSelf: "center", marginTop: 12 },
   header: { padding: 22, paddingBottom: 18, flexDirection: "row", alignItems: "center", gap: 8 }, headerCopy: { flex: 1, gap: 7 },
-  eyebrow: { fontSize: 9, letterSpacing: 1, fontWeight: "700", color: "#7F9C88", lineHeight: 15 }, heading: { fontSize: 25, fontWeight: "800", color: colors.textPrimary },
+  eyebrow: { fontSize: 9, letterSpacing: 1, fontWeight: "700", color: "#7F9C88", lineHeight: 15 }, heading: { fontSize: 25, lineHeight: 34, fontWeight: "700", color: colors.textPrimary },
   close: { width: 42, height: 42, borderRadius: 21, backgroundColor: "#F2F6F1", alignItems: "center", justifyContent: "center" },
   content: { padding: 22, paddingTop: 4, gap: 25, paddingBottom: 24 },
   section: { gap: 12 }, sectionHeading: { flexDirection: "row", alignItems: "center", gap: 9 },
