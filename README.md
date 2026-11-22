@@ -23,8 +23,8 @@ Hai tính năng dùng chung model và camera nhưng có quyết định riêng:
   `result_kind=plant`, tên cây từ DB; không kết luận bệnh/healthy, không tạo lịch sử bệnh.
 - **Chẩn đoán bệnh** mở `/customer/diagnosis`, gọi API `/diagnosis`; vẫn xét từng nhãn
   cây–bệnh, giữ điều kiện lưu lịch sử và tạo phác đồ hiện có.
-- Nút **Camera** ở navbar mở hộp chọn hai tính năng. Màn camera cũng có nút chuyển
-  chế độ; chuyển chế độ bắt đầu lượt chụp mới và bị khóa trong lúc đang xử lý.
+- Nút **Camera** ở navbar mở một màn phân tích thống nhất. Người dùng chạm tab hoặc vuốt ngang
+  giữa **Nhận diện cây** và **Chẩn đoán bệnh**; chuyển chế độ bị khóa trong lúc đang xử lý.
 
 Ngưỡng nhận diện cây bắt buộc đặt riêng trong `backend/.env`:
 `IDENTIFICATION_MIN_CONFIDENCE`, `IDENTIFICATION_MIN_MARGIN`, `IDENTIFICATION_UNRECOGNIZED_BELOW`.
@@ -281,9 +281,10 @@ Kết quả AI đủ chắc chắn và khớp duy nhất với cây/bệnh trong
 bằng chứng chẩn đoán. Customer có thể chọn một cây cùng loài trong vườn, xem các
 phác đồ đang hoạt động cho đúng cặp cây–bệnh, tạo lịch xem trước rồi xác nhận áp dụng.
 
-Manager quản lý phác đồ tại tab **Điều trị**. Mỗi công việc có ngày và giờ Việt Nam
-để tạo thông báo đúng thời điểm. Khi sửa phác đồ đã duyệt, backend tạo phiên bản mới
-và ngừng phiên bản cũ; lịch đã tạo giữ snapshot nên không bị thay đổi ngược.
+Manager tạo phác đồ tại tab **Phác đồ** (`/manager/protocol-generator`) bằng cách chọn
+bệnh, cây áp dụng và tải file DOCX. Mỗi công việc có ngày và giờ Việt Nam để tạo
+thông báo đúng thời điểm. Kết quả hợp lệ được kích hoạt ngay, không có bước Manager
+duyệt hoặc chỉnh sửa thủ công trên mobile.
 
 Manager chọn bệnh/cây và có thể tải một file DOCX tối đa 10 MB qua multipart field
 `document` tới `POST /api/treatments/manager/ai-draft`; `plant_ids` là mảng JSON.
@@ -314,6 +315,13 @@ thường, đánh dấu cây đang điều trị và tạo nhắc việc theo đ
 lịch chăm sóc từng bị hệ thống tạm dừng được khôi phục; các lịch vốn đã tạm dừng thủ
 công vẫn giữ nguyên. API customer nằm dưới `/api/treatments`; API Manager nằm dưới
 `/api/treatments/manager`.
+
+Sau khi áp dụng, Customer có thể chỉnh từng công việc ngay trên màn chi tiết
+phác đồ. Bản chỉnh sửa chỉ thuộc lịch của Customer đó, không thay đổi phác đồ mẫu dùng chung.
+API `PATCH /api/treatments/schedules/:id/tasks/:taskId` cho phép cập nhật tiêu đề, ngày, giờ,
+hướng dẫn, liều lượng/lượng nước/dụng cụ và lưu ý; backend đồng thời ghi lịch sử và cập nhật
+lại lời nhắc điều trị. Trường ngày/giờ dùng picker của trình duyệt hoặc thiết bị và giới hạn
+trong thời gian phác đồ; nút hoàn thành gửi cập nhật ngay, không có bước xác nhận trung gian.
 
 Kiểm tra logic không cần database:
 
@@ -347,8 +355,8 @@ trong phần luồng chẩn đoán của README này.
 
 Đã gỡ cơ chế/API/màn quản lý FAQ; không đọc `chat_faqs`, không dùng `AI_FAQ_ENABLED`.
 Giữ lịch sử `chat_turns` cũ; enum `faq` chỉ để tương thích lịch sử.
-Manager có tab **Chat** xem/tìm/phân trang chat người dùng qua
-`GET /api/chat/manager/turns`, kiểm tra vai trò và trạng thái từ DB.
+Đã gỡ màn và tab **Chat** khỏi ứng dụng Manager. Endpoint
+`GET /api/chat/manager/turns` vẫn được giữ ở backend để tương thích API hiện có.
 Kiến thức tiếp tục được quản lý ở các tab Cây trồng, Bệnh cây, Điều trị.
 
 Luồng chat: xác thực → đọc danh mục hiện tại → chia đoạn → xếp hạng BM25 → đưa
@@ -401,6 +409,8 @@ Cần kiểm thử thêm MongoDB thật, model thật và thiết bị trước 
 ### Trang chủ theo tài khoản (15/11/2026)
 
 Các ô “Nhận diện cây”, “Vườn của tôi” và chuông thông báo đã có điều hướng.
+Trang chi tiết danh mục cây hiển thị hướng dẫn chăm sóc và bệnh thường gặp dưới dạng accordion.
+Mỗi bệnh dùng ảnh từ dữ liệu bệnh; khi mở chi tiết có thể chạm ảnh để xem toàn màn hình.
 Nhận diện cây mở `/customer/identification`, dùng chung camera và model 78 nhãn
 cây/bệnh với chẩn đoán, chỉ gợi ý tên cây khi vượt các ngưỡng hiện có; chưa hỗ trợ
 nhận diện mọi loài cây. `POST /api/identification` nhận multipart `photo`, bảo vệ
@@ -441,7 +451,8 @@ không phải đánh giá sức khỏe từ AI. Vườn rỗng hiển thị “C
 Danh sách xem trước hiển thị tối đa 6 cây mới nhất với ảnh/tên/trạng thái thật;
 bấm cây mở chi tiết, “Xem thêm” mở vườn. Công việc chăm sóc thường hôm nay tiếp tục
 dùng API lịch chăm sóc theo ngày Việt Nam, hỗ trợ đánh dấu hoàn thành. Dữ liệu tải
-lại khi quay về trang chủ hoặc kéo xuống làm mới; lỗi có nút thử lại.
+lại khi quay về trang chủ hoặc kéo xuống làm mới; lỗi có nút thử lại. Form tạo lịch
+chăm sóc dùng picker cho ngày bắt đầu, giờ thực hiện và ngày kết thúc tùy chọn.
 Weather vẫn ghi rõ là dữ liệu minh họa.
 
 Cần kiểm thử thêm với MongoDB và thiết bị thật.
@@ -573,7 +584,7 @@ Mobile mới dùng prefix `/api`. Backend cũng hỗ trợ alias `/api/v1` để
 | `/plants`, `/plants/PlantList` | Danh mục và chi tiết cây (ID qua params) |
 | `/admin/users`, `/admin/profile` | Quản lý người dùng và hồ sơ Admin |
 | `/manager/plants`, `/manager/diseases` | Quản lý cây và bệnh cây |
-| `/manager/treatments`, `/manager/profile` | Điều trị placeholder và hồ sơ Manager |
+| `/manager/protocol-generator`, `/manager/profile` | Tạo phác đồ từ DOCX và hồ sơ Manager |
 
 ## API hiện có
 
