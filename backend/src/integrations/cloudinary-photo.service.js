@@ -104,29 +104,31 @@ const createCloudinaryPhotos = ({ env = process.env, fetchImpl = globalThis.fetc
 const gardenUnavailable = () => new AppError("GARDEN_PHOTO_STORAGE_UNAVAILABLE", 503, "Chưa kết nối được nơi lưu ảnh vườn. Vui lòng thử lại.");
 const gardenNotConfigured = () => new AppError("GARDEN_PHOTO_NOT_CONFIGURED", 503, "Nơi lưu ảnh vườn chưa được cấu hình đầy đủ.");
 
-const createGardenPhotos = ({ env = process.env, fetchImpl = globalThis.fetch } = {}) => {
-  const getConfig = () => configured(env, gardenNotConfigured);
-  const post = createImagePost(fetchImpl, getConfig, gardenUnavailable);
+const createPublicPhotos = (folder, configurationError, storageError, {
+  env = process.env, fetchImpl = globalThis.fetch,
+} = {}) => {
+  const getConfig = () => configured(env, configurationError);
+  const post = createImagePost(fetchImpl, getConfig, storageError);
+  const publicIdPattern = new RegExp(`^plantify/${folder}/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`);
   const remove = async ({ publicId }) => {
-    if (typeof publicId !== "string" || !/^plantify\/garden\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(publicId))
-      throw gardenUnavailable();
+    if (typeof publicId !== "string" || !publicIdPattern.test(publicId)) throw storageError();
     const result = await post("destroy", { public_id: publicId, type: "upload", invalidate: true }, null, 5000);
-    if (!["ok", "not found"].includes(result?.result)) throw gardenUnavailable();
+    if (!["ok", "not found"].includes(result?.result)) throw storageError();
   };
   return {
     async save(content, extension) {
       getConfig();
-      const publicId = `plantify/garden/${randomUUID()}`;
+      const publicId = `plantify/${folder}/${randomUUID()}`;
       try {
         const result = await post("upload", { public_id: publicId, type: "upload", overwrite: false }, {
-          content, extension, name: `garden.${extension}`,
+          content, extension, name: `plant.${extension}`,
         });
         if (result?.public_id !== publicId || result.type !== "upload" || result.resource_type !== "image" ||
             typeof result.secure_url !== "string" || !/^https:\/\/[^\s/]+\/\S+$/i.test(result.secure_url))
-          throw gardenUnavailable();
+          throw storageError();
         return { publicId, url: result.secure_url };
       } catch (error) {
-        await remove({ publicId }).catch(() => console.error("[Garden] Không dọn được ảnh vừa tải lên Cloudinary."));
+        await remove({ publicId }).catch(() => console.error(`[Cloudinary] Không dọn được ảnh vừa tải lên (${folder}).`));
         throw error;
       }
     },
@@ -134,4 +136,9 @@ const createGardenPhotos = ({ env = process.env, fetchImpl = globalThis.fetch } 
   };
 };
 
-module.exports = { ...createCloudinaryPhotos(), createCloudinaryPhotos, createGardenPhotos };
+const createGardenPhotos = options => createPublicPhotos("garden", gardenNotConfigured, gardenUnavailable, options);
+const plantUnavailable = () => new AppError("PLANT_PHOTO_STORAGE_UNAVAILABLE", 503, "Chưa kết nối được nơi lưu ảnh cây. Vui lòng thử lại.");
+const plantNotConfigured = () => new AppError("PLANT_PHOTO_NOT_CONFIGURED", 503, "Nơi lưu ảnh cây chưa được cấu hình đầy đủ.");
+const createPlantPhotos = options => createPublicPhotos("plants", plantNotConfigured, plantUnavailable, options);
+
+module.exports = { ...createCloudinaryPhotos(), createCloudinaryPhotos, createGardenPhotos, createPlantPhotos };

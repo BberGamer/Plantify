@@ -1,9 +1,11 @@
 // controllers/plant.controller.js - Dieu phoi request & response cho Plants
 const plantService = require('../services/plant.service');
 const { success } = require('../utils/api-response');
-const { savePhoto } = require('../middlewares/garden-upload.middleware');
-const fs = require('node:fs/promises');
+const { imageExtension } = require('../middlewares/garden-upload.middleware');
+const { createPlantPhotos } = require('../integrations/cloudinary-photo.service');
 const v = require('../validators/common');
+
+const photos = createPlantPhotos();
 
 // Multipart keeps structured care fields and booleans in a JSON payload.
 async function savePlant(req, action) {
@@ -13,12 +15,13 @@ async function savePlant(req, action) {
     catch { v.invalid('payload', 'Thông tin cây không hợp lệ.'); }
     v.object(data);
   }
-  let photo;
+  if (!req.file) return action({ ...data });
+  const { buffer } = req.file;
+  const photo = await photos.save(buffer, imageExtension(buffer));
   try {
-    if (req.file) photo = await savePhoto(req.file);
-    return await action({ ...data, ...(photo ? { plant_image: photo.url } : {}) });
+    return await action({ ...data, plant_image: photo.url });
   } catch (error) {
-    if (photo) await fs.unlink(photo.filename).catch(() => console.error('[Upload] Cleanup failed'));
+    await photos.remove(photo).catch(() => console.error('[Plants] Không dọn được ảnh sau khi lưu cây thất bại.'));
     throw error;
   }
 }
