@@ -49,6 +49,9 @@ const ERROR_MESSAGES = {
   PAYMENT_NOT_CONFIGURED: "Hệ thống chưa cấu hình SePay.",
   GARDEN_LIMIT_REACHED:
     "Tài khoản Free được thêm tối đa 3 cây trong vườn. Hãy lưu trữ một cây hoặc mua gói VIP để thêm cây mới.",
+  FEEDBACK_VIP_REQUIRED: "Bạn cần gói VIP còn hạn để gửi đóng góp.",
+  FEEDBACK_NOT_FOUND: "Không tìm thấy đóng góp.",
+  FEEDBACK_REVIEW_CHANGED: "Đóng góp đã được cập nhật. Hãy tải lại trước khi xử lý.",
   VIP_REQUIRED:
     "Nhận diện và chẩn đoán AI cần gói VIP còn hạn. Hãy vào Tài khoản → Tài khoản VIP để mua hoặc gia hạn gói.",
   CHAT_RETRIEVAL_UNAVAILABLE:
@@ -237,6 +240,9 @@ export default function getErrorMessage(
   }
   const data = error?.response?.data;
   const code = data?.code || error?.code;
+  if (code === "FEEDBACK_INVALID_IMAGES") {
+    return data?.errors?.images || error?.message || "Vui lòng kiểm tra ảnh đính kèm.";
+  }
   if (
     code === "FINANCE_VALIDATION" &&
     data?.errors &&
