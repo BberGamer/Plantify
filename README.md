@@ -599,6 +599,11 @@ Mobile mới dùng prefix `/api`. Backend cũng hỗ trợ alias `/api/v1` để
 | GET, PATCH | `/garden/plants/:id` | Customer sở hữu cây |
 | PATCH | `/garden/plants/:id/archive` | Customer sở hữu cây |
 
+Manager có thể chọn ảnh bệnh JPG hoặc PNG tối đa 10 MB từ thiết bị. POST và PUT
+bệnh cây vẫn nhận JSON. Khi gửi ảnh, API nhận multipart với `payload` là JSON
+dạng chuỗi và `photo` là tệp ảnh. Backend tải ảnh lên Cloudinary và lưu URL HTTPS
+công khai trong `disease_image_url`. URL ảnh đã lưu trước đó vẫn hiển thị trong form.
+
 `/admin/users` là alias backend của `/users`, có cùng middleware. Admin tạo tài khoản bằng `POST /users`: tài khoản hoạt động ngay, không cần OTP; API không cấp token mới hoặc thay phiên của Admin.
 
 API bệnh hỗ trợ tìm kiếm, phân trang, lọc theo `plant_id`; API quản lý thêm lọc `status`. Khi tạo/sửa bệnh phải chọn ít nhất một cây liên quan. Liên kết được lưu qua `Plant.common_disease_ids`; xóa bệnh đồng thời gỡ liên kết khỏi cây.

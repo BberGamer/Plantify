@@ -3,11 +3,12 @@ const express = require('express');
 const router = express.Router();
 const { getCategories, getPlants, getPlantById, getManagerPlants, createPlant, updatePlant, deletePlant } = require('../controllers/plant.controller');
 const { authenticate, authorizeManager } = require('../middlewares/auth.middleware');
+const catalogUpload = require('../middlewares/catalog-upload.middleware');
 
 router.use('/manager', authenticate, authorizeManager);
 router.get('/manager', getManagerPlants);
-router.post('/manager', require('../middlewares/garden-upload.middleware').upload, createPlant);
-router.put('/manager/:id', require('../middlewares/garden-upload.middleware').upload, updatePlant);
+router.post('/manager', catalogUpload, createPlant);
+router.put('/manager/:id', catalogUpload, updatePlant);
 router.delete('/manager/:id', deletePlant);
 
 // GET /api/plants/categories  → danh sach danh muc

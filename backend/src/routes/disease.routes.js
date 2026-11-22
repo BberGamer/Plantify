@@ -1,6 +1,7 @@
 // routes/disease.routes.js - Các endpoint đọc danh mục bệnh cây
 const express = require("express");
 const diseaseController = require("../controllers/disease.controller");
+const catalogUpload = require("../middlewares/catalog-upload.middleware");
 const {
   authenticate,
   authorizeManager,
@@ -10,9 +11,9 @@ const router = express.Router();
 
 router.use("/manager", authenticate, authorizeManager);
 router.get("/manager", diseaseController.getManagerDiseases);
-router.post("/manager", diseaseController.createDisease);
+router.post("/manager", catalogUpload, diseaseController.createDisease);
 router.get("/manager/:id", diseaseController.getManagerDiseaseById);
-router.put("/manager/:id", diseaseController.updateDisease);
+router.put("/manager/:id", catalogUpload, diseaseController.updateDisease);
 router.delete("/manager/:id", diseaseController.deleteDisease);
 
 router.get("/", diseaseController.getDiseases);

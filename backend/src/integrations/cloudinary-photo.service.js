@@ -141,4 +141,8 @@ const plantUnavailable = () => new AppError("PLANT_PHOTO_STORAGE_UNAVAILABLE", 5
 const plantNotConfigured = () => new AppError("PLANT_PHOTO_NOT_CONFIGURED", 503, "Nơi lưu ảnh cây chưa được cấu hình đầy đủ.");
 const createPlantPhotos = options => createPublicPhotos("plants", plantNotConfigured, plantUnavailable, options);
 
-module.exports = { ...createCloudinaryPhotos(), createCloudinaryPhotos, createGardenPhotos, createPlantPhotos };
+const diseaseUnavailable = () => new AppError("DISEASE_PHOTO_STORAGE_UNAVAILABLE", 503, "Chưa tải được ảnh bệnh lên. Vui lòng thử lại.");
+const diseaseNotConfigured = () => new AppError("DISEASE_PHOTO_NOT_CONFIGURED", 503, "Nơi lưu ảnh bệnh chưa được cấu hình đầy đủ.");
+const createDiseasePhotos = options => createPublicPhotos("diseases", diseaseNotConfigured, diseaseUnavailable, options);
+
+module.exports = { ...createCloudinaryPhotos(), createCloudinaryPhotos, createGardenPhotos, createPlantPhotos, createDiseasePhotos };

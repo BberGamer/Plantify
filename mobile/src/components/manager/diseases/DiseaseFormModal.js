@@ -1,6 +1,6 @@
-import { spacing } from "../../../theme/tokens";
-
+import { useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -17,6 +17,7 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../../../theme/colors";
+import { spacing } from "../../../theme/tokens";
 import FormField from "../../common/FormField";
 import DiseasePlantPicker from "./DiseasePlantPicker";
 
@@ -34,13 +35,14 @@ const FIELDS = [
   ["scientific_name", "Tên khoa học", 200],
   ["typical_symptoms", "Triệu chứng điển hình *", 5000, true],
   ["environmental_cause", "Nguyên nhân môi trường", 5000, true],
-  ["disease_image_url", "URL ảnh bệnh (http/https)", 2048],
 ];
 
 export default function DiseaseFormModal({
   visible,
   editing,
   form,
+  photo,
+  choosingPhoto,
   loading,
   ready,
   saving,
@@ -51,12 +53,18 @@ export default function DiseaseFormModal({
   onClose,
   onSave,
   onChange,
+  onChoosePhoto,
+  onRemovePhoto,
   onTogglePlant,
   onRetryPlants,
   onRetryDetail,
 }) {
-  const locked = saving || loading || !ready;
-  const close = () => { if (!saving) onClose(); };
+  const locked = saving || choosingPhoto || loading || !ready;
+  const imageUri = photo?.uri || form.disease_image_url;
+  const [failedImageUri, setFailedImageUri] = useState(null);
+  const close = () => {
+    if (!saving && !choosingPhoto) onClose();
+  };
   return (
     <Modal
       visible={visible}
@@ -70,7 +78,7 @@ export default function DiseaseFormModal({
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           <View style={styles.header}>
-            <Button onPress={close} disabled={saving}>
+            <Button onPress={close} disabled={saving || choosingPhoto}>
               Hủy
             </Button>
             <Text variant="titleMedium">
@@ -106,13 +114,36 @@ export default function DiseaseFormModal({
                 disabled={locked}
                 maxLength={maxLength}
                 multiline={Boolean(multiline)}
-                autoCapitalize={
-                  key === "disease_image_url" ? "none" : "sentences"
-                }
-                autoCorrect={key !== "disease_image_url"}
-                keyboardType={key === "disease_image_url" ? "url" : "default"}
               />
             ))}
+            <Text variant="titleMedium">Ảnh bệnh</Text>
+            {!!imageUri && (failedImageUri === imageUri ? (
+              <Text variant="bodySmall">Không tải được ảnh xem trước.</Text>
+            ) : (
+              <Image
+                source={{ uri: imageUri }}
+                style={styles.photo}
+                resizeMode="contain"
+                accessibilityLabel="Ảnh bệnh cây"
+                onError={() => setFailedImageUri(imageUri)}
+              />
+            ))}
+            <Button
+              mode="outlined"
+              onPress={onChoosePhoto}
+              disabled={locked}
+              loading={choosingPhoto}
+            >
+              {imageUri ? "Chọn ảnh khác từ máy" : "Tải ảnh từ máy"}
+            </Button>
+            <Text variant="bodySmall">
+              JPG hoặc PNG, tối đa 10 MB. Ảnh được tải lên khi lưu.
+            </Text>
+            {!!imageUri && (
+              <Button onPress={onRemovePhoto} disabled={locked}>
+                {photo ? "Bỏ ảnh đã chọn" : "Xóa ảnh hiện tại"}
+              </Button>
+            )}
             <Text variant="titleMedium">Tác nhân gây bệnh</Text>
             <RadioButton.Group
               value={form.pathogen_type}
@@ -159,6 +190,7 @@ export default function DiseaseFormModal({
 
 const styles = StyleSheet.create({
   field: { marginBottom: 0 },
+  photo: { width: "100%", height: 180, backgroundColor: colors.background },
   safe: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: "row",

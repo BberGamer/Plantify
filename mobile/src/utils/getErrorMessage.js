@@ -85,6 +85,8 @@ const ERROR_MESSAGES = {
     "Máy chủ chưa cấu hình lưu ảnh. Bạn có thể bỏ ảnh để lưu cây trước.",
   GARDEN_PHOTO_STORAGE_UNAVAILABLE: "Chưa tải được ảnh vườn lên. Vui lòng thử lại.",
   PLANT_PHOTO_STORAGE_UNAVAILABLE: "Chưa tải được ảnh cây lên. Vui lòng thử lại.",
+  DISEASE_PHOTO_NOT_CONFIGURED: "Máy chủ chưa cấu hình lưu ảnh bệnh.",
+  DISEASE_PHOTO_STORAGE_UNAVAILABLE: "Chưa tải được ảnh bệnh lên. Vui lòng thử lại.",
   AI_NOT_CONFIGURED: "Trợ lý AI chưa được cấu hình. Vui lòng thử lại sau.",
   AI_TIMEOUT: "AI trả lời quá lâu. Vui lòng thử lại.",
   AI_BUSY: "Trợ lý AI đang bận. Vui lòng thử lại sau.",

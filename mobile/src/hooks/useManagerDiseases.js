@@ -1,5 +1,6 @@
 // useManagerDiseases.js - Quản lý danh sách và thao tác CRUD bệnh cây.
 import { useCallback, useEffect, useRef, useState } from "react";
+import * as ImagePicker from "expo-image-picker";
 import diseaseService from "../services/diseaseService";
 import plantService from "../services/plantService";
 import getErrorMessage from "../utils/getErrorMessage";
@@ -47,6 +48,8 @@ export default function useManagerDiseases() {
   const [visible, setVisible] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(createDiseaseForm);
+  const [photo, setPhoto] = useState(null);
+  const [choosingPhoto, setChoosingPhoto] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [formReady, setFormReady] = useState(false);
   const [formError, setFormError] = useState("");
@@ -58,6 +61,7 @@ export default function useManagerDiseases() {
   const plantRequest = useRef(0);
   const detailRequest = useRef(0);
   const mutationPending = useRef(false);
+  const photoPending = useRef(false);
   const debounced = useDebouncedValue(search.trim());
   const fetchPage = useCallback(
     (params) =>
@@ -143,6 +147,7 @@ export default function useManagerDiseases() {
     setVisible(false);
     setEditing(null);
     setForm(createDiseaseForm());
+    setPhoto(null);
     setFormReady(false);
     setFormError("");
     setDeleteTarget(null);
@@ -164,10 +169,11 @@ export default function useManagerDiseases() {
   };
 
   const openCreate = () => {
-    if (mutationPending.current || deleteTarget || !isActive()) return;
+    if (mutationPending.current || photoPending.current || deleteTarget || !isActive()) return;
     ++detailRequest.current;
     setEditing(null);
     setForm(createDiseaseForm());
+    setPhoto(null);
     setFormLoading(false);
     setFormReady(true);
     setFormError("");
@@ -181,6 +187,7 @@ export default function useManagerDiseases() {
     const isCurrent = () => inScope() && requestId === detailRequest.current;
     setEditing(disease);
     setForm(createDiseaseForm(disease));
+    setPhoto(null);
     setFormLoading(true);
     setFormReady(false);
     setFormError("");
@@ -208,7 +215,7 @@ export default function useManagerDiseases() {
   };
 
   const openEdit = (disease) => {
-    if (mutationPending.current || deleteTarget || !isActive()) return;
+    if (mutationPending.current || photoPending.current || deleteTarget || !isActive()) return;
     loadDiseaseForEdit(disease);
   };
 
@@ -219,11 +226,12 @@ export default function useManagerDiseases() {
   };
 
   const closeForm = () => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || photoPending.current) return;
     ++detailRequest.current;
     setVisible(false);
     setEditing(null);
     setForm(createDiseaseForm());
+    setPhoto(null);
     setFormLoading(false);
     setFormReady(false);
     setFormError("");
@@ -236,20 +244,42 @@ export default function useManagerDiseases() {
       formLoading ||
       !formReady ||
       !Object.prototype.hasOwnProperty.call(form, key) ||
-      ["plant_ids", "treatment_protocol"].includes(key)
+      ["plant_ids", "treatment_protocol", "disease_image_url"].includes(key)
     )
       return;
     setForm((previous) => ({ ...previous, [key]: value }));
     setFormError("");
   };
 
-  const changeTreatmentField = (key, value) => {
-    if (mutationPending.current || !visible || formLoading || !formReady)
-      return;
-    setForm((previous) => ({
-      ...previous,
-      treatment_protocol: { ...previous.treatment_protocol, [key]: value },
-    }));
+  const choosePhoto = async () => {
+    if (mutationPending.current || photoPending.current || !visible || formLoading || !formReady || !isActive()) return;
+    const current = capture();
+    photoPending.current = true;
+    setChoosingPhoto(true);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 1 });
+      if (!current() || result.canceled) return;
+      const asset = result.assets?.[0];
+      if (!asset?.uri) { setFormError("Không đọc được ảnh đã chọn."); return; }
+      if (asset.fileSize > 10 * 1024 * 1024) { setFormError("Ảnh tối đa 10 MB."); return; }
+      if (asset.mimeType && !["image/jpeg", "image/png"].includes(asset.mimeType)) {
+        setFormError("Vui lòng chọn ảnh JPG hoặc PNG.");
+        return;
+      }
+      setPhoto(asset);
+      setFormError("");
+    } catch (error) {
+      if (current()) setFormError(getErrorMessage(error, "Không thể chọn ảnh. Vui lòng thử lại."));
+    } finally {
+      photoPending.current = false;
+      if (mounted.current) setChoosingPhoto(false);
+    }
+  };
+
+  const removePhoto = () => {
+    if (mutationPending.current || photoPending.current || !visible || !formReady) return;
+    if (photo) setPhoto(null);
+    else setForm(previous => ({ ...previous, disease_image_url: "" }));
     setFormError("");
   };
 
@@ -268,6 +298,7 @@ export default function useManagerDiseases() {
   const save = async () => {
     if (
       mutationPending.current ||
+      photoPending.current ||
       !visible ||
       formLoading ||
       !formReady ||
@@ -280,7 +311,6 @@ export default function useManagerDiseases() {
       scientific_name: 200,
       typical_symptoms: 5000,
       environmental_cause: 5000,
-      disease_image_url: 2048,
     };
     if (
       Object.entries(limits).some(
@@ -288,13 +318,6 @@ export default function useManagerDiseases() {
       )
     ) {
       setFormError("Nội dung vượt quá độ dài cho phép. Vui lòng kiểm tra lại.");
-      return;
-    }
-    if (
-      form.disease_image_url.trim() &&
-      !/^https?:\/\/\S+$/i.test(form.disease_image_url.trim())
-    ) {
-      setFormError("URL ảnh bệnh phải là đường dẫn http hoặc https hợp lệ.");
       return;
     }
     if (!form.disease_name.trim() || !form.typical_symptoms.trim()) {
@@ -312,8 +335,8 @@ export default function useManagerDiseases() {
     try {
       const payload = createDiseasePayload(form);
       const response = editing
-        ? await diseaseService.updateDisease(editing._id, payload)
-        : await diseaseService.createDisease(payload);
+        ? await diseaseService.updateDisease(editing._id, payload, photo)
+        : await diseaseService.createDisease(payload, photo);
       if (!response?.success) {
         throw new Error(response?.message || "Không lưu được bệnh cây.");
       }
@@ -321,6 +344,7 @@ export default function useManagerDiseases() {
       setVisible(false);
       setEditing(null);
       setForm(createDiseaseForm());
+      setPhoto(null);
       setFormReady(false);
       await loadDiseases(true);
     } catch (error) {
@@ -389,6 +413,8 @@ export default function useManagerDiseases() {
     visible,
     editing,
     form,
+    photo,
+    choosingPhoto,
     formLoading,
     formReady,
     formError,
@@ -406,7 +432,8 @@ export default function useManagerDiseases() {
     openEdit,
     closeForm,
     changeField,
-    changeTreatmentField,
+    choosePhoto,
+    removePhoto,
     togglePlant,
     save,
     requestDelete,
