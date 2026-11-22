@@ -68,6 +68,9 @@ export default function ManagerLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="feedback" options={{ title: "Quản lý đóng góp", tabBarLabel: "Góp ý",
+        tabBarIcon: ({ color, size }) => <Ionicons name="chatbox-ellipses-outline" color={color} size={size} />,
+      }} />
       <Tabs.Screen name="index" options={{ href: null }} />
     </Tabs>
   );
