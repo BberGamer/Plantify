@@ -13,5 +13,6 @@ router.get("/preferences", controller.preferences);
 router.patch("/preferences", controller.updatePreferences);
 router.put("/devices/:installationId", controller.registerDevice);
 router.get("/:id", controller.detail);
+router.patch("/read-all", controller.markAllRead);
 router.patch("/:id/read", controller.markRead);
 module.exports = router;

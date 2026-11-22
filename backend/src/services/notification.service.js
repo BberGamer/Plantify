@@ -77,6 +77,14 @@ const markRead = async (userId, id) => {
   return item;
 };
 
+async function markAllRead(userId) {
+  const { modifiedCount } = await Notification.updateMany(
+    { ...visible(userId), is_read: { $ne: true } }, { $set: { is_read: true } },
+  );
+  if (modifiedCount > 0) notifyChanged(userId);
+  return { modifiedCount };
+}
+
 async function preferences(userId) {
   const user = await User.findById(userId).select("notification_preferences").lean();
   return { treatment_reminders: user?.notification_preferences?.treatment_reminders !== false };
@@ -93,4 +101,4 @@ async function updatePreferences(userId, input) {
   return preferences(userId);
 }
 
-module.exports = { list, unreadCount, detail, markRead, preferences, updatePreferences, subscribe, notifyChanged };
+module.exports = { list, unreadCount, detail, markRead, markAllRead, preferences, updatePreferences, subscribe, notifyChanged };

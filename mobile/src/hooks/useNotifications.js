@@ -10,6 +10,7 @@ import useAuthStore from "../../store/authStore";
 export default function useNotifications() {
   const list = usePaginatedList(notificationService.list, { limit: 20 });
   const [busyId, setBusyId] = useState(null);
+  const [markingAll, setMarkingAll] = useState(false);
   const [actionError, setActionError] = useState("");
   const lock = useRef(false);
   const sessionVersion = useAuthStore(state => state.sessionVersion);
@@ -17,7 +18,7 @@ export default function useNotifications() {
   useFocusEffect(useCallback(() => notificationService.subscribe(getSessionContext(), () => {
     if (!lock.current) void reload();
   }), [reload, sessionVersion]));
-  const scope = useScreenScope(() => { setBusyId(null); setActionError(""); });
+  const scope = useScreenScope(() => { setBusyId(null); setMarkingAll(false); setActionError(""); });
   const markRead = async (item) => {
     if (lock.current) return false;
     if (item.is_read) return true;
@@ -40,6 +41,24 @@ export default function useNotifications() {
       if (current()) setBusyId(null);
     }
   };
+  const markAllRead = async () => {
+    if (lock.current) return;
+    const current = scope.capture();
+    lock.current = true;
+    setMarkingAll(true);
+    setActionError("");
+    try {
+      const response = await notificationService.markAllRead();
+      if (response?.success !== true || !Number.isSafeInteger(response.data?.modifiedCount))
+        throw Object.assign(new Error("Invalid response"), { code: "INVALID_RESPONSE" });
+      if (current()) await reload();
+    } catch (error) {
+      if (current()) setActionError(getErrorMessage(error, "Không thể đánh dấu đã đọc tất cả. Vui lòng thử lại."));
+    } finally {
+      lock.current = false;
+      if (current()) setMarkingAll(false);
+    }
+  };
   const refresh = () => { if (!lock.current) return list.refresh(); };
-  return { ...list, refresh, busyId, actionError, markRead };
+  return { ...list, refresh, busyId, actionError, markRead, markingAll, markAllRead };
 }
