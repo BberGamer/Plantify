@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
 import { spacing } from "../../theme/tokens";
 import { colors } from "../../theme/colors";
 
 import { View, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Button, Dialog, Portal, Text } from "react-native-paper";
+import { Text } from "react-native-paper";
 import { usePathname, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -54,30 +53,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
-  const [choosingCamera, setChoosingCamera] = useState(false);
-  useEffect(() => setChoosingCamera(false), [pathname]);
-  const openCamera = (href) => {
-    setChoosingCamera(false);
-    router.navigate(href);
-  };
   return (
-    <>
-      <Portal>
-        <Dialog visible={choosingCamera} onDismiss={() => setChoosingCamera(false)}>
-          <Dialog.Title>Chọn tính năng camera</Dialog.Title>
-          <Dialog.Content>
-            <Button icon="leaf-outline" onPress={() => openCamera("/customer/identification")}>
-              Nhận diện cây
-            </Button>
-            <Button icon="stethoscope" onPress={() => openCamera("/customer/diagnosis")}>
-              Chẩn đoán bệnh
-            </Button>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setChoosingCamera(false)}>Hủy</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
     <View style={[styles.navbar, { paddingBottom: insets.bottom }]}>
       {ITEMS.map((item) => {
         // Dựa vào trang thực tế, không cố định Home đang active như bản cũ.
@@ -97,13 +73,12 @@ export default function Navbar() {
             accessibilityRole="button"
             accessibilityLabel={item.label.replace("\n", " ")}
             accessibilityHint={
-              item.camera ? "Chọn nhận diện cây hoặc chẩn đoán bệnh" : undefined
+              item.camera ? "Mở camera nhận diện cây và chẩn đoán bệnh" : undefined
             }
             accessibilityState={{ selected: isActive, disabled: !canNavigate }}
             // navigate tái sử dụng trang trong stack khi có thể, tránh push lặp trang.
             onPress={() => {
-              if (item.camera) setChoosingCamera(true);
-              else if (canNavigate && !isActive) router.navigate(item.href);
+              if (canNavigate && !isActive) router.navigate(item.href);
             }}
           >
             <View style={[styles.iconSlot, item.camera && styles.cameraSlot]}>
@@ -137,7 +112,6 @@ export default function Navbar() {
         );
       })}
     </View>
-    </>
   );
 }
 
