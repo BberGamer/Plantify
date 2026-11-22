@@ -100,6 +100,10 @@ const utcToday = () => {
     ),
   );
 };
+const vietnamDateKey = (date) =>
+  new Date(new Date(date).getTime() + 7 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
 
 const createProtocolSnapshot = (protocol) => ({
   protocol_name: protocol.protocol_name,
@@ -175,6 +179,7 @@ const presentSchedule = async (schedule, session) => {
   const start = value.start_date ? new Date(value.start_date) : null;
   const elapsed = start ? Math.floor((utcToday() - start) / DAY_MS) + 1 : 0;
   const historyLabels = {
+    task_edited: "Đã chỉnh sửa công việc điều trị",
     generated: "Đã tạo lịch điều trị",
     activated: "Đã bắt đầu phác đồ điều trị",
     task_completed: "Đã hoàn thành công việc điều trị",
@@ -608,6 +613,99 @@ const completeTask = async (userId, scheduleId, taskId) => {
   });
 };
 
+const editTask = async (userId, scheduleId, taskId, input) => {
+  v.id(userId, "user_id");
+  v.id(scheduleId, "schedule_id");
+  v.id(taskId, "task_id");
+  const result = validate.editTask(input);
+  return withTransactionResult(async (session) => {
+    const schedule = await TreatmentSchedule.findOne({
+      _id: scheduleId,
+      user_id: userId,
+    }).session(session);
+    if (!schedule)
+      throw new AppError(
+        "RESOURCE_NOT_FOUND",
+        404,
+        "Không tìm thấy lịch điều trị.",
+      );
+    if (schedule.status !== "in_progress")
+      throw new AppError(
+        "INVALID_TREATMENT_TRANSITION",
+        409,
+        "Chỉ có thể chỉnh sửa phác đồ đang được áp dụng.",
+      );
+
+    const task = schedule.tasks.id(taskId);
+    if (!task)
+      throw new AppError(
+        "RESOURCE_NOT_FOUND",
+        404,
+        "Không tìm thấy công việc điều trị.",
+      );
+    const dateKey = result.scheduled_date
+      ? result.scheduled_date.toISOString().slice(0, 10)
+      : vietnamDateKey(task.scheduled_date);
+    const treatmentDate = new Date(`${dateKey}T00:00:00.000Z`);
+    const time = result.time || task.time || "08:00";
+    const scheduledDate = withVietnamTime(
+      treatmentDate,
+      time,
+    );
+    if (treatmentDate < schedule.start_date || treatmentDate > schedule.end_date)
+      throw new AppError(
+        "TASK_DATE_OUT_OF_RANGE",
+        400,
+        "Ngày thực hiện phải nằm trong thời gian điều trị.",
+      );
+
+    for (const field of [
+      "title",
+      "instructions",
+      "dosage_note",
+      "important_note",
+    ]) {
+      if (result[field] !== undefined) task[field] = result[field];
+    }
+    task.time = time;
+    task.scheduled_date = scheduledDate;
+    schedule.tasks.sort(
+      (left, right) => left.scheduled_date - right.scheduled_date,
+    );
+    schedule.history.push({
+      event: "task_edited",
+      task_id: task._id,
+      occurred_at: new Date(),
+      note: `Đã chỉnh sửa “${task.title}” (${dateKey} ${time}).`,
+    });
+    await schedule.save({ session });
+
+    const reminder = await Notification.updateOne(
+      {
+        treatment_schedule_id: schedule._id,
+        treatment_task_id: task._id,
+        status: "scheduled",
+      },
+      {
+        $set: {
+          message: task.title,
+          scheduled_for: task.scheduled_date,
+        },
+      },
+      { session },
+    );
+    if (!reminder.matchedCount && task.status === "pending") {
+      const operations = createReminderOperations({
+        _id: schedule._id,
+        user_id: userId,
+        tasks: [task],
+      });
+      await Notification.bulkWrite(operations, { session });
+    }
+    return presentSchedule(schedule, session);
+  });
+};
+
 const rescheduleTask = async (userId, scheduleId, taskId, input) => {
   v.id(userId, "user_id");
   v.id(scheduleId, "schedule_id");
@@ -902,6 +1000,7 @@ module.exports = {
   getSchedule,
   activateSchedule,
   completeTask,
+  editTask,
   rescheduleTask,
   finishSchedule,
   getManagerProtocols,

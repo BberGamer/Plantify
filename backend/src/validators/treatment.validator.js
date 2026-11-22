@@ -194,4 +194,54 @@ const rescheduleTask = (input) => {
   return { scheduled_date: scheduledDate };
 };
 
-module.exports = { generate, finish, rescheduleTask, protocol, aiDraft };
+const editTask = (input) => {
+  v.object(input);
+  const allowed = [
+    "title",
+    "scheduled_date",
+    "time",
+    "instructions",
+    "dosage_note",
+    "important_note",
+  ];
+  for (const key of Object.keys(input)) {
+    if (!allowed.includes(key))
+      v.invalid(key, `Trường ${key} không được hỗ trợ.`);
+  }
+  if (!Object.keys(input).length)
+    v.invalid("task", "Vui lòng nhập ít nhất một nội dung cần cập nhật.");
+
+  const result = {};
+  if (input.title !== undefined) {
+    result.title = v.text(input.title, "title");
+    if (result.title.length > 200)
+      v.invalid("title", "Tiêu đề tối đa 200 ký tự.");
+  }
+  if (input.scheduled_date !== undefined)
+    result.scheduled_date = rescheduleTask({
+      scheduled_date: input.scheduled_date,
+    }).scheduled_date;
+  if (input.time !== undefined) {
+    if (
+      typeof input.time !== "string" ||
+      !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(input.time)
+    )
+      v.invalid("time", "Giờ thực hiện phải có định dạng HH:mm.");
+    result.time = input.time;
+  }
+  if (input.instructions !== undefined) {
+    const instruction = v.text(input.instructions, "instructions");
+    if (instruction.length > 2000)
+      v.invalid("instructions", "Hướng dẫn tối đa 2000 ký tự.");
+    result.instructions = [instruction];
+  }
+  for (const field of ["dosage_note", "important_note"]) {
+    if (input[field] === undefined) continue;
+    result[field] = v.text(input[field], field, false);
+    if (result[field].length > 2000)
+      v.invalid(field, "Nội dung tối đa 2000 ký tự.");
+  }
+  return result;
+};
+
+module.exports = { generate, finish, rescheduleTask, editTask, protocol, aiDraft };

@@ -10,6 +10,7 @@ import { colors, spacing, typography } from "../../theme";
 export default function DiagnosisCapture({
   cameraRef, showCamera, permission, cameraError, busy, canCapture,
   onCameraReady, onCameraError, onEnableCamera, onRetryCamera, onCapture, onPickPhoto,
+  modeSelector,
 }) {
   return (
     <View style={styles.card}>
@@ -51,6 +52,7 @@ export default function DiagnosisCapture({
           </View>
         )}
       </LinearGradient>
+      {modeSelector}
       <View style={styles.controls}>
         <Pressable
           disabled={busy}
@@ -95,7 +97,7 @@ export default function DiagnosisCapture({
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 24, overflow: "hidden", backgroundColor: colors.white },
+  card: { borderRadius: 24, overflow: "hidden", backgroundColor: "#17221E" },
   preview: { alignItems: "center", padding: spacing.xxl, paddingVertical: spacing.xxxl },
   permission: { alignItems: "center", gap: spacing.md, marginTop: spacing.md },
   permissionText: { ...typography.caption, color: colors.white, textAlign: "center" },
@@ -152,7 +154,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#8CD5A91A",
   },
-  controls: { padding: spacing.xl, flexDirection: "row", alignItems: "center" },
+  controls: { padding: spacing.xl, flexDirection: "row", alignItems: "center", backgroundColor: "#17221E" },
   control: { flex: 1, alignItems: "center", gap: spacing.sm },
   albumIcon: {
     width: 48,
@@ -160,9 +162,9 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.lightMint,
+    backgroundColor: "#2B3933",
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#44534D",
   },
   shutterRing: {
     padding: 4,
@@ -177,10 +179,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  controlLabel: { ...typography.caption, color: colors.textPrimary },
+  controlLabel: { ...typography.caption, color: colors.white },
   shutterLabel: {
     ...typography.caption,
-    color: colors.primary,
+    color: colors.white,
     fontWeight: "700",
   },
 });

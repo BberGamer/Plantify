@@ -15,11 +15,14 @@ export default function DiagnosisPreview({
   onAnalyze,
   identification = false,
 }) {
+  const imageRatio = photo.width > 0 && photo.height > 0
+    ? Math.max(0.65, Math.min(1.8, photo.width / photo.height))
+    : 1;
   return (
     <View style={styles.card}>
       <Image
         source={{ uri: photo.uri }}
-        style={styles.image}
+        style={[styles.image, { aspectRatio: imageRatio }]}
         resizeMode="contain"
         accessibilityLabel="Ảnh cây đã chọn"
         onError={onImageError}
@@ -55,7 +58,7 @@ export default function DiagnosisPreview({
 
 const styles = StyleSheet.create({
   card: { borderRadius: 24, overflow: "hidden", backgroundColor: colors.white },
-  image: { width: "100%", aspectRatio: 0.85, backgroundColor: "#10231D" },
+  image: { width: "100%", backgroundColor: "#10231D" },
   actions: {
     flexDirection: "row",
     flexWrap: "wrap",

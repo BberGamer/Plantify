@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Image, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Dialog, Portal, Text } from "react-native-paper";
+import { Button, Portal, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { colors, radius, spacing, typography } from "../../../../src/theme";
@@ -12,6 +12,7 @@ import {
   TreatmentStateView,
   TreatmentStatusBadge,
   TreatmentTaskCard,
+  TreatmentTaskEditDialog,
   TreatmentTimeline,
 } from "../../../../src/components/treatments";
 
@@ -23,14 +24,22 @@ export default function TreatmentListScreen() {
   const treatmentId =
     typeof routeTreatmentId === "string" ? routeTreatmentId : "";
   const treatment = useActiveTreatment(treatmentId);
-  const [taskToComplete, setTaskToComplete] = useState(null);
+  const [taskToEdit, setTaskToEdit] = useState(null);
   const data = treatment.data;
 
-  async function completeTask() {
-    const completed = await treatment.completeTask(taskToComplete._id);
-    if (completed) {
-      setTaskToComplete(null);
-    }
+  async function completeTask(task) {
+    treatment.clearMutationError();
+    await treatment.completeTask(task._id);
+  }
+
+  async function saveTask(payload) {
+    const saved = await treatment.editTask(taskToEdit._id, payload);
+    if (saved) setTaskToEdit(null);
+  }
+
+  function beginEdit(task) {
+    treatment.clearMutationError();
+    setTaskToEdit(task);
   }
 
   const currentStage = data?.stages.find((stage) => stage.order === data.current_stage_order);
@@ -65,7 +74,7 @@ export default function TreatmentListScreen() {
       </View>}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Công việc điều trị</Text>
-        {data.task_progress.length ? data.task_progress.map((task) => <TreatmentTaskCard key={task._id} task={task} busy={treatment.completingTaskId === task._id} onComplete={setTaskToComplete} />) : <Text style={styles.empty}>Hôm nay chưa có công việc điều trị.</Text>}
+        {data.task_progress.length ? data.task_progress.map((task) => <TreatmentTaskCard key={task._id} task={task} editable={data.status === "in_progress"} busy={treatment.completingTaskId === task._id || treatment.editingTaskId === task._id} onComplete={completeTask} onEdit={beginEdit} />) : <Text style={styles.empty}>Hôm nay chưa có công việc điều trị.</Text>}
       </View>
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Các giai đoạn</Text>
@@ -89,14 +98,15 @@ export default function TreatmentListScreen() {
       </Button>}
     </ScrollView>}
     <Portal>
-      <Dialog visible={Boolean(taskToComplete)} onDismiss={() => !treatment.completingTaskId && setTaskToComplete(null)} dismissable={!treatment.completingTaskId}>
-        <Dialog.Title>Xác nhận hoàn thành?</Dialog.Title>
-        <Dialog.Content><Text>Bạn xác nhận đã hoàn thành “{taskToComplete?.title}” theo đúng hướng dẫn?</Text></Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={() => setTaskToComplete(null)} disabled={Boolean(treatment.completingTaskId)}>Hủy</Button>
-          <Button onPress={completeTask} loading={Boolean(treatment.completingTaskId)} disabled={Boolean(treatment.completingTaskId)}>Xác nhận</Button>
-        </Dialog.Actions>
-      </Dialog>
+      <TreatmentTaskEditDialog
+        task={taskToEdit}
+        busy={Boolean(treatment.editingTaskId)}
+        serverError={treatment.mutationError}
+        scheduleStart={data?.started_at}
+        scheduleEnd={data?.estimated_end_at}
+        onDismiss={() => !treatment.editingTaskId && setTaskToEdit(null)}
+        onSave={saveTask}
+      />
     </Portal>
   </SafeAreaView>;
 }

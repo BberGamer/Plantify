@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   leaf: { width: 82, height: 82, borderRadius: 28, backgroundColor: colors.white, alignItems: "center", justifyContent: "center", transform: [{ rotate: "-8deg" }] },
   sparkle: { position: "absolute", right: 0, top: 4, width: 36, height: 36, borderRadius: 14, backgroundColor: colors.softPurpleBg, borderWidth: 3, borderColor: colors.background, alignItems: "center", justifyContent: "center" },
   eyebrow: { ...typography.caption, fontWeight: "700", letterSpacing: 1.1, color: colors.accentGreen, textAlign: "center", marginBottom: spacing.md },
-  heading: { fontSize: 28, lineHeight: 36, fontWeight: "800", letterSpacing: -0.7, color: colors.textPrimary, textAlign: "center", maxWidth: 300 },
+  heading: { fontSize: 28, lineHeight: 38, fontWeight: "700", letterSpacing: -0.4, color: colors.textPrimary, textAlign: "center", maxWidth: 300 },
   description: { ...typography.body, color: colors.textSecondary, textAlign: "center", marginTop: spacing.md, maxWidth: 340 },
   sectionTitle: { ...typography.label, color: colors.textPrimary, marginBottom: spacing.md },
   suggestions: { gap: spacing.sm },

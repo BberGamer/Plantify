@@ -1,10 +1,8 @@
 import { getRoleLabel } from "../constants/roles";
-// useHomeHeader.js - Điều phối menu tài khoản và đăng xuất tại Home.
-import { Alert } from "react-native";
+// useHomeHeader.js - Điều phối hồ sơ và thông báo tại Home.
 import { useCallback, useState } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import useAuthStore from "../../store/authStore";
-import useLogout from "./useLogout";
 import notificationService from "../services/notificationService";
 import { getSessionContext, isSessionCurrent } from "../services/sessionAccess";
 
@@ -37,26 +35,18 @@ export default function useHomeHeader() {
       unsubscribe();
     };
   }, [user?.role, sessionVersion]));
-  const { handleLogout, isLoggingOut, logoutError } = useLogout();
   const roleLabel = getRoleLabel(user?.role);
   const openAdmin = () => router.push("/admin/users");
   const openNotifications = () => router.navigate("/customer/notifications");
-  const openAccountMenu = () => {
-    if (isLoggingOut) return;
-    Alert.alert(
-      user ? `Xin chào, ${user.fullName || "Người dùng"}!` : "Tài khoản",
-      user
-        ? `Địa chỉ email: ${user.email}\nVai trò: ${roleLabel}`
-        : "Bạn chưa đăng nhập",
-      [
-        { text: "Đóng", style: "cancel" },
-        ...(user?.role === "admin"
-          ? [{ text: "Quản lý người dùng", onPress: openAdmin }]
-          : []),
-        { text: "Đăng xuất", style: "destructive", onPress: handleLogout },
-      ],
-    );
+  const openProfile = () => {
+    if (!user?.role) return;
+    const routes = {
+      customer: "/customer/profile",
+      manager: "/manager/profile",
+      admin: "/admin/profile",
+    };
+    if (routes[user.role]) router.push(routes[user.role]);
   };
   const unreadCount = unread?.version === sessionVersion ? unread.count : 0;
-  return { roleLabel, user, openAdmin, openAccountMenu, openNotifications, unreadCount, isLoggingOut, logoutError };
+  return { roleLabel, user, openAdmin, openProfile, openNotifications, unreadCount };
 }

@@ -29,6 +29,7 @@ router.get("/protocols", controller.protocols);
 router.post("/schedules", controller.generate);
 router.get("/schedules/:id", controller.detail);
 router.post("/schedules/:id/activate", controller.activate);
+router.patch("/schedules/:id/tasks/:taskId", controller.editTask);
 router.patch("/schedules/:id/tasks/:taskId/complete", controller.completeTask);
 router.patch("/schedules/:id/tasks/:taskId/reschedule", controller.rescheduleTask);
 router.patch("/schedules/:id/finish", controller.finish);

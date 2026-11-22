@@ -63,7 +63,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     fontSize: 22,
-    fontWeight: "800",
+    lineHeight: 30,
+    fontWeight: "700",
     color: garden.ink,
     letterSpacing: 0.2,
   },
