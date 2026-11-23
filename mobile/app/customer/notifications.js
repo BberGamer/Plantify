@@ -50,12 +50,13 @@ export default function NotificationsScreen() {
         {!!notifications.actionError && <Text accessibilityRole="alert">{notifications.actionError}</Text>}
         {notifications.items.map(item => {
           const isCare = item.type === "care";
+          const isFeedback = item.type === "feedback_reply";
           const scheduledFor = new Date(item.scheduled_for);
           return <Card key={item._id} mode="outlined" style={[styles.card, !item.is_read && styles.unreadCard]}>
             <View style={styles.cardBody}>
               <View style={styles.cardHeading}>
-                <View style={[styles.iconTile, !isCare && styles.treatmentTile]}>
-                  <Icon source={isCare ? "sprout-outline" : "medical-bag"} size={17} color={colors.primary} />
+                <View style={[styles.iconTile, !isCare && !isFeedback && styles.treatmentTile]}>
+                  <Icon source={isFeedback ? "message-text-outline" : isCare ? "sprout-outline" : "medical-bag"} size={17} color={colors.primary} />
                 </View>
                 <View style={styles.headingText}>
                   <Text variant="titleMedium" style={styles.title}>{item.title}</Text>
@@ -75,9 +76,13 @@ export default function NotificationsScreen() {
                 {!item.is_read && <IconButton mode="outlined" icon="check" size={20} style={styles.actionButton}
                   accessibilityLabel="Đánh dấu đã đọc" disabled={actionsDisabled} loading={notifications.busyId === item._id}
                   onPress={() => notifications.markRead(item)} />}
-                <IconButton mode="contained" icon="calendar-outline" size={20} style={styles.actionButton}
+                {isFeedback ? (
+                  <Button mode="contained" icon="message-text-outline" disabled={actionsDisabled} onPress={() => open(item)}>
+                    Xem phản hồi
+                  </Button>
+                ) : <IconButton mode="contained" icon="calendar-outline" size={20} style={styles.actionButton}
                   accessibilityLabel={isCare ? "Xem lịch chăm sóc" : "Xem lịch điều trị"}
-                  disabled={actionsDisabled} onPress={() => open(item)} />
+                  disabled={actionsDisabled} onPress={() => open(item)} />}
               </View>
             </View>
           </Card>;

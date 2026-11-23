@@ -73,7 +73,7 @@ export async function syncPushDevice(session, rotatedToken) {
   const current = () => started === generation && isSessionCurrent(session);
   if (!current()) return;
   await Notifications.setNotificationChannelAsync(CHANNEL, {
-    name: "Nhắc lịch chăm sóc và điều trị",
+    name: "Thông báo Plantify",
     importance: Notifications.AndroidImportance.HIGH,
   });
   let permission = await Notifications.getPermissionsAsync();
@@ -133,6 +133,7 @@ TaskManager.defineTask(TASK, async ({ data, error }) => {
   if (error || !/^[a-f0-9]{24}$/i.test(payload?.notificationId ?? "") ||
       typeof payload.bindingId !== "string") return;
   const { notificationId, bindingId, kind } = payload;
+  const isFeedback = kind === "feedback_reply";
   const expiresAt = Number(payload.expiresAt);
   if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return;
 
@@ -146,8 +147,10 @@ TaskManager.defineTask(TASK, async ({ data, error }) => {
     await Notifications.scheduleNotificationAsync({
       identifier,
       content: {
-        title: kind === "care" ? "Đến giờ chăm sóc cây" : "Đến giờ điều trị cây",
-        body: "Mở Plantify để xem công việc cần thực hiện.",
+        title: isFeedback ? "Plantify đã phản hồi góp ý của bạn"
+          : kind === "care" ? "Đến giờ chăm sóc cây" : "Đến giờ điều trị cây",
+        body: isFeedback ? "Mở ứng dụng để xem nội dung phản hồi."
+          : "Mở Plantify để xem công việc cần thực hiện.",
         data: { notificationId, bindingId },
       },
       trigger: { channelId: CHANNEL },
