@@ -1,10 +1,13 @@
+const mongoose = require("mongoose");
 const { Feedback } = require("../models/feedback.model");
+const Notification = require("../models/notification.model");
 const User = require("../models/user.model");
 const diagnosis = require("./diagnosis.service");
 const photos = require("../integrations/diagnosis-photo.service");
 const validate = require("../validators/common");
 const AppError = require("../utils/app-error");
 const { isVip } = require("../utils/vip");
+const { notifyChanged } = require("./notification.service");
 
 const missing = () => new AppError("FEEDBACK_NOT_FOUND", 404, "Không tìm thấy đóng góp.");
 const latestFields = "_id user_id diagnosis_id type description images status review review_count created_at";
@@ -115,15 +118,32 @@ async function detail(id, userId) {
 async function review(id, managerId, input) {
   validate.id(id);
   const entry = { status: input.status, response: input.response, manager_id: managerId, reviewed_at: new Date() };
-  const updated = await Feedback.updateOne(
-    { _id: id, review_count: input.review_count },
-    { $set: { status: entry.status, review: entry }, $inc: { review_count: 1 }, $push: { review_history: entry } },
-    { runValidators: true },
-  );
-  if (!updated.matchedCount) {
-    if (!await Feedback.exists({ _id: id })) throw missing();
-    throw new AppError("FEEDBACK_REVIEW_CHANGED", 409, "Đóng góp đã được cập nhật. Hãy tải lại trước khi xử lý.");
-  }
+  let userId;
+  await mongoose.connection.transaction(async (session) => {
+    const updated = await Feedback.findOneAndUpdate(
+      { _id: id, review_count: input.review_count },
+      { $set: { status: entry.status, review: entry }, $inc: { review_count: 1 }, $push: { review_history: entry } },
+      { new: true, runValidators: true, session },
+    ).select("user_id review_count").lean();
+    if (!updated) {
+      if (!await Feedback.exists({ _id: id }).session(session)) throw missing();
+      throw new AppError("FEEDBACK_REVIEW_CHANGED", 409, "Đóng góp đã được cập nhật. Hãy tải lại trước khi xử lý.");
+    }
+    await Notification.create([{
+      user_id: updated.user_id,
+      feedback_id: updated._id,
+      type: "feedback_reply",
+      title: "Plantify đã phản hồi góp ý của bạn",
+      message: "Mở ứng dụng để xem nội dung phản hồi.",
+      scheduled_for: entry.reviewed_at,
+      published_at: entry.reviewed_at,
+      status: "published",
+      dispatch_managed: true,
+      dedupe_key: `feedback_reply:${updated._id}:${updated.review_count}`,
+    }], { session });
+    userId = updated.user_id;
+  });
+  notifyChanged(userId);
   return detail(id);
 }
 
