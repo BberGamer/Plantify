@@ -305,6 +305,8 @@ const assertDiagnosis = async (diagnosisId, userId, diseaseId, session) => {
   }).session(session || null);
   if (!diagnosis)
     throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy kết quả chẩn đoán.");
+  if (diagnosis.result_kind === "plant")
+    throw new AppError("DIAGNOSIS_DISEASE_MISMATCH", 400, "Kết quả nhận diện cây không dùng để tạo điều trị bệnh.");
   if (
     String(diagnosis.disease_id) !== String(diseaseId)
   )

@@ -97,14 +97,12 @@ export default function AnalysisScreen({ identification = false }) {
           <Text style={styles.title}>{showResult ? "Kết quả phân tích" : "Quét cây"}</Text>
           <Text style={styles.subtitle}>Vuốt ngang để đổi chế độ</Text>
         </View>
-        {!identificationMode ? (
-          <IconButton
-            icon="history"
-            accessibilityLabel="Xem lịch sử chẩn đoán"
-            disabled={busy}
-            onPress={() => router.push("/customer/diagnosis-history")}
-          />
-        ) : <View style={styles.headerPlaceholder} />}
+        <IconButton
+          icon="history"
+          accessibilityLabel="Xem lịch sử nhận diện và chẩn đoán"
+          disabled={busy}
+          onPress={() => router.push("/customer/diagnosis-history")}
+        />
       </View>
 
       {(capture.photo || showResult) && (

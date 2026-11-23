@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, IconButton, Text } from "react-native-paper";
+import { ActivityIndicator, Chip, IconButton, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import useDiagnosisHistoryDetail from "../../src/hooks/useDiagnosisHistoryDetail";
@@ -14,6 +14,7 @@ export default function DiagnosisDetailScreen() {
   const detail = useDiagnosisHistoryDetail(id);
   if (!detail.enabled) return null;
   const record = detail.data;
+  const isPlant = record?.result_kind === "plant";
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}>
@@ -26,7 +27,7 @@ export default function DiagnosisDetailScreen() {
               : router.replace("/customer/diagnosis-history")
           }
         />
-        <Text variant="titleLarge">Chi tiết chẩn đoán</Text>
+        <Text variant="titleLarge">{isPlant ? "Chi tiết nhận diện cây" : "Chi tiết chẩn đoán bệnh"}</Text>
       </View>
       {detail.loading ? (
         <View style={styles.center}>
@@ -40,23 +41,29 @@ export default function DiagnosisDetailScreen() {
       ) : (
         record && (
           <ScrollView contentContainerStyle={styles.content}>
+            <Chip icon={isPlant ? "leaf-outline" : "stethoscope"} style={styles.kind}>
+              {isPlant ? "Nhận diện cây" : "Chẩn đoán bệnh"}
+            </Chip>
             <DiagnosisHistoryPhoto
               diagnosisId={record._id}
               hasImage={record.has_image}
               large
             />
             <Text variant="headlineSmall">
-              {record.disease_name || "Thông tin bệnh không còn khả dụng"}
+              {isPlant ? record.plant_name || "Thông tin cây không còn khả dụng"
+                : record.disease_name || "Thông tin bệnh không còn khả dụng"}
             </Text>
-            <Text variant="titleMedium">
+            {!isPlant && <Text variant="titleMedium">
               Cây: {record.plant_name || "Thông tin cây không còn khả dụng"}
-            </Text>
+            </Text>}
             <Text style={styles.secondary}>
               {record.created_at
                 ? new Date(record.created_at).toLocaleString("vi-VN")
                 : "Chưa có thời gian"}
             </Text>
-            <Text style={styles.secondary}>Kết quả chẩn đoán đã được lưu.</Text>
+            <Text style={styles.secondary}>{isPlant
+              ? "Kết quả nhận diện tên cây đã được lưu. Lần nhận diện này không kết luận tình trạng bệnh."
+              : "Kết quả chẩn đoán bệnh đã được lưu."}</Text>
           </ScrollView>
         )
       )}
@@ -68,6 +75,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: "row", alignItems: "center" },
   content: { padding: spacing.lg, gap: spacing.lg },
+  kind: { alignSelf: "flex-start", backgroundColor: colors.lightMint },
   secondary: { color: colors.textSecondary },
   center: {
     flex: 1,

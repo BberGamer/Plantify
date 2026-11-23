@@ -32,7 +32,7 @@ const ERROR_MESSAGES = {
   DIAGNOSIS_INPUT_GUARD_UNAVAILABLE:
     "Dịch vụ kiểm tra ảnh chưa sẵn sàng. Vui lòng thử lại sau.",
   DIAGNOSIS_HISTORY_UNAVAILABLE:
-    "Chưa lưu được chẩn đoán; chưa thể dùng kết quả để điều trị. Vui lòng thử lại sau.",
+      "Chưa lưu được lịch sử nhận diện/chẩn đoán. Vui lòng thử lại sau.",
 
   FINANCE_VALIDATION:
     "Thông tin giao dịch chưa hợp lệ. Vui lòng kiểm tra nội dung đã nhập.",
