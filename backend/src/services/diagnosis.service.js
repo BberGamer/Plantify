@@ -286,6 +286,7 @@ const checkCancellation = signal => {
 
 const historyItem = row => ({
   _id: String(row._id), created_at: row.created_at || null, status: row.status,
+  result_kind: row.result_kind || "disease",
   plant_id: row.plant_id ? String(row.plant_id._id) : null,
   plant_name: row.plant_id?.common_name || null,
   disease_id: row.disease_id ? String(row.disease_id._id) : null,
@@ -314,11 +315,16 @@ const createDiagnosisService = ({
     const limit = validate.positiveInteger(input.limit, 20, "limit", 100);
     if (!Number.isSafeInteger((page - 1) * limit)) validate.invalid("page");
     const filter = { user_id: userId, status: "identified" };
+    if (input.result_kind !== undefined) {
+      if (!["plant", "disease"].includes(input.result_kind)) validate.invalid("result_kind");
+      if (input.result_kind === "plant") filter.result_kind = "plant";
+      else filter.$or = [{ result_kind: "disease" }, { result_kind: { $exists: false } }];
+    }
     try {
       const [rows, total] = await Promise.all([
         diagnosisModel.find(filter).sort({ created_at: -1, _id: -1 })
           .skip((page - 1) * limit).limit(limit)
-          .select("plant_id disease_id status created_at image")
+          .select("result_kind plant_id disease_id status created_at image")
           .populate(historyCatalog).lean(),
         diagnosisModel.countDocuments(filter),
       ]);
@@ -334,7 +340,7 @@ const createDiagnosisService = ({
     validate.id(userId, "user_id"); validate.id(diagnosisId, "diagnosis_id");
     try {
       const row = await diagnosisModel.findOne({ _id: diagnosisId, user_id: userId, status: "identified" })
-        .select("plant_id disease_id status created_at image confidence").populate(historyCatalog).lean();
+        .select("result_kind plant_id disease_id status created_at image confidence").populate(historyCatalog).lean();
       if (!row) throw new AppError("DIAGNOSIS_HISTORY_NOT_FOUND", 404, "Không tìm thấy chẩn đoán này trong lịch sử của bạn.");
       return { ...historyItem(row), confidence: row.confidence };
     } catch (error) {
@@ -391,47 +397,53 @@ const createDiagnosisService = ({
         image_size: data.model.image_size, device: data.model.device },
       processing_ms: data.processing_ms, diagnosis_id: null,
     };
+    let result;
     if (options.identification === true) {
-      const result = await identifyPlant(data, metadata, config.thresholds);
+      result = { ...details, ...await identifyPlant(data, metadata, config.thresholds) };
       checkCancellation(options.signal);
-      return { ...details, ...result };
+    } else {
+      const decision = decideResult(data, config.thresholds);
+      const accepted = decision.status === "identified";
+      const alternatives = data.top5.map(toCandidate);
+      const prediction = accepted ? await enrich(alternatives[0], metadata.labels[data.prediction.class_id], metadata) : null;
+      if (accepted && !prediction) throw new AppError("DIAGNOSIS_MAPPING_INVALID", 503,
+        "Mapping chưa trả được thông tin cây/bệnh hợp lệ.");
+      if (prediction) alternatives[0] = prediction;
+      result = {
+        ...decision,
+        result_status: accepted ? "accepted" : "uncertain",
+        message: messages[decision.reason], prediction, alternatives,
+        ...details,
+        scores: { top1: data.top5[0].confidence, top2: data.top5[1].confidence,
+          margin: data.top5[0].confidence - data.top5[1].confidence },
+      };
     }
-    const decision = decideResult(data, config.thresholds);
-    const accepted = decision.status === "identified";
-    const alternatives = data.top5.map(toCandidate);
-    const prediction = accepted ? await enrich(alternatives[0], metadata.labels[data.prediction.class_id], metadata) : null;
-    if (accepted && !prediction) throw new AppError("DIAGNOSIS_MAPPING_INVALID", 503,
-      "Mapping chưa trả được thông tin cây/bệnh hợp lệ.");
-    if (prediction) alternatives[0] = prediction;
-    const result = {
-      ...decision,
-      result_status: accepted ? "accepted" : "uncertain",
-      message: messages[decision.reason], prediction, alternatives,
-      ...details,
-      scores: { top1: data.top5[0].confidence, top2: data.top5[1].confidence,
-        margin: data.top5[0].confidence - data.top5[1].confidence },
-    };
     checkCancellation(options.signal);
-    // Giữ lịch sử hiện có: chỉ chẩn đoán bệnh accepted có tài khoản mới tạo evidence.
-    if (options.userId && accepted && !prediction.is_healthy) {
+    const prediction = result.prediction;
+    const isPlant = result.result_kind === "plant";
+    // Nhận diện cây có lịch sử riêng về loại; chỉ bệnh mới trả diagnosis_id cho điều trị.
+    if (options.userId && result.result_status === "accepted" && (isPlant || !prediction.is_healthy)) {
       let savedPhoto;
       try {
         savedPhoto = await photoStorage.save(photo);
         checkCancellation(options.signal);
         const saved = await diagnosisModel.create({
-          user_id: options.userId, plant_id: prediction.plant_id, disease_id: prediction.disease_id,
-          class_id: prediction.class_id, class_name: prediction.class_name, confidence: prediction.confidence,
+          result_kind: result.result_kind,
+          user_id: options.userId, plant_id: prediction.plant_id, disease_id: isPlant ? null : prediction.disease_id,
+          ...(isPlant ? {} : { class_id: prediction.class_id, class_name: prediction.class_name }),
+          confidence: prediction.confidence,
           status: "identified",
           model: { sha256: data.model.sha256, name: data.model.name, run_id: data.model.run_id,
             checkpoint: data.model.checkpoint, checkpoint_epoch: data.model.checkpoint_epoch },
           image: { width: data.image.width, height: data.image.height, ...savedPhoto }, processing_ms: data.processing_ms,
         });
-        result.diagnosis_id = String(saved._id);
+        result.history_id = String(saved._id);
+        if (!isPlant) result.diagnosis_id = String(saved._id);
       } catch (error) {
         if (savedPhoto) await photoStorage.remove(savedPhoto).catch(() => console.error("[Diagnosis] Không dọn được ảnh chưa lưu lịch sử."));
         if (["REQUEST_ABORTED", "DIAGNOSIS_PHOTO_NOT_CONFIGURED", "DIAGNOSIS_PHOTO_STORAGE_UNAVAILABLE"].includes(error.code)) throw error;
         throw new AppError("DIAGNOSIS_HISTORY_UNAVAILABLE", 503,
-          "Chưa lưu được kết quả chẩn đoán; chưa thể dùng kết quả này để điều trị. Vui lòng thử lại sau.");
+          "Chưa lưu được lịch sử nhận diện/chẩn đoán. Vui lòng thử lại sau.");
       }
     }
     return result;

@@ -34,14 +34,19 @@ Mapping pending bệnh vẫn dùng được cho nhận diện cây nếu `plant_
 thiếu mapping cây hoặc metadata sai phải báo lỗi dữ liệu, không tự đoán tên từ nhãn.
 Sau cập nhật phải khởi động lại Python để có đủ điểm class, và backend để nạp ngưỡng mới.
 
-Customer xem **Lịch sử chẩn đoán** từ Tài khoản hoặc biểu tượng lịch sử ở màn
-Chẩn đoán bệnh. API `GET /api/diagnosis/history?page=1&limit=20` yêu cầu đăng nhập
+Customer xem **Lịch sử nhận diện & chẩn đoán** từ Tài khoản hoặc biểu tượng lịch sử ở cả hai chế độ.
+Nhận diện cây accepted lưu cùng collection hiện có, với `result_kind=plant`, không có bệnh/class bệnh;
+response trả `history_id` để mở chi tiết và giữ `diagnosis_id=null`, không dùng để tạo điều trị.
+Chẩn đoán bệnh lưu `result_kind=disease`; bản ghi cũ thiếu trường này được hiểu là bệnh, không cần migration.
+Danh sách có bộ lọc Tất cả/Nhận diện cây/Bệnh cây, nhãn loại và biểu tượng trên từng thẻ, chi tiết theo loại.
+API `GET /api/diagnosis/history?page=1&limit=20&result_kind=plant` lọc theo loại ngay tại backend;
+bỏ `result_kind` để lấy cả hai loại. API yêu cầu đăng nhập
 và tài khoản customer còn hoạt động, không yêu cầu VIP còn hạn. Backend luôn lọc
 theo user trong JWT, sắp xếp mới nhất trước, phân trang tối đa 100 bản ghi/lần.
 Danh sách dùng dữ liệu `disease_diagnoses` hiện có; tên cây/bệnh lấy từ DB.
 Giữ bản ghi nếu danh mục bị xóa/ẩn và hiển thị thông tin không còn khả dụng.
 Card bấm mở chi tiết, ảnh của lần chẩn đoán nằm bên phải card và xem lớn trong chi tiết.
-Chẩn đoán bệnh accepted mới lưu một bản ảnh JPEG đã bỏ EXIF, tối đa 1600×1600;
+Nhận diện cây accepted và chẩn đoán bệnh accepted lưu một bản ảnh JPEG đã bỏ EXIF, tối đa 1600×1600;
 bytes dùng inference không thay đổi. `DIAGNOSIS_PHOTO_STORAGE=cloudinary` lưu asset
 ở chế độ authenticated, upload ký SHA-256 bằng credential backend. DB chỉ lưu
 `image.storage`, `image.public_id`, `image.asset_id`; không lưu khóa bí mật hoặc URL ký số.
@@ -56,8 +61,8 @@ Bản ghi cũ không có ảnh hiện “Không có ảnh lưu”; ảnh mất/h
 không lấy ảnh danh mục làm ảnh của lần chẩn đoán. Không tự cập nhật dữ liệu cũ.
 Ảnh cloud được backend tải bằng request ký số sau khi kiểm tra chủ tài khoản, rồi trả
 JPEG qua cùng API ảnh; frontend không nhận URL có chữ ký hoặc credential Cloudinary.
-Khi dùng local cần giữ thư mục uploads trên ổ lưu trữ bền vững. Healthy, nhận diện cây
-và lần bị từ chối vẫn không tạo lịch sử bệnh hoặc ảnh lưu.
+Khi dùng local cần giữ thư mục uploads trên ổ lưu trữ bền vững. Healthy trong chế độ chẩn đoán bệnh
+và lần bị từ chối vẫn không tạo lịch sử hoặc ảnh lưu.
 Màn hình hỗ trợ trạng thái tải/rỗng/lỗi, thử lại, kéo để tải lại và chuyển trang;
 tận dụng `usePaginatedList` để loại phản hồi cũ khi đổi trang, rời màn hoặc đổi phiên.
 

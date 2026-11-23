@@ -33,7 +33,7 @@ export default function ProfileContent({ onBack, showNavbar = false, onOpenFavor
           saving={profile.saving} cancelEditing={profile.cancelEditing} saveProfile={profile.saveProfile} />
         {(onOpenDiagnosisHistory || onOpenFeedback) && <View style={styles.favorites}>
           <Text variant="titleMedium" style={styles.sectionTitle}>Chẩn đoán bệnh cây và phản hồi</Text>
-          {onOpenDiagnosisHistory && <List.Item title="Lịch sử chẩn đoán" description="Xem các kết quả chẩn đoán bệnh đã lưu"
+          {onOpenDiagnosisHistory && <List.Item title="Lịch sử nhận diện & chẩn đoán" description="Xem cây và bệnh đã nhận diện, kèm ảnh đã lưu"
             onPress={onOpenDiagnosisHistory} disabled={profile.isLoggingOut} style={styles.favoriteLink}
             left={(props) => <List.Icon {...props} icon="history" color={colors.primary} />}
             right={(props) => <List.Icon {...props} icon="chevron-right" color={colors.primary} />} />}

@@ -42,7 +42,7 @@ export default function DiagnosisHistoryPhoto({ diagnosisId, hasImage, large = f
     <View style={[styles.frame, large ? styles.large : styles.thumbnail]}>
       {current.source && !current.error ? (
         <Image source={current.source} style={styles.image} resizeMode={large ? "contain" : "cover"}
-          accessibilityLabel="Ảnh của lần chẩn đoán"
+          accessibilityLabel="Ảnh của lần nhận diện hoặc chẩn đoán"
           onError={() => setPhoto(previous => previous.key === key ? { key, error: true } : previous)} />
       ) : <Text style={styles.placeholder}>
         {!hasImage ? "Không có ảnh lưu" : current.error ? "Ảnh không còn khả dụng" : "Đang tải ảnh..."}

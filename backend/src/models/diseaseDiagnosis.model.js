@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const diagnosisSchema = new mongoose.Schema(
   {
+    result_kind: { type: String, enum: ["plant", "disease"], default: "disease", immutable: true },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -22,11 +23,11 @@ const diagnosisSchema = new mongoose.Schema(
     disease_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Disease",
-      required: true,
+      required: function () { return this.result_kind !== "plant"; },
       immutable: true,
     },
-    class_id: { type: Number, required: true, min: 0, immutable: true },
-    class_name: { type: String, required: true, trim: true, immutable: true },
+    class_id: { type: Number, required: function () { return this.result_kind !== "plant"; }, min: 0, immutable: true },
+    class_name: { type: String, required: function () { return this.result_kind !== "plant"; }, trim: true, immutable: true },
     confidence: {
       type: Number,
       required: true,
@@ -61,6 +62,12 @@ const diagnosisSchema = new mongoose.Schema(
     timestamps: { createdAt: "created_at", updatedAt: false },
   },
 );
+
+diagnosisSchema.pre("validate", function (next) {
+  if (this.result_kind === "plant" && this.disease_id)
+    this.invalidate("disease_id", "Nhận diện cây không kết luận bệnh.");
+  next();
+});
 
 diagnosisSchema.index({ user_id: 1, created_at: -1 });
 diagnosisSchema.index({ plant_id: 1, disease_id: 1, created_at: -1 });

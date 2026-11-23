@@ -12,8 +12,7 @@ const analyze = (identification = false) => async (req, res, next) => {
     const data = await diagnosis.diagnose(req.file, {
       signal: controller.signal,
       identification,
-      // Nhận diện tên cây không tạo bằng chứng chẩn đoán để áp dụng điều trị.
-      userId: identification ? undefined : req.user.id,
+      userId: req.user.id,
     });
     if (!controller.signal.aborted && !res.destroyed)
       return success(res, data.message, data);

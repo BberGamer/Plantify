@@ -20,6 +20,8 @@ const plantCandidateValid = (item) => item && optionalId(item.plant_id) && !!ite
   Number.isFinite(item.confidence) && item.confidence >= 0 && item.confidence <= 1;
 
 const historyValid = item => item && optionalId(item._id) && !!item._id &&
+  (item.result_kind === undefined || ["plant", "disease"].includes(item.result_kind)) &&
+  (item.result_kind !== "plant" || item.disease_id === null) &&
   optionalId(item.plant_id) && optionalId(item.disease_id) &&
   optionalText(item.plant_name) && optionalText(item.disease_name) && item.status === "identified" &&
   (item.has_image === undefined || typeof item.has_image === "boolean") &&
@@ -54,19 +56,19 @@ export function validateResponse(envelope) {
   const state = data?.result_status ?? legacyStates[data?.status];
   if (envelope?.success !== true || !["accepted", "uncertain", "invalid_image", "unsupported_image"].includes(state) ||
       !text(data.message) || !text(data.reason) || !Array.isArray(data.alternatives) ||
-      !optionalId(data.diagnosis_id ?? null)) invalid();
+      !optionalId(data.diagnosis_id ?? null) || !optionalId(data.history_id ?? null)) invalid();
   if (state === "accepted") {
     const prediction = data.prediction;
     if (data.result_kind === "plant") {
       if (!plantCandidateValid(prediction) || data.diagnosis_id != null) invalid();
     } else if (!candidateValid(prediction) || !text(prediction.plant_name) || !text(prediction.display_name) ||
         !prediction.plant_id || (!prediction.is_healthy && (!prediction.disease_id || !text(prediction.disease_name)))) invalid();
-  } else if (data.prediction !== null || data.diagnosis_id != null) invalid();
+  } else if (data.prediction !== null || data.diagnosis_id != null || data.history_id != null) invalid();
   return { ...envelope, data: { ...data, result_status: state, diagnosis_id: data.diagnosis_id ?? null } };
 }
 export default {
-  async history({ page = 1, limit = 20 } = {}) {
-    const response = await api.get("/diagnosis/history", { params: { page, limit } });
+  async history({ page = 1, limit = 20, result_kind } = {}) {
+    const response = await api.get("/diagnosis/history", { params: { page, limit, result_kind } });
     const envelope = adaptDiagnosisHistoryList(response.data);
     if (envelope.data.items.some(item => !historyValid(item))) invalid();
     return envelope;
@@ -151,7 +153,7 @@ export default {
         {
           signal,
           sessionContext,
-          timeout: identification ? 30000 : 100000,
+          timeout: 100000,
           headers: { "Content-Type": null },
         },
       );
