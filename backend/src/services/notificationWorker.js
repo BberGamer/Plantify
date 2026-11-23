@@ -1,5 +1,6 @@
 const { randomUUID } = require("node:crypto");
 const Notification = require("../models/notification.model");
+const { Feedback } = require("../models/feedback.model");
 const Delivery = require("../models/notificationDelivery.model");
 const Device = require("../models/notificationDevice.model");
 const Care = require("../models/careSchedule.model");
@@ -65,6 +66,9 @@ async function discover(from, now) {
 async function eligible(item) {
   const user = await User.findById(item.user_id).select("status role notification_preferences").lean();
   if (!user?.status || user.role !== "customer") return false;
+  if (item.type === "feedback_reply") {
+    return !!item.feedback_id && !!(await Feedback.exists({ _id: item.feedback_id, user_id: item.user_id }));
+  }
   if (item.type === "care") {
     const schedule = await Care.findOne({ _id: item.care_schedule_id,
       user_id: item.user_id, is_active: true, is_paused: { $ne: true } }).lean();

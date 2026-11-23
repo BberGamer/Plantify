@@ -422,10 +422,15 @@ nhận diện mọi loài cây. `POST /api/identification` nhận multipart `pho
 bằng phiên Customer đang hoạt động như chẩn đoán nhưng không lưu bằng chứng bệnh
 để áp dụng điều trị. Kết quả có liên kết chi tiết khi khớp cây trong danh mục.
 
-Chuông mở `/customer/notifications` để xem lời nhắc chăm sóc và điều trị,
-đánh dấu đã đọc và mở lịch tương ứng. Khách hàng quản lý nhắc điều trị trong
+Chuông mở `/customer/notifications` để xem lời nhắc chăm sóc, điều trị và
+phản hồi góp ý từ Manager. Khách hàng có thể đánh dấu đã đọc và mở lịch hoặc
+chi tiết góp ý tương ứng. Khách hàng quản lý nhắc điều trị trong
 Hồ sơ. Hộp thư có trên Android, iOS và web. Push qua Firebase Cloud Messaging
 được triển khai trên Android.
+
+Phản hồi mới tạo thông báo trong ứng dụng ngay khi Manager lưu thành công.
+Push phản hồi dùng cấu hình FCM bên dưới và hoạt động độc lập với tùy chọn
+nhắc điều trị. Cập nhật ứng dụng Android để hiển thị đúng nội dung push phản hồi.
 
 #### Chạy thông báo lịch
 

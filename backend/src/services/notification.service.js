@@ -3,6 +3,7 @@ const Treatment = require("../models/treatmentSchedule.model");
 const Care = require("../models/careSchedule.model");
 const Plant = require("../models/userPlant.model");
 const User = require("../models/user.model");
+const { Feedback } = require("../models/feedback.model");
 const AppError = require("../utils/app-error");
 const v = require("../validators/common");
 const subscribers = new Map();
@@ -22,7 +23,7 @@ function notifyChanged(userId) {
   for (const listener of subscribers.get(String(userId)) || []) listener();
 }
 
-const fields = "title message scheduled_for is_read type treatment_schedule_id care_schedule_id user_plant_id occurrence_date";
+const fields = "title message scheduled_for is_read type treatment_schedule_id care_schedule_id user_plant_id occurrence_date feedback_id";
 const visible = (userId) => ({
   user_id: userId,
   scheduled_for: { $lte: new Date() },
@@ -58,6 +59,10 @@ async function detail(userId, id) {
   v.id(id);
   const item = await Notification.findOne({ ...visible(userId), _id: id }).select(fields).lean();
   if (!item) throw new AppError("NOTIFICATION_NOT_FOUND", 404, "Không tìm thấy thông báo.");
+  if (item.type === "feedback_reply") {
+    const available = item.feedback_id && await Feedback.exists({ _id: item.feedback_id, user_id: userId });
+    return { ...item, target_available: !!available };
+  }
   const schedule = item.type === "care"
     ? await Care.findOne({ _id: item.care_schedule_id, user_id: userId, is_active: true }).select("user_plant_id").lean()
     : await Treatment.findOne({ _id: item.treatment_schedule_id, user_id: userId }).select("user_plant_id").lean();
