@@ -3,12 +3,13 @@ import { Image, Platform, StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
 import useAuthStore from "../../../store/authStore";
 import diagnosisService from "../../services/diagnosisService";
+import feedbackService from "../../services/feedbackService";
 import { getSessionContext, isSessionCurrent } from "../../services/sessionAccess";
 import { colors } from "../../theme";
 
-export default function DiagnosisHistoryPhoto({ diagnosisId, hasImage, large = false }) {
+export default function DiagnosisHistoryPhoto({ diagnosisId, hasImage, large = false, managerFeedbackId }) {
   const version = useAuthStore(state => state.sessionVersion);
-  const key = `${diagnosisId}:${version}:${!!hasImage}`;
+  const key = `${diagnosisId}:${managerFeedbackId ?? ''}:${version}:${!!hasImage}`;
   const [photo, setPhoto] = useState({ key: null });
   useEffect(() => {
     const controller = new AbortController();
@@ -21,12 +22,17 @@ export default function DiagnosisHistoryPhoto({ diagnosisId, hasImage, large = f
         try {
           let source;
           if (Platform.OS === "web") {
-            const blob = await diagnosisService.historyImage(diagnosisId, { signal: controller.signal });
+            const blob = managerFeedbackId
+              ? await feedbackService.managerHistoryImage(managerFeedbackId, controller.signal)
+              : await diagnosisService.historyImage(diagnosisId, { signal: controller.signal });
             if (!current()) return;
             objectUrl = URL.createObjectURL(blob);
             source = { uri: objectUrl };
           } else {
-            source = { uri: diagnosisService.historyImageUrl(diagnosisId), headers: { Authorization: `Bearer ${context.token}` } };
+            const uri = managerFeedbackId
+              ? feedbackService.managerHistoryImageUrl(managerFeedbackId)
+              : diagnosisService.historyImageUrl(diagnosisId);
+            source = { uri, headers: { Authorization: `Bearer ${context.token}` } };
           }
           if (current()) setPhoto({ key, source });
         } catch {
@@ -36,7 +42,7 @@ export default function DiagnosisHistoryPhoto({ diagnosisId, hasImage, large = f
       load();
     }
     return () => { controller.abort(); if (objectUrl) URL.revokeObjectURL(objectUrl); };
-  }, [key, diagnosisId, hasImage]);
+  }, [key, diagnosisId, hasImage, managerFeedbackId]);
   const current = photo.key === key ? photo : {};
   return (
     <View style={[styles.frame, large ? styles.large : styles.thumbnail]}>

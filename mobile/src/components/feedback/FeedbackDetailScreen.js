@@ -9,6 +9,7 @@ import feedbackService from "../../services/feedbackService";
 import { getSessionContext, isSessionCurrent } from "../../services/sessionAccess";
 import { colors } from "../../theme";
 import ListError from "../common/ListError";
+import LinkedFeedbackHistory from "./LinkedFeedbackHistory";
 import FeedbackFrame, { FeedbackMessage, feedbackStyles as styles, feedbackTime, statusLabels, typeLabels } from "./FeedbackFrame";
 
 function FeedbackPhoto({ id, index, manager }) {
@@ -90,16 +91,10 @@ export default function FeedbackDetailScreen({ id, manager = false, sent = false
                 {manager && <Text>{item.sender?.fullName || "Tài khoản không còn khả dụng"}{item.sender?.email ? ` · ${item.sender.email}` : ""}</Text>}
                 <Text variant="labelLarge">{statusLabels[item.status]}</Text>
                 <Text>{item.description}</Text>
-                {!!item.diagnosis_id && <Text style={styles.muted}>
-                  {item.diagnosis
-                    ? [item.diagnosis.plant_name, item.diagnosis.disease_name, feedbackTime(item.diagnosis.created_at)].filter(Boolean).join(" · ")
-                    : "Lịch sử chẩn đoán không còn khả dụng."}
-                </Text>}
-                {!!item.diagnosis && !manager && <Button onPress={() => router.push({
-                  pathname: "/customer/diagnosis-detail", params: { diagnosisId: item.diagnosis_id },
-                })}>Xem chẩn đoán đã liên kết</Button>}
               </Card.Content>
             </Card>
+            {!!item.diagnosis_id && <LinkedFeedbackHistory key={item._id}
+              history={item.diagnosis} managerFeedbackId={manager ? item._id : undefined} />}
             <Text variant="titleMedium">Ảnh đính kèm</Text>
             {Array.from({ length: item.image_count }, (_, index) => (
               <FeedbackPhoto key={`${item._id}:${index}`} id={item._id} index={index} manager={manager} />

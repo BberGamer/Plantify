@@ -57,6 +57,13 @@ export default {
     const { data } = await api.patch(`${path(true, id)}/review`, input);
     return data.data;
   },
+  managerHistoryImageUrl(id) {
+    return api.getUri({ url: `${path(true, id)}/history-image` });
+  },
+  async managerHistoryImage(id, signal) {
+    const { data } = await api.get(`${path(true, id)}/history-image`, { signal, responseType: "blob" });
+    return data;
+  },
   imageUrl(id, index, manager) {
     return api.getUri({ url: `${path(manager, id)}/images/${index}` });
   },
