@@ -7,6 +7,7 @@ node_modules/
 coverage/
 tests/
 test/
+.npm-cache/
 
 # ===== Production & Build =====
 build/
@@ -21,6 +22,8 @@ web-build/
 .env.development.local
 .env.test.local
 .env.production.local
+google-services.json
+firebase-service-account*.json
 
 # ===== Logs =====
 *.log
@@ -59,3 +62,14 @@ docs/
 *.pptx
 *.ppt
 *.pdf
+backend/uploads/
+
+# ===== Python inference =====
+.venv/
+__pycache__/
+*.py[cod]
+*.pt
+
+# Local runtime model bundle (weights and metadata)
+/inference/model/
+/inference/input_guard_model/

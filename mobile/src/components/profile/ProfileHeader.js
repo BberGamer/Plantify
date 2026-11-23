@@ -46,7 +46,8 @@ headerTitle: {
     flex: 1,
     textAlign: "center",
     fontSize: 20,
-    fontWeight: "800",
+    lineHeight: 28,
+    fontWeight: "700",
     color: colors.primaryText,
   }
 });

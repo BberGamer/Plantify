@@ -1,11 +1,12 @@
 // src/services/plantService.js - Goi API Plants tu backend
 import api from "./api";
 import { adaptPlantsList, mapPlantsParams } from "./listAdapters";
+import saveCatalogEntry from "./saveCatalogEntry";
 
 const plantService = {
   /**
    * Lay danh sach danh muc cay
-   * GET /api/v1/plants/categories
+   * GET /api/plants/categories
    */
   getCategories: async () => {
     const response = await api.get("/plants/categories");
@@ -14,7 +15,7 @@ const plantService = {
 
   /**
    * Lay danh sach cay co the loc theo danh muc va tim kiem
-   * GET /api/v1/plants?category_id=...&search=...&page=1&limit=20
+   * GET /api/plants?category_id=...&search=...&page=1&limit=20
    */
   getPlants: async ({ categoryId, search, page = 1, limit = 20 } = {}) => {
     const params = mapPlantsParams({ categoryId, search, page, limit });
@@ -25,7 +26,7 @@ const plantService = {
 
   /**
    * Lay chi tiet mot cay theo ID
-   * GET /api/v1/plants/:id
+   * GET /api/plants/:id
    */
   getPlantById: async (id) => {
     const response = await api.get(`/plants/${id}`);
@@ -39,9 +40,8 @@ const plantService = {
     return adaptPlantsList(response.data);
   },
 
-  createPlant: async (plant) => (await api.post("/plants/manager", plant)).data,
-  updatePlant: async (id, plant) =>
-    (await api.put(`/plants/manager/${id}`, plant)).data,
+  createPlant: (plant, photo) => saveCatalogEntry("post", "/plants/manager", plant, photo),
+  updatePlant: (id, plant, photo) => saveCatalogEntry("put", `/plants/manager/${id}`, plant, photo),
   deletePlant: async (id) => (await api.delete(`/plants/manager/${id}`)).data,
 };
 

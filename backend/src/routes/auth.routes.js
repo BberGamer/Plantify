@@ -10,6 +10,9 @@ router.post("/register/verify-otp", authController.verifyRegisterOTP);
 
 // === DANG NHAP & DANG XUAT ===
 router.post("/login", authController.login);
+router.post("/google/challenge", authController.googleChallenge);
+router.post("/google", authController.googleLogin);
+router.post("/google/complete", authController.completeGoogle);
 router.post("/logout", authenticate, authController.logout);
 router.get("/me", authenticate, authController.getMe);
 router.patch("/me", authenticate, authController.updateProfile);

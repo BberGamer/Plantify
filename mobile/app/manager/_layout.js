@@ -46,15 +46,18 @@ export default function ManagerLayout() {
         }}
       />
       <Tabs.Screen
-        name="treatments"
+        name="protocol-generator"
         options={{
-          title: "Điều trị",
-          tabBarLabel: "Điều trị",
+          title: "Tạo phác đồ",
+          tabBarLabel: "Phác đồ",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="medkit-outline" color={color} size={size} />
+            <Ionicons name="document-text-outline" color={color} size={size} />
           ),
         }}
       />
+      <Tabs.Screen name="feedback" options={{ title: "Quản lý đóng góp", tabBarLabel: "Góp ý",
+        tabBarIcon: ({ color, size }) => <Ionicons name="chatbox-ellipses-outline" color={color} size={size} />,
+      }} />
       <Tabs.Screen
         name="profile"
         options={{

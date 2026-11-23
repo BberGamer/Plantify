@@ -13,6 +13,7 @@ import PlantInformation from "../../src/components/plants/PlantInformation";
 import PlantCareRequirements from "../../src/components/plants/PlantCareRequirements";
 import PlantDiseases from "../../src/components/plants/PlantDiseases";
 import PlantDetailActions from "../../src/components/plants/PlantDetailActions";
+import ListError from "../../src/components/common/ListError";
 export default function PlantDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -22,10 +23,13 @@ export default function PlantDetailScreen() {
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <PlantDetailHeader
         saved={detail.saved}
-        canSave={!detail.loading && !detail.error && Boolean(detail.plant)}
+        showFavorite={detail.showFavorite}
+        busy={detail.favoriteBusy}
+        canSave={!detail.loading && !detail.error && Boolean(detail.plant) && !detail.favoriteBusy}
         onBack={() => router.back()}
         onToggleSaved={detail.toggleSaved}
       />
+      {!!detail.favoriteError && <ListError message={detail.favoriteError} onRetry={detail.retryFavorite} />}
       {detail.loading ? (
         <View style={styles.centerBox}>
           <ActivityIndicator size="large" color={colors.primary} />

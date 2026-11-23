@@ -1,0 +1,34 @@
+{
+  "model_id": "timm/MobileCLIP2-S0-OpenCLIP",
+  "revision": "095906d28bf54d7584dc411e8ffe448f34289e05",
+  "weights_sha256": "ab91a1a0c4330d6b1913e24d5035dfdea15423316aaec649610c6b1c6ddd0e95",
+  "config_sha256": "43e7162c531e845155dbf47e8fef8fe5718b0eab3d6beefb8d615a2c55b4c1e5",
+  "tokenizer_model_name": "MobileCLIP2-S0",
+  "positive_prompts": [
+    "a close-up photograph of a real plant leaf",
+    "a photograph of healthy leaves on a living plant",
+    "a photograph of a diseased plant leaf with spots",
+    "a photograph of damaged leaves on a crop plant",
+    "a photograph of a leaf held in a person's hand",
+    "a photograph of real plant foliage in a garden",
+    "a photograph of a single real leaf on a plain background",
+    "a close-up photograph of real fruit growing on a living plant",
+    "a photograph of diseased or rotting fruit attached to a tree branch with leaves"
+  ],
+  "negative_prompts": [
+    "an anime illustration of a character's face and eyes",
+    "a cartoon or digital artwork",
+    "a drawing or painting of plants and leaves",
+    "a photograph of a person or human face",
+    "a photograph of a car, motorcycle or bus",
+    "a photograph of cooked food or a meal",
+    "a photograph of picked fruit or vegetables on a plate",
+    "a photograph of a dog, cat or other animal",
+    "a photograph of a phone, computer or electronic device",
+    "a screenshot with text, icons or a user interface",
+    "a photograph of furniture, household objects or tools",
+    "a photograph of artificial plastic plants",
+    "a photograph of a building or street",
+    "a panoramic landscape photograph of mountains and sky"
+  ]
+}

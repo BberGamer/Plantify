@@ -7,6 +7,7 @@ import useDebouncedValue from "./useDebouncedValue";
 import useScreenScope from "./useScreenScope";
 import useAuthStore from "../../store/authStore";
 import { usePlantCategories } from "./usePlants";
+import * as ImagePicker from "expo-image-picker";
 
 const CARE_FIELDS = ["light", "water", "temperature", "humidity"];
 
@@ -64,6 +65,9 @@ export default function useManagerPlants() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(createPlantForm);
   const [formError, setFormError] = useState("");
+  const [photo, setPhoto] = useState(null);
+  const [choosingPhoto, setChoosingPhoto] = useState(false);
+  const photoPending = useRef(false);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -107,6 +111,7 @@ export default function useManagerPlants() {
 
   useEffect(() => {
     setVisible(false);
+    setPhoto(null);
     setEditing(null);
     setForm(createPlantForm());
     setFormError("");
@@ -123,7 +128,8 @@ export default function useManagerPlants() {
   };
 
   const openCreate = () => {
-    if (mutationPending.current || deleteTarget || !isActive()) return;
+    if (mutationPending.current || photoPending.current || deleteTarget || !isActive()) return;
+    setPhoto(null);
     setEditing(null);
     setForm(createPlantForm({ category_id: categories[0]?._id || "" }));
     setFormError("");
@@ -131,7 +137,8 @@ export default function useManagerPlants() {
   };
 
   const openEdit = (plant) => {
-    if (mutationPending.current || deleteTarget || !isActive()) return;
+    if (mutationPending.current || photoPending.current || deleteTarget || !isActive()) return;
+    setPhoto(null);
     setEditing(plant);
     setForm(createPlantForm(plant));
     setFormError("");
@@ -139,7 +146,8 @@ export default function useManagerPlants() {
   };
 
   const closeForm = () => {
-    if (mutationPending.current) return;
+    if (mutationPending.current || photoPending.current) return;
+    setPhoto(null);
     setVisible(false);
     setEditing(null);
     setForm(createPlantForm());
@@ -168,8 +176,37 @@ export default function useManagerPlants() {
     setFormError("");
   };
 
+  const choosePhoto = async () => {
+    if (mutationPending.current || photoPending.current || !visible || !isActive()) return;
+    photoPending.current = true;
+    setChoosingPhoto(true);
+    const current = capture();
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 1 });
+      if (!current() || result.canceled) return;
+      const asset = result.assets?.[0];
+      if (!asset?.uri) { setFormError("Không đọc được ảnh đã chọn."); return; }
+      if ((asset.fileSize || 0) > 10 * 1024 * 1024) { setFormError("Ảnh tối đa 10 MB."); return; }
+      if (asset.mimeType && !["image/jpeg", "image/png"].includes(asset.mimeType)) { setFormError("Vui lòng chọn ảnh JPG hoặc PNG."); return; }
+      setPhoto(asset);
+      setFormError("");
+    } catch (error) {
+      if (current()) setFormError(getErrorMessage(error, "Không thể chọn ảnh. Vui lòng thử lại."));
+    } finally {
+      photoPending.current = false;
+      if (mounted.current) setChoosingPhoto(false);
+    }
+  };
+
+  const removePhoto = () => {
+    if (mutationPending.current || photoPending.current || !visible) return;
+    if (photo) setPhoto(null);
+    else setForm(previous => ({ ...previous, plant_image: "" }));
+    setFormError("");
+  };
+
   const save = async () => {
-    if (mutationPending.current || !visible || !isActive()) return;
+    if (mutationPending.current || photoPending.current || !visible || !isActive()) return;
     const isCurrent = capture();
     if (
       !form.common_name.trim() ||
@@ -187,12 +224,13 @@ export default function useManagerPlants() {
     try {
       const payload = createPlantPayload(form, editing);
       const response = editing
-        ? await plantService.updatePlant(editing._id, payload)
-        : await plantService.createPlant(payload);
+        ? await plantService.updatePlant(editing._id, payload, photo)
+        : await plantService.createPlant(payload, photo);
       if (!response?.success)
         throw new Error(response?.message || "Không lưu được cây.");
       if (!isCurrent()) return;
       setVisible(false);
+      setPhoto(null);
       setEditing(null);
       setForm(createPlantForm());
       await loadPlants(true);
@@ -261,6 +299,10 @@ export default function useManagerPlants() {
     editing,
     form,
     formError,
+    photo,
+    choosingPhoto,
+    choosePhoto,
+    removePhoto,
     saving,
     deleteTarget,
     deleting,

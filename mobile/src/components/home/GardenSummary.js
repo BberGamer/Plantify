@@ -1,13 +1,16 @@
 import React from 'react';
+import { useRouter } from 'expo-router';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Button, Card, ProgressBar, Text } from 'react-native-paper';
 
-export default function GardenSummary() {
+export default function GardenSummary({ summary }) {
+  const router = useRouter();
+  const openGarden = () => router.navigate('/customer/garden');
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Vườn cây của bạn</Text>
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity activeOpacity={0.7} onPress={openGarden} accessibilityRole="button">
           <Text style={styles.linkText}>Xem vườn</Text>
         </TouchableOpacity>
       </View>
@@ -15,30 +18,31 @@ export default function GardenSummary() {
       <Card mode="contained" style={styles.card}>
         <View style={styles.statsRow}>
           <View style={styles.statCol}>
-            <Text style={styles.statNumber}>12</Text>
+            <Text style={styles.statNumber}>{summary.total}</Text>
             <Text style={styles.statLabel}>Tổng số cây</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statCol}>
-            <Text style={[styles.statNumber, { color: '#16A34A' }]}>9</Text>
+            <Text style={[styles.statNumber, { color: '#16A34A' }]}>{summary.healthy}</Text>
             <Text style={styles.statLabel}>Khỏe mạnh</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statCol}>
-            <Text style={[styles.statNumber, { color: '#D97706' }]}>3</Text>
-            <Text style={styles.statLabel}>Cần chăm sóc</Text>
+            <Text style={[styles.statNumber, { color: '#D97706' }]}>{summary.treatment}</Text>
+            <Text style={styles.statLabel}>Đang điều trị</Text>
           </View>
         </View>
 
         <View style={styles.healthSection}>
           <View style={styles.healthLabelRow}>
             <Text style={styles.healthTitle}>Sức khỏe tổng quan</Text>
-            <Text style={styles.healthValue}>75% tốt</Text>
+            <Text style={styles.healthValue}>{summary.total ? `${Math.round(summary.healthyRatio * 100)}% khỏe mạnh` : "Chưa có cây"}</Text>
           </View>
-          <ProgressBar progress={0.75} color="#2E8B57" style={styles.progressTrack} />
+          <ProgressBar progress={summary.healthyRatio} color="#2E8B57" style={styles.progressTrack} />
         </View>
 
         <Button
+          onPress={openGarden}
           mode="contained"
           buttonColor="#EAF5EE"
           textColor="#1A5B40"

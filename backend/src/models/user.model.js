@@ -39,11 +39,20 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    notification_preferences: {
+      treatment_reminders: { type: Boolean, default: true },
+      treatment_reminders_enabled_at: Date,
+    },
+    isproaccount: { type: Boolean, default: false },
+    balance: { type: Number, default: 0, min: 0, max: Number.MAX_SAFE_INTEGER, validate: Number.isSafeInteger },
+    vip_plan: { type: String, enum: ["VIP1", "VIP3", "VIP12", null], default: null },
+    vip_expires_at: { type: Date, default: null },
     // Phan biet tai khoan dang ky qua Google va tai khoan email thuong
     isGoogleAccount: {
       type: Boolean,
       default: false,
     },
+    googleSub: { type: String, trim: true },
     resetPasswordOTP: {
       type: String,
       default: null,
@@ -59,6 +68,8 @@ const userSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+
+userSchema.index({ googleSub: 1 }, { unique: true, partialFilterExpression: { googleSub: { $type: "string" } } });
 
 // Virtual ho tro ca isAccountGoogle
 userSchema.virtual("isAccountGoogle").get(function () {

@@ -7,9 +7,19 @@ const plantRoutes = require("./plant.routes");
 const diseaseRoutes = require("./disease.routes");
 
 router.use("/auth", authRoutes);
+router.use("/commerce", require("./finance.routes"));
 router.use("/users", userRoutes);
 router.use("/admin/users", userRoutes);
 router.use("/plants", plantRoutes);
 router.use("/diseases", diseaseRoutes);
+router.use("/garden/plants", require("./garden.routes"));
+router.use("/favorites/plants", require("./favorite.routes"));
+router.use("/chat", require("./chat.routes"));
+router.use("/treatments", require("./treatment.routes"));
+router.use("/diagnosis", require("./diagnosis.routes"));
+router.use("/care-schedules", require("./care.routes"));
+router.use("/notifications", require("./notification.routes"));
+router.use("/identification", require("./identification.routes"));
+router.use("/feedback", require("./feedback.routes"));
 
 module.exports = router;

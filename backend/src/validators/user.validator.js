@@ -12,8 +12,16 @@ const update = (input) => {
     result.fullName = v.text(input.fullName, "fullName");
   if (input.phone !== undefined) result.phone = v.phone(input.phone);
   if (input.role !== undefined) result.role = role(input.role);
-  if (input.status !== undefined)
+  if (input.status !== undefined) {
     result.status = v.boolean(input.status, "status");
+    if (!result.status) {
+      const reason = typeof input.reason === "string" ? input.reason.trim() : "";
+      if (!reason || reason.length > 500) {
+        v.invalid("reason", "Nhập lý do khóa tài khoản từ 1 đến 500 ký tự.");
+      }
+      result.reason = reason;
+    }
+  }
   return result;
 };
 const query = (input = {}) => {
@@ -43,4 +51,14 @@ const query = (input = {}) => {
     v.invalid("sortOrder");
   return result;
 };
-module.exports = { role, update, query };
+const create = (input) => {
+  v.object(input);
+  return {
+    fullName: v.text(input.fullName, "fullName"),
+    email: v.email(input.email),
+    phone: input.phone === undefined ? "" : v.phone(input.phone),
+    password: v.password(input.password),
+    role: input.role === undefined ? "customer" : role(input.role),
+  };
+};
+module.exports = { role, update, query, create };

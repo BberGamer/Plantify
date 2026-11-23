@@ -2,6 +2,7 @@ import { spacing } from "../../../theme/tokens";
 // PlantFormModal.js - Giao diện PlantFormModal của màn hình quản lý cây.
 
 import {
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -31,8 +32,13 @@ export default function PlantFormModal({
   onFieldChange,
   onCareChange,
   onRetryCategories,
+  photo,
+  onChoosePhoto,
+  onRemovePhoto,
 }) {
   const close = () => { if (!saving) onClose(); };
+  const imageUri = photo?.uri || form.plant_image || null;
+  const hasImage = typeof imageUri === "string" && imageUri.trim().length > 0;
   return (
     <Modal
       visible={visible}
@@ -116,7 +122,6 @@ export default function PlantFormModal({
               ["common_name", "Tên thường gọi *"],
               ["scientific_name", "Tên khoa học *"],
               ["botanical_family", "Họ thực vật"],
-              ["plant_image", "Đường dẫn hình ảnh"],
               ["description", "Mô tả"],
             ].map(([key, label]) => {
               const multiline = key === "description";
@@ -138,6 +143,34 @@ export default function PlantFormModal({
                 </View>
               );
             })}
+            <View style={styles.photoSection}>
+              <Text style={styles.fieldLabel}>Hình ảnh cây</Text>
+              {hasImage ? (
+                <Image
+                  source={{ uri: imageUri }}
+                  style={styles.photoPreview}
+                  accessibilityLabel="Ảnh cây đã chọn"
+                />
+              ) : (
+                <View style={styles.photoPlaceholder}>
+                  <Text style={styles.photoHint}>Chưa có hình ảnh cây</Text>
+                </View>
+              )}
+              <Button
+                mode="outlined"
+                icon="image-plus"
+                disabled={saving}
+                onPress={onChoosePhoto}
+              >
+                {hasImage ? "Chọn ảnh khác từ máy" : "Tải ảnh từ máy"}
+              </Button>
+              <Text style={styles.photoHint}>JPG / PNG · Tối đa 10 MB · Ảnh được tải lên khi lưu cây</Text>
+              {hasImage ? (
+                <Button disabled={saving} onPress={onRemovePhoto}>
+                  {photo ? "Bỏ ảnh đã chọn" : "Xóa ảnh hiện tại"}
+                </Button>
+              ) : null}
+            </View>
             <PlantCareFields
               value={form.care_requirements}
               disabled={saving}
@@ -185,6 +218,10 @@ const styles = StyleSheet.create({
     marginBottom: 7,
   },
   multilineInput: { minHeight: 78 },
+  photoSection: { gap: 10, marginBottom: 22 },
+  photoPreview: { width: "100%", height: 200, borderRadius: 16, backgroundColor: colors.lightMint, resizeMode: "contain" },
+  photoPlaceholder: { height: 110, borderWidth: 1, borderStyle: "dashed", borderColor: colors.inputBorder, borderRadius: 16, justifyContent: "center", alignItems: "center", backgroundColor: colors.white },
+  photoHint: { fontSize: 12, color: colors.textSecondary, lineHeight: 18 },
   categoryScroll: { flexGrow: 0, marginBottom: 19 },
   categoryChip: {
     borderWidth: 1,

@@ -1,17 +1,35 @@
 // PlantCard.js - Giao diện PlantCard của màn hình quản lý cây.
-import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../theme/colors";
 
+function PlantThumbnail({ uri, name }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <View style={styles.leafIcon}>
+      {uri && !failed ? (
+        <Image
+          source={{ uri }}
+          style={styles.thumbnail}
+          resizeMode="cover"
+          accessibilityLabel={`Ảnh ${name}`}
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <Ionicons name="leaf" size={21} color={colors.primaryLight} />
+      )}
+    </View>
+  );
+}
+
 export default function PlantCard({ item, disabled, onEdit, onDelete }) {
+  const imageUri = typeof item.plant_image === "string" ? item.plant_image.trim() : "";
   return (
     <View style={styles.card}>
       <View style={styles.cardTop}>
-        <View style={styles.leafIcon}>
-          <Ionicons name="leaf" size={21} color={colors.primaryLight} />
-        </View>
+        <PlantThumbnail key={imageUri} uri={imageUri} name={item.common_name} />
         <View style={styles.plantInfo}>
           <Text style={styles.commonName}>{item.common_name}</Text>
           <Text style={styles.scientificName}>{item.scientific_name}</Text>
@@ -69,11 +87,14 @@ const styles = StyleSheet.create({
   leafIcon: {
     width: 43,
     height: 43,
+    flexShrink: 0,
+    overflow: "hidden",
     borderRadius: 12,
     backgroundColor: colors.lightMint,
     justifyContent: "center",
     alignItems: "center",
   },
+  thumbnail: { width: "100%", height: "100%" },
   plantInfo: { flex: 1, paddingHorizontal: 11 },
   commonName: { color: colors.textPrimary, fontSize: 15, fontWeight: "700" },
   scientificName: {

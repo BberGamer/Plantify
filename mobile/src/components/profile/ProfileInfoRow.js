@@ -5,7 +5,7 @@ import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
 
-export default function InfoRow({ icon, label, value, last }) {
+export default function InfoRow({ icon, label, value, last, action }) {
   return (
     <View style={[styles.infoRow, !last && styles.divider]}>
       <View style={styles.iconBox}>
@@ -15,6 +15,7 @@ export default function InfoRow({ icon, label, value, last }) {
         <Text style={styles.fieldLabel}>{label}</Text>
         <Text style={styles.fieldValue}>{value}</Text>
       </View>
+      {action}
     </View>
   );
 }

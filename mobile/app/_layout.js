@@ -6,9 +6,11 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PaperProvider } from "react-native-paper";
 import { paperTheme } from "../src/theme/paperTheme";
 import useAuthNavigation from "../src/hooks/useAuthNavigation";
+import usePushNotifications from "../src/hooks/usePushNotifications";
 
 function AuthGuard() {
   useAuthNavigation();
+  usePushNotifications();
   return null;
 }
 

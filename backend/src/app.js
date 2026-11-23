@@ -8,6 +8,12 @@ const app = express();
 
 // === PHAN 1: Middlewares co ban ===
 app.use(cors());
+app.use("/uploads/plants", express.static(require("./middlewares/garden-upload.middleware").uploadDirectory, {
+  dotfiles: "deny", index: false, setHeaders: (res) => res.set("X-Content-Type-Options", "nosniff"),
+}));
+// Webhook phải nhận bytes gốc trước express.json để xác minh HMAC.
+app.post(["/api/v1/commerce/payment/webhook/sepay", "/api/commerce/payment/webhook/sepay"],
+  express.raw({ type: "application/json", limit: "64kb" }), require("./controllers/finance.controller").webhook);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -21,7 +27,8 @@ app.get("/health", (req, res) => {
 });
 
 // === PHAN 3: Dang ky Routes cho cac Modules ===
-app.use("/api/v1", require("./routes"));
+// Giữ tương thích client đang dùng /api và client dùng prefix /api/v1.
+app.use(["/api/v1", "/api"], require("./routes"));
 
 // === PHAN 4: 404 Handler ===
 app.use((req, res) => {

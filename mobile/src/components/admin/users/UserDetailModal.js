@@ -12,7 +12,7 @@ import {
   Platform,
 } from "react-native";
 import FormField from "../../common/FormField";
-import { Button } from "react-native-paper";
+import { Button, HelperText } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../theme/colors";
 import { garden, getRoleMeta, leafShape } from "./theme";
@@ -20,6 +20,7 @@ import { garden, getRoleMeta, leafShape } from "./theme";
 const SYSTEM_ROLES = ["customer", "manager", "admin"];
 
 export default function UserDetailModal({
+  currentAdminId,
   visible,
   user,
   fullName,
@@ -30,10 +31,16 @@ export default function UserDetailModal({
   onChangeRole,
   status,
   onChangeStatus,
+  lockReason,
+  lockReasonError,
+  onChangeLockReason,
+  submitError,
   submitting,
   onClose,
   onSave,
 }) {
+  const readOnly = user?.role === "admin" && user?._id !== currentAdminId;
+  const permissionsReadOnly = user?.role === "admin";
   const close = () => { if (!submitting) onClose(); };
   return (
     <Modal
@@ -55,7 +62,9 @@ export default function UserDetailModal({
               </View>
               <View style={{ flexShrink: 1 }}>
                 <Text style={styles.modalTitle}>Chi tiết tài khoản</Text>
-                <Text style={styles.modalSubtitle}>Xem & vun đắp thông tin</Text>
+                <Text style={styles.modalSubtitle}>
+                  {readOnly ? "Tài khoản cùng vai trò chỉ được xem" : "Xem và cập nhật thông tin"}
+                </Text>
               </View>
             </View>
             <TouchableOpacity
@@ -98,7 +107,7 @@ export default function UserDetailModal({
                 </View>
                 </View>
 
-                <FormField label="Họ và tên *" disabled={submitting}
+                <FormField label="Họ và tên *" disabled={submitting || readOnly}
 
                     value={fullName}
                     onChangeText={onChangeFullName}
@@ -106,7 +115,7 @@ export default function UserDetailModal({
                     placeholderTextColor={garden.muted}
                   />
 
-                <FormField label="Số điện thoại" disabled={submitting}
+                <FormField label="Số điện thoại" disabled={submitting || readOnly}
 
                     value={phone}
                     onChangeText={onChangePhone}
@@ -127,7 +136,10 @@ export default function UserDetailModal({
                             styles.roleChoiceBtn,
                             isActive && styles.roleChoiceBtnActive,
                           ]}
-                          disabled={submitting} onPress={() => onChangeRole(r)}
+                          disabled={submitting || user?.role === "admin"}
+                          accessibilityRole="button"
+                          accessibilityState={{ disabled: submitting || user?.role === "admin", selected: isActive }}
+                          onPress={() => onChangeRole(r)}
                         >
                           <Text
                             style={[
@@ -141,6 +153,9 @@ export default function UserDetailModal({
                       );
                     })}
                   </View>
+                  {user?.role === "admin" && (
+                    <Text style={styles.inputLabel}>Không thể thay đổi vai trò quản trị viên.</Text>
+                  )}
                 </View>
 
                 <View style={styles.inputGroup}>
@@ -151,7 +166,7 @@ export default function UserDetailModal({
                         styles.roleChoiceBtn,
                         status === true && styles.statusChoiceActive,
                       ]}
-                      disabled={submitting} onPress={() => onChangeStatus(true)}
+                      disabled={submitting || permissionsReadOnly} onPress={() => onChangeStatus(true)}
                     >
                       <Text
                         style={[
@@ -168,7 +183,7 @@ export default function UserDetailModal({
                         styles.roleChoiceBtn,
                         status === false && styles.statusChoiceBanned,
                       ]}
-                      disabled={submitting} onPress={() => onChangeStatus(false)}
+                      disabled={submitting || permissionsReadOnly} onPress={() => onChangeStatus(false)}
                     >
                       <Text
                         style={[
@@ -181,16 +196,30 @@ export default function UserDetailModal({
                     </TouchableOpacity>
                   </View>
                 </View>
+                {!permissionsReadOnly && user.status !== false && status === false && (
+                  <FormField
+                    label="Lý do khóa tài khoản"
+                    value={lockReason}
+                    onChangeText={onChangeLockReason}
+                    error={lockReasonError}
+                    hint="Lý do sẽ được gửi đến email của người dùng."
+                    multiline
+                    disabled={submitting}
+                  />
+                )}
+                {!!submitError && <HelperText type="error" accessibilityRole="alert">{submitError}</HelperText>}
               </>
             ) : null}
           </ScrollView>
 
           {/* MODAL FOOTER */}
           <View style={styles.modalFooter}>
-            <Button onPress={close} disabled={submitting}>Hủy</Button>
+            <Button onPress={close} disabled={submitting}>{readOnly ? "Đóng" : "Hủy"}</Button>
+            {!readOnly && (
             <Button mode="contained" onPress={onSave} disabled={submitting} loading={submitting}>
               Lưu thay đổi
             </Button>
+            )}
           </View>
         </SafeAreaView>
       </KeyboardAvoidingView>

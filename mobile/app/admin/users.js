@@ -7,6 +7,8 @@ import {
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import useCreateUser from "../../src/hooks/useCreateUser";
+import UserCreateModal from "../../src/components/admin/users/UserCreateModal";
 
 import { garden } from "../../src/components/admin/users/theme";
 import ListError from "../../src/components/common/ListError";
@@ -25,6 +27,7 @@ import {
 
 export default function AdminUsersScreen() {
   const {
+    handleUserCreated,
     currentAdminId,
     users,
     pagination,
@@ -38,6 +41,10 @@ export default function AdminUsersScreen() {
     selectedStatus,
     selectStatus,
     toast,
+    lockReason,
+    lockReasonError,
+    changeLockReason,
+    userMutationError,
     fetchUsers,
     handleRefresh,
     handleSearchSubmit,
@@ -70,6 +77,7 @@ export default function AdminUsersScreen() {
     handleOpenRoleModal,
     handleConfirmRoleChange,
   } = useAdminUsers();
+  const createUser = useCreateUser({ onCreated: handleUserCreated });
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -78,7 +86,10 @@ export default function AdminUsersScreen() {
         <UserToastBanner toast={toast} />
 
         {/* HEADER */}
-        <UserHeader totalUsers={pagination.total} onRefresh={handleRefresh} />
+        <UserHeader
+          totalUsers={pagination.total}
+          onAdd={createUser.open}
+        />
 
         {/* SEARCH & FILTERS */}
         <UserFilterBar
@@ -114,11 +125,10 @@ export default function AdminUsersScreen() {
                 item={item}
                 currentAdminId={currentAdminId}
                 onOpenDetail={handleOpenDetail}
-                onOpenRole={handleOpenRoleModal}
-                onOpenStatus={handleOpenStatusConfirm}
               />
             )}
             contentContainerStyle={styles.listContent}
+            keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
@@ -139,8 +149,19 @@ export default function AdminUsersScreen() {
         )}
       </View>
 
+      {createUser.visible && <UserCreateModal
+        visible={createUser.visible}
+        draft={createUser.draft}
+        errors={createUser.errors}
+        error={createUser.error}
+        submitting={createUser.submitting}
+        onClose={createUser.close}
+        onChangeField={createUser.changeField}
+        onSubmit={createUser.submit}
+      />}
       {/* MODAL 1: XEM CHI TIET & CAP NHAT THONG TIN */}
       <UserDetailModal
+        currentAdminId={currentAdminId}
         visible={detailModalVisible}
         user={selectedUser}
         fullName={editFullName}
@@ -151,6 +172,10 @@ export default function AdminUsersScreen() {
         onChangeRole={(value) => changeField("role", value)}
         status={editStatus}
         onChangeStatus={(value) => changeField("status", value)}
+        lockReason={lockReason}
+        lockReasonError={lockReasonError}
+        onChangeLockReason={changeLockReason}
+        submitError={userMutationError}
         submitting={submitting}
         onClose={closeDetail}
         onSave={handleSaveUserInfo}
@@ -172,6 +197,10 @@ export default function AdminUsersScreen() {
         visible={confirmModalVisible}
         targetUser={targetUserForStatus}
         loading={statusLoading}
+        lockReason={lockReason}
+        lockReasonError={lockReasonError}
+        onChangeLockReason={changeLockReason}
+        submitError={userMutationError}
         onClose={closeStatus}
         onConfirm={handleConfirmStatusChange}
       />
@@ -182,10 +211,13 @@ export default function AdminUsersScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: garden.forest,
+    backgroundColor: garden.white,
   },
   container: {
     flex: 1,
+    width: "100%",
+    maxWidth: 960,
+    alignSelf: "center",
     backgroundColor: garden.cream,
   },
   listContent: {

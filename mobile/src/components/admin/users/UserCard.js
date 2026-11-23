@@ -2,14 +2,12 @@ import React from "react";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { RoleBadge, StatusBadge, GoogleBadge } from "./UserBadges";
-import { garden, getRoleMeta, leafShape } from "./theme";
+import { garden } from "./theme";
 
 export default function UserCard({
   item,
   currentAdminId,
   onOpenDetail,
-  onOpenRole,
-  onOpenStatus,
 }) {
   const initials = item.fullName
     ? item.fullName
@@ -22,13 +20,10 @@ export default function UserCard({
 
   const isSelf = item._id === currentAdminId;
   const isActive = item.status !== false;
-  const roleMeta = getRoleMeta(item.role);
+
 
   return (
     <View style={[styles.userCard, !isActive && styles.userCardDormant]}>
-      {/* Vien la ben trai the hien vai tro */}
-      <View style={[styles.stem, { backgroundColor: roleMeta.color }]} />
-
       {/* CARD HEADER / SUMMARY */}
       <TouchableOpacity
         style={styles.cardHeader}
@@ -47,9 +42,7 @@ export default function UserCard({
           >
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
-          <View style={[styles.avatarSprout, { backgroundColor: roleMeta.bg }]}>
-            <Ionicons name={roleMeta.icon} size={11} color={roleMeta.color} />
-          </View>
+
         </View>
 
         {/* User Info */}
@@ -90,52 +83,6 @@ export default function UserCard({
         {item.isGoogleAccount && <GoogleBadge />}
       </View>
 
-      {/* ACTION BUTTONS ROW */}
-      <View style={styles.actionButtonsRow}>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.btnSoft]}
-          onPress={() => onOpenDetail(item)}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-        >
-          <Ionicons name="create-outline" size={15} color={garden.forest} />
-          <Text style={styles.btnSoftText}>Chi tiết</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.btnSoft]}
-          onPress={() => onOpenRole(item)}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-        >
-          <Ionicons name="git-branch-outline" size={15} color={garden.forest} />
-          <Text style={styles.btnSoftText}>Vai trò</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.actionBtn,
-            isActive ? styles.btnDanger : styles.btnSuccess,
-          ]}
-          onPress={() => onOpenStatus(item)}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-        >
-          <Ionicons
-            name={isActive ? "lock-closed" : "leaf"}
-            size={14}
-            color={isActive ? garden.terracotta : garden.white}
-          />
-          <Text
-            style={[
-              styles.btnSolidText,
-              { color: isActive ? garden.terracotta : garden.white },
-            ]}
-          >
-            {isActive ? "Khóa" : "Kích hoạt"}
-          </Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -143,31 +90,15 @@ export default function UserCard({
 const styles = StyleSheet.create({
   userCard: {
     backgroundColor: garden.white,
-    borderRadius: 20,
-    borderTopLeftRadius: 28,
+    borderRadius: 12,
     padding: 14,
-    paddingLeft: 18,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: garden.line,
     overflow: "hidden",
-    shadowColor: garden.forest,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 2,
   },
   userCardDormant: {
     backgroundColor: "#FBFBF8",
-  },
-  stem: {
-    position: "absolute",
-    left: 0,
-    top: 16,
-    bottom: 16,
-    width: 4,
-    borderTopRightRadius: 4,
-    borderBottomRightRadius: 4,
   },
   cardHeader: {
     flexDirection: "row",
@@ -178,7 +109,9 @@ const styles = StyleSheet.create({
     height: 50,
   },
   avatar: {
-    ...leafShape(46),
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -186,18 +119,6 @@ const styles = StyleSheet.create({
     color: garden.white,
     fontWeight: "800",
     fontSize: 16,
-  },
-  avatarSprout: {
-    position: "absolute",
-    right: 0,
-    bottom: 0,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: garden.white,
-    justifyContent: "center",
-    alignItems: "center",
   },
   userInfo: {
     flex: 1,
@@ -246,41 +167,5 @@ const styles = StyleSheet.create({
     marginTop: 12,
     flexWrap: "wrap",
     gap: 6,
-  },
-  actionButtonsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: garden.line,
-    gap: 8,
-  },
-  actionBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 44,
-    borderRadius: 14,
-    gap: 5,
-  },
-  btnSoft: {
-    backgroundColor: garden.mint,
-  },
-  btnSoftText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: garden.forest,
-  },
-  btnDanger: {
-    backgroundColor: garden.terracottaBg,
-  },
-  btnSuccess: {
-    backgroundColor: garden.moss,
-  },
-  btnSolidText: {
-    fontSize: 13,
-    fontWeight: "700",
   },
 });

@@ -1,6 +1,7 @@
 // src/services/diseaseService.js - Gọi API quản lý bệnh cây
 import api from "./api";
 import { adaptDiseasesList } from "./listAdapters";
+import saveCatalogEntry from "./saveCatalogEntry";
 
 const diseaseService = {
   getDiseases: async ({ plantId, page = 1, limit = 100 } = {}) => {
@@ -31,15 +32,9 @@ const diseaseService = {
     return response.data;
   },
 
-  createDisease: async (disease) => {
-    const response = await api.post("/diseases/manager", disease);
-    return response.data;
-  },
+  createDisease: (disease, photo) => saveCatalogEntry("post", "/diseases/manager", disease, photo),
 
-  updateDisease: async (id, disease) => {
-    const response = await api.put(`/diseases/manager/${id}`, disease);
-    return response.data;
-  },
+  updateDisease: (id, disease, photo) => saveCatalogEntry("put", `/diseases/manager/${id}`, disease, photo),
 
   deleteDisease: async (id) => {
     const response = await api.delete(`/diseases/manager/${id}`);

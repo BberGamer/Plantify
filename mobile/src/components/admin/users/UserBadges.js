@@ -25,7 +25,7 @@ export function StatusBadge({ status }) {
       ]}
     >
       <Ionicons
-        name={isActive ? "water" : "snow"}
+        name={isActive ? "checkmark-circle-outline" : "lock-closed-outline"}
         size={12}
         color={isActive ? garden.sprout : garden.terracotta}
       />
@@ -56,10 +56,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 9,
     paddingVertical: 4,
-    borderTopLeftRadius: 12,
-    borderBottomRightRadius: 12,
-    borderTopRightRadius: 4,
-    borderBottomLeftRadius: 4,
+    borderRadius: 6,
     gap: 4,
   },
   badgeText: {

@@ -3,6 +3,7 @@ const fields = [
   "category_id",
   "common_name",
   "scientific_name",
+  "diagnosis_aliases",
   "botanical_family",
   "description",
   "plant_image",
@@ -13,6 +14,10 @@ const fields = [
 const payload = (input, creating = false) => {
   v.object(input);
   const result = {};
+  if (input.diagnosis_aliases !== undefined &&
+      (!Array.isArray(input.diagnosis_aliases) || input.diagnosis_aliases.length > 50 ||
+       input.diagnosis_aliases.some(x => typeof x !== "string" || !x.trim() || x.length > 200)))
+    v.invalid("diagnosis_aliases");
   for (const field of fields)
     if (input[field] !== undefined) result[field] = input[field];
   for (const field of ["common_name", "scientific_name"]) {
