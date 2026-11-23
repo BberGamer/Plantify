@@ -127,6 +127,14 @@ async function review(id, managerId, input) {
   return detail(id);
 }
 
+async function managerHistoryImage(id) {
+  const row = await Feedback.findOne(filterFor(id)).select("user_id diagnosis_id").lean();
+  if (!row?.diagnosis_id) {
+    throw new AppError("DIAGNOSIS_HISTORY_NOT_FOUND", 404, "Không tìm thấy kết quả đã liên kết.");
+  }
+  return diagnosis.historyImage(String(row.user_id), String(row.diagnosis_id));
+}
+
 async function image(id, index, userId) {
   if (!/^[0-4]$/.test(index)) throw missing();
   const row = await Feedback.findOne(filterFor(id, userId)).select("images").lean();
@@ -135,4 +143,4 @@ async function image(id, index, userId) {
   return photos.read(item);
 }
 
-module.exports = { assertVip, create, list, detail, review, image };
+module.exports = { assertVip, create, list, detail, review, image, managerHistoryImage };

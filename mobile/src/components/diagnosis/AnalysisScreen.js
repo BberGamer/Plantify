@@ -57,6 +57,7 @@ export default function AnalysisScreen({ identification = false }) {
   const diagnosis = useDiagnosis(capture.photo, operationLock, identificationMode);
   const scroll = useRef(null);
   const showResult = Boolean(diagnosis.result);
+  const feedbackHistoryId = diagnosis.result?.history_id ?? diagnosis.result?.diagnosis_id;
   const busy = capture.busy || diagnosis.busy;
   const onImageError = diagnosis.onImageError;
 
@@ -175,14 +176,14 @@ export default function AnalysisScreen({ identification = false }) {
               modeSelector={<ModeTabs mode={mode} busy={busy} dark onChange={changeMode} />}
             />
           )}
-          {!!diagnosis.result?.diagnosis_id && (
+          {!!feedbackHistoryId && (
             <Button
               mode="outlined"
               icon="message-text-outline"
               disabled={busy}
               onPress={() => router.push({
                 pathname: "/customer/feedback/new",
-                params: { diagnosisId: diagnosis.result.diagnosis_id },
+                params: { diagnosisId: feedbackHistoryId },
               })}
             >
               Đóng góp ý kiến

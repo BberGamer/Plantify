@@ -1,6 +1,6 @@
 import { FlatList, Image, ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Button, Card, IconButton, Text, TextInput } from "react-native-paper";
-import { useState } from "react";
+import { ActivityIndicator, Button, Card, IconButton, SegmentedButtons, Text, TextInput } from "react-native-paper";
+import { useCallback, useState } from "react";
 import { useRouter } from "expo-router";
 import useFeedbackForm from "../../hooks/useFeedbackForm";
 import useFormBack from "../../hooks/useFormBack";
@@ -10,6 +10,7 @@ import diagnosisService from "../../services/diagnosisService";
 import DiagnosisHistoryPhoto from "../diagnosis/DiagnosisHistoryPhoto";
 import ListPagination from "../common/ListPagination";
 import ListError from "../common/ListError";
+import { historyKindLabel } from "./LinkedFeedbackHistory";
 import FeedbackFrame, { FeedbackMessage, feedbackStyles as styles, feedbackTime } from "./FeedbackFrame";
 
 export function DiagnosisSummary({ diagnosis }) {
@@ -19,23 +20,35 @@ export function DiagnosisSummary({ diagnosis }) {
       <View style={local.summary}>
         <Text variant="titleMedium">{diagnosis.disease_name || diagnosis.plant_name || "Kết quả đã lưu"}</Text>
         {!!diagnosis.disease_name && !!diagnosis.plant_name && <Text>{diagnosis.plant_name}</Text>}
-        <Text style={styles.muted}>{feedbackTime(diagnosis.created_at)}</Text>
+        <Text style={styles.muted}>{historyKindLabel(diagnosis)} · {feedbackTime(diagnosis.created_at)}</Text>
       </View>
     </View>
   );
 }
 
 function HistoryPicker({ onSelect, onClose }) {
-  const list = usePaginatedList(diagnosisService.history, { limit: 8 });
+  const [kind, setKind] = useState("all");
+  const fetchHistory = useCallback(
+    (params) => diagnosisService.history({ ...params, result_kind: kind === "all" ? undefined : kind }),
+    [kind],
+  );
+  const list = usePaginatedList(fetchHistory, { limit: 8 });
   return (
     <FlatList data={list.loading || list.error ? [] : list.items} keyExtractor={item => item._id}
       contentContainerStyle={styles.content}
-      ListHeaderComponent={<Button onPress={onClose}>Quay lại bản nháp</Button>}
+      ListHeaderComponent={<>
+        <Button onPress={onClose}>Quay lại bản nháp</Button>
+        <SegmentedButtons value={kind} onValueChange={setKind} buttons={[
+          { value: "all", label: "Tất cả" },
+          { value: "plant", label: "Nhận diện cây" },
+          { value: "disease", label: "Bệnh cây" },
+        ]} />
+      </>}
       ListEmptyComponent={list.loading ? <ActivityIndicator /> : list.error
         ? <ListError message={list.error} onRetry={list.retry} />
-        : <Text>Chưa có lịch sử chẩn đoán đã lưu.</Text>}
+        : <Text>Chưa có kết quả đã lưu.</Text>}
       renderItem={({ item }) => (
-        <Card style={styles.card} onPress={() => onSelect(item)} accessibilityLabel="Chọn kết quả chẩn đoán">
+        <Card style={styles.card} onPress={() => onSelect(item)} accessibilityLabel="Chọn kết quả đã lưu">
           <Card.Content><DiagnosisSummary diagnosis={item} /></Card.Content>
         </Card>
       )}
@@ -58,7 +71,7 @@ export default function FeedbackFormScreen({ diagnosisId }) {
   }, form.busy);
 
   return (
-    <FeedbackFrame title={choosing ? "Chọn lịch sử chẩn đoán" : "Tạo đóng góp"}
+    <FeedbackFrame title={choosing ? "Chọn kết quả đã lưu" : "Tạo đóng góp"}
       busy={form.busy} fallback={choosing ? null : "/customer/feedback"}>
       {choosing ? <HistoryPicker onClose={() => setChoosing(false)}
         onSelect={item => { form.selectDiagnosis(item); setChoosing(false); }} />
@@ -83,7 +96,7 @@ export default function FeedbackFormScreen({ diagnosisId }) {
             </View>
             <Button mode="outlined" icon="image-plus" onPress={form.pickImages}
               disabled={form.busy || form.images.length >= 5}>Thêm ảnh</Button>
-            <Text variant="titleMedium">Lịch sử chẩn đoán (không bắt buộc)</Text>
+            <Text variant="titleMedium">Kết quả đã lưu (không bắt buộc)</Text>
             {form.loadingDiagnosis && <ActivityIndicator />}
             {!!form.diagnosis && <DiagnosisSummary diagnosis={form.diagnosis} />}
             <View style={styles.row}>

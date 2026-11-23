@@ -30,14 +30,25 @@ const review = action(async (req, res) =>
   success(res, "Đã lưu kết quả xử lý.",
     await service.review(req.params.id, req.user.id, validate.review(req.body))));
 
-const image = (manager = false) => action(async (req, res, next) => {
-  const data = await service.image(req.params.id, req.params.index, manager ? null : req.user.id);
+function sendPrivateImage(res, next, data, missingImage) {
   res.set({ "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" });
   if (Buffer.isBuffer(data)) return res.type("image/jpeg").send(data);
   res.sendFile(data, error => {
     if (error) next(error.code === "ENOENT"
-      ? new AppError("FEEDBACK_IMAGE_NOT_FOUND", 404, "Ảnh đóng góp không còn khả dụng.") : error);
+      ? missingImage : error);
   });
+}
+
+const image = (manager = false) => action(async (req, res, next) => {
+  const data = await service.image(req.params.id, req.params.index, manager ? null : req.user.id);
+  return sendPrivateImage(res, next, data,
+    new AppError("FEEDBACK_IMAGE_NOT_FOUND", 404, "Ảnh đóng góp không còn khả dụng."));
 });
 
-module.exports = { requireVip, create, list, detail, review, image };
+const managerHistoryImage = action(async (req, res, next) => {
+  const data = await service.managerHistoryImage(req.params.id);
+  return sendPrivateImage(res, next, data,
+    new AppError("DIAGNOSIS_IMAGE_NOT_FOUND", 404, "Ảnh của kết quả đã liên kết không còn khả dụng."));
+});
+
+module.exports = { requireVip, create, list, detail, review, image, managerHistoryImage };
