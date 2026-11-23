@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../src/theme/colors";
 import useLogin from "../../src/hooks/useLogin";
 import LoginForm from "../../src/components/auth/LoginForm";
+import AccountLockedDialog from "../../src/components/auth/AccountLockedDialog";
 export default function LoginScreen() {
   const login = useLogin();
   return (
@@ -66,6 +67,7 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <AccountLockedDialog visible={login.accountLocked} onDismiss={login.dismissAccountLocked} />
     </SafeAreaView>
   );
 }

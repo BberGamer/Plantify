@@ -95,6 +95,7 @@ const useAuthStore = create((set, get) => {
       set({ ...emptySession, isLoggingIn: false });
       return {
         success: false,
+        code: error?.response?.data?.code || error?.code,
         error: getErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại."),
       };
     } finally {

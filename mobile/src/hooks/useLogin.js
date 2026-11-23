@@ -13,12 +13,21 @@ export default function useLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState("");
+  const [accountLocked, setAccountLocked] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const pending = useRef(null);
   const { capture, isActive } = useScreenScope(undefined, undefined, undefined, false);
   const isPending = () => {
     const state = useAuthStore.getState();
     return state.isLoggingIn || pending.current?.version === state.sessionVersion;
+  };
+  const handleLoginFailure = (response, fallback) => {
+    if (response.cancelled) return;
+    if (response.code === "ACCOUNT_LOCKED") {
+      setAccountLocked(true);
+    } else {
+      setLocalError(response.error || fallback);
+    }
   };
   const submit = async () => {
     if (isPending() || !isActive()) return;
@@ -45,7 +54,7 @@ export default function useLogin() {
       const response = await request;
       if (!inScreen() || pending.current !== attempt) return;
       if (response.success) setPassword("");
-      else if (!response.cancelled) setLocalError(response.error || "Đăng nhập thất bại.");
+      else handleLoginFailure(response, "Đăng nhập thất bại.");
     } catch (failure) {
       if (inScreen() && pending.current === attempt)
         setLocalError(getErrorMessage(failure, "Đăng nhập thất bại"));
@@ -59,6 +68,8 @@ export default function useLogin() {
     password,
     isLoading,
     error: localError,
+    accountLocked,
+    dismissAccountLocked: () => setAccountLocked(false),
     fieldErrors,
     submit,
     changeEmail: (value) => {
@@ -92,7 +103,9 @@ export default function useLogin() {
         if (response.success) {
           setPassword("");
           if (response.requiresProfile) router.push("/auth/google-complete");
-        } else if (!response.cancelled) setLocalError(response.error);
+        } else {
+          handleLoginFailure(response, "Đăng nhập Google thất bại.");
+        }
       } catch (failure) {
         if (inScreen() && pending.current === attempt) setLocalError(getErrorMessage(failure, "Đăng nhập Google thất bại."));
       } finally { if (pending.current === attempt) pending.current = null; }
