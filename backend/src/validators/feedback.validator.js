@@ -23,12 +23,17 @@ function date(value, field) {
 
 function create(body, requestKey) {
   validate.object(body);
-  if (typeof requestKey !== "string" || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(requestKey))
+  if (
+    typeof requestKey !== "string" ||
+    !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(requestKey)
+  )
     validate.invalid("request_key", "Mã yêu cầu gửi không hợp lệ.");
   return {
     description: boundedText(body.description, "description", 250, "Mô tả"),
-    diagnosis_id: body.diagnosis_id === undefined || body.diagnosis_id === ""
-      ? null : validate.id(body.diagnosis_id, "diagnosis_id"),
+    diagnosis_id:
+      body.diagnosis_id === undefined || body.diagnosis_id === ""
+        ? null
+        : validate.id(body.diagnosis_id, "diagnosis_id"),
     request_key: requestKey.toLowerCase(),
   };
 }
@@ -39,17 +44,20 @@ function list(query, manager) {
   if (!Number.isSafeInteger((page - 1) * limit)) validate.invalid("page");
   const filter = {};
   let email;
+  if (query.type !== undefined) filter.type = choice(query.type, "type", types);
+  if (query.status !== undefined)
+    filter.status = choice(query.status, "status", ["pending", ...decisions]);
   if (manager) {
-    if (query.type !== undefined) filter.type = choice(query.type, "type", types);
-    if (query.status !== undefined) filter.status = choice(query.status, "status", ["pending", ...decisions]);
     if (query.email !== undefined) email = validate.email(query.email);
     const from = query.from === undefined ? null : date(query.from, "from");
     const to = query.to === undefined ? null : date(query.to, "to");
-    if (from && to && from > to) validate.invalid("to", "Ngày kết thúc phải từ ngày bắt đầu trở đi.");
-    if (from || to) filter.created_at = {
-      ...(from ? { $gte: from } : {}),
-      ...(to ? { $lt: new Date(to.getTime() + 86400000) } : {}),
-    };
+    if (from && to && from > to)
+      validate.invalid("to", "Ngày kết thúc phải từ ngày bắt đầu trở đi.");
+    if (from || to)
+      filter.created_at = {
+        ...(from ? { $gte: from } : {}),
+        ...(to ? { $lt: new Date(to.getTime() + 86400000) } : {}),
+      };
   }
   return { page, limit, filter, email };
 }

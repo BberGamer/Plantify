@@ -233,6 +233,15 @@ Khởi động backend sẽ đồng bộ cờ VIP hết hạn mỗi phút; API l
 
 SePay/ngrok thực tế phải cấu hình và kiểm thử riêng trước khi nhận tiền thật.
 
+### Lọc lịch sử đóng góp của Customer
+
+Trang Đóng góp ý kiến có bộ lọc loại (Tất cả / Feedback chẩn đoán / Feedback Chủ động)
+và trạng thái (Tất cả / Chờ xử lý / Đã tiếp nhận / Từ chối), áp dụng ngay khi chọn.
+API `GET /api/v1/feedback` nhận `type` và `status`, lọc trước khi phân trang và luôn
+ràng buộc theo tài khoản đăng nhập. Tìm email/ngày của Manager vẫn qua API Manager.
+Thẻ Customer/Manager dùng chung badge và viền màu: chờ xử lý vàng, tiếp nhận xanh,
+từ chối đỏ. Customer hết VIP vẫn xem/lọc đóng góp cũ; gửi mới cần VIP còn hạn.
+
 ### Cây yêu thích của customer
 
 Trong danh mục hoặc chi tiết cây, customer bấm trái tim để lưu/bỏ yêu thích. Tại **Tài khoản → Cây yêu thích của tôi**, có tổng số cây, chỉnh sửa danh sách, xem chi tiết, thêm vào vườn qua form hiện có và khám phá thêm cây. Dữ liệu lưu theo tài khoản trong `favorite_plants`; cây bị ẩn/xóa không hiển thị trong danh sách.
@@ -603,6 +612,30 @@ Mobile mới dùng prefix `/api`. Backend cũng hỗ trợ alias `/api/v1` để
 | `/admin/users`, `/admin/profile` | Quản lý người dùng và hồ sơ Admin |
 | `/manager/plants`, `/manager/diseases` | Quản lý cây và bệnh cây |
 | `/manager/protocol-generator`, `/manager/profile` | Tạo phác đồ từ DOCX và hồ sơ Manager |
+
+### Header, thông báo giới hạn và sao chép thông tin nạp tiền
+
+Các màn đăng ký/OTP, đặt lại mật khẩu, thêm/sửa cây và tài chính dùng chung
+`ScreenHeader`. Nút quay về từ OTP giữ thông tin đăng ký và xóa mã/lỗi xác thực.
+Popup xanh hiển thị kết quả lưu yêu thích và giới hạn VIP theo mã lỗi backend;
+nút **Xem gói VIP** mở trang mua/gia hạn. Đóng popup không xóa form hoặc ảnh đang chọn.
+
+Trang VIP có các thẻ tới ví, hồ sơ và lịch sử giao dịch. Chi tiết đơn nạp dùng chung
+cho Customer/Admin, chia rõ thông tin đơn, QR, tài khoản nhận và nội dung chuyển khoản.
+Nút **Sao chép** lấy chính giá trị của đơn do backend trả về, chỉ báo thành công khi
+clipboard xác nhận đã ghi; không đọc clipboard của người dùng.
+
+Sau khi pull, chạy `npm ci` trong `mobile/` để cài thêm `expo-clipboard`.
+Development build/APK cũ chưa có native module này cần build và cài lại:
+
+```powershell
+cd mobile
+npx eas-cli@latest build --platform android --profile development
+# Hoặc dùng --profile preview để tạo APK mở thẳng vào ứng dụng.
+```
+
+Web chỉ cần tải lại bundler sau khi cài dependency. Đóng gói JS thành công không
+thay thế kiểm tra clipboard, thao tác quay lại và popup trên thiết bị thật.
 
 ## API hiện có
 

@@ -1,7 +1,7 @@
-import { componentStyles } from "../../theme/componentStyles";
+import ScreenHeader from "../common/ScreenHeader";
 import { colors } from "../../theme";
 import { ScrollView, View } from "react-native";
-import { ActivityIndicator, Button, Icon, Text } from "react-native-paper";
+import { ActivityIndicator, Icon, List, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import useFinanceScreen from "../../hooks/useFinanceScreen";
@@ -11,6 +11,12 @@ import WalletSection from "./finance/WalletSection";
 import AdminAdjustment from "./finance/AdminAdjustment";
 import HistorySection from "./finance/HistorySection";
 import FinanceDialogs from "./finance/FinanceDialogs";
+
+const VIP_SHORTCUTS = [
+  { title: "Đến ví tiền", description: "Nạp tiền và kiểm tra số dư", icon: "wallet-outline", path: "/customer/wallet", background: colors.lightMint },
+  { title: "Về hồ sơ của tôi", description: "Xem thông tin tài khoản", icon: "account-outline", path: "/customer/profile", background: colors.white },
+  { title: "Lịch sử giao dịch", description: "Xem đơn nạp và các lần mua VIP", icon: "history", path: "/customer/transactions", background: colors.softSproutBg },
+];
 
 export default function FinanceScreen({ admin = false, section = "vip" }) {
   const {
@@ -40,22 +46,12 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
   const showHistory = admin || section === "history";
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        {!admin && (
-          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={() => router.back()} icon="arrow-left">
-            Quay lại
-          </Button>
-        )}
-        <Text variant="titleLarge" style={styles.heading}>
-          {admin
-            ? "Quản lý tài chính"
-            : {
-                vip: "Tài khoản VIP",
-                wallet: "Ví tiền",
-                history: "Lịch sử giao dịch",
-              }[section]}
-        </Text>
-      </View>
+      <ScreenHeader title={admin ? "Quản lý tài chính" : {
+        vip: "Tài khoản VIP", wallet: "Ví tiền", history: "Lịch sử giao dịch",
+      }[section]} onBack={admin ? undefined : () => {
+        if (router.canGoBack()) router.back();
+        else router.replace("/customer/profile");
+      }} />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -92,7 +88,7 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
               <Text style={styles.light}>
                 {f.summary.isproaccount
                   ? "VIP còn hạn: được nhận diện, chẩn đoán AI và không giới hạn cây trong vườn, cây yêu thích."
-                  : "Free: tối đa 3 cây trong vườn, 5 cây yêu thích; chưa được nhận diện hoặc chẩn đoán AI. Mua gói VIP để mở rộng quyền lợi."}
+                  : "Mua gói VIP để mở rộng quyền lợi."}
               </Text>
             )}
             {showWallet && (
@@ -120,13 +116,17 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
           />
         )}
         {!admin && !showHistory && (
-          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
-            icon="history"
-            disabled={f.busy}
-            onPress={() => router.push("/customer/transactions")}
-          >
-            Xem lịch sử giao dịch
-          </Button>
+          <View style={styles.shortcuts}>
+            {(showVip ? VIP_SHORTCUTS : VIP_SHORTCUTS.slice(2)).map((item) => (
+              <List.Item key={item.path} title={item.title} description={item.description}
+                disabled={f.busy} onPress={() => router.navigate(item.path)}
+                style={[styles.shortcut, { backgroundColor: item.background }]}
+                titleStyle={styles.shortcutTitle} descriptionStyle={styles.secondaryText}
+                descriptionNumberOfLines={2}
+                left={(props) => <List.Icon {...props} icon={item.icon} color={colors.primary} />}
+                right={(props) => <List.Icon {...props} icon="chevron-right" color={colors.primary} />} />
+            ))}
+          </View>
         )}
         {admin && (
           <AdminAdjustment

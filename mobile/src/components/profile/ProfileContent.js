@@ -62,7 +62,6 @@ export default function ProfileContent({
             {onOpenDiagnosisHistory && (
               <List.Item
                 title="Lịch sử nhận diện & chẩn đoán"
-                description="Xem cây và bệnh đã nhận diện, kèm ảnh đã lưu"
                 onPress={onOpenDiagnosisHistory}
                 disabled={profile.isLoggingOut}
                 style={styles.favoriteLink}
@@ -136,13 +135,6 @@ export default function ProfileContent({
             </Text>
             <List.Item
               title="Tài khoản VIP"
-              description={
-                !finance
-                  ? "Xem thông tin gói tài khoản"
-                  : finance.isproaccount
-                    ? `Đang sử dụng ${finance.vip_plan}`
-                    : "Đang dùng Free · Mua gói VIP để mở rộng quyền lợi"
-              }
               onPress={() => onOpenFinance("vip")}
               disabled={profile.isLoggingOut}
               style={styles.favoriteLink}
@@ -159,11 +151,6 @@ export default function ProfileContent({
             />
             <List.Item
               title="Ví tiền"
-              description={
-                finance
-                  ? `Số dư: ${finance.balance.toLocaleString("vi-VN")} ₫`
-                  : "Số dư và nạp tiền"
-              }
               onPress={() => onOpenFinance("wallet")}
               disabled={profile.isLoggingOut}
               style={styles.favoriteLink}
@@ -184,7 +171,6 @@ export default function ProfileContent({
             />
             <List.Item
               title="Lịch sử giao dịch"
-              description="Đơn nạp, mua VIP và các thay đổi số dư"
               onPress={() => onOpenFinance("history")}
               disabled={profile.isLoggingOut}
               style={styles.favoriteLink}

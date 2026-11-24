@@ -1,4 +1,4 @@
-// routes/index.js - Dinh nghia va tong hop API endpoints
+// routes/index.route.js - Dinh nghia va tong hop API endpoints
 const express = require("express");
 const router = express.Router();
 const authRoutes = require("./auth.routes");

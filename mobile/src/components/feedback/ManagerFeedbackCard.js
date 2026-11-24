@@ -6,7 +6,7 @@ import { feedbackTime, statusLabels, typeLabels } from "./feedbackLabels";
 
 import { FeedbackStatusBadge, feedbackStatusTone } from "./FeedbackPresentation";
 
-export default function ManagerFeedbackCard({ item, onPress }) {
+export function FeedbackCard({ item, onPress, children }) {
   const tone = feedbackStatusTone(item.status);
   const status = statusLabels[item.status] || "Chưa xác định trạng thái";
   const type = typeLabels[item.type] || "Đóng góp ý kiến";
@@ -20,13 +20,7 @@ export default function ManagerFeedbackCard({ item, onPress }) {
           <FeedbackStatusBadge status={item.status} />
         </View>
         <Text numberOfLines={3} style={styles.description}>{item.description}</Text>
-        <View style={styles.senderRow}>
-          <Ionicons name="person-outline" size={16} color={colors.textSecondary} accessible={false} />
-          <View style={styles.sender}>
-            <Text style={styles.senderName}>{item.sender?.fullName || "Tài khoản không còn khả dụng"}</Text>
-            {!!item.sender?.email && <Text style={styles.metadata}>{item.sender.email}</Text>}
-          </View>
-        </View>
+        {children}
         <View style={styles.footer}>
           <Text style={styles.metadata}>{item.created_at ? feedbackTime(item.created_at) : "Chưa có thời gian"}</Text>
           <View style={styles.detailLink}>
@@ -37,6 +31,19 @@ export default function ManagerFeedbackCard({ item, onPress }) {
       </Card.Content>
     </Card>
   );
+}
+
+// Manager thêm thông tin người gửi; Customer dùng cùng thẻ với trạng thái và màu.
+export default function ManagerFeedbackCard({ item, onPress }) {
+  return <FeedbackCard item={item} onPress={onPress}>
+    <View style={styles.senderRow}>
+      <Ionicons name="person-outline" size={16} color={colors.textSecondary} accessible={false} />
+      <View style={styles.sender}>
+        <Text style={styles.senderName}>{item.sender?.fullName || "Tài khoản không còn khả dụng"}</Text>
+        {!!item.sender?.email && <Text style={styles.metadata}>{item.sender.email}</Text>}
+      </View>
+    </View>
+  </FeedbackCard>;
 }
 
 const styles = StyleSheet.create({

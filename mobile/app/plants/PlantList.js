@@ -1,3 +1,4 @@
+import ActionNoticeDialog from "../../src/components/common/ActionNoticeDialog";
 import LoadingState from "../../src/components/common/LoadingState";
 import { componentStyles } from "../../src/theme/componentStyles";
 // PlantList.js - Ghép giao diện và hành động màn chi tiết cây.
@@ -23,6 +24,7 @@ export default function PlantDetailScreen() {
   const diseaseState = usePlantDiseases(typeof id === "string" ? id : null);
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <ActionNoticeDialog {...detail.noticeDialog} />
       <PlantDetailHeader
         saved={detail.saved}
         showFavorite={detail.showFavorite}

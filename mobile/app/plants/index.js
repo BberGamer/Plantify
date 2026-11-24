@@ -1,3 +1,4 @@
+import ActionNoticeDialog from "../../src/components/common/ActionNoticeDialog";
 import EmptyState from "../../src/components/common/EmptyState";
 import LoadingState from "../../src/components/common/LoadingState";
 import { componentStyles } from "../../src/theme/componentStyles";
@@ -99,6 +100,7 @@ export default function PlantDirectoryScreen() {
           }
         />
       )}
+      <ActionNoticeDialog {...favorite.noticeDialog} />
       <Navbar />
     </SafeAreaView>
   );

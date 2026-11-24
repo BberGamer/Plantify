@@ -1,3 +1,5 @@
+import ScreenHeader from "../common/ScreenHeader";
+import ActionNoticeDialog from "../common/ActionNoticeDialog";
 import { componentStyles } from "../../theme/componentStyles";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -133,26 +135,12 @@ export default function AnalysisScreen({ identification = false }) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.header}>
-        <IconButton
-          icon="arrow-left"
-          onPress={handleBack}
-          disabled={busy}
-          accessibilityLabel="Quay lại"
-        />
-        <View style={styles.headerText}>
-          <Text style={styles.title}>
-            {showResult ? "Kết quả phân tích" : "Quét cây"}
-          </Text>
-          <Text style={styles.subtitle}>Vuốt ngang để đổi chế độ</Text>
-        </View>
-        <IconButton
-          icon="history"
-          accessibilityLabel="Xem lịch sử nhận diện và chẩn đoán"
-          disabled={busy}
-          onPress={() => router.push("/customer/diagnosis-history")}
-        />
-      </View>
+      <ScreenHeader title={showResult ? "Kết quả phân tích" : "Quét cây"}
+        subtitle="Vuốt ngang để đổi chế độ" onBack={handleBack} disabled={busy}>
+        <IconButton size={20} icon="history" accessibilityLabel="Xem lịch sử nhận diện và chẩn đoán"
+          disabled={busy} onPress={() => router.push("/customer/diagnosis-history")} />
+      </ScreenHeader>
+      <ActionNoticeDialog {...diagnosis.noticeDialog} />
 
       {(capture.photo || showResult) && (
         <View style={styles.modeBarOuter}>
@@ -271,28 +259,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background
-  },
-  header: {
-    minHeight: 64,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.sm
-  },
-  headerText: {
-    flex: 1,
-    alignItems: "center"
-  },
-  title: {
-    ...typography.section,
-    color: colors.textPrimary
-  },
-  subtitle: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: 2
-  },
-  headerPlaceholder: {
-    width: 48
   },
   modeBarOuter: {
     width: "100%",
