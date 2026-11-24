@@ -19,6 +19,7 @@ async function authorizeActiveManager(req, res, next) {
 router.use(authenticate);
 router.use("/manager", authorizeActiveManager);
 router.get("/manager", controller.list(true));
+router.get("/manager/export-images", controller.exportImages);
 router.get("/manager/:id/images/:index", controller.image(true));
 router.get("/manager/:id/history-image", controller.managerHistoryImage);
 router.get("/manager/:id", controller.detail(true));
