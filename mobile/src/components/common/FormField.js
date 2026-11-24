@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useState } from "react";
+import { Platform, StyleSheet, View } from "react-native";
 import { HelperText, TextInput } from "react-native-paper";
 import { colors } from "../../theme/colors";
 import { control, radius, spacing, typography } from "../../theme/tokens";
@@ -17,6 +17,7 @@ export default React.forwardRef(function FormField(
   },
   ref,
 ) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={[styles.group, containerStyle]}>
       <TextInput
@@ -27,7 +28,17 @@ export default React.forwardRef(function FormField(
         editable={!disabled && props.editable !== false}
         error={Boolean(error)}
         accessibilityLabel={props.accessibilityLabel || props.label}
-        style={[styles.input, style]}
+        style={[styles.input, style, focused && styles.focused]}
+        outlineColor={colors.inputBorder}
+        activeOutlineColor={colors.primary}
+        onFocus={(event) => {
+          setFocused(true);
+          props.onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          props.onBlur?.(event);
+        }}
         contentStyle={[styles.content, contentStyle]}
         outlineStyle={styles.outline}
       />
@@ -45,8 +56,26 @@ export default React.forwardRef(function FormField(
 });
 
 const styles = StyleSheet.create({
-  group: { marginBottom: spacing.lg },
-  input: { backgroundColor: colors.white },
-  content: { ...typography.body, minHeight: control.minHeight },
-  outline: { borderRadius: radius.input },
+  group: {
+    marginBottom: spacing.lg
+  },
+  input: {
+    backgroundColor: colors.white
+  },
+  content: {
+    ...typography.body,
+    minHeight: control.minHeight
+  },
+  outline: {
+    borderRadius: radius.input
+  },
+  focused: Platform.select({
+    web: {
+      outlineStyle: "solid",
+      outlineWidth: 2,
+      outlineColor: colors.primary,
+      outlineOffset: 3
+    },
+    default: {}
+  })
 });

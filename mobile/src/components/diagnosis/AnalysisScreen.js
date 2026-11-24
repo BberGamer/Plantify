@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   PanResponder,
@@ -237,7 +238,7 @@ export default function AnalysisScreen({ identification = false }) {
             />
           )}
           {!!feedbackHistoryId && (
-            <Button
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
               mode="outlined"
               icon="message-text-outline"
               disabled={busy}
@@ -267,22 +268,37 @@ export default function AnalysisScreen({ identification = false }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
   header: {
     minHeight: 64,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.sm
   },
-  headerText: { flex: 1, alignItems: "center" },
-  title: { ...typography.section, color: colors.textPrimary },
-  subtitle: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
-  headerPlaceholder: { width: 48 },
+  headerText: {
+    flex: 1,
+    alignItems: "center"
+  },
+  title: {
+    ...typography.section,
+    color: colors.textPrimary
+  },
+  subtitle: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: 2
+  },
+  headerPlaceholder: {
+    width: 48
+  },
   modeBarOuter: {
     width: "100%",
     maxWidth: 600,
     alignSelf: "center",
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.lg
   },
   modeBar: {
     width: "100%",
@@ -293,7 +309,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: colors.borderLight
   },
   modeBarDark: {
     maxWidth: 560,
@@ -302,7 +318,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#34433D",
     backgroundColor: "#17221E",
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.sm
   },
   modeTab: {
     flex: 1,
@@ -312,13 +328,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 7,
     borderRadius: radius.md,
-    position: "relative",
+    position: "relative"
   },
-  modeTabActive: { backgroundColor: colors.softMintBg },
-  modeLabel: { ...typography.label, color: colors.textMuted, fontSize: 13 },
-  modeLabelDark: { color: "#94A19B" },
-  modeLabelActive: { color: colors.primary },
-  modeLabelActiveDark: { color: colors.white },
+  modeTabActive: {
+    backgroundColor: colors.softMintBg
+  },
+  modeLabel: {
+    ...typography.label,
+    color: colors.textMuted,
+    fontSize: 13
+  },
+  modeLabelDark: {
+    color: "#94A19B"
+  },
+  modeLabelActive: {
+    color: colors.primary
+  },
+  modeLabelActiveDark: {
+    color: colors.white
+  },
   activeLine: {
     position: "absolute",
     left: "28%",
@@ -326,11 +354,17 @@ const styles = StyleSheet.create({
     bottom: 3,
     height: 3,
     borderRadius: 2,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.primary
   },
-  activeLineDark: { backgroundColor: colors.white },
-  swipeArea: { flex: 1 },
-  body: { flex: 1 },
+  activeLineDark: {
+    backgroundColor: colors.white
+  },
+  swipeArea: {
+    flex: 1
+  },
+  body: {
+    flex: 1
+  },
   content: {
     flexGrow: 1,
     width: "100%",
@@ -338,7 +372,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    gap: spacing.md,
+    gap: spacing.md
   },
   guide: {
     flexDirection: "row",
@@ -347,12 +381,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
-    backgroundColor: colors.lightMint,
+    backgroundColor: colors.lightMint
   },
-  guideText: { ...typography.caption, flex: 1, color: colors.textSecondary },
+  guideText: {
+    ...typography.caption,
+    flex: 1,
+    color: colors.textSecondary
+  },
   error: {
     ...typography.caption,
     color: colors.statusError,
-    textAlign: "center",
-  },
+    textAlign: "center"
+  }
 });

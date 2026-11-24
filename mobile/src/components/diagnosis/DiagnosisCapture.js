@@ -1,3 +1,5 @@
+import { componentStyles } from "../../theme/componentStyles";
+import { radius } from "../../theme";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Text } from "react-native-paper";
 import { CameraView } from "expo-camera";
@@ -54,7 +56,7 @@ export default function DiagnosisCapture({
                 : cameraError || "Cho phép camera để chụp ảnh cây."}
             </Text>
             {Platform.OS !== "web" && (
-              <Button
+              <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
                 mode="contained"
                 disabled={busy}
                 onPress={cameraError ? onRetryCamera : onEnableCamera}
@@ -117,17 +119,25 @@ export default function DiagnosisCapture({
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 24, overflow: "hidden", backgroundColor: "#17221E" },
+  card: {
+    borderRadius: radius.card,
+    overflow: "hidden",
+    backgroundColor: "#17221E"
+  },
   preview: {
     alignItems: "center",
     padding: spacing.xxl,
-    paddingVertical: spacing.xxxl,
+    paddingVertical: spacing.xxxl
   },
-  permission: { alignItems: "center", gap: spacing.md, marginTop: spacing.md },
+  permission: {
+    alignItems: "center",
+    gap: spacing.md,
+    marginTop: spacing.md
+  },
   permissionText: {
     ...typography.caption,
     color: colors.white,
-    textAlign: "center",
+    textAlign: "center"
   },
   frame: {
     width: "100%",
@@ -136,41 +146,41 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 22,
-    backgroundColor: "#FFFFFF03",
+    backgroundColor: "#FFFFFF03"
   },
   corner: {
     position: "absolute",
     width: 32,
     height: 32,
-    borderColor: "#8CD5A9",
+    borderColor: "#8CD5A9"
   },
   topLeft: {
     top: 0,
     left: 0,
     borderTopWidth: 3,
     borderLeftWidth: 3,
-    borderTopLeftRadius: 18,
+    borderTopLeftRadius: 18
   },
   topRight: {
     top: 0,
     right: 0,
     borderTopWidth: 3,
     borderRightWidth: 3,
-    borderTopRightRadius: 18,
+    borderTopRightRadius: 18
   },
   bottomLeft: {
     bottom: 0,
     left: 0,
     borderBottomWidth: 3,
     borderLeftWidth: 3,
-    borderBottomLeftRadius: 18,
+    borderBottomLeftRadius: 18
   },
   bottomRight: {
     bottom: 0,
     right: 0,
     borderBottomWidth: 3,
     borderRightWidth: 3,
-    borderBottomRightRadius: 18,
+    borderBottomRightRadius: 18
   },
   leafHalo: {
     width: "60%",
@@ -180,15 +190,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#8CD5A90D",
     borderWidth: 1,
-    borderColor: "#8CD5A91A",
+    borderColor: "#8CD5A91A"
   },
   controls: {
     padding: spacing.xl,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#17221E",
+    backgroundColor: "#17221E"
   },
-  control: { flex: 1, alignItems: "center", gap: spacing.sm },
+  control: {
+    flex: 1,
+    alignItems: "center",
+    gap: spacing.sm
+  },
   albumIcon: {
     width: 48,
     height: 48,
@@ -197,25 +211,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#2B3933",
     borderWidth: 1,
-    borderColor: "#44534D",
+    borderColor: "#44534D"
   },
   shutterRing: {
     padding: 4,
     borderRadius: 40,
     borderWidth: 2,
-    borderColor: "#A8DCC0",
+    borderColor: "#A8DCC0"
   },
   shutter: {
     width: 58,
     height: 58,
     borderRadius: 29,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
-  controlLabel: { ...typography.caption, color: colors.white },
+  controlLabel: {
+    ...typography.caption,
+    color: colors.white
+  },
   shutterLabel: {
     ...typography.caption,
     color: colors.white,
-    fontWeight: "700",
-  },
+    fontWeight: "700"
+  }
 });

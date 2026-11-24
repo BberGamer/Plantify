@@ -1,3 +1,5 @@
+import { componentStyles } from "../../theme/componentStyles";
+import { radius } from "../../theme";
 import { Image, StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { colors, spacing, typography } from "../../theme";
@@ -29,22 +31,22 @@ export default function DiagnosisPreview({
         onError={onImageError}
       />
       <View style={styles.actions}>
-        <Button mode="outlined" onPress={onRetake} disabled={busy}>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" onPress={onRetake} disabled={busy}>
           Chụp lại
         </Button>
-        <Button mode="outlined" onPress={onPickPhoto} disabled={busy}>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" onPress={onPickPhoto} disabled={busy}>
           Chọn ảnh khác
         </Button>
       </View>
       <Text style={styles.hint}>
         Chọn ảnh rõ nét của một cây hoặc một lá, đủ sáng và không dùng bộ lọc.
       </Text>
-      <Button
+      <Button contentStyle={componentStyles.button}
         mode="contained"
         onPress={onAnalyze}
         loading={analyzing}
         disabled={busy || imageInvalid}
-        style={styles.resultButton}
+        style={[styles.resultButton, componentStyles.buttonShape]}
       >
         {analyzing
           ? "Đang phân tích ảnh…"
@@ -62,27 +64,37 @@ export default function DiagnosisPreview({
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 24, overflow: "hidden", backgroundColor: colors.white },
-  image: { width: "100%", backgroundColor: "#10231D" },
+  card: {
+    borderRadius: radius.card,
+    overflow: "hidden",
+    backgroundColor: colors.white
+  },
+  image: {
+    width: "100%",
+    backgroundColor: "#10231D"
+  },
   actions: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
     gap: spacing.md,
-    padding: spacing.lg,
+    padding: spacing.lg
   },
-  resultButton: { marginHorizontal: spacing.lg, marginBottom: spacing.lg },
+  resultButton: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg
+  },
   hint: {
     ...typography.caption,
     color: colors.textSecondary,
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.lg
   },
   progress: {
     ...typography.caption,
     color: colors.textSecondary,
     textAlign: "center",
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
+    marginBottom: spacing.lg
+  }
 });

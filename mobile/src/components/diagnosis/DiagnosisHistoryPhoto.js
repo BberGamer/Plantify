@@ -97,15 +97,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.lightMint,
     overflow: "hidden",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
-  thumbnail: { width: 88, height: 88 },
-  large: { width: "100%", aspectRatio: 1.2 },
-  image: { width: "100%", height: "100%" },
+  thumbnail: {
+    width: 88,
+    height: 88
+  },
+  large: {
+    width: "100%",
+    aspectRatio: 1.2
+  },
+  image: {
+    width: "100%",
+    height: "100%"
+  },
   placeholder: {
     padding: 8,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 20,
     textAlign: "center",
-    color: colors.textSecondary,
-  },
+    color: colors.textSecondary
+  }
 });

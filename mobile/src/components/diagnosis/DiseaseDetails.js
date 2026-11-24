@@ -1,3 +1,4 @@
+import DetailField from "../common/DetailField";
 import { StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
 import { colors, spacing, typography } from "../../theme";
@@ -31,12 +32,7 @@ export default function DiseaseDetails({ disease }) {
         let value = disease[key];
         if (key === "pathogen_type") value = pathogens[value] || value;
         return (
-          <View key={key} style={styles.field}>
-            <Text style={styles.label}>{labels[key]}</Text>
-            <Text selectable style={value ? styles.value : styles.empty}>
-              {value || "Chưa cập nhật"}
-            </Text>
-          </View>
+          <DetailField key={key} label={labels[key]} value={value || "Chưa cập nhật"} style={styles.field} />
         );
       })}
     </View>
