@@ -1,3 +1,5 @@
+import { componentStyles } from "../../theme/componentStyles";
+import { radius } from "../../theme";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,11 +17,11 @@ export default function CareTaskCard({
   const paused = task.status === "paused";
   const overdue = !completed && !paused && task.date < today;
   const tone = completed
-    ? "#247855"
+    ? colors.primaryLight
     : paused
       ? "#8A6C36"
       : overdue
-        ? "#B75B3A"
+        ? colors.statusError
         : "#52776A";
   const status = completed
     ? "Đã hoàn thành"
@@ -80,7 +82,7 @@ export default function CareTaskCard({
             s.badge,
             {
               backgroundColor: completed
-                ? "#EDF7F1"
+                ? colors.lightMint
                 : paused
                   ? "#FBF5E9"
                   : overdue
@@ -105,7 +107,7 @@ export default function CareTaskCard({
           <Text style={[s.badgeText, { color: tone }]}>{status}</Text>
         </View>
         {!completed && !paused && (
-          <Button
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
             mode="text"
             compact
             icon="check"
@@ -128,50 +130,74 @@ export default function CareTaskCard({
 
 const s = StyleSheet.create({
   card: {
+    elevation: 0,
+    shadowOpacity: 0,
     backgroundColor: colors.white,
-    borderRadius: 22,
-    padding: 18,
+    borderRadius: radius.card,
+    padding: 16,
     borderWidth: 1,
     borderColor: "#E8EEE9",
-    gap: 14,
+    gap: 14
   },
-  completed: { borderColor: "#E1EDE4", backgroundColor: "#FDFEFD" },
-  top: { flexDirection: "row", alignItems: "center", gap: 12 },
+  completed: {
+    borderColor: "#E1EDE4",
+    backgroundColor: "#FDFEFD"
+  },
+  top: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
   icon: {
     width: 50,
     height: 54,
     borderRadius: 16,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
-  heading: { flex: 1, minWidth: 0, gap: 4 },
-  plant: { fontSize: 12, color: "#7B8C82", fontWeight: "500" },
+  heading: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4
+  },
+  plant: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#7B8C82",
+    fontWeight: "500"
+  },
   title: {
     fontSize: 16,
     fontWeight: "700",
     color: colors.textPrimary,
-    lineHeight: 23,
+    lineHeight: 23
   },
-  doneTitle: { color: "#718A7A" },
+  doneTitle: {
+    color: "#718A7A"
+  },
   menu: {
     minWidth: 32,
     minHeight: 44,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   meta: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    flexWrap: "wrap",
+    flexWrap: "wrap"
   },
-  metaText: { fontSize: 12, color: "#7B8C82" },
+  metaText: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#7B8C82"
+  },
   dot: {
     width: 3,
     height: 3,
     borderRadius: 2,
     backgroundColor: "#CAD7CE",
-    marginHorizontal: 3,
+    marginHorizontal: 3
   },
   notes: {
     fontSize: 13,
@@ -179,7 +205,7 @@ const s = StyleSheet.create({
     color: "#718078",
     backgroundColor: "#F7FAF7",
     padding: 11,
-    borderRadius: 10,
+    borderRadius: 10
   },
   footer: {
     borderTopWidth: 1,
@@ -189,7 +215,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 6,
-    flexWrap: "wrap",
+    flexWrap: "wrap"
   },
   badge: {
     flexDirection: "row",
@@ -197,9 +223,21 @@ const s = StyleSheet.create({
     gap: 5,
     paddingVertical: 6,
     paddingHorizontal: 9,
-    borderRadius: 8,
+    borderRadius: 8
   },
-  badgeText: { fontSize: 11, fontWeight: "600" },
-  completeLabel: { fontSize: 12, fontWeight: "700" },
-  pauseNote: { color: "#9A8A6D", fontSize: 11 },
+  badgeText: {
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "600"
+  },
+  completeLabel: {
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700"
+  },
+  pauseNote: {
+    color: "#9A8A6D",
+    fontSize: 13,
+    lineHeight: 20
+  }
 });

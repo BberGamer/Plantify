@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Text } from "react-native-paper";
 import { colors, spacing } from "../../theme";
@@ -12,7 +13,7 @@ export default function ChatEvaluation({ evaluation, onRetry }) {
           Đang đánh giá CCC… Câu trả lời đã được hiển thị.
         </Text>
         {evaluation.status === "processing" && (
-          <Button onPress={onRetry}>Kiểm tra kết quả</Button>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onRetry}>Kiểm tra kết quả</Button>
         )}
       </View>
     );
@@ -24,7 +25,7 @@ export default function ChatEvaluation({ evaluation, onRetry }) {
         </Text>
         {evaluation.status === "failed" &&
           evaluation.error_code !== "EVALUATION_RETRY_LIMIT" && (
-            <Button onPress={onRetry}>Thử đánh giá lại</Button>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onRetry}>Thử đánh giá lại</Button>
           )}
       </View>
     );
@@ -105,14 +106,43 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    gap: spacing.sm,
+    gap: spacing.sm
   },
-  title: { fontSize: 16, fontWeight: "700", color: colors.primary },
-  row: { flexDirection: "row", gap: spacing.sm, paddingVertical: spacing.xs },
-  name: { flex: 1, color: colors.textPrimary, fontWeight: "600" },
-  score: { width: 42, color: colors.textPrimary },
-  weight: { width: 65, color: colors.textPrimary },
-  criterion: { gap: spacing.xs, paddingBottom: spacing.sm },
-  body: { fontSize: 14, lineHeight: 21, color: colors.textPrimary },
-  note: { fontSize: 12, lineHeight: 18, color: colors.textSecondary },
+  title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.primary
+  },
+  row: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    paddingVertical: spacing.xs
+  },
+  name: {
+    flex: 1,
+    color: colors.textPrimary,
+    fontWeight: "600"
+  },
+  score: {
+    width: 42,
+    color: colors.textPrimary
+  },
+  weight: {
+    width: 65,
+    color: colors.textPrimary
+  },
+  criterion: {
+    gap: spacing.xs,
+    paddingBottom: spacing.sm
+  },
+  body: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: colors.textPrimary
+  },
+  note: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.textSecondary
+  }
 });

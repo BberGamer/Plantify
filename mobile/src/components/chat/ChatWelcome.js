@@ -35,7 +35,7 @@ export default function ChatWelcome({ onSelect }) {
             <Ionicons name="leaf" size={42} color={colors.primary} />
           </View>
           <View style={styles.sparkle}>
-            <MaterialCommunityIcons name="creation" size={21} color="#7C3AED" />
+            <MaterialCommunityIcons name="creation" size={21} color={colors.info} />
           </View>
         </View>
         <Text style={styles.eyebrow}>TRỢ LÝ CHĂM CÂY CỦA BẠN</Text>
@@ -67,8 +67,15 @@ export default function ChatWelcome({ onSelect }) {
 }
 
 const styles = StyleSheet.create({
-  container: { width: "100%", maxWidth: 560, alignSelf: "center" },
-  hero: { alignItems: "center", marginBottom: spacing.xxxl },
+  container: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center"
+  },
+  hero: {
+    alignItems: "center",
+    marginBottom: spacing.xxxl
+  },
   halo: {
     width: 112,
     height: 112,
@@ -76,7 +83,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.softMintBg,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.xxl
   },
   leaf: {
     width: 82,
@@ -85,7 +92,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center",
-    transform: [{ rotate: "-8deg" }],
+    transform: [{
+      rotate: "-8deg"
+    }]
   },
   sparkle: {
     position: "absolute",
@@ -98,7 +107,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: colors.background,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   eyebrow: {
     ...typography.caption,
@@ -106,7 +115,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.1,
     color: colors.accentGreen,
     textAlign: "center",
-    marginBottom: spacing.md,
+    marginBottom: spacing.md
   },
   heading: {
     fontSize: 28,
@@ -115,21 +124,23 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
     color: colors.textPrimary,
     textAlign: "center",
-    maxWidth: 300,
+    maxWidth: 300
   },
   description: {
     ...typography.body,
     color: colors.textSecondary,
     textAlign: "center",
     marginTop: spacing.md,
-    maxWidth: 340,
+    maxWidth: 340
   },
   sectionTitle: {
     ...typography.label,
     color: colors.textPrimary,
-    marginBottom: spacing.md,
+    marginBottom: spacing.md
   },
-  suggestions: { gap: spacing.sm },
+  suggestions: {
+    gap: spacing.sm
+  },
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -138,14 +149,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.card,
+    borderRadius: radius.card
   },
   icon: {
     width: 38,
     height: 38,
     borderRadius: radius.md,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
-  suggestionText: { ...typography.label, flex: 1, color: colors.textPrimary },
+  suggestionText: {
+    ...typography.label,
+    flex: 1,
+    color: colors.textPrimary
+  }
 });

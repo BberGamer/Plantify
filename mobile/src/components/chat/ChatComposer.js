@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { StyleSheet, TextInput, View } from "react-native";
 import {
   ActivityIndicator,
@@ -21,7 +22,7 @@ export default function ChatComposer({
           <View accessibilityLiveRegion="polite">
             <Text style={styles.error}>{error}</Text>
             {!!draft.trim() && (
-              <Button onPress={onSend} disabled={sending}>
+              <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onSend} disabled={sending}>
                 Thử lại
               </Button>
             )}
@@ -68,9 +69,13 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
-    backgroundColor: colors.background,
+    backgroundColor: colors.background
   },
-  content: { width: "100%", maxWidth: 560, alignSelf: "center" },
+  content: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center"
+  },
   composer: {
     flexDirection: "row",
     alignItems: "center",
@@ -78,7 +83,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.border
   },
   input: {
     ...typography.body,
@@ -86,14 +91,19 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     minHeight: 50,
     maxHeight: 140,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md
   },
-  loader: { margin: spacing.lg },
-  error: { ...typography.body, color: colors.statusError },
+  loader: {
+    margin: spacing.lg
+  },
+  error: {
+    ...typography.body,
+    color: colors.statusError
+  },
   caption: {
     ...typography.caption,
     textAlign: "center",
     color: colors.textSecondary,
-    marginTop: spacing.sm,
-  },
+    marginTop: spacing.sm
+  }
 });

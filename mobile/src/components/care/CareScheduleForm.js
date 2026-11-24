@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import {
   Image,
   KeyboardAvoidingView,
@@ -133,14 +134,14 @@ export default function CareScheduleForm({
               ) : plantError ? (
                 <>
                   <Text style={s.error}>{plantError}</Text>
-                  <Button onPress={onRetryPlants}>Tải lại danh sách cây</Button>
+                  <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onRetryPlants}>Tải lại danh sách cây</Button>
                 </>
               ) : !available.length ? (
                 <>
                   <Text style={s.help}>
                     Vườn của bạn chưa có cây để tạo lịch.
                   </Text>
-                  <Button onPress={onAddPlant} icon="plus">
+                  <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onAddPlant} icon="plus">
                     Thêm cây vào vườn
                   </Button>
                 </>
@@ -397,7 +398,7 @@ export default function CareScheduleForm({
                 !!selected.active_treatment
               }
               onPress={save}
-              style={s.save}
+              style={[s.save, componentStyles.buttonShape]}
               contentStyle={s.saveContent}
               labelStyle={s.saveLabel}
             >
@@ -415,7 +416,7 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(15, 39, 27, 0.42)",
     justifyContent: "flex-end",
     alignItems: "center",
-    paddingTop: 45,
+    paddingTop: 45
   },
   sheet: {
     width: "100%",
@@ -426,7 +427,7 @@ const s = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     overflow: "hidden",
-    flexShrink: 1,
+    flexShrink: 1
   },
   handle: {
     width: 38,
@@ -434,28 +435,31 @@ const s = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: "#DDE6DD",
     alignSelf: "center",
-    marginTop: 12,
+    marginTop: 12
   },
   header: {
     padding: 22,
     paddingBottom: 18,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 8
   },
-  headerCopy: { flex: 1, gap: 7 },
+  headerCopy: {
+    flex: 1,
+    gap: 7
+  },
   eyebrow: {
-    fontSize: 9,
+    fontSize: 13,
     letterSpacing: 1,
     fontWeight: "700",
     color: "#7F9C88",
-    lineHeight: 15,
+    lineHeight: 20
   },
   heading: {
     fontSize: 25,
     lineHeight: 34,
     fontWeight: "700",
-    color: colors.textPrimary,
+    color: colors.textPrimary
   },
   close: {
     width: 42,
@@ -463,26 +467,41 @@ const s = StyleSheet.create({
     borderRadius: 21,
     backgroundColor: "#F2F6F1",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
-  content: { padding: 22, paddingTop: 4, gap: 25, paddingBottom: 24 },
-  section: { gap: 12 },
-  sectionHeading: { flexDirection: "row", alignItems: "center", gap: 9 },
+  content: {
+    padding: 22,
+    paddingTop: 4,
+    gap: 25,
+    paddingBottom: 24
+  },
+  section: {
+    gap: 12
+  },
+  sectionHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9
+  },
   number: {
     color: "#91A68F",
-    fontSize: 11,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: "700",
     backgroundColor: "#F1F5EE",
     borderRadius: 7,
-    padding: 6,
+    padding: 6
   },
   sectionTitle: {
     fontWeight: "700",
     color: colors.textPrimary,
     fontSize: 15,
-    flex: 1,
+    flex: 1
   },
-  plants: { gap: 10, paddingBottom: 2 },
+  plants: {
+    gap: 10,
+    paddingBottom: 2
+  },
   plant: {
     width: 108,
     borderWidth: 1,
@@ -490,16 +509,19 @@ const s = StyleSheet.create({
     borderRadius: 17,
     padding: 12,
     alignItems: "center",
-    gap: 8,
+    gap: 8
   },
-  plantSelected: { borderColor: "#58956E", backgroundColor: "#F0F7EF" },
+  plantSelected: {
+    borderColor: "#58956E",
+    backgroundColor: "#F0F7EF"
+  },
   plantPhoto: {
     width: 48,
     height: 48,
     borderRadius: 16,
     backgroundColor: "#E6F0E1",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   check: {
     position: "absolute",
@@ -512,60 +534,116 @@ const s = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.primaryLight,
     borderWidth: 2,
-    borderColor: "white",
+    borderColor: "white"
   },
   plantName: {
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: "600",
     textAlign: "center",
-    color: "#748271",
+    color: "#748271"
   },
-  treatment: { color: "#9A8050", fontSize: 10 },
-  dimmed: { opacity: 0.5 },
-  row: { flexDirection: "row", gap: 12 },
-  flex: { flex: 1, minWidth: 0 },
-  time: { width: 105 },
+  treatment: {
+    color: "#9A8050",
+    fontSize: 13,
+    lineHeight: 20
+  },
+  dimmed: {
+    opacity: 0.5
+  },
+  row: {
+    flexDirection: "row",
+    gap: 12
+  },
+  flex: {
+    flex: 1,
+    minWidth: 0
+  },
+  time: {
+    width: 105
+  },
   action: {
     flex: 1,
     padding: 16,
     borderWidth: 1,
     borderColor: "#E5ECE3",
     borderRadius: 18,
-    gap: 6,
+    gap: 6
   },
-  actionSelected: { backgroundColor: "#F7FAF4", borderColor: "#6F9E74" },
+  actionSelected: {
+    backgroundColor: "#F7FAF4",
+    borderColor: "#6F9E74"
+  },
   actionIcon: {
     width: 43,
     height: 43,
     borderRadius: 13,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 5,
+    marginBottom: 5
   },
-  actionTitle: { fontSize: 15, fontWeight: "700", color: colors.textPrimary },
-  actionSubtitle: { fontSize: 10, color: "#899281" },
-  actionCheck: { position: "absolute", top: 13, right: 12 },
-  input: { fontSize: 13, backgroundColor: "#FBFCFA" },
-  outline: { borderRadius: 14 },
-  label: { fontSize: 13, color: colors.textPrimary, fontWeight: "600" },
-  help: { fontSize: 11, lineHeight: 17, color: "#8B9887" },
-  wrap: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  actionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.textPrimary
+  },
+  actionSubtitle: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#899281"
+  },
+  actionCheck: {
+    position: "absolute",
+    top: 13,
+    right: 12
+  },
+  input: {
+    fontSize: 13,
+    backgroundColor: "#FBFCFA"
+  },
+  outline: {
+    borderRadius: 14
+  },
+  label: {
+    fontSize: 13,
+    color: colors.textPrimary,
+    fontWeight: "600"
+  },
+  help: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#8B9887"
+  },
+  wrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7
+  },
   preset: {
     paddingVertical: 11,
     paddingHorizontal: 13,
     borderRadius: 12,
     backgroundColor: "#F3F6F0",
     minHeight: 44,
-    justifyContent: "center",
+    justifyContent: "center"
   },
-  presetSelected: { backgroundColor: colors.primary },
-  presetText: { fontSize: 12, color: "#7F8D77", fontWeight: "500" },
-  presetTextSelected: { color: "white" },
+  presetSelected: {
+    backgroundColor: colors.primary
+  },
+  presetText: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#7F8D77",
+    fontWeight: "500"
+  },
+  presetTextSelected: {
+    color: "white"
+  },
   switchRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginTop: 2,
+    marginTop: 2
   },
   info: {
     flexDirection: "row",
@@ -573,18 +651,34 @@ const s = StyleSheet.create({
     padding: 14,
     backgroundColor: "#EFF6EB",
     borderRadius: 14,
-    alignItems: "center",
+    alignItems: "center"
   },
-  infoText: { flex: 1, fontSize: 11, lineHeight: 17, color: "#698063" },
-  error: { color: "#B3261E", fontSize: 13, lineHeight: 19 },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#698063"
+  },
+  error: {
+    color: "#B3261E",
+    fontSize: 13,
+    lineHeight: 19
+  },
   bottom: {
     paddingHorizontal: 22,
     paddingTop: 14,
     paddingBottom: 12,
     borderTopWidth: 1,
-    borderTopColor: "#EFF2EB",
+    borderTopColor: "#EFF2EB"
   },
-  save: { borderRadius: 16 },
-  saveContent: { minHeight: 52 },
-  saveLabel: { fontSize: 14, fontWeight: "700" },
+  save: {
+    borderRadius: 16
+  },
+  saveContent: {
+    minHeight: 52
+  },
+  saveLabel: {
+    fontSize: 14,
+    fontWeight: "700"
+  }
 });

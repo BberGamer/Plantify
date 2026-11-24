@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { StyleSheet } from "react-native";
 import { Button, Dialog, Portal, Text } from "react-native-paper";
 import { colors } from "../../theme/colors";
@@ -18,7 +19,7 @@ export default function ConfirmDeleteDialog({
   };
   return (
     <Portal>
-      <Dialog
+      <Dialog style={componentStyles.dialog}
         visible={visible}
         onDismiss={close}
         dismissable={!pending}
@@ -34,10 +35,10 @@ export default function ConfirmDeleteDialog({
           )}
         </Dialog.Content>
         <Dialog.Actions>
-          <Button onPress={close} disabled={pending}>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={close} disabled={pending}>
             Hủy
           </Button>
-          <Button
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
             onPress={() => {
               if (!pending) onConfirm();
             }}
@@ -54,5 +55,8 @@ export default function ConfirmDeleteDialog({
 }
 
 const styles = StyleSheet.create({
-  error: { color: colors.statusError, marginTop: spacing.md },
+  error: {
+    color: colors.statusError,
+    marginTop: spacing.md
+  }
 });

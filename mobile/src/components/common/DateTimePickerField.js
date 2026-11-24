@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { useState } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
@@ -92,7 +93,7 @@ export default function DateTimePickerField({
             onChange={handleChange}
           />
           {Platform.OS === "ios" && (
-            <Button onPress={() => setOpen(false)}>Xong</Button>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={() => setOpen(false)}>Xong</Button>
           )}
         </View>
       )}
@@ -114,20 +115,26 @@ const webInputStyle = {
 };
 
 const styles = StyleSheet.create({
-  nativeField: { flex: 1 },
-  webField: { flex: 1, minWidth: 120, position: "relative" },
+  nativeField: {
+    flex: 1
+  },
+  webField: {
+    flex: 1,
+    minWidth: 120,
+    position: "relative"
+  },
   webLabel: {
     ...typography.caption,
     position: "absolute",
     zIndex: 1,
     left: 12,
     top: 4,
-    color: colors.textMuted,
+    color: colors.textMuted
   },
   pickerBox: {
     marginTop: spacing.xs,
     borderRadius: radius.md,
     backgroundColor: colors.white,
-    overflow: "hidden",
-  },
+    overflow: "hidden"
+  }
 });

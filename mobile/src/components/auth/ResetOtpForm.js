@@ -44,13 +44,13 @@ export default function ResetOtpForm({
 }
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 22,
+    marginBottom: 22
   },
   stepHeader: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: spacing.md,
-    gap: 10,
+    gap: 10
   },
   stepBadge: {
     width: 24,
@@ -58,16 +58,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: "#111827",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   stepBadgeText: {
     color: colors.white,
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700"
   },
   stepTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: colors.textPrimary,
-  },
+    color: colors.textPrimary
+  }
 });

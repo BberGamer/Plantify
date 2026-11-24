@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 // ResetPasswordForm.js - Khối giao diện ResetPasswordForm.
 
 import { View, StyleSheet } from "react-native";
@@ -74,7 +75,7 @@ export default function ResetPasswordForm({
       </View>
       <Button
         mode="contained"
-        style={styles.submit}
+        style={[styles.submit, componentStyles.buttonShape]}
         contentStyle={{ minHeight: control.minHeight }}
         onPress={onSubmit}
         disabled={!isOtpComplete || busy}
@@ -86,15 +87,18 @@ export default function ResetPasswordForm({
   );
 }
 const styles = StyleSheet.create({
-  submit: { marginTop: spacing.md, marginBottom: spacing.xl },
+  submit: {
+    marginTop: spacing.md,
+    marginBottom: spacing.xl
+  },
   section: {
-    marginBottom: 22,
+    marginBottom: 22
   },
   stepHeader: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: spacing.md,
-    gap: 10,
+    gap: 10
   },
   stepBadge: {
     width: 24,
@@ -102,20 +106,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: "#111827",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   stepBadgeDisabled: {
-    backgroundColor: colors.textMuted,
+    backgroundColor: colors.textMuted
   },
   stepBadgeText: {
     color: colors.white,
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700"
   },
   stepTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: colors.textPrimary,
+    color: colors.textPrimary
   },
   lockHintBox: {
     flexDirection: "row",
@@ -125,10 +130,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: 6,
     marginBottom: spacing.md,
-    gap: 6,
+    gap: 6
   },
   lockHintText: {
     ...typography.caption,
-    color: colors.textMuted,
-  },
+    color: colors.textMuted
+  }
 });
