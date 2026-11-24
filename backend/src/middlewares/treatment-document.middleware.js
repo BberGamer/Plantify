@@ -19,7 +19,8 @@ const uploadTreatmentDocument = (req, res, next) =>
       );
     if (!req.file) return next();
     const name = req.file.originalname || "";
-    const isDocx = name.toLowerCase().endsWith(".docx") &&
+    const isDocx =
+      name.toLowerCase().endsWith(".docx") &&
       req.file.buffer.subarray(0, 2).toString("ascii") === "PK";
     if (!isDocx)
       return next(

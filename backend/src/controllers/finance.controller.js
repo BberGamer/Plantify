@@ -1,8 +1,12 @@
 const service = require("../services/finance.service");
 const { success } = require("../utils/api-response");
 const action = (work) => async (req, res, next) => {
-  try { res.set("Cache-Control", "no-store"); success(res, "Thành công.", await work(req)); }
-  catch (error) { next(error); }
+  try {
+    res.set("Cache-Control", "no-store");
+    success(res, "Thành công.", await work(req));
+  } catch (error) {
+    next(error);
+  }
 };
 module.exports = {
   summary: action((r) => service.summary(r.user.id)),
@@ -16,5 +20,9 @@ module.exports = {
   adminEvents: action((r) => service.list("events", null, r.query)),
   review: action((r) => service.review(r.user.id, r.params.id, r.body)),
   adjust: action((r) => service.adjust(r.user.id, r.body)),
-  webhook: action((r) => service.webhook(require("../integrations/sepay.service").verify(r.body, r.headers))),
+  webhook: action((r) =>
+    service.webhook(
+      require("../integrations/sepay.service").verify(r.body, r.headers),
+    ),
+  ),
 };

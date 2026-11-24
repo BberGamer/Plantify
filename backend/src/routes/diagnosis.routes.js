@@ -10,6 +10,6 @@ router.get("/history/:diagnosisId/image", authenticate, authorizeActiveCustomer,
 router.get("/history/:diagnosisId", authenticate, authorizeActiveCustomer, controller.historyDetail);
 
 // Kiểm tra phiên/quyền trước khi đọc và giữ file upload trong bộ nhớ.
-router.post("/", authenticate, authorizeActiveCustomer, require("../services/membership.service").requireVip, uploadDiagnosisPhoto, controller.predict);
+router.post("/", authenticate, authorizeActiveCustomer, require("../middlewares/vip.middleware"), uploadDiagnosisPhoto, controller.predict);
 
 module.exports = router;

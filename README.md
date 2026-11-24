@@ -315,6 +315,14 @@ vườn và bấm tạo lịch, backend mới lưu phác đồ cùng lịch đi�
 Nếu không có DOCX tương ứng, AI vẫn sinh từ dữ liệu danh mục và gắn cảnh báo chưa được
 kiểm chứng. Luồng này không cần Manager tải file hoặc duyệt lại.
 
+Client tải vườn và tạo preview đồng thời; lỗi tải vườn có thể thử lại riêng mà không
+tạo lại preview. `POST /api/treatments/schedules` hỗ trợ thêm `schedule_id` tùy chọn
+(ObjectId do client tạo), để đối chiếu bằng `GET /api/treatments/schedules/:id` khi
+mất phản hồi. Payload cũ vẫn được server cấp ID. Blur không hủy transaction server;
+client giữ thao tác trong bộ nhớ qua blur/remount của cùng phiên, không tự gửi lại
+POST. Nếu timeout và chưa đọc được lịch, hoặc áp dụng chưa rõ kết quả, UI khóa gửi
+lại và cho kiểm tra trạng thái. GET chưa thấy lịch không chứng minh server đã hủy.
+
 Mỗi cây chỉ có một lịch `in_progress`. Khi bắt đầu, backend tạm dừng lịch chăm sóc
 thường, đánh dấu cây đang điều trị và tạo nhắc việc theo đúng ngày/giờ. Khi kết thúc,
 lịch chăm sóc từng bị hệ thống tạm dừng được khôi phục; các lịch vốn đã tạm dừng thủ

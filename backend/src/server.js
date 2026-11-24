@@ -25,4 +25,4 @@ const startServer = async () => {
   });
 };
 
-startServer();
+startServer().catch(() => process.exit(1));

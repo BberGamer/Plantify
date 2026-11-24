@@ -5,12 +5,26 @@ const AppError = require("../utils/app-error");
 module.exports = async (req, res, next) => {
   try {
     if (typeof req.user?.id !== "string" || !/^[a-f\d]{24}$/i.test(req.user.id))
-      throw new AppError("SESSION_INVALID", 401, "Phiên đăng nhập không hợp lệ.");
+      throw new AppError(
+        "SESSION_INVALID",
+        401,
+        "Phiên đăng nhập không hợp lệ.",
+      );
     const user = await User.findById(req.user.id).select("role status").lean();
     if (!user || !user.status)
-      throw new AppError("ACCOUNT_INACTIVE", 403, "Tài khoản không còn hoạt động.");
+      throw new AppError(
+        "ACCOUNT_INACTIVE",
+        403,
+        "Tài khoản không còn hoạt động.",
+      );
     if (user.role !== "customer")
-      throw new AppError("FORBIDDEN", 403, "Chỉ tài khoản khách hàng được thực hiện thao tác này.");
+      throw new AppError(
+        "FORBIDDEN",
+        403,
+        "Chỉ tài khoản khách hàng được thực hiện thao tác này.",
+      );
     next();
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
 };

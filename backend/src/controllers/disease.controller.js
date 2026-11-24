@@ -1,7 +1,9 @@
 // controllers/disease.controller.js - Điều phối request và response cho bệnh cây
 const diseaseService = require("../services/disease.service");
 const { success } = require("../utils/api-response");
-const { createDiseasePhotos } = require("../integrations/cloudinary-photo.service");
+const {
+  createDiseasePhotos,
+} = require("../integrations/cloudinary-photo.service");
 const { saveWithPhoto } = require("../services/catalog-photo.service");
 
 const photos = createDiseasePhotos();
@@ -44,8 +46,13 @@ const getManagerDiseaseById = async (req, res, next) => {
 
 const createDisease = async (req, res, next) => {
   try {
-    const disease = await saveWithPhoto(req.body, req.file, photos, "disease_image_url",
-      data => diseaseService.createDisease(data));
+    const disease = await saveWithPhoto(
+      req.body,
+      req.file,
+      photos,
+      "disease_image_url",
+      (data) => diseaseService.createDisease(data),
+    );
     return success(res, "Tạo bệnh cây thành công.", disease, 201);
   } catch (error) {
     next(error);
@@ -54,8 +61,13 @@ const createDisease = async (req, res, next) => {
 
 const updateDisease = async (req, res, next) => {
   try {
-    const disease = await saveWithPhoto(req.body, req.file, photos, "disease_image_url",
-      data => diseaseService.updateDisease(req.params.id, data));
+    const disease = await saveWithPhoto(
+      req.body,
+      req.file,
+      photos,
+      "disease_image_url",
+      (data) => diseaseService.updateDisease(req.params.id, data),
+    );
     return success(res, "Cập nhật bệnh cây thành công.", disease);
   } catch (error) {
     next(error);
