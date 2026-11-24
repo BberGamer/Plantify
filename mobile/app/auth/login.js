@@ -74,84 +74,89 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.background
   },
   keyboardView: {
-    flex: 1,
+    flex: 1
   },
   scrollContent: {
+    width: "100%",
+    maxWidth: 560,
+    alignSelf: "center",
     flexGrow: 1,
-    paddingHorizontal: 28,
+    paddingHorizontal: 24,
+    paddingTop: 32,
     paddingBottom: 32,
-    justifyContent: "center",
+    justifyContent: "center"
   },
   logoContainer: {
-    alignItems: "center",
+    alignItems: "flex-start",
     marginTop: 16,
-    marginBottom: 20,
+    marginBottom: 32
   },
   logoCircle: {
     width: 62,
     height: 62,
-    borderRadius: 31,
+    borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: "#E8ECE9",
-    backgroundColor: "#F4FBF7",
+    borderColor: colors.border,
+    backgroundColor: colors.softSproutBg,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 8
   },
   brandTitle: {
     fontSize: 22,
     fontWeight: "700",
     color: colors.primary,
-    letterSpacing: -0.3,
+    letterSpacing: -0.3
   },
   headingContainer: {
-    alignItems: "center",
-    marginBottom: 26,
+    alignItems: "flex-start",
+    marginBottom: 26
   },
   title: {
-    fontSize: 24,
-    lineHeight: 32,
+    fontSize: 28,
+    lineHeight: 36,
     fontWeight: "700",
     color: colors.textPrimary,
-    marginBottom: 6,
+    marginBottom: 6
   },
   subtitle: {
-    textAlign: "center",
-    fontSize: 14,
-    color: colors.textSecondary,
+    textAlign: "left",
+    fontSize: 16,
+    lineHeight: 24,
+    color: colors.textSecondary
   },
   errorBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEF2F2",
+    backgroundColor: colors.errorBackground,
     borderWidth: 1,
     borderColor: "#FCA5A5",
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 8,
     marginBottom: 16,
-    gap: 8,
+    gap: 8
   },
   errorText: {
-    color: "#B91C1C",
+    color: colors.statusError,
     fontSize: 13,
-    flex: 1,
+    flex: 1
   },
   footerContainer: {
     alignItems: "center",
-    marginTop: 28,
+    marginTop: 28
   },
   footerText: {
     textAlign: "center",
     fontSize: 14,
-    color: colors.textSecondary,
+    color: colors.textSecondary
   },
   registerLink: {
     color: colors.primary,
     fontWeight: "700",
-    textDecorationLine: "underline",
-  },
+    textDecorationLine: "underline"
+  }
 });

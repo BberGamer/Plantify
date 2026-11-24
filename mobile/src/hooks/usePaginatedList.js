@@ -45,13 +45,21 @@ export default function usePaginatedList(
 
   const load = useCallback(
     async (page = pageRef.current, refresh = false) => {
-      if (!enabledRef.current || !isActive() || !Number.isSafeInteger(page) || page < 1) return;
+      if (
+        !enabledRef.current ||
+        !isActive() ||
+        !Number.isSafeInteger(page) ||
+        page < 1
+      )
+        return;
       const requestId = ++request.current;
       const fetch = fetchRef.current;
       const inScope = capture();
       const isCurrent = () =>
-        inScope() && enabledRef.current &&
-        fetch === fetchRef.current && requestId === request.current;
+        inScope() &&
+        enabledRef.current &&
+        fetch === fetchRef.current &&
+        requestId === request.current;
       pageRef.current = page;
       setLoading(!refresh);
       setRefreshing(refresh);
@@ -61,10 +69,15 @@ export default function usePaginatedList(
         for (;;) {
           const response = await fetch({ page: requestedPage, limit });
           if (!isCurrent()) return;
-          if (response?.success !== true || !Array.isArray(response.data?.items) ||
-              !Number.isSafeInteger(response.data?.pagination?.totalPages) ||
-              response.data.pagination.totalPages < 0) {
-            throw Object.assign(new Error("Dữ liệu danh sách không hợp lệ."), { code: "INVALID_RESPONSE" });
+          if (
+            response?.success !== true ||
+            !Array.isArray(response.data?.items) ||
+            !Number.isSafeInteger(response.data?.pagination?.totalPages) ||
+            response.data.pagination.totalPages < 0
+          ) {
+            throw Object.assign(new Error("Dữ liệu danh sách không hợp lệ."), {
+              code: "INVALID_RESPONSE",
+            });
           }
           const { items: nextItems, pagination: nextPagination } =
             response.data;

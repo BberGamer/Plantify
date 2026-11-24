@@ -13,8 +13,13 @@ export default function useAuthNavigation() {
   const group = useSegments()[0];
   const navigationKey = useRootNavigationState()?.key;
   const router = useRouter();
-  const destination = getAuthRedirect({ hasHydrated, isRestoring, isAuthenticated, role }, group);
-  useEffect(() => { loadUser(); }, [loadUser]);
+  const destination = getAuthRedirect(
+    { hasHydrated, isRestoring, isAuthenticated, role },
+    group,
+  );
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
   useEffect(() => {
     if (navigationKey && destination) router.replace(destination);
   }, [navigationKey, destination, router]);

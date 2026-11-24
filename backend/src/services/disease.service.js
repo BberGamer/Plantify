@@ -1,3 +1,4 @@
+const withTransactionResult = require("../utils/transaction-result");
 const AppError = require("../utils/app-error");
 // services/disease.service.js - Nghiệp vụ đọc danh mục bệnh cây
 const mongoose = require("mongoose");
@@ -293,11 +294,7 @@ const synchronizeDiseasePlants = async (diseaseId, plantIds, session) => {
 
 const runDiseaseMutation = async (operation) => {
   try {
-    let result;
-    await mongoose.connection.transaction(async (session) => {
-      result = await operation(session);
-    });
-    return result;
+    return await withTransactionResult(operation);
   } catch (error) {
     if (error?.code === 11000) {
       throw createError("Tên bệnh đã tồn tại.", 409);

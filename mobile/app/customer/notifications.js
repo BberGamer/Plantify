@@ -1,3 +1,5 @@
+import { componentStyles } from "../../src/theme/componentStyles";
+import { radius } from "../../src/theme";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Card, Icon, IconButton, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -36,7 +38,7 @@ export default function NotificationsScreen() {
     <View style={styles.header}>
       <IconButton icon="arrow-left" accessibilityLabel="Quay lại" onPress={() => router.canGoBack() ? router.back() : router.replace("/customer/home")} />
       <Text variant="titleLarge">Thông báo</Text>
-      <Button compact mode="contained" style={styles.readAll} labelStyle={styles.readAllLabel}
+      <Button contentStyle={componentStyles.button} compact mode="contained" style={[styles.readAll, componentStyles.buttonShape]} labelStyle={styles.readAllLabel}
         disabled={actionsDisabled || notifications.loading} loading={notifications.markingAll} onPress={notifications.markAllRead}>
         Đánh dấu đã đọc tất cả
       </Button>
@@ -44,7 +46,7 @@ export default function NotificationsScreen() {
     <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={notifications.refreshing} onRefresh={notifications.refresh} />}>
       {notifications.loading ? <ActivityIndicator /> : notifications.error ? <>
         <Text accessibilityRole="alert">{notifications.error}</Text>
-        <Button onPress={notifications.retry}>Thử lại</Button>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={notifications.retry}>Thử lại</Button>
       </> : <>
         {!notifications.items.length && <Text>Bạn chưa có thông báo đến hạn.</Text>}
         {!!notifications.actionError && <Text accessibilityRole="alert">{notifications.actionError}</Text>}
@@ -77,7 +79,7 @@ export default function NotificationsScreen() {
                   accessibilityLabel="Đánh dấu đã đọc" disabled={actionsDisabled} loading={notifications.busyId === item._id}
                   onPress={() => notifications.markRead(item)} />}
                 {isFeedback ? (
-                  <Button mode="contained" icon="message-text-outline" disabled={actionsDisabled} onPress={() => open(item)}>
+                  <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="contained" icon="message-text-outline" disabled={actionsDisabled} onPress={() => open(item)}>
                     Xem phản hồi
                   </Button>
                 ) : <IconButton mode="contained" icon="calendar-outline" size={20} style={styles.actionButton}
@@ -94,24 +96,106 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  header: { flexDirection: "row", alignItems: "center", paddingRight: 12 },
-  readAll: { marginLeft: "auto", flexShrink: 1, borderRadius: 20 },
-  readAllLabel: { fontSize: 12, marginHorizontal: 10 },
-  content: { padding: 18, gap: 16 },
-  card: { backgroundColor: colors.white, borderColor: colors.border, borderRadius: 20 },
-  unreadCard: { backgroundColor: colors.softSproutBg, borderColor: colors.primaryLight },
-  cardBody: { paddingHorizontal: 10, paddingVertical: 8, gap: 6 },
-  cardHeading: { flexDirection: "row", alignItems: "flex-start", gap: 6 },
-  iconTile: { width: 26, height: 26, borderRadius: 9, backgroundColor: colors.lightMint, alignItems: "center", justifyContent: "center" },
-  treatmentTile: { backgroundColor: colors.softPurpleBg },
-  headingText: { flex: 1, gap: 4 },
-  title: { color: colors.primaryText, fontWeight: "700", fontSize: 14, lineHeight: 18 },
-  message: { color: colors.textPrimary },
-  secondaryText: { color: colors.textSecondary, flexShrink: 1 },
-  metadata: { flexDirection: "row", alignItems: "center", gap: 5 },
-  status: { backgroundColor: colors.borderLight, color: colors.textSecondary, paddingHorizontal: 6, borderRadius: 12 },
-  unreadStatus: { backgroundColor: colors.lightMint, color: colors.primary },
-  actions: { flexDirection: "row", justifyContent: "flex-end", gap: 8 },
-  actionButton: { width: 44, height: 44, borderRadius: 22, margin: 0 },
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  header: {
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingRight: 12
+  },
+  readAll: {
+    marginLeft: "auto",
+    flexShrink: 1,
+    borderRadius: 20
+  },
+  readAllLabel: {
+    fontSize: 13,
+    lineHeight: 20,
+    marginHorizontal: 10
+  },
+  content: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    padding: 20,
+    gap: 16
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderColor: colors.border,
+    borderRadius: radius.card
+  },
+  unreadCard: {
+    backgroundColor: colors.softSproutBg,
+    borderColor: colors.primaryLight
+  },
+  cardBody: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 6
+  },
+  cardHeading: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6
+  },
+  iconTile: {
+    width: 26,
+    height: 26,
+    borderRadius: 9,
+    backgroundColor: colors.lightMint,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  treatmentTile: {
+    backgroundColor: colors.softPurpleBg
+  },
+  headingText: {
+    flex: 1,
+    gap: 4
+  },
+  title: {
+    color: colors.primaryText,
+    fontWeight: "700",
+    fontSize: 14,
+    lineHeight: 18
+  },
+  message: {
+    color: colors.textPrimary
+  },
+  secondaryText: {
+    color: colors.textSecondary,
+    flexShrink: 1
+  },
+  metadata: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5
+  },
+  status: {
+    backgroundColor: colors.borderLight,
+    color: colors.textSecondary,
+    paddingHorizontal: 6,
+    borderRadius: 12
+  },
+  unreadStatus: {
+    backgroundColor: colors.lightMint,
+    color: colors.primary
+  },
+  actions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 8
+  },
+  actionButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    margin: 0
+  }
 });

@@ -12,9 +12,11 @@ const DAY = 86400000;
 let tail = Promise.resolve();
 let generation = 0;
 let flushing;
-const storage = () => AsyncStorage.getItem(STORAGE).then(value =>
-  value ? JSON.parse(value) : { pending: [] });
-const save = state => AsyncStorage.setItem(STORAGE, JSON.stringify(state));
+const storage = () =>
+  AsyncStorage.getItem(STORAGE).then((value) =>
+    value ? JSON.parse(value) : { pending: [] },
+  );
+const save = (state) => AsyncStorage.setItem(STORAGE, JSON.stringify(state));
 
 function serialize(operation) {
   const task = tail.then(operation);
@@ -53,18 +55,24 @@ export function flushRevocations() {
     for (const value of pending) {
       try {
         await api.delete(`/notifications/devices/${installationId}`, {
-          data: value, anonymous: true, timeout: 5000,
+          data: value,
+          anonymous: true,
+          timeout: 5000,
         });
       } catch {
         continue;
       }
       await serialize(async () => {
         const state = await storage();
-        state.pending = state.pending.filter(item => item.bindingId !== value.bindingId);
+        state.pending = state.pending.filter(
+          (item) => item.bindingId !== value.bindingId,
+        );
         await save(state);
       });
     }
-  })().finally(() => { flushing = undefined; });
+  })().finally(() => {
+    flushing = undefined;
+  });
   return flushing;
 }
 
@@ -85,15 +93,18 @@ export async function syncPushDevice(session, rotatedToken) {
       await save(state);
       return true;
     });
-    if (shouldPrompt && current()) permission = await Notifications.requestPermissionsAsync();
+    if (shouldPrompt && current())
+      permission = await Notifications.requestPermissionsAsync();
   }
   if (!current()) return;
   if (!permission.granted) {
     if ((await storage()).binding && current()) await clearPushBinding();
     return;
   }
-  if (!(await TaskManager.isTaskRegisteredAsync(TASK))) await Notifications.registerTaskAsync(TASK);
-  const token = rotatedToken ?? (await Notifications.getDevicePushTokenAsync()).data;
+  if (!(await TaskManager.isTaskRegisteredAsync(TASK)))
+    await Notifications.registerTaskAsync(TASK);
+  const token =
+    rotatedToken ?? (await Notifications.getDevicePushTokenAsync()).data;
   if (typeof token !== "string" || !current()) return;
 
   const registration = await serialize(async () => {
@@ -103,8 +114,12 @@ export async function syncPushDevice(session, rotatedToken) {
     state.installationId ||= randomUUID();
     if (!state.binding) {
       state.sequence = (state.sequence ?? 0) + 1;
-      state.binding = { userId: session.userId, sequence: state.sequence,
-        bindingId: randomUUID(), revocationKey: randomUUID() };
+      state.binding = {
+        userId: session.userId,
+        sequence: state.sequence,
+        bindingId: randomUUID(),
+        revocationKey: randomUUID(),
+      };
     }
     await save(state);
     const { userId, ...credentials } = state.binding;
@@ -113,8 +128,11 @@ export async function syncPushDevice(session, rotatedToken) {
   if (!registration || !current()) return;
   const { installationId, ...credentials } = registration;
   try {
-    await api.put(`/notifications/devices/${installationId}`, { ...credentials, token },
-      { sessionContext: session, timeout: 10000 });
+    await api.put(
+      `/notifications/devices/${installationId}`,
+      { ...credentials, token },
+      { sessionContext: session, timeout: 10000 },
+    );
   } catch (error) {
     if (error.response?.data?.code === "DEVICE_BINDING_INACTIVE" && current()) {
       await clearPushBinding();
@@ -125,13 +143,21 @@ export async function syncPushDevice(session, rotatedToken) {
 
 export async function isCurrentPushBinding(bindingId, userId) {
   const { binding } = await storage();
-  return !!bindingId && binding?.bindingId === bindingId && (!userId || binding.userId === userId);
+  return (
+    !!bindingId &&
+    binding?.bindingId === bindingId &&
+    (!userId || binding.userId === userId)
+  );
 }
 
 TaskManager.defineTask(TASK, async ({ data, error }) => {
   const payload = data?.data;
-  if (error || !/^[a-f0-9]{24}$/i.test(payload?.notificationId ?? "") ||
-      typeof payload.bindingId !== "string") return;
+  if (
+    error ||
+    !/^[a-f0-9]{24}$/i.test(payload?.notificationId ?? "") ||
+    typeof payload.bindingId !== "string"
+  )
+    return;
   const { notificationId, bindingId, kind } = payload;
   const isFeedback = kind === "feedback_reply";
   const expiresAt = Number(payload.expiresAt);
@@ -139,17 +165,29 @@ TaskManager.defineTask(TASK, async ({ data, error }) => {
 
   await serialize(async () => {
     const state = await storage();
-    if (state.binding?.bindingId !== bindingId || state.shown?.[notificationId] > Date.now()) return;
+    if (
+      state.binding?.bindingId !== bindingId ||
+      state.shown?.[notificationId] > Date.now()
+    )
+      return;
     const started = generation;
     const identifier = `plantify-${notificationId}`;
-    if (!(await Notifications.getPermissionsAsync()).granted || started !== generation ||
-      !(await isCurrentPushBinding(bindingId))) return;
+    if (
+      !(await Notifications.getPermissionsAsync()).granted ||
+      started !== generation ||
+      !(await isCurrentPushBinding(bindingId))
+    )
+      return;
     await Notifications.scheduleNotificationAsync({
       identifier,
       content: {
-        title: isFeedback ? "Plantify đã phản hồi góp ý của bạn"
-          : kind === "care" ? "Đến giờ chăm sóc cây" : "Đến giờ điều trị cây",
-        body: isFeedback ? "Mở ứng dụng để xem nội dung phản hồi."
+        title: isFeedback
+          ? "Plantify đã phản hồi góp ý của bạn"
+          : kind === "care"
+            ? "Đến giờ chăm sóc cây"
+            : "Đến giờ điều trị cây",
+        body: isFeedback
+          ? "Mở ứng dụng để xem nội dung phản hồi."
           : "Mở Plantify để xem công việc cần thực hiện.",
         data: { notificationId, bindingId },
       },
@@ -161,17 +199,27 @@ TaskManager.defineTask(TASK, async ({ data, error }) => {
     }
     const updated = await storage();
     if (updated.binding?.bindingId !== bindingId) return;
-    updated.shown = Object.fromEntries(Object.entries(updated.shown ?? {}).filter(([, until]) => until > Date.now()));
+    updated.shown = Object.fromEntries(
+      Object.entries(updated.shown ?? {}).filter(
+        ([, until]) => until > Date.now(),
+      ),
+    );
     updated.shown[notificationId] = Math.min(expiresAt, Date.now() + DAY);
     await save(updated);
   });
 });
 
 Notifications.setNotificationHandler({
-  handleNotification: async notification => {
+  handleNotification: async (notification) => {
     const data = notification.request.content.data;
-    const show = notification.request.identifier.startsWith("plantify-") &&
-      await isCurrentPushBinding(data?.bindingId);
-    return { shouldShowBanner: show, shouldShowList: show, shouldPlaySound: show, shouldSetBadge: false };
+    const show =
+      notification.request.identifier.startsWith("plantify-") &&
+      (await isCurrentPushBinding(data?.bindingId));
+    return {
+      shouldShowBanner: show,
+      shouldShowList: show,
+      shouldPlaySound: show,
+      shouldSetBadge: false,
+    };
   },
 });

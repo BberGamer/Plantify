@@ -8,7 +8,10 @@ export default function useHomeGarden() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const request = useRef(0);
-  const scope = useScreenScope(() => { setData(null); reload(); });
+  const scope = useScreenScope(() => {
+    setData(null);
+    reload();
+  });
 
   async function reload() {
     const current = scope.capture();
@@ -24,9 +27,13 @@ export default function useHomeGarden() {
       if (current() && version === request.current) {
         const total = all.data.pagination.total;
         const healthyCount = healthy.data.pagination.total;
-        setData({ plants: all.data.items, total, healthy: healthyCount,
+        setData({
+          plants: all.data.items,
+          total,
+          healthy: healthyCount,
           treatment: Math.max(0, total - healthyCount),
-          healthyRatio: total ? healthyCount / total : 0 });
+          healthyRatio: total ? healthyCount / total : 0,
+        });
       }
     } catch (failure) {
       if (current() && version === request.current)

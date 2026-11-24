@@ -15,23 +15,49 @@ const send = async (req, res, next) => {
 };
 
 const list = async (req, res, next) => {
-  try { return success(res, "Lấy lịch sử thành công.", await history.list(req.user.id, req.query)); }
-  catch (error) { next(error); }
+  try {
+    return success(
+      res,
+      "Lấy lịch sử thành công.",
+      await history.list(req.user.id, req.query),
+    );
+  } catch (error) {
+    next(error);
+  }
 };
 const recordTiming = async (req, res, next) => {
-  try { return success(res, "Ghi nhận thời gian.", await benchmark.recordTiming(req.user.id, req.params.id, req.body)); }
-  catch (error) { next(error); }
+  try {
+    return success(
+      res,
+      "Ghi nhận thời gian.",
+      await benchmark.recordTiming(req.user.id, req.params.id, req.body),
+    );
+  } catch (error) {
+    next(error);
+  }
 };
 const exportReport = async (req, res, next) => {
   try {
     const csv = await benchmark.exportReport(req.user.id, req.query);
-    return res.type("text/csv; charset=utf-8").attachment("Plantify_AI_Results.csv").send(csv);
-  } catch (error) { next(error); }
+    return res
+      .type("text/csv; charset=utf-8")
+      .attachment("Plantify_AI_Results.csv")
+      .send(csv);
+  } catch (error) {
+    next(error);
+  }
 };
 
 const listManager = async (req, res, next) => {
-  try { return success(res, "Lấy chat người dùng thành công.", await history.listManager(req.user.id, req.query)); }
-  catch (error) { next(error); }
+  try {
+    return success(
+      res,
+      "Lấy chat người dùng thành công.",
+      await history.listManager(req.user.id, req.query),
+    );
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = { send, list, recordTiming, exportReport, listManager };

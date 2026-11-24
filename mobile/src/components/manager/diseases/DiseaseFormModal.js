@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { FormModalFrame } from "../../common/ModalFrames";
+import PhotoUploadField from "../../common/PhotoUploadField";
+import { componentStyles } from "../../../theme/componentStyles";
+
 import {
-  Image,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   ScrollView,
   StyleSheet,
   View,
@@ -15,7 +14,7 @@ import {
   Switch,
   Text,
 } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { colors } from "../../../theme/colors";
 import { spacing } from "../../../theme/tokens";
 import FormField from "../../common/FormField";
@@ -61,30 +60,19 @@ export default function DiseaseFormModal({
 }) {
   const locked = saving || choosingPhoto || loading || !ready;
   const imageUri = photo?.uri || form.disease_image_url;
-  const [failedImageUri, setFailedImageUri] = useState(null);
   const close = () => {
     if (!saving && !choosingPhoto) onClose();
   };
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={close}
-    >
-      <SafeAreaView style={styles.safe}>
-        <KeyboardAvoidingView
-          style={styles.safe}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
+    <FormModalFrame visible={visible} onRequestClose={close}>
           <View style={styles.header}>
-            <Button onPress={close} disabled={saving || choosingPhoto}>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={close} disabled={saving || choosingPhoto}>
               Hủy
             </Button>
             <Text variant="titleMedium">
               {editing ? "Sửa bệnh cây" : "Thêm bệnh cây"}
             </Text>
-            <Button onPress={onSave} disabled={locked} loading={saving}>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onSave} disabled={locked} loading={saving}>
               Lưu
             </Button>
           </View>
@@ -101,7 +89,7 @@ export default function DiseaseFormModal({
               <ActivityIndicator accessibilityLabel="Đang tải chi tiết bệnh" />
             )}
             {!ready && !loading && (
-              <Button onPress={onRetryDetail}>Thử tải lại chi tiết</Button>
+              <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onRetryDetail}>Thử tải lại chi tiết</Button>
             )}
             {FIELDS.map(([key, label, maxLength, multiline]) => (
               <FormField
@@ -116,34 +104,11 @@ export default function DiseaseFormModal({
                 multiline={Boolean(multiline)}
               />
             ))}
-            <Text variant="titleMedium">Ảnh bệnh</Text>
-            {!!imageUri && (failedImageUri === imageUri ? (
-              <Text variant="bodySmall">Không tải được ảnh xem trước.</Text>
-            ) : (
-              <Image
-                source={{ uri: imageUri }}
-                style={styles.photo}
-                resizeMode="contain"
-                accessibilityLabel="Ảnh bệnh cây"
-                onError={() => setFailedImageUri(imageUri)}
-              />
-            ))}
-            <Button
-              mode="outlined"
-              onPress={onChoosePhoto}
-              disabled={locked}
-              loading={choosingPhoto}
-            >
-              {imageUri ? "Chọn ảnh khác từ máy" : "Tải ảnh từ máy"}
-            </Button>
-            <Text variant="bodySmall">
-              JPG hoặc PNG, tối đa 10 MB. Ảnh được tải lên khi lưu.
-            </Text>
-            {!!imageUri && (
-              <Button onPress={onRemovePhoto} disabled={locked}>
-                {photo ? "Bỏ ảnh đã chọn" : "Xóa ảnh hiện tại"}
-              </Button>
-            )}
+            <PhotoUploadField label="Ảnh bệnh" uri={imageUri} disabled={locked} loading={choosingPhoto}
+              onChoose={onChoosePhoto} onRemove={imageUri ? onRemovePhoto : undefined}
+              chooseLabel={imageUri ? "Chọn ảnh khác từ máy" : "Tải ảnh từ máy"}
+              removeLabel={photo ? "Bỏ ảnh đã chọn" : "Xóa ảnh hiện tại"}
+              hint="JPG hoặc PNG, tối đa 10 MB. Ảnh được tải lên khi lưu." />
             <Text variant="titleMedium">Tác nhân gây bệnh</Text>
             <RadioButton.Group
               value={form.pathogen_type}
@@ -182,23 +147,40 @@ export default function DiseaseFormModal({
               onRetry={onRetryPlants}
             />
           </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </Modal>
+    </FormModalFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  field: { marginBottom: 0 },
-  photo: { width: "100%", height: 180, backgroundColor: colors.background },
-  safe: { flex: 1, backgroundColor: colors.background },
+  field: {
+    marginBottom: 0
+  },
+  photo: {
+    borderRadius: 16,
+    width: "100%",
+    height: 180,
+    backgroundColor: colors.background
+  },
+  safe: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     padding: spacing.sm,
-    flexWrap: "wrap",
+    flexWrap: "wrap"
   },
-  form: { padding: 18, gap: 14, paddingBottom: spacing.xxxl },
-  error: { color: colors.statusError },
+  form: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    padding: 24,
+    gap: 14,
+    paddingBottom: spacing.xxxl
+  },
+  error: {
+    color: colors.statusError
+  }
 });

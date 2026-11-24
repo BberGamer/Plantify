@@ -1,3 +1,5 @@
+import PlantImage from "../../plants/PlantImage";
+import { radius } from "../../../theme";
 // PlantCard.js - Giao diện PlantCard của màn hình quản lý cây.
 import React, { useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
@@ -5,31 +7,13 @@ import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../theme/colors";
 
-function PlantThumbnail({ uri, name }) {
-  const [failed, setFailed] = useState(false);
-  return (
-    <View style={styles.leafIcon}>
-      {uri && !failed ? (
-        <Image
-          source={{ uri }}
-          style={styles.thumbnail}
-          resizeMode="cover"
-          accessibilityLabel={`Ảnh ${name}`}
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <Ionicons name="leaf" size={21} color={colors.primaryLight} />
-      )}
-    </View>
-  );
-}
-
 export default function PlantCard({ item, disabled, onEdit, onDelete }) {
-  const imageUri = typeof item.plant_image === "string" ? item.plant_image.trim() : "";
+  const imageUri =
+    typeof item.plant_image === "string" ? item.plant_image.trim() : "";
   return (
     <View style={styles.card}>
       <View style={styles.cardTop}>
-        <PlantThumbnail key={imageUri} uri={imageUri} name={item.common_name} />
+        <PlantImage uri={imageUri} style={styles.leafIcon} accessibilityLabel={`Ảnh ${item.common_name}`} />
         <View style={styles.plantInfo}>
           <Text style={styles.commonName}>{item.common_name}</Text>
           <Text style={styles.scientificName}>{item.scientific_name}</Text>
@@ -80,10 +64,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 15,
-    padding: 13,
+    borderRadius: radius.card,
+    padding: 16
   },
-  cardTop: { flexDirection: "row", alignItems: "center" },
+  cardTop: {
+    gap: 8,
+    flexWrap: "wrap",
+    flexDirection: "row",
+    alignItems: "flex-start"
+  },
   leafIcon: {
     width: 43,
     height: 43,
@@ -92,28 +81,57 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: colors.lightMint,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
-  thumbnail: { width: "100%", height: "100%" },
-  plantInfo: { flex: 1, paddingHorizontal: 11 },
-  commonName: { color: colors.textPrimary, fontSize: 15, fontWeight: "700" },
+  thumbnail: {
+    width: "100%",
+    height: "100%"
+  },
+  plantInfo: {
+    minWidth: 140,
+    flex: 1,
+    paddingHorizontal: 11
+  },
+  commonName: {
+    lineHeight: 24,
+    color: colors.textPrimary,
+    fontSize: 17,
+    fontWeight: "700"
+  },
   scientificName: {
     color: colors.textSecondary,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 20,
     fontStyle: "italic",
-    marginTop: 2,
+    marginTop: 2
   },
-  meta: { color: colors.textSecondary, fontSize: 10, marginTop: 4 },
-  badge: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 4 },
-  published: { backgroundColor: colors.lightMint },
-  draft: { backgroundColor: colors.borderLight },
+  meta: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 4
+  },
+  badge: {
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 4
+  },
+  published: {
+    backgroundColor: colors.lightMint
+  },
+  draft: {
+    backgroundColor: colors.borderLight
+  },
   badgeText: {
     color: colors.primaryLight,
-    textTransform: "uppercase",
-    fontSize: 8,
-    fontWeight: "800",
+    textTransform: "none",
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "800"
   },
-  draftText: { color: colors.textSecondary },
+  draftText: {
+    color: colors.textSecondary
+  },
   cardActions: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -121,23 +139,23 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     marginTop: 13,
     paddingTop: 11,
-    gap: 9,
+    gap: 12
   },
   editButton: {
-    width: 38,
-    height: 36,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 9,
+    borderRadius: radius.input
   },
   deleteButton: {
-    width: 38,
-    height: 36,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.warmPeachBg,
-    borderRadius: 9,
-  },
+    borderRadius: radius.input
+  }
 });

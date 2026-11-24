@@ -1,23 +1,51 @@
-
+import { componentStyles } from "../../theme/componentStyles";
 import { StyleSheet } from "react-native";
 import { Button, Dialog, Portal, Text } from "react-native-paper";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/tokens";
 
 // Hai danh mục có cùng chính sách: không đóng/submit lại trong lúc xóa.
-export default function ConfirmDeleteDialog({ visible, title, children, pending, error, onClose, onConfirm }) {
-  const close = () => { if (!pending) onClose(); };
+export default function ConfirmDeleteDialog({
+  visible,
+  title,
+  children,
+  pending,
+  error,
+  onClose,
+  onConfirm,
+}) {
+  const close = () => {
+    if (!pending) onClose();
+  };
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={close} dismissable={!pending} dismissableBackButton={!pending}>
+      <Dialog style={componentStyles.dialog}
+        visible={visible}
+        onDismiss={close}
+        dismissable={!pending}
+        dismissableBackButton={!pending}
+      >
         <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Content>
           <Text>{children}</Text>
-          {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
+          {!!error && (
+            <Text style={styles.error} accessibilityRole="alert">
+              {error}
+            </Text>
+          )}
         </Dialog.Content>
         <Dialog.Actions>
-          <Button onPress={close} disabled={pending}>Hủy</Button>
-          <Button onPress={() => { if (!pending) onConfirm(); }} loading={pending} disabled={pending} textColor={colors.statusError}>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={close} disabled={pending}>
+            Hủy
+          </Button>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
+            onPress={() => {
+              if (!pending) onConfirm();
+            }}
+            loading={pending}
+            disabled={pending}
+            textColor={colors.statusError}
+          >
             Xóa
           </Button>
         </Dialog.Actions>
@@ -26,4 +54,9 @@ export default function ConfirmDeleteDialog({ visible, title, children, pending,
   );
 }
 
-const styles = StyleSheet.create({ error: { color: colors.statusError, marginTop: spacing.md } });
+const styles = StyleSheet.create({
+  error: {
+    color: colors.statusError,
+    marginTop: spacing.md
+  }
+});

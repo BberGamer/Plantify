@@ -9,18 +9,35 @@ const { sendAccountLockEmail } = require("../integrations/email/email.service");
 const createUser = async (input) => {
   const data = validate.create(input);
   if (await User.findOne({ email: data.email })) {
-    throw new AppError("EMAIL_IN_USE", 409, "Email này đã được sử dụng bởi một tài khoản khác.");
+    throw new AppError(
+      "EMAIL_IN_USE",
+      409,
+      "Email này đã được sử dụng bởi một tài khoản khác.",
+    );
   }
-  if (data.phone && await User.findOne({ phone: data.phone })) {
-    throw new AppError("PHONE_IN_USE", 409, "Số điện thoại này đã được sử dụng bởi tài khoản khác.");
+  if (data.phone && (await User.findOne({ phone: data.phone }))) {
+    throw new AppError(
+      "PHONE_IN_USE",
+      409,
+      "Số điện thoại này đã được sử dụng bởi tài khoản khác.",
+    );
   }
   const password = await bcrypt.hash(data.password, 10);
   let user;
   try {
-    user = await User.create({ ...data, password, status: true, isGoogleAccount: false });
+    user = await User.create({
+      ...data,
+      password,
+      status: true,
+      isGoogleAccount: false,
+    });
   } catch (error) {
     if (error.code === 11000 && error.keyPattern?.email) {
-      throw new AppError("EMAIL_IN_USE", 409, "Email này đã được sử dụng bởi một tài khoản khác.");
+      throw new AppError(
+        "EMAIL_IN_USE",
+        409,
+        "Email này đã được sử dụng bởi một tài khoản khác.",
+      );
     }
     throw error;
   }
@@ -64,16 +81,15 @@ const assertUserEditable = (user) => {
  */
 const getUsers = async (query = {}) => {
   query = validate.query(query);
-  const page = Math.max(1, parseInt(query.page, 10) || 1);
-  const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || 10));
+  const { page, limit } = query;
   const skip = (page - 1) * limit;
 
   // Xay dung filter query cho MongoDB
   const filter = {};
 
   // Tim kiem gan dung khong phan biet hoa thuong (fullName, email, phone)
-  if (query.search && query.search.trim()) {
-    const searchRegex = new RegExp(v.escapeRegex(query.search.trim()), "i");
+  if (query.search) {
+    const searchRegex = new RegExp(v.escapeRegex(query.search), "i");
     filter.$or = [
       { fullName: searchRegex },
       { email: searchRegex },
@@ -82,33 +98,12 @@ const getUsers = async (query = {}) => {
   }
 
   // Loc theo vai tro (role)
-  if (
-    query.role &&
-    ["customer", "admin", "manager"].includes(query.role.trim())
-  ) {
-    filter.role = query.role.trim();
-  }
-
-  // Loc theo trang thai hoat dong (status)
-  if (query.status !== undefined && query.status !== "") {
-    if (query.status === "true" || query.status === true) {
-      filter.status = true;
-    } else if (query.status === "false" || query.status === false) {
-      filter.status = false;
-    }
-  }
+  if (query.role) filter.role = query.role;
+  if (query.status !== undefined && query.status !== "")
+    filter.status = query.status;
 
   // Sap xep (sort)
-  const allowedSortFields = [
-    "createdAt",
-    "fullName",
-    "email",
-    "role",
-    "status",
-  ];
-  const sortBy = allowedSortFields.includes(query.sortBy)
-    ? query.sortBy
-    : "createdAt";
+  const sortBy = query.sortBy || "createdAt";
   const sortOrder = query.sortOrder === "asc" ? 1 : -1;
   const sortOptions = { [sortBy]: sortOrder };
 
@@ -195,7 +190,8 @@ const updateUserInfoAndStatus = async (
       "Bạn không thể tự khóa tài khoản của chính mình.",
     );
   }
-  if (!isSelf || role !== undefined || status !== undefined) assertUserEditable(user);
+  if (!isSelf || role !== undefined || status !== undefined)
+    assertUserEditable(user);
 
   // Cap nhat ho ten
   if (fullName !== undefined) {
@@ -252,14 +248,28 @@ const updateUserInfoAndStatus = async (
   try {
     await user.save();
   } catch (error) {
-    if (status === undefined || error.name !== "DocumentNotFoundError") throw error;
+    if (status === undefined || error.name !== "DocumentNotFoundError")
+      throw error;
     const current = await User.findById(userId);
     if (!current) {
-      throw new AppError("USER_NOT_FOUND", 404, "Không tìm thấy người dùng với ID này.");
+      throw new AppError(
+        "USER_NOT_FOUND",
+        404,
+        "Không tìm thấy người dùng với ID này.",
+      );
     }
     assertUserEditable(current);
-    if (current.status !== status || fullName !== undefined || phone !== undefined || role !== undefined) {
-      throw new AppError("USER_STATUS_CONFLICT", 409, "Trạng thái tài khoản đã thay đổi. Vui lòng thực hiện lại.");
+    if (
+      current.status !== status ||
+      fullName !== undefined ||
+      phone !== undefined ||
+      role !== undefined
+    ) {
+      throw new AppError(
+        "USER_STATUS_CONFLICT",
+        409,
+        "Trạng thái tài khoản đã thay đổi. Vui lòng thực hiện lại.",
+      );
     }
     savedUser = current;
   }

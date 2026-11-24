@@ -137,7 +137,7 @@ const aiDraft = (input) => {
 const generate = (input) => {
   v.object(input);
   for (const key of Object.keys(input)) {
-    if (!["user_plant_id", "disease_id", "preview_token", "diagnosis_id", "start_date"].includes(key))
+    if (!["user_plant_id", "disease_id", "preview_token", "diagnosis_id", "start_date", "schedule_id"].includes(key))
       v.invalid(key, `Trường ${key} không được hỗ trợ.`);
   }
   const result = {
@@ -145,6 +145,7 @@ const generate = (input) => {
     disease_id: v.id(input.disease_id, "disease_id"),
     preview_token: v.text(input.preview_token, "preview_token"),
   };
+  if (input.schedule_id !== undefined) result.schedule_id = v.id(input.schedule_id, "schedule_id");
   if (result.preview_token.length > 50000) v.invalid("preview_token", "Bản xem trước phác đồ quá lớn.");
   if (input.diagnosis_id !== undefined && input.diagnosis_id !== null)
     result.diagnosis_id = v.id(input.diagnosis_id, "diagnosis_id");

@@ -1,11 +1,11 @@
-import { useCallback, useState } from "react";
+import { FilterOptions } from "../../src/components/common/FilterControls";
+import { componentStyles } from "../../src/theme/componentStyles";
 import { FlatList, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Button, Card, Chip, IconButton, SegmentedButtons, Text } from "react-native-paper";
+import { ActivityIndicator, Button, Card, Chip, IconButton, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import useAuthStore from "../../store/authStore";
-import diagnosisService from "../../src/services/diagnosisService";
-import usePaginatedList from "../../src/hooks/usePaginatedList";
+import useDiagnosisHistoryList from "../../src/hooks/useDiagnosisHistoryList";
 import ListError from "../../src/components/common/ListError";
 import ListPagination from "../../src/components/common/ListPagination";
 import Navbar from "../../src/components/navigation/Navbar";
@@ -19,11 +19,7 @@ const formatTime = value => value ? new Date(value).toLocaleString("vi-VN", {
 export default function DiagnosisHistoryScreen() {
   const router = useRouter();
   const enabled = useAuthStore(state => state.isAuthenticated && state.user?.role === "customer");
-  const [kind, setKind] = useState("all");
-  const fetchHistory = useCallback(params => diagnosisService.history({
-    ...params, result_kind: kind === "all" ? undefined : kind,
-  }), [kind]);
-  const history = usePaginatedList(fetchHistory, { limit: 20, enabled });
+  const { kind, setKind, history } = useDiagnosisHistoryList({ limit: 20, enabled });
   if (!enabled) return null;
   return (
     <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
@@ -35,8 +31,8 @@ export default function DiagnosisHistoryScreen() {
           onPress={() => router.push("/customer/diagnosis")} />
       </View>
       <Text style={styles.summary}>Các kết quả nhận diện cây và chẩn đoán bệnh đã được chấp nhận và lưu.</Text>
-      <SegmentedButtons value={kind} onValueChange={setKind} style={styles.filters}
-        buttons={[
+      <FilterOptions value={kind} onChange={setKind} style={styles.filters}
+        options={[
           { value: "all", label: "Tất cả" },
           { value: "plant", label: "Nhận diện cây" },
           { value: "disease", label: "Bệnh cây" },
@@ -70,7 +66,7 @@ export default function DiagnosisHistoryScreen() {
           ListEmptyComponent={history.refreshing ? <ActivityIndicator /> : (
             <View style={styles.center}>
               <Text>{kind === "plant" ? "Chưa có lịch sử nhận diện cây." : kind === "disease" ? "Chưa có lịch sử chẩn đoán bệnh." : "Chưa có lịch sử nhận diện hoặc chẩn đoán."}</Text>
-              <Button mode="contained" icon="camera-outline" onPress={() => router.push(kind === "disease" ? "/customer/diagnosis" : "/customer/identification")}>
+              <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="contained" icon="camera-outline" onPress={() => router.push(kind === "disease" ? "/customer/diagnosis" : "/customer/identification")}>
                 {kind === "disease" ? "Chẩn đoán bệnh" : "Nhận diện cây"}
               </Button>
             </View>
@@ -84,17 +80,67 @@ export default function DiagnosisHistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  header: { flexDirection: "row", alignItems: "center", backgroundColor: colors.white },
-  title: { flex: 1, color: colors.textPrimary, fontWeight: "700" },
-  summary: { padding: spacing.lg, color: colors.textSecondary },
-  filters: { marginHorizontal: spacing.lg, marginBottom: spacing.sm },
-  kind: { alignSelf: "flex-start", backgroundColor: colors.lightMint },
-  diseaseKind: { backgroundColor: "#FFF3DF" },
-  content: { padding: spacing.lg, paddingBottom: spacing.xl, flexGrow: 1 },
-  card: { marginBottom: spacing.md, backgroundColor: colors.white },
-  cardContent: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  cardText: { flex: 1, gap: spacing.sm },
-  time: { color: colors.textSecondary },
-  center: { flex: 1, padding: spacing.xl, gap: spacing.md, justifyContent: "center", alignItems: "center" },
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  header: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.white
+  },
+  title: {
+    flex: 1,
+    color: colors.textPrimary,
+    fontWeight: "700"
+  },
+  summary: {
+    padding: spacing.lg,
+    color: colors.textSecondary
+  },
+  filters: {
+    flexWrap: "wrap",
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm
+  },
+  kind: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.lightMint
+  },
+  diseaseKind: {
+    backgroundColor: "#FFF3DF"
+  },
+  content: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    padding: 20,
+    paddingBottom: spacing.xl,
+    flexGrow: 1
+  },
+  card: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.white
+  },
+  cardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md
+  },
+  cardText: {
+    flex: 1,
+    gap: spacing.sm
+  },
+  time: {
+    color: colors.textSecondary
+  },
+  center: {
+    flex: 1,
+    padding: spacing.xl,
+    gap: spacing.md,
+    justifyContent: "center",
+    alignItems: "center"
+  }
 });

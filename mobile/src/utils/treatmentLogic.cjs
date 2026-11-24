@@ -2,7 +2,9 @@ const clamp = (value, minimum, maximum) =>
   Math.min(maximum, Math.max(minimum, value));
 
 function calculateTreatmentProgress(schedule) {
-  const duration = Number.isSafeInteger(schedule?.protocol?.standard_duration_days)
+  const duration = Number.isSafeInteger(
+    schedule?.protocol?.standard_duration_days,
+  )
     ? schedule.protocol.standard_duration_days
     : 0;
   const currentDay = Number.isSafeInteger(schedule?.current_day)
@@ -29,9 +31,9 @@ function calculateTreatmentProgress(schedule) {
 function canApplyTreatment(schedule) {
   return Boolean(
     schedule &&
-      schedule.status === "generated" &&
-      schedule.plant?._id &&
-      schedule.protocol?._id,
+    schedule.status === "generated" &&
+    schedule.plant?._id &&
+    schedule.protocol?._id,
   );
 }
 
@@ -42,10 +44,10 @@ function canCompleteTask(task) {
 function canCompleteTreatment(schedule) {
   return Boolean(
     schedule &&
-      schedule.status === "in_progress" &&
-      Array.isArray(schedule.task_progress) &&
-      schedule.task_progress.length > 0 &&
-      schedule.task_progress.every((task) => task.status === "completed"),
+    schedule.status === "in_progress" &&
+    Array.isArray(schedule.task_progress) &&
+    schedule.task_progress.length > 0 &&
+    schedule.task_progress.every((task) => task.status === "completed"),
   );
 }
 

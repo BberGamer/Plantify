@@ -1,6 +1,10 @@
 export { default as UserToastBanner } from "./UserToastBanner";
 export { default as UserHeader } from "./UserHeader";
-export { default as UserFilterBar, USER_ROLES, USER_STATUSES } from "./UserFilterBar";
+export {
+  default as UserFilterBar,
+  USER_ROLES,
+  USER_STATUSES,
+} from "./UserFilterBar";
 export { default as UserCard } from "./UserCard";
 export { RoleBadge, StatusBadge, GoogleBadge } from "./UserBadges";
 export { default as UserEmptyState } from "./UserEmptyState";

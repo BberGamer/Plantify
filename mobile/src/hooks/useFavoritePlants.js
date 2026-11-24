@@ -5,7 +5,9 @@ import usePaginatedList from "./usePaginatedList";
 import useFavoriteActions from "./useFavoriteActions";
 
 export default function useFavoritePlants() {
-  const enabled = useAuthStore((state) => state.isAuthenticated && state.user?.role === "customer");
+  const enabled = useAuthStore(
+    (state) => state.isAuthenticated && state.user?.role === "customer",
+  );
   const fetchPage = useFavoriteStore((state) => state.loadPlants);
   const revision = useFavoriteStore((state) => state.revision);
   const list = usePaginatedList(fetchPage, { limit: 20, enabled });
@@ -17,8 +19,17 @@ export default function useFavoritePlants() {
       list.refresh();
     }
   }, [revision, list.refresh]);
-  const plants = enabled ? list.items.filter((plant) => actions.favorites[plant._id] !== false) : [];
-  return { ...list, plants, actions, enabled,
-    refresh: () => { actions.clearError(); return list.refresh(); },
+  const plants = enabled
+    ? list.items.filter((plant) => actions.favorites[plant._id] !== false)
+    : [];
+  return {
+    ...list,
+    plants,
+    actions,
+    enabled,
+    refresh: () => {
+      actions.clearError();
+      return list.refresh();
+    },
   };
 }

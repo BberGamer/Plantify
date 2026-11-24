@@ -12,13 +12,17 @@ export default function usePlantDetailScreen(id) {
   const plantId = detail.plant?._id;
   const addToGarden = () => {
     if (!detail.plant || !isActive()) return;
-    router.push({ pathname: "/customer/garden/add", params: { plantId: detail.plant._id } });
+    router.push({
+      pathname: "/customer/garden/add",
+      params: { plantId: detail.plant._id },
+    });
   };
   return {
     ...detail,
     saved: favorite.favorites[plantId] === true,
     showFavorite: favorite.enabled,
-    favoriteBusy: !!favorite.pending[plantId] || favorite.favorites[plantId] === undefined,
+    favoriteBusy:
+      !!favorite.pending[plantId] || favorite.favorites[plantId] === undefined,
     favoriteError: favorite.error,
     retryFavorite: favorite.retry,
     toggleSaved: () => favorite.toggle(plantId),

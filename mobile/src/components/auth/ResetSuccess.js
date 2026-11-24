@@ -9,7 +9,7 @@ export default function ResetSuccess({}) {
   return (
     <View style={styles.successScreen}>
       <View style={styles.successIconWrap}>
-        <Ionicons name="checkmark-circle" size={72} color="#16A34A" />
+        <Ionicons name="checkmark-circle" size={72} color={colors.primaryLight} />
       </View>
       <Text style={styles.successTitle}>Đặt lại mật khẩu thành công!</Text>
       <Text style={styles.successDesc}>
@@ -33,28 +33,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.xxxl,
-    backgroundColor: colors.white,
+    backgroundColor: colors.white
   },
   successIconWrap: {
     width: 110,
     height: 110,
     borderRadius: 55,
-    backgroundColor: "#F0FDF4",
+    backgroundColor: colors.softMintBg,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.xxl
   },
   successTitle: {
     fontSize: 22,
     fontWeight: "700",
     color: colors.textPrimary,
     textAlign: "center",
-    marginBottom: spacing.md,
+    marginBottom: spacing.md
   },
   successDesc: {
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: "center",
-    lineHeight: 22,
-  },
+    lineHeight: 22
+  }
 });

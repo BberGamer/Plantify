@@ -36,5 +36,6 @@ export default function useGarden() {
     selectHealthStatus,
     refresh: list.refresh,
     retry: list.retry,
+    changePage: list.load,
   };
 }

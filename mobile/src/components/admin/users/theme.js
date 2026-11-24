@@ -6,19 +6,19 @@ export const garden = {
   forest: colors.primary, // #144D37 - mau la dam
   forestDark: colors.primaryDark,
   moss: colors.primaryLight, // #247855
-  sprout: "#3FA673",
+  sprout: colors.statusSuccess,
   mint: colors.lightMint, // #EDF7F1
-  sage: "#DCEBE1",
+  sage: colors.border,
   cream: colors.background,
   bark: "#7A5230", // mau vo cay
   barkBg: "#F5EDE4",
-  terracotta: "#B4532A", // mau chau dat nung
-  terracottaBg: "#FBEDE6",
-  sun: "#B7791F",
-  sunBg: "#FDF5E3",
+  terracotta: colors.statusError, // mau chau dat nung
+  terracottaBg: colors.errorBackground,
+  sun: colors.statusWarning,
+  sunBg: colors.warmPeachBg,
   ink: colors.textPrimary,
-  inkSoft: "#4B6357",
-  muted: "#7C8B83",
+  inkSoft: colors.textSecondary,
+  muted: colors.textMuted,
   line: colors.border,
   white: colors.white,
   overlay: "rgba(13, 56, 39, 0.55)",

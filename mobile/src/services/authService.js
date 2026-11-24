@@ -2,9 +2,16 @@
 import api from "./api";
 
 const authService = {
-  googleChallenge: async () => (await api.post("/auth/google/challenge", {}, { anonymous: true })).data,
+  googleChallenge: async () =>
+    (await api.post("/auth/google/challenge", {}, { anonymous: true })).data,
   loginGoogle: async ({ idToken, challengeToken }) =>
-    (await api.post("/auth/google", { idToken, challengeToken }, { anonymous: true })).data,
+    (
+      await api.post(
+        "/auth/google",
+        { idToken, challengeToken },
+        { anonymous: true },
+      )
+    ).data,
   completeGoogle: async (fields) =>
     (await api.post("/auth/google/complete", fields, { anonymous: true })).data,
   // Server tự xác định user từ token, không gửi id tài khoản cần sửa.

@@ -5,9 +5,17 @@ import { getSessionContext } from "../services/sessionAccess";
 import getErrorMessage from "../utils/getErrorMessage";
 import useScreenScope from "./useScreenScope";
 
-const invalidResult = (reason, message = getErrorMessage({ code: "DIAGNOSIS_INVALID_PHOTO" })) => ({
-  status: "unrecognized", result_status: "invalid_image", reason, message,
-  prediction: null, alternatives: [], diagnosis_id: null,
+const invalidResult = (
+  reason,
+  message = getErrorMessage({ code: "DIAGNOSIS_INVALID_PHOTO" }),
+) => ({
+  status: "unrecognized",
+  result_status: "invalid_image",
+  reason,
+  message,
+  prediction: null,
+  alternatives: [],
+  diagnosis_id: null,
 });
 
 export default function useDiagnosis(
@@ -67,7 +75,10 @@ export default function useDiagnosis(
     operationLock.current = controller;
     const current = capture();
     const selected = photo;
-    const isCurrent = () => current() && !controller.signal.aborted && latestPhoto.current === selected;
+    const isCurrent = () =>
+      current() &&
+      !controller.signal.aborted &&
+      latestPhoto.current === selected;
     setBusy(true);
     setError("");
     setResult(null);

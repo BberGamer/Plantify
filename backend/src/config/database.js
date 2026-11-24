@@ -1,8 +1,5 @@
 // database.js - Cau hinh ket noi MongoDB (Mongoose)
 
-const dns = require('dns');
-dns.setServers(['8.8.8.8', '1.1.1.1']);
-
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
@@ -13,7 +10,7 @@ const connectDB = async () => {
     console.log(`[MongoDB] Da ket noi thanh cong: ${conn.connection.host}`);
   } catch (error) {
     console.error(`[MongoDB] Loi ket noi: ${error.message}`);
-    process.exit(1);
+    throw error;
   }
 };
 

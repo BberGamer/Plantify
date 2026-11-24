@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Button, Dialog, HelperText, TextInput } from "react-native-paper";
@@ -71,11 +72,21 @@ export default function TreatmentTaskEditDialog({
   }
 
   return (
-    <Dialog visible={Boolean(task)} onDismiss={onDismiss} dismissable={!busy}>
+    <Dialog style={componentStyles.dialog} visible={Boolean(task)} onDismiss={onDismiss} dismissable={!busy}>
       <Dialog.Title>Chỉnh sửa công việc điều trị</Dialog.Title>
       <Dialog.ScrollArea style={styles.scrollArea}>
-        <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-          <TextInput mode="outlined" label="Tiêu đề" value={form.title} onChangeText={change("title")} maxLength={200} disabled={busy} />
+        <ScrollView
+          contentContainerStyle={styles.form}
+          keyboardShouldPersistTaps="handled"
+        >
+          <TextInput
+            mode="outlined"
+            label="Tiêu đề"
+            value={form.title}
+            onChangeText={change("title")}
+            maxLength={200}
+            disabled={busy}
+          />
           <View style={styles.dateTimeRow}>
             <DateTimePickerField
               type="date"
@@ -96,25 +107,68 @@ export default function TreatmentTaskEditDialog({
               />
             </View>
           </View>
-          <TextInput mode="outlined" label="Hướng dẫn" value={form.instructions} onChangeText={change("instructions")} multiline maxLength={2000} disabled={busy} />
-          <TextInput mode="outlined" label="Liều lượng / lượng nước / dụng cụ" value={form.dosage_note} onChangeText={change("dosage_note")} multiline maxLength={2000} disabled={busy} />
-          <TextInput mode="outlined" label="Lưu ý quan trọng" value={form.important_note} onChangeText={change("important_note")} multiline maxLength={2000} disabled={busy} />
+          <TextInput
+            mode="outlined"
+            label="Hướng dẫn"
+            value={form.instructions}
+            onChangeText={change("instructions")}
+            multiline
+            maxLength={2000}
+            disabled={busy}
+          />
+          <TextInput
+            mode="outlined"
+            label="Liều lượng / lượng nước / dụng cụ"
+            value={form.dosage_note}
+            onChangeText={change("dosage_note")}
+            multiline
+            maxLength={2000}
+            disabled={busy}
+          />
+          <TextInput
+            mode="outlined"
+            label="Lưu ý quan trọng"
+            value={form.important_note}
+            onChangeText={change("important_note")}
+            multiline
+            maxLength={2000}
+            disabled={busy}
+          />
           {!!(error || serverError) && (
-            <HelperText type="error" visible>{error || serverError}</HelperText>
+            <HelperText type="error" visible>
+              {error || serverError}
+            </HelperText>
           )}
         </ScrollView>
       </Dialog.ScrollArea>
       <Dialog.Actions>
-        <Button onPress={onDismiss} disabled={busy}>Hủy</Button>
-        <Button onPress={submit} loading={busy} disabled={busy}>Lưu thay đổi</Button>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onDismiss} disabled={busy}>
+          Hủy
+        </Button>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={submit} loading={busy} disabled={busy}>
+          Lưu thay đổi
+        </Button>
       </Dialog.Actions>
     </Dialog>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollArea: { maxHeight: 520 },
-  form: { gap: spacing.md, paddingVertical: spacing.md },
-  dateTimeRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
-  timeField: { width: 150 },
+  scrollArea: {
+    maxHeight: 520
+  },
+  form: {
+    gap: spacing.md,
+    paddingVertical: spacing.md
+  },
+  dateTimeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "flex-start",
+    gap: spacing.md
+  },
+  timeField: {
+    flexGrow: 1,
+    flexBasis: 140
+  }
 });

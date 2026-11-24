@@ -1,3 +1,5 @@
+import { componentStyles } from "../../theme/componentStyles";
+import { radius } from "../../theme";
 import { Image, StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { colors, spacing, typography } from "../../theme";
@@ -14,9 +16,12 @@ export default function DiagnosisResult({
   const identified = status === "accepted" && !!result.prediction;
   const prediction = identified ? result.prediction : null;
   const hasDisease = !!prediction && !prediction.is_healthy;
-  const canCreateTreatment = hasDisease &&
+  const canCreateTreatment =
+    hasDisease &&
     prediction.treatment_available === true &&
-    !!result.diagnosis_id && !!prediction.plant_id && !!prediction.disease_id;
+    !!result.diagnosis_id &&
+    !!prediction.plant_id &&
+    !!prediction.disease_id;
   const title = identified
     ? prediction.is_healthy
       ? "Chưa phát hiện bệnh trong phạm vi hỗ trợ"
@@ -46,16 +51,16 @@ export default function DiagnosisResult({
         )}
         <View style={styles.actions}>
           {hasDisease && (
-              <Button
-                mode="contained"
-                icon="clipboard-pulse-outline"
-                disabled={!canCreateTreatment}
-                onPress={canCreateTreatment ? onCreateTreatment : undefined}
-              >
-                Tạo phác đồ điều trị
-              </Button>
-            )}
-          <Button mode="contained" icon="camera-outline" onPress={onRetake}>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
+              mode="contained"
+              icon="clipboard-pulse-outline"
+              disabled={!canCreateTreatment}
+              onPress={canCreateTreatment ? onCreateTreatment : undefined}
+            >
+              Tạo phác đồ điều trị
+            </Button>
+          )}
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="contained" icon="camera-outline" onPress={onRetake}>
             {identified ? "Chụp / chọn ảnh mới" : "Chụp lại"}
           </Button>
         </View>
@@ -72,16 +77,33 @@ export default function DiagnosisResult({
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 24, overflow: "hidden", backgroundColor: colors.white },
-  image: { width: "100%", aspectRatio: 1.4, backgroundColor: "#10231D" },
-  content: { padding: spacing.xl, gap: spacing.md },
-  title: { ...typography.title, color: colors.textPrimary },
-  body: { ...typography.body, color: colors.textSecondary },
+  card: {
+    borderRadius: radius.card,
+    overflow: "hidden",
+    backgroundColor: colors.white
+  },
+  image: {
+    width: "100%",
+    aspectRatio: 1.4,
+    backgroundColor: "#10231D"
+  },
+  content: {
+    padding: spacing.xl,
+    gap: spacing.md
+  },
+  title: {
+    ...typography.title,
+    color: colors.textPrimary
+  },
+  body: {
+    ...typography.body,
+    color: colors.textSecondary
+  },
   actions: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
     gap: spacing.md,
-    marginTop: spacing.lg,
-  },
+    marginTop: spacing.lg
+  }
 });

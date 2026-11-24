@@ -1,9 +1,7 @@
+import { componentStyles } from "../../theme/componentStyles";
 // RegisterOtpForm.js - Khối giao diện RegisterOtpForm.
 
-import {
-  View,
-  StyleSheet,
-} from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { control, spacing } from "../../theme/tokens";
 import { colors } from "../../theme/colors";
@@ -46,16 +44,26 @@ export default function RegisterOtpForm({
       <OtpResend countdown={countdown} disabled={loading} onResend={onResend} />
 
       {/* Verify Button */}
-      <Button mode="contained" style={styles.submit} contentStyle={{ minHeight: control.minHeight }} onPress={onVerify} disabled={loading} loading={loading}>
-          Xác nhận và kích hoạt tài khoản
+      <Button
+        mode="contained"
+        style={[styles.submit, componentStyles.buttonShape]}
+        contentStyle={{ minHeight: control.minHeight }}
+        onPress={onVerify}
+        disabled={loading}
+        loading={loading}
+      >
+        Xác nhận và kích hoạt tài khoản
       </Button>
     </View>
   );
 }
 const styles = StyleSheet.create({
-  submit: { marginTop: spacing.md, marginBottom: spacing.xl },
+  submit: {
+    marginTop: spacing.md,
+    marginBottom: spacing.xl
+  },
   headerTitleContainer: {
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.xxl
   },
   badge: {
     alignSelf: "flex-start",
@@ -63,25 +71,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: spacing.xs,
     borderRadius: 6,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: "700",
     color: colors.primary,
-    letterSpacing: 0.8,
+    letterSpacing: 0.8
   },
   title: {
     fontSize: 24,
     lineHeight: 32,
     fontWeight: "700",
     color: colors.textPrimary,
-    marginBottom: 6,
+    marginBottom: 6
   },
   subtitle: {
     fontSize: 14,
     color: colors.textSecondary,
-    lineHeight: 20,
-  },
-
+    lineHeight: 20
+  }
 });

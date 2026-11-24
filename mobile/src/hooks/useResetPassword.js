@@ -22,7 +22,9 @@ export default function useResetPassword() {
   const mounted = useRef(false);
   const redirectTimer = useRef(null);
   const countdown = useOtpCountdown(codeSent);
-  const { capture, isActive } = useScreenScope(undefined, () => clearTimeout(redirectTimer.current));
+  const { capture, isActive } = useScreenScope(undefined, () =>
+    clearTimeout(redirectTimer.current),
+  );
 
   useEffect(() => {
     mounted.current = true;
@@ -45,7 +47,13 @@ export default function useResetPassword() {
   };
 
   const sendCode = async () => {
-    if (pending.current || resetSuccess || !isActive() || (codeSent && !countdown.canResend())) return;
+    if (
+      pending.current ||
+      resetSuccess ||
+      !isActive() ||
+      (codeSent && !countdown.canResend())
+    )
+      return;
     const isCurrent = capture();
     if (
       !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.trim())
@@ -70,9 +78,7 @@ export default function useResetPassword() {
       );
     } catch (error) {
       if (isCurrent())
-        setErrorMsg(
-          getErrorMessage(error, "Gửi mã xác thực thất bại."),
-        );
+        setErrorMsg(getErrorMessage(error, "Gửi mã xác thực thất bại."));
     } finally {
       pending.current = false;
       if (mounted.current) setSendingCode(false);
@@ -114,9 +120,7 @@ export default function useResetPassword() {
       }, 2000);
     } catch (error) {
       if (isCurrent())
-        setErrorMsg(
-          getErrorMessage(error, "Đặt lại mật khẩu thất bại."),
-        );
+        setErrorMsg(getErrorMessage(error, "Đặt lại mật khẩu thất bại."));
     } finally {
       pending.current = false;
       if (mounted.current) setUpdatingPassword(false);

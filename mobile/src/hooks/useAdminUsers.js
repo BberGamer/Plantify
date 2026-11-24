@@ -7,7 +7,8 @@ import useAuthStore from "../../store/authStore";
 import useDebouncedValue from "./useDebouncedValue";
 import useScreenScope from "./useScreenScope";
 
-const lockEmailWarning = "Tài khoản đã bị khóa, nhưng không gửi được email thông báo.";
+const lockEmailWarning =
+  "Tài khoản đã bị khóa, nhưng không gửi được email thông báo.";
 
 export default function useAdminUsers() {
   const currentAdmin = useAuthStore((state) => state.user);
@@ -51,15 +52,19 @@ export default function useAdminUsers() {
   });
 
   const fetchPage = useCallback(
-    (params) => userService.getUsers({
-      ...params,
-      search: debounced.value,
-      role: selectedRole,
-      status: selectedStatus,
-    }),
+    (params) =>
+      userService.getUsers({
+        ...params,
+        search: debounced.value,
+        role: selectedRole,
+        status: selectedStatus,
+      }),
     [debounced.value, selectedRole, selectedStatus],
   );
-  const userList = usePaginatedList(fetchPage, { limit: 10, enabled: !debounced.pending });
+  const userList = usePaginatedList(fetchPage, {
+    limit: 10,
+    enabled: !debounced.pending,
+  });
   const {
     items: users,
     setItems: setUsers,
@@ -67,20 +72,26 @@ export default function useAdminUsers() {
     loading,
     refreshing,
   } = userList;
-  const fetchUsers = useCallback((page, refresh = false) => {
-    return userList.load(page, refresh);
-  }, [userList.load]);
+  const fetchUsers = useCallback(
+    (page, refresh = false) => {
+      return userList.load(page, refresh);
+    },
+    [userList.load],
+  );
 
-  const showToast = useCallback((message, type = "success") => {
-    if (!isActive()) return;
-    const inScope = capture();
-    clearTimeout(toastTimer.current);
-    setToast({ visible: true, message, type });
-    toastTimer.current = setTimeout(() => {
-      if (inScope())
-        setToast({ visible: false, message: "", type: "success" });
-    }, 3500);
-  }, [capture, isActive]);
+  const showToast = useCallback(
+    (message, type = "success") => {
+      if (!isActive()) return;
+      const inScope = capture();
+      clearTimeout(toastTimer.current);
+      setToast({ visible: true, message, type });
+      toastTimer.current = setTimeout(() => {
+        if (inScope())
+          setToast({ visible: false, message: "", type: "success" });
+      }, 3500);
+    },
+    [capture, isActive],
+  );
 
   const resetLockForm = () => {
     setLockReason("");
@@ -183,8 +194,7 @@ export default function useAdminUsers() {
     closeStatus();
     const inScope = capture();
     const requestId = ++detailRequest.current;
-    const isCurrent = () =>
-      inScope() && requestId === detailRequest.current;
+    const isCurrent = () => inScope() && requestId === detailRequest.current;
     setDetailLoading(true);
     try {
       const response = await userService.getUserById(item._id);
@@ -212,13 +222,23 @@ export default function useAdminUsers() {
   };
 
   const handleSaveUserInfo = async () => {
-    if (mutationPending.current || !selectedUser || !detailModalVisible || !isActive()) return;
-    if (selectedUser.role === "admin" && (
-      selectedUser._id !== currentAdminId ||
-      editRole !== selectedUser.role ||
-      editStatus !== (selectedUser.status !== false)
-    )) {
-      showToast("Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.", "error");
+    if (
+      mutationPending.current ||
+      !selectedUser ||
+      !detailModalVisible ||
+      !isActive()
+    )
+      return;
+    if (
+      selectedUser.role === "admin" &&
+      (selectedUser._id !== currentAdminId ||
+        editRole !== selectedUser.role ||
+        editStatus !== (selectedUser.status !== false))
+    ) {
+      showToast(
+        "Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.",
+        "error",
+      );
       return;
     }
     const isCurrent = capture();
@@ -259,7 +279,11 @@ export default function useAdminUsers() {
       await userList.refresh();
     } catch (error) {
       if (isCurrent())
-        await handleUserMutationError(error, "Cập nhật thông tin thất bại.", setDetailModalVisible);
+        await handleUserMutationError(
+          error,
+          "Cập nhật thông tin thất bại.",
+          setDetailModalVisible,
+        );
     } finally {
       mutationPending.current = false;
       if (mounted.current) setSubmitting(false);
@@ -269,7 +293,10 @@ export default function useAdminUsers() {
   const handleOpenStatusConfirm = (target) => {
     if (mutationPending.current || !isActive()) return;
     if (target.role === "admin") {
-      showToast("Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.", "error");
+      showToast(
+        "Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.",
+        "error",
+      );
       return;
     }
     if (target._id === currentAdminId && target.status !== false) {
@@ -282,10 +309,18 @@ export default function useAdminUsers() {
     setConfirmModalVisible(true);
   };
   const handleConfirmStatusChange = async () => {
-    if (mutationPending.current || !targetUserForStatus || !confirmModalVisible || !isActive())
+    if (
+      mutationPending.current ||
+      !targetUserForStatus ||
+      !confirmModalVisible ||
+      !isActive()
+    )
       return;
     if (targetUserForStatus.role === "admin") {
-      showToast("Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.", "error");
+      showToast(
+        "Tài khoản cùng vai trò chỉ được xem, không được chỉnh sửa.",
+        "error",
+      );
       return;
     }
     const isCurrent = capture();
@@ -297,7 +332,11 @@ export default function useAdminUsers() {
     mutationPending.current = true;
     setStatusLoading(true);
     try {
-      const response = await userService.updateUserStatus(target._id, status, reason);
+      const response = await userService.updateUserStatus(
+        target._id,
+        status,
+        reason,
+      );
       if (!response?.success)
         throw new Error(response?.message || "Thao tác thất bại.");
       if (!isCurrent()) return;
@@ -313,7 +352,11 @@ export default function useAdminUsers() {
       await userList.refresh();
     } catch (error) {
       if (isCurrent())
-        await handleUserMutationError(error, "Thao tác thất bại.", setConfirmModalVisible);
+        await handleUserMutationError(
+          error,
+          "Thao tác thất bại.",
+          setConfirmModalVisible,
+        );
     } finally {
       mutationPending.current = false;
       if (mounted.current) setStatusLoading(false);
@@ -333,13 +376,15 @@ export default function useAdminUsers() {
     setRoleModalVisible(true);
   };
   const handleConfirmRoleChange = async () => {
-    if (mutationPending.current || !targetUserForRole || !roleModalVisible || !isActive())
+    if (
+      mutationPending.current ||
+      !targetUserForRole ||
+      !roleModalVisible ||
+      !isActive()
+    )
       return;
     const isCurrent = capture();
-    if (
-      targetUserForRole.role === "admin" &&
-      newRoleSelection !== "admin"
-    ) {
+    if (targetUserForRole.role === "admin" && newRoleSelection !== "admin") {
       showToast(
         "Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình!",
         "error",
@@ -401,28 +446,42 @@ export default function useAdminUsers() {
   };
   const changeField = (key, value) => {
     if (mutationPending.current || !detailModalVisible) return;
-    if (selectedUser?.role === "admin" && (
-      selectedUser._id !== currentAdminId || !["fullName", "phone"].includes(key)
-    )) return;
+    if (
+      selectedUser?.role === "admin" &&
+      (selectedUser._id !== currentAdminId ||
+        !["fullName", "phone"].includes(key))
+    )
+      return;
     if (key === "status" && value === true) resetLockForm();
-    const actions = { fullName: setEditFullName, phone: setEditPhone, role: setEditRole, status: setEditStatus };
+    const actions = {
+      fullName: setEditFullName,
+      phone: setEditPhone,
+      role: setEditRole,
+      status: setEditStatus,
+    };
     if (Object.prototype.hasOwnProperty.call(actions, key)) actions[key](value);
   };
   const selectNewRole = (value) => {
-    if (!mutationPending.current && roleModalVisible) setNewRoleSelection(value);
+    if (!mutationPending.current && roleModalVisible)
+      setNewRoleSelection(value);
   };
 
   return {
     handleUserCreated: (user) => {
       if (!isActive()) return;
       const query = search.trim().toLowerCase();
-      const excluded = (selectedRole !== "all" && selectedRole !== user.role) ||
+      const excluded =
+        (selectedRole !== "all" && selectedRole !== user.role) ||
         (selectedStatus !== "all" && selectedStatus !== String(user.status)) ||
-        (query && ![user.fullName, user.email, user.phone].some((value) =>
-          (value || "").toLowerCase().includes(query)));
-      showToast(excluded
-        ? "Đã thêm người dùng. Tài khoản mới không thuộc bộ lọc hiện tại."
-        : "Thêm người dùng thành công.");
+        (query &&
+          ![user.fullName, user.email, user.phone].some((value) =>
+            (value || "").toLowerCase().includes(query),
+          ));
+      showToast(
+        excluded
+          ? "Đã thêm người dùng. Tài khoản mới không thuộc bộ lọc hiện tại."
+          : "Thêm người dùng thành công.",
+      );
       fetchUsers(1);
     },
     currentAdminId,

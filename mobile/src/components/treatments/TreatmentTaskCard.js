@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,7 +10,13 @@ const META = {
   upcoming: ["time-outline", colors.textMuted, "Sắp tới"],
 };
 
-export default function TreatmentTaskCard({ task, busy, editable, onComplete, onEdit }) {
+export default function TreatmentTaskCard({
+  task,
+  busy,
+  editable,
+  onComplete,
+  onEdit,
+}) {
   const [icon, color, label] = META[task.status] || META.upcoming;
   return (
     <View style={styles.card}>
@@ -18,9 +25,15 @@ export default function TreatmentTaskCard({ task, busy, editable, onComplete, on
         <View style={styles.content}>
           <Text style={styles.title}>{task.title}</Text>
           <Text style={[styles.status, { color }]}>
-            {label} · {new Intl.DateTimeFormat("vi-VN").format(new Date(task.scheduled_date))} · {task.time || "08:00"}
+            {label} ·{" "}
+            {new Intl.DateTimeFormat("vi-VN").format(
+              new Date(task.scheduled_date),
+            )}{" "}
+            · {task.time || "08:00"}
           </Text>
-          {!!task.instructions && <Text style={styles.body}>{task.instructions}</Text>}
+          {!!task.instructions && (
+            <Text style={styles.body}>{task.instructions}</Text>
+          )}
           {!!task.dosage_note && (
             <Text style={styles.dosage}>Liều lượng: {task.dosage_note}</Text>
           )}
@@ -31,11 +44,21 @@ export default function TreatmentTaskCard({ task, busy, editable, onComplete, on
       </View>
       {editable && (
         <View style={styles.actions}>
-          <Button mode="outlined" icon="pencil-outline" onPress={() => onEdit(task)} disabled={busy}>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
+            mode="outlined"
+            icon="pencil-outline"
+            onPress={() => onEdit(task)}
+            disabled={busy}
+          >
             Chỉnh sửa
           </Button>
           {task.status === "pending" && (
-            <Button mode="outlined" onPress={() => onComplete(task)} loading={busy} disabled={busy}>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
+              mode="outlined"
+              onPress={() => onComplete(task)}
+              loading={busy}
+              disabled={busy}
+            >
               Đánh dấu đã hoàn thành
             </Button>
           )}
@@ -46,13 +69,48 @@ export default function TreatmentTaskCard({ task, busy, editable, onComplete, on
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.card, padding: spacing.lg, gap: spacing.md },
-  row: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
-  content: { flex: 1, minWidth: 0, gap: spacing.xs },
-  title: { ...typography.label, color: colors.textPrimary },
-  status: { ...typography.caption, fontWeight: "600" },
-  body: { ...typography.body, color: colors.textSecondary, marginTop: spacing.xs },
-  dosage: { ...typography.label, color: colors.primaryLight, marginTop: spacing.xs },
-  important: { ...typography.body, color: colors.statusError, marginTop: spacing.xs },
-  actions: { gap: spacing.sm },
+  card: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    padding: spacing.lg,
+    gap: spacing.md
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md
+  },
+  content: {
+    flex: 1,
+    minWidth: 0,
+    gap: spacing.xs
+  },
+  title: {
+    ...typography.label,
+    color: colors.textPrimary
+  },
+  status: {
+    ...typography.caption,
+    fontWeight: "600"
+  },
+  body: {
+    ...typography.body,
+    color: colors.textSecondary,
+    marginTop: spacing.xs
+  },
+  dosage: {
+    ...typography.label,
+    color: colors.primaryLight,
+    marginTop: spacing.xs
+  },
+  important: {
+    ...typography.body,
+    color: colors.statusError,
+    marginTop: spacing.xs
+  },
+  actions: {
+    gap: spacing.sm
+  }
 });

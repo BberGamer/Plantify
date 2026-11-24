@@ -4,9 +4,18 @@ import getErrorMessage from "../utils/getErrorMessage";
 import useScreenScope from "./useScreenScope";
 
 export default function usePlantDiseases(plantId) {
-  const [result, setResult] = useState({ plantId: null, diseases: [], loading: true, error: "" });
+  const [result, setResult] = useState({
+    plantId: null,
+    diseases: [],
+    loading: true,
+    error: "",
+  });
   const request = useRef(0);
-  const { capture, isActive } = useScreenScope(() => retry(), undefined, plantId);
+  const { capture, isActive } = useScreenScope(
+    () => retry(),
+    undefined,
+    plantId,
+  );
 
   const retry = useCallback(async () => {
     if (!isActive()) return;
@@ -23,23 +32,41 @@ export default function usePlantDiseases(plantId) {
       let page = 1;
       let totalPages = 1;
       do {
-        const response = await diseaseService.getDiseases({ plantId, page, limit: 100 });
+        const response = await diseaseService.getDiseases({
+          plantId,
+          page,
+          limit: 100,
+        });
         if (!isCurrent()) return;
         const data = response?.data;
-        if (!response?.success || !Array.isArray(data?.diseases) ||
-          !Number.isInteger(data.totalPages) || data.totalPages < 0) {
+        if (
+          !response?.success ||
+          !Array.isArray(data?.diseases) ||
+          !Number.isInteger(data.totalPages) ||
+          data.totalPages < 0
+        ) {
           throw new Error("Dữ liệu bệnh cây không hợp lệ.");
         }
         // Server quyết định quyền truy cập; lọc thêm để UI chỉ hiển thị trạng thái công khai.
-        diseases.push(...data.diseases.filter((disease) => disease.status === "active"));
+        diseases.push(
+          ...data.diseases.filter((disease) => disease.status === "active"),
+        );
         totalPages = data.totalPages;
         page += 1;
       } while (page <= totalPages);
-      if (isCurrent()) setResult({ plantId, diseases, loading: false, error: "" });
+      if (isCurrent())
+        setResult({ plantId, diseases, loading: false, error: "" });
     } catch (error) {
       if (isCurrent()) {
-        setResult({ plantId, diseases: [], loading: false,
-          error: getErrorMessage(error, "Không tải được bệnh thường gặp của cây.") });
+        setResult({
+          plantId,
+          diseases: [],
+          loading: false,
+          error: getErrorMessage(
+            error,
+            "Không tải được bệnh thường gặp của cây.",
+          ),
+        });
       }
     }
   }, [plantId, capture, isActive]);

@@ -15,7 +15,11 @@ export default function ChatHeader({ onBack }) {
         <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
       </Pressable>
       <View style={styles.avatar}>
-        <MaterialCommunityIcons name="robot-happy-outline" size={23} color={colors.primary} />
+        <MaterialCommunityIcons
+          name="robot-happy-outline"
+          size={23}
+          color={colors.primary}
+        />
       </View>
       <View style={styles.identity}>
         <Text style={styles.title}>Trợ lý AI</Text>
@@ -27,14 +31,36 @@ export default function ChatHeader({ onBack }) {
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md, backgroundColor: colors.white,
-    borderBottomWidth: 1, borderBottomColor: colors.border,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  back: { width: control.touchSize, minHeight: control.touchSize, alignItems: "center", justifyContent: "center", borderRadius: 22 },
+  back: {
+    width: control.touchSize,
+    minHeight: control.touchSize,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 22,
+  },
   pressed: { backgroundColor: colors.lightMint },
-  avatar: { width: 44, height: 44, borderRadius: 16, backgroundColor: colors.lightMint, alignItems: "center", justifyContent: "center", marginLeft: spacing.xs },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: colors.lightMint,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: spacing.xs,
+  },
   identity: { flex: 1, marginLeft: spacing.md },
   title: { ...typography.section, color: colors.textPrimary },
-  subtitle: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+  subtitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
 });

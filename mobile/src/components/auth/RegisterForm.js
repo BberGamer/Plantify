@@ -1,10 +1,7 @@
+import { componentStyles } from "../../theme/componentStyles";
 // RegisterForm.js - Khối giao diện RegisterForm.
 
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Button, Text } from "react-native-paper";
 import FormField from "../common/FormField";
 import { control, spacing } from "../../theme/tokens";
@@ -28,8 +25,14 @@ export default function RegisterForm({
         <View style={styles.badge}>
           <Text style={styles.badgeText}>THAM GIA PLANTIFY</Text>
         </View>
-        <Text style={styles.title}>{googleMode ? "Hoàn tất thông tin tài khoản" : "Tạo tài khoản mới"}</Text>
-        <Text style={styles.subtitle}>{googleMode ? "Email đã được Google xác minh. Bổ sung thông tin và tạo mật khẩu để hoàn tất đăng ký." : "Điền thông tin của bạn để bắt đầu."}</Text>
+        <Text style={styles.title}>
+          {googleMode ? "Hoàn tất thông tin tài khoản" : "Tạo tài khoản mới"}
+        </Text>
+        <Text style={styles.subtitle}>
+          {googleMode
+            ? "Email đã được Google xác minh. Bổ sung thông tin và tạo mật khẩu để hoàn tất đăng ký."
+            : "Điền thông tin của bạn để bắt đầu."}
+        </Text>
       </View>
 
       <View style={styles.form}>
@@ -104,17 +107,31 @@ export default function RegisterForm({
         </TouchableOpacity>
 
         {/* Button: Create Account */}
-        <Button mode="contained" style={styles.submit} contentStyle={{ minHeight: control.minHeight }} loading={loading} disabled={loading} onPress={onSubmit}>
+        <Button
+          mode="contained"
+          style={[styles.submit, componentStyles.buttonShape]}
+          contentStyle={{ minHeight: control.minHeight }}
+          loading={loading}
+          disabled={loading}
+          onPress={onSubmit}
+        >
           {googleMode ? "Hoàn tất đăng ký" : "Đăng ký"}
         </Button>
 
         {/* Footer Link */}
         <View style={styles.footerContainer}>
           <Text style={styles.footerText}>
-            {googleMode ? "Muốn chọn tài khoản khác? " : "Bạn đã có tài khoản? "}
-            <Text style={styles.linkText} accessibilityRole="link"
+            {googleMode
+              ? "Muốn chọn tài khoản khác? "
+              : "Bạn đã có tài khoản? "}
+            <Text
+              style={styles.linkText}
+              accessibilityRole="link"
               accessibilityState={{ disabled: loading }}
-              onPress={() => { if (!loading) onLogin(); }}>
+              onPress={() => {
+                if (!loading) onLogin();
+              }}
+            >
               {googleMode ? "Quay lại" : "Đăng nhập"}
             </Text>
           </Text>
@@ -124,9 +141,12 @@ export default function RegisterForm({
   );
 }
 const styles = StyleSheet.create({
-  submit: { marginTop: spacing.sm, marginBottom: spacing.xl },
+  submit: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl
+  },
   headerTitleContainer: {
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.xxl
   },
   badge: {
     alignSelf: "flex-start",
@@ -134,34 +154,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: spacing.xs,
     borderRadius: 6,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: "700",
     color: colors.primary,
-    letterSpacing: 0.8,
+    letterSpacing: 0.8
   },
   title: {
     fontSize: 24,
     lineHeight: 32,
     fontWeight: "700",
     color: colors.textPrimary,
-    marginBottom: 6,
+    marginBottom: 6
   },
   subtitle: {
     fontSize: 14,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 20
   },
   form: {
-    width: "100%",
+    width: "100%"
   },
   termsRow: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: spacing.lg,
-    gap: 10,
+    gap: 10
   },
   checkbox: {
     width: 20,
@@ -170,34 +191,34 @@ const styles = StyleSheet.create({
     borderColor: colors.inputBorder,
     borderRadius: 4,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   checkboxActive: {
     backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    borderColor: colors.primary
   },
   termsText: {
     fontSize: 13,
     color: colors.textSecondary,
     flex: 1,
-    lineHeight: 18,
+    lineHeight: 18
   },
   termsHighlight: {
     color: colors.primary,
-    fontWeight: "600",
+    fontWeight: "600"
   },
   footerContainer: {
     alignItems: "center",
-    marginTop: spacing.md,
+    marginTop: spacing.md
   },
   footerText: {
     textAlign: "center",
     fontSize: 14,
-    color: colors.textSecondary,
+    color: colors.textSecondary
   },
   linkText: {
     color: colors.primary,
     fontWeight: "700",
-    textDecorationLine: "underline",
-  },
+    textDecorationLine: "underline"
+  }
 });

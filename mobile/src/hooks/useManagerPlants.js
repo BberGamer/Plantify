@@ -128,7 +128,13 @@ export default function useManagerPlants() {
   };
 
   const openCreate = () => {
-    if (mutationPending.current || photoPending.current || deleteTarget || !isActive()) return;
+    if (
+      mutationPending.current ||
+      photoPending.current ||
+      deleteTarget ||
+      !isActive()
+    )
+      return;
     setPhoto(null);
     setEditing(null);
     setForm(createPlantForm({ category_id: categories[0]?._id || "" }));
@@ -137,7 +143,13 @@ export default function useManagerPlants() {
   };
 
   const openEdit = (plant) => {
-    if (mutationPending.current || photoPending.current || deleteTarget || !isActive()) return;
+    if (
+      mutationPending.current ||
+      photoPending.current ||
+      deleteTarget ||
+      !isActive()
+    )
+      return;
     setPhoto(null);
     setEditing(plant);
     setForm(createPlantForm(plant));
@@ -177,21 +189,45 @@ export default function useManagerPlants() {
   };
 
   const choosePhoto = async () => {
-    if (mutationPending.current || photoPending.current || !visible || !isActive()) return;
+    if (
+      mutationPending.current ||
+      photoPending.current ||
+      !visible ||
+      !isActive()
+    )
+      return;
     photoPending.current = true;
     setChoosingPhoto(true);
     const current = capture();
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 1 });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 1,
+      });
       if (!current() || result.canceled) return;
       const asset = result.assets?.[0];
-      if (!asset?.uri) { setFormError("Không đọc được ảnh đã chọn."); return; }
-      if ((asset.fileSize || 0) > 10 * 1024 * 1024) { setFormError("Ảnh tối đa 10 MB."); return; }
-      if (asset.mimeType && !["image/jpeg", "image/png"].includes(asset.mimeType)) { setFormError("Vui lòng chọn ảnh JPG hoặc PNG."); return; }
+      if (!asset?.uri) {
+        setFormError("Không đọc được ảnh đã chọn.");
+        return;
+      }
+      if ((asset.fileSize || 0) > 10 * 1024 * 1024) {
+        setFormError("Ảnh tối đa 10 MB.");
+        return;
+      }
+      if (
+        asset.mimeType &&
+        !["image/jpeg", "image/png"].includes(asset.mimeType)
+      ) {
+        setFormError("Vui lòng chọn ảnh JPG hoặc PNG.");
+        return;
+      }
       setPhoto(asset);
       setFormError("");
     } catch (error) {
-      if (current()) setFormError(getErrorMessage(error, "Không thể chọn ảnh. Vui lòng thử lại."));
+      if (current())
+        setFormError(
+          getErrorMessage(error, "Không thể chọn ảnh. Vui lòng thử lại."),
+        );
     } finally {
       photoPending.current = false;
       if (mounted.current) setChoosingPhoto(false);
@@ -201,12 +237,18 @@ export default function useManagerPlants() {
   const removePhoto = () => {
     if (mutationPending.current || photoPending.current || !visible) return;
     if (photo) setPhoto(null);
-    else setForm(previous => ({ ...previous, plant_image: "" }));
+    else setForm((previous) => ({ ...previous, plant_image: "" }));
     setFormError("");
   };
 
   const save = async () => {
-    if (mutationPending.current || photoPending.current || !visible || !isActive()) return;
+    if (
+      mutationPending.current ||
+      photoPending.current ||
+      !visible ||
+      !isActive()
+    )
+      return;
     const isCurrent = capture();
     if (
       !form.common_name.trim() ||

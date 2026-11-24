@@ -1,9 +1,9 @@
+import LoadingState from "../../src/components/common/LoadingState";
+import { colors } from "../../src/theme/colors";
 import {
   StyleSheet,
   View,
-  Text,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -112,10 +112,7 @@ export default function AdminUsersScreen() {
         )}
         {/* USER LIST */}
         {loading && !refreshing ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={garden.forest} />
-            <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
-          </View>
+          <LoadingState style={{ flex: 1 }} message="Đang tải dữ liệu..." />
         ) : (
           <FlatList
             data={users}
@@ -211,27 +208,27 @@ export default function AdminUsersScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: garden.white,
+    backgroundColor: colors.background
   },
   container: {
     flex: 1,
     width: "100%",
-    maxWidth: 960,
+    maxWidth: 1040,
     alignSelf: "center",
-    backgroundColor: garden.cream,
+    backgroundColor: garden.cream
   },
   listContent: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: 20,
+    paddingBottom: 40
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   loadingText: {
     marginTop: 10,
     fontSize: 15,
-    color: garden.inkSoft,
-  },
+    color: garden.inkSoft
+  }
 });

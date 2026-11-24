@@ -1,7 +1,11 @@
 import { create } from "zustand";
 import useAuthStore from "./authStore";
 import favoriteService from "../src/services/favoriteService";
-import { getSessionContext, isSessionCurrent, sessionError } from "../src/services/sessionAccess";
+import {
+  getSessionContext,
+  isSessionCurrent,
+  sessionError,
+} from "../src/services/sessionAccess";
 
 const useFavoriteStore = create((set, get) => {
   let sequence = 0;
@@ -26,11 +30,14 @@ const useFavoriteStore = create((set, get) => {
       if (!requested.length) return;
       const request = ++sequence;
       requested.forEach((id) => latest.set(id, request));
-      const favoriteIds = new Set(await favoriteService.getStatus(requested, origin));
+      const favoriteIds = new Set(
+        await favoriteService.getStatus(requested, origin),
+      );
       if (!isSessionCurrent(origin)) return;
       const values = { ...get().favorites };
       for (const id of requested) {
-        if (latest.get(id) === request && !get().pending[id]) values[id] = favoriteIds.has(id);
+        if (latest.get(id) === request && !get().pending[id])
+          values[id] = favoriteIds.has(id);
       }
       set({ favorites: values });
     },
@@ -41,7 +48,10 @@ const useFavoriteStore = create((set, get) => {
       if (!isSessionCurrent(origin)) throw sessionError("SESSION_CHANGED");
       const values = { ...get().favorites };
       for (const plant of response.data.items) {
-        if ((latest.get(plant._id) || 0) <= request && !get().pending[plant._id]) {
+        if (
+          (latest.get(plant._id) || 0) <= request &&
+          !get().pending[plant._id]
+        ) {
           latest.set(plant._id, request);
           values[plant._id] = true;
         }
@@ -57,7 +67,10 @@ const useFavoriteStore = create((set, get) => {
       try {
         await favoriteService.setFavorite(id, value, origin);
         if (!isSessionCurrent(origin)) return;
-        set({ favorites: { ...get().favorites, [id]: value }, revision: get().revision + 1 });
+        set({
+          favorites: { ...get().favorites, [id]: value },
+          revision: get().revision + 1,
+        });
       } finally {
         if (isSessionCurrent(origin)) {
           // GET khởi chạy trước khi mutation kết thúc không được ghi đè kết quả vừa lưu.
@@ -73,9 +86,14 @@ const useFavoriteStore = create((set, get) => {
 
 // Cache chỉ ở bộ nhớ; nguồn dữ liệu bền vững là backend của phiên đang đăng nhập.
 useAuthStore.subscribe((state, previous) => {
-  if (state.sessionVersion !== previous.sessionVersion || state.token !== previous.token ||
-      (state.user?._id || state.user?.id) !== (previous.user?._id || previous.user?.id) ||
-      state.user?.role !== previous.user?.role) useFavoriteStore.getState().reset();
+  if (
+    state.sessionVersion !== previous.sessionVersion ||
+    state.token !== previous.token ||
+    (state.user?._id || state.user?.id) !==
+      (previous.user?._id || previous.user?.id) ||
+    state.user?.role !== previous.user?.role
+  )
+    useFavoriteStore.getState().reset();
 });
 
 export default useFavoriteStore;

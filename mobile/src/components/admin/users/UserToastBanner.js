@@ -1,6 +1,7 @@
-import React from "react";
-import { StyleSheet, View, Text } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import NoticeBanner from "../../common/NoticeBanner";
+
+import { StyleSheet } from "react-native";
+
 import { garden } from "./theme";
 
 export default function UserToastBanner({ toast }) {
@@ -8,22 +9,7 @@ export default function UserToastBanner({ toast }) {
 
   const isError = toast.type === "error";
 
-  return (
-    <View
-      style={[styles.toastBanner, isError ? styles.toastError : styles.toastSuccess]}
-      accessibilityLiveRegion="polite"
-      accessibilityRole="alert"
-    >
-      <View style={styles.iconCircle}>
-        <Ionicons
-          name={isError ? "alert" : "leaf"}
-          size={14}
-          color={isError ? garden.terracotta : garden.forest}
-        />
-      </View>
-      <Text style={styles.toastText}>{toast.message}</Text>
-    </View>
-  );
+  return <NoticeBanner tone={isError ? "error" : "success"} message={toast.message} style={styles.toastBanner} />;
 }
 
 const styles = StyleSheet.create({

@@ -71,41 +71,45 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.background
   },
   keyboardView: {
-    flex: 1,
+    flex: 1
   },
   scrollContent: {
+    width: "100%",
+    maxWidth: 560,
+    alignSelf: "center",
+    paddingTop: 24,
     flexGrow: 1,
-    paddingHorizontal: 28,
-    paddingBottom: 32,
+    paddingHorizontal: 24,
+    paddingBottom: 32
   },
   topBar: {
-    paddingVertical: 12,
+    paddingVertical: 12
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 20,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   errorBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEF2F2",
+    backgroundColor: colors.errorBackground,
     borderWidth: 1,
     borderColor: "#FCA5A5",
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 8,
     marginBottom: 16,
-    gap: 8,
+    gap: 8
   },
   errorText: {
-    color: "#B91C1C",
+    color: colors.statusError,
     fontSize: 13,
-    flex: 1,
-  },
+    flex: 1
+  }
 });

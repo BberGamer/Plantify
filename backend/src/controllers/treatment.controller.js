@@ -1,14 +1,16 @@
 const treatment = require("../services/treatment.service");
 const { success } = require("../utils/api-response");
 
-const handle = (action, message, statusCode = 200) => async (req, res, next) => {
-  try {
-    const data = await action(req);
-    return success(res, message, data, statusCode);
-  } catch (error) {
-    next(error);
-  }
-};
+const handle =
+  (action, message, statusCode = 200) =>
+  async (req, res, next) => {
+    try {
+      const data = await action(req);
+      return success(res, message, data, statusCode);
+    } catch (error) {
+      next(error);
+    }
+  };
 
 module.exports = {
   protocols: handle(
@@ -17,10 +19,11 @@ module.exports = {
     "Lấy danh sách phác đồ điều trị thành công.",
   ),
   preview: handle(
-    (req) => require("../services/treatment-ai.service").createCustomerPreview(
-      req.user.id,
-      req.body,
-    ),
+    (req) =>
+      require("../services/treatment-ai.service").createCustomerPreview(
+        req.user.id,
+        req.body,
+      ),
     "Đã tạo bản xem trước phác đồ điều trị.",
     201,
   ),
@@ -80,11 +83,12 @@ module.exports = {
     201,
   ),
   managerAiDraft: handle(
-    (req) => require("../services/treatment-ai.service").generateFromDocument(
-      req.user.id,
-      req.body,
-      req.file,
-    ),
+    (req) =>
+      require("../services/treatment-ai.service").generateFromDocument(
+        req.user.id,
+        req.body,
+        req.file,
+      ),
     "Đã tạo phác đồ từ tài liệu DOCX.",
     201,
   ),

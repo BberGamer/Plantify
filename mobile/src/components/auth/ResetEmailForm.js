@@ -1,9 +1,7 @@
+import { componentStyles } from "../../theme/componentStyles";
 // ResetEmailForm.js - Khối giao diện ResetEmailForm.
 
-import {
-  View,
-  StyleSheet,
-} from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Button, Text } from "react-native-paper";
 import FormField from "../common/FormField";
 import { control, spacing, radius } from "../../theme/tokens";
@@ -28,22 +26,22 @@ export default function ResetEmailForm({
 
       <View style={styles.emailRow}>
         <View style={styles.emailField}>
-        <FormField
-          label="Địa chỉ email"
-          containerStyle={styles.emailGroup}
-          placeholder="Địa chỉ email"
-          placeholderTextColor={colors.textMuted}
-          value={email}
-          disabled={busy}
-          onChangeText={(val) => {
-            onEmailChange(val);
-          }}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-        />
+          <FormField
+            label="Địa chỉ email"
+            containerStyle={styles.emailGroup}
+            placeholder="Địa chỉ email"
+            placeholderTextColor={colors.textMuted}
+            value={email}
+            disabled={busy}
+            onChangeText={(val) => {
+              onEmailChange(val);
+            }}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+          />
         </View>
-        <Button
+        <Button style={componentStyles.buttonShape}
           mode="outlined"
           contentStyle={{ minHeight: control.minHeight }}
           onPress={onSend}
@@ -57,16 +55,20 @@ export default function ResetEmailForm({
   );
 }
 const styles = StyleSheet.create({
-  emailGroup: { marginBottom: 0 },
-  emailField: { flex: 1 },
+  emailGroup: {
+    marginBottom: 0
+  },
+  emailField: {
+    flex: 1
+  },
   section: {
-    marginBottom: 22,
+    marginBottom: 22
   },
   stepHeader: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: spacing.md,
-    gap: 10,
+    gap: 10
   },
   stepBadge: {
     width: 24,
@@ -74,23 +76,23 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: "#111827",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   stepBadgeText: {
     color: colors.white,
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700"
   },
   stepTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: colors.textPrimary,
+    color: colors.textPrimary
   },
   emailRow: {
     flexDirection: "row",
     alignItems: "center",
     flexWrap: "wrap",
-    gap: 10,
-  },
-
+    gap: 10
+  }
 });

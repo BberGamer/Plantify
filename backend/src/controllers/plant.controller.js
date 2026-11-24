@@ -1,8 +1,10 @@
 // controllers/plant.controller.js - Dieu phoi request & response cho Plants
-const plantService = require('../services/plant.service');
-const { success } = require('../utils/api-response');
-const { createPlantPhotos } = require('../integrations/cloudinary-photo.service');
-const { saveWithPhoto } = require('../services/catalog-photo.service');
+const plantService = require("../services/plant.service");
+const { success } = require("../utils/api-response");
+const {
+  createPlantPhotos,
+} = require("../integrations/cloudinary-photo.service");
+const { saveWithPhoto } = require("../services/catalog-photo.service");
 
 const photos = createPlantPhotos();
 
@@ -13,7 +15,7 @@ const photos = createPlantPhotos();
 const getCategories = async (req, res, next) => {
   try {
     const categories = await plantService.getAllCategories();
-    return success(res, 'Lấy danh mục cây thành công.', categories);
+    return success(res, "Lấy danh mục cây thành công.", categories);
   } catch (error) {
     next(error);
   }
@@ -27,8 +29,13 @@ const getCategories = async (req, res, next) => {
 const getPlants = async (req, res, next) => {
   try {
     const { category_id, search, page, limit } = req.query;
-    const result = await plantService.getAllPlants({ category_id, search, page, limit });
-    return success(res, 'Lấy danh sách cây thành công.', result);
+    const result = await plantService.getAllPlants({
+      category_id,
+      search,
+      page,
+      limit,
+    });
+    return success(res, "Lấy danh sách cây thành công.", result);
   } catch (error) {
     next(error);
   }
@@ -41,7 +48,7 @@ const getPlants = async (req, res, next) => {
 const getPlantById = async (req, res, next) => {
   try {
     const plant = await plantService.getPlantById(req.params.id);
-    return success(res, 'Lấy thông tin cây thành công.', plant);
+    return success(res, "Lấy thông tin cây thành công.", plant);
   } catch (error) {
     next(error);
   }
@@ -50,31 +57,57 @@ const getPlantById = async (req, res, next) => {
 const getManagerPlants = async (req, res, next) => {
   try {
     const result = await plantService.getManagerPlants(req.query);
-    return success(res, 'Lấy danh sách cây thành công.', result);
-  } catch (error) { next(error); }
+    return success(res, "Lấy danh sách cây thành công.", result);
+  } catch (error) {
+    next(error);
+  }
 };
 
 const createPlant = async (req, res, next) => {
   try {
-    const plant = await saveWithPhoto(req.body, req.file, photos, 'plant_image',
-      data => plantService.createPlant({ ...data }));
-    return success(res, 'Tạo cây thành công.', plant, 201);
-  } catch (error) { next(error); }
+    const plant = await saveWithPhoto(
+      req.body,
+      req.file,
+      photos,
+      "plant_image",
+      (data) => plantService.createPlant({ ...data }),
+    );
+    return success(res, "Tạo cây thành công.", plant, 201);
+  } catch (error) {
+    next(error);
+  }
 };
 
 const updatePlant = async (req, res, next) => {
   try {
-    const plant = await saveWithPhoto(req.body, req.file, photos, 'plant_image',
-      data => plantService.updatePlant(req.params.id, { ...data }));
-    return success(res, 'Cập nhật cây thành công.', plant);
-  } catch (error) { next(error); }
+    const plant = await saveWithPhoto(
+      req.body,
+      req.file,
+      photos,
+      "plant_image",
+      (data) => plantService.updatePlant(req.params.id, { ...data }),
+    );
+    return success(res, "Cập nhật cây thành công.", plant);
+  } catch (error) {
+    next(error);
+  }
 };
 
 const deletePlant = async (req, res, next) => {
   try {
     await plantService.deletePlant(req.params.id);
-    return success(res, 'Xóa cây thành công.');
-  } catch (error) { next(error); }
+    return success(res, "Xóa cây thành công.");
+  } catch (error) {
+    next(error);
+  }
 };
 
-module.exports = { getCategories, getPlants, getPlantById, getManagerPlants, createPlant, updatePlant, deletePlant };
+module.exports = {
+  getCategories,
+  getPlants,
+  getPlantById,
+  getManagerPlants,
+  createPlant,
+  updatePlant,
+  deletePlant,
+};

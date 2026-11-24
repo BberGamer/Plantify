@@ -169,7 +169,13 @@ export default function useManagerDiseases() {
   };
 
   const openCreate = () => {
-    if (mutationPending.current || photoPending.current || deleteTarget || !isActive()) return;
+    if (
+      mutationPending.current ||
+      photoPending.current ||
+      deleteTarget ||
+      !isActive()
+    )
+      return;
     ++detailRequest.current;
     setEditing(null);
     setForm(createDiseaseForm());
@@ -215,7 +221,13 @@ export default function useManagerDiseases() {
   };
 
   const openEdit = (disease) => {
-    if (mutationPending.current || photoPending.current || deleteTarget || !isActive()) return;
+    if (
+      mutationPending.current ||
+      photoPending.current ||
+      deleteTarget ||
+      !isActive()
+    )
+      return;
     loadDiseaseForEdit(disease);
   };
 
@@ -252,24 +264,47 @@ export default function useManagerDiseases() {
   };
 
   const choosePhoto = async () => {
-    if (mutationPending.current || photoPending.current || !visible || formLoading || !formReady || !isActive()) return;
+    if (
+      mutationPending.current ||
+      photoPending.current ||
+      !visible ||
+      formLoading ||
+      !formReady ||
+      !isActive()
+    )
+      return;
     const current = capture();
     photoPending.current = true;
     setChoosingPhoto(true);
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 1 });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 1,
+      });
       if (!current() || result.canceled) return;
       const asset = result.assets?.[0];
-      if (!asset?.uri) { setFormError("Không đọc được ảnh đã chọn."); return; }
-      if (asset.fileSize > 10 * 1024 * 1024) { setFormError("Ảnh tối đa 10 MB."); return; }
-      if (asset.mimeType && !["image/jpeg", "image/png"].includes(asset.mimeType)) {
+      if (!asset?.uri) {
+        setFormError("Không đọc được ảnh đã chọn.");
+        return;
+      }
+      if (asset.fileSize > 10 * 1024 * 1024) {
+        setFormError("Ảnh tối đa 10 MB.");
+        return;
+      }
+      if (
+        asset.mimeType &&
+        !["image/jpeg", "image/png"].includes(asset.mimeType)
+      ) {
         setFormError("Vui lòng chọn ảnh JPG hoặc PNG.");
         return;
       }
       setPhoto(asset);
       setFormError("");
     } catch (error) {
-      if (current()) setFormError(getErrorMessage(error, "Không thể chọn ảnh. Vui lòng thử lại."));
+      if (current())
+        setFormError(
+          getErrorMessage(error, "Không thể chọn ảnh. Vui lòng thử lại."),
+        );
     } finally {
       photoPending.current = false;
       if (mounted.current) setChoosingPhoto(false);
@@ -277,9 +312,15 @@ export default function useManagerDiseases() {
   };
 
   const removePhoto = () => {
-    if (mutationPending.current || photoPending.current || !visible || !formReady) return;
+    if (
+      mutationPending.current ||
+      photoPending.current ||
+      !visible ||
+      !formReady
+    )
+      return;
     if (photo) setPhoto(null);
-    else setForm(previous => ({ ...previous, disease_image_url: "" }));
+    else setForm((previous) => ({ ...previous, disease_image_url: "" }));
     setFormError("");
   };
 

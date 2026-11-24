@@ -23,7 +23,9 @@ export default function useProfile() {
   const { capture, isActive } = useScreenScope();
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; };
+    return () => {
+      mounted.current = false;
+    };
   }, []);
   useEffect(() => {
     savePending.current = false;
@@ -54,8 +56,13 @@ export default function useProfile() {
     setMessage("");
   };
   const changeField = (key, value) => {
-    if (savePending.current || isLoggingOut || !editing ||
-        !Object.prototype.hasOwnProperty.call(form, key)) return;
+    if (
+      savePending.current ||
+      isLoggingOut ||
+      !editing ||
+      !Object.prototype.hasOwnProperty.call(form, key)
+    )
+      return;
     setForm((previous) => ({ ...previous, [key]: value }));
     setMessage("");
   };
@@ -74,13 +81,18 @@ export default function useProfile() {
     setMessage("");
     try {
       // Bỏ trống mật khẩu mới nghĩa là giữ mật khẩu cũ; không gửi confirmPassword.
-      const result = await updateProfile({
-        fullName: form.fullName,
-        email: form.email,
-        phone: form.phone,
-        ...(form.currentPassword ? { currentPassword: form.currentPassword } : {}),
-        ...(form.newPassword ? { newPassword: form.newPassword } : {}),
-      }, origin);
+      const result = await updateProfile(
+        {
+          fullName: form.fullName,
+          email: form.email,
+          phone: form.phone,
+          ...(form.currentPassword
+            ? { currentPassword: form.currentPassword }
+            : {}),
+          ...(form.newPassword ? { newPassword: form.newPassword } : {}),
+        },
+        origin,
+      );
       if (!inScope() || result.cancelled) return;
       setEditing(false);
       setForm({}); // Xóa mật khẩu khỏi state sau khi lưu.

@@ -11,7 +11,12 @@ export default function useLogout() {
   const [logoutError, setLogoutError] = useState("");
   const pending = useRef(null);
   const mounted = useRef(false);
-  const { capture, isActive } = useScreenScope(undefined, undefined, undefined, false);
+  const { capture, isActive } = useScreenScope(
+    undefined,
+    undefined,
+    undefined,
+    false,
+  );
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -29,7 +34,8 @@ export default function useLogout() {
   const handleLogout = async () => {
     if (!isActive()) return;
     const inScreen = capture(false);
-    if (pending.current?.version === useAuthStore.getState().sessionVersion) return;
+    if (pending.current?.version === useAuthStore.getState().sessionVersion)
+      return;
     const attempt = {};
     pending.current = attempt;
     setIsLoggingOut(true);
@@ -38,8 +44,14 @@ export default function useLogout() {
       const request = logout();
       attempt.version = useAuthStore.getState().sessionVersion;
       const result = await request;
-      if (inScreen() && isSessionCurrent(result.context) && !result.cacheCleared) {
-        setLogoutError("Đã kết thúc phiên, nhưng chưa xóa được toàn bộ cache trên thiết bị.");
+      if (
+        inScreen() &&
+        isSessionCurrent(result.context) &&
+        !result.cacheCleared
+      ) {
+        setLogoutError(
+          "Đã kết thúc phiên, nhưng chưa xóa được toàn bộ cache trên thiết bị.",
+        );
       }
     } catch {
       if (inScreen() && pending.current === attempt)

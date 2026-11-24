@@ -1,7 +1,10 @@
+import LoadingState from "../../src/components/common/LoadingState";
+import { componentStyles } from "../../src/theme/componentStyles";
+import { radius } from "../../src/theme";
 // plants.js - Ghép giao diện quản lý cây từ hook và các component.
 
-import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Button, Text } from "react-native-paper";
+import { FlatList, RefreshControl, StyleSheet } from "react-native";
+import { Button } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../../src/theme/colors";
 import useManagerPlants from "../../src/hooks/useManagerPlants";
@@ -32,10 +35,7 @@ export default function ManagerPlantsScreen() {
         />
       )}
       {manager.loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Đang tải danh sách cây…</Text>
-        </View>
+        <LoadingState style={{ flex: 1 }} message="Đang tải danh sách cây…" />
       ) : (
         <FlatList
           data={manager.plants}
@@ -79,7 +79,7 @@ export default function ManagerPlantsScreen() {
         disabled={busy}
         buttonColor={colors.primary}
         textColor={colors.white}
-        style={styles.addButton}
+        style={[styles.addButton, componentStyles.buttonShape]}
         contentStyle={styles.addContent}
       >
         Thêm cây mới
@@ -114,16 +114,41 @@ export default function ManagerPlantsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  list: { paddingHorizontal: 18, paddingBottom: 16, gap: 12 },
-  emptyList: { flexGrow: 1 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  loadingText: { color: colors.textSecondary, marginTop: 12 },
-  addButton: {
-    marginHorizontal: 18,
-    marginTop: 6,
-    marginBottom: 10,
-    borderRadius: 13,
+  safe: {
+    flex: 1,
+    backgroundColor: colors.background
   },
-  addContent: { minHeight: 50 },
+  list: {
+    width: "100%",
+    maxWidth: 1040,
+    alignSelf: "center",
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    gap: 12
+  },
+  emptyList: {
+    flexGrow: 1
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  loadingText: {
+    color: colors.textSecondary,
+    marginTop: 12
+  },
+  addButton: {
+    width: "90%",
+    maxWidth: 1000,
+    alignSelf: "center",
+    marginHorizontal: 0,
+    marginTop: 6,
+    marginBottom: 16,
+    borderRadius: radius.input
+  },
+  addContent: {
+    minHeight: 50
+  }
 });

@@ -1,5 +1,7 @@
-import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Button, Text } from "react-native-paper";
+import LoadingState from "../../src/components/common/LoadingState";
+import { componentStyles } from "../../src/theme/componentStyles";
+import { FlatList, RefreshControl, StyleSheet } from "react-native";
+import { Button } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../../src/theme/colors";
 import useManagerDiseases from "../../src/hooks/useManagerDiseases";
@@ -19,10 +21,10 @@ export default function ManagerDiseasesScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <DiseaseHeader count={manager.diseases.length} total={manager.total} />
-      <Button
+      <Button contentStyle={componentStyles.button}
         icon="plus"
         mode="contained"
-        style={{ marginHorizontal: 18, marginBottom: 12 }}
+        style={[{ marginHorizontal: 18, marginBottom: 12 }, componentStyles.buttonShape]}
         onPress={manager.openCreate}
         disabled={manager.saving || manager.deleting}
       >
@@ -47,10 +49,7 @@ export default function ManagerDiseasesScreen() {
         />
       )}
       {manager.loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Đang tải danh sách bệnh cây…</Text>
-        </View>
+        <LoadingState style={{ flex: 1 }} message="Đang tải danh sách bệnh cây…" />
       ) : (
         <FlatList
           data={manager.diseases}
@@ -128,9 +127,29 @@ export default function ManagerDiseasesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  list: { paddingHorizontal: 18, paddingBottom: 18, gap: 12 },
-  emptyList: { flexGrow: 1 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  loadingText: { color: colors.textSecondary, marginTop: 12 },
+  safe: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  list: {
+    width: "100%",
+    maxWidth: 1040,
+    alignSelf: "center",
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 18,
+    gap: 12
+  },
+  emptyList: {
+    flexGrow: 1
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  loadingText: {
+    color: colors.textSecondary,
+    marginTop: 12
+  }
 });

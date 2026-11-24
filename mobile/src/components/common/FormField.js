@@ -1,13 +1,23 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useState } from "react";
+import { Platform, StyleSheet, View } from "react-native";
 import { HelperText, TextInput } from "react-native-paper";
 import { colors } from "../../theme/colors";
 import { control, radius, spacing, typography } from "../../theme/tokens";
 
 // Ghép input với lỗi/hướng dẫn: caller giữ draft, focus và validation nghiệp vụ.
 export default React.forwardRef(function FormField(
-  { error, hint, disabled = false, style, contentStyle, containerStyle, ...props }, ref,
+  {
+    error,
+    hint,
+    disabled = false,
+    style,
+    contentStyle,
+    containerStyle,
+    ...props
+  },
+  ref,
 ) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={[styles.group, containerStyle]}>
       <TextInput
@@ -18,12 +28,26 @@ export default React.forwardRef(function FormField(
         editable={!disabled && props.editable !== false}
         error={Boolean(error)}
         accessibilityLabel={props.accessibilityLabel || props.label}
-        style={[styles.input, style]}
+        style={[styles.input, style, focused && styles.focused]}
+        outlineColor={colors.inputBorder}
+        activeOutlineColor={colors.primary}
+        onFocus={(event) => {
+          setFocused(true);
+          props.onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          props.onBlur?.(event);
+        }}
         contentStyle={[styles.content, contentStyle]}
         outlineStyle={styles.outline}
       />
       {!!(error || hint) && (
-        <HelperText type={error ? "error" : "info"} visible accessibilityRole={error ? "alert" : undefined}>
+        <HelperText
+          type={error ? "error" : "info"}
+          visible
+          accessibilityRole={error ? "alert" : undefined}
+        >
           {error || hint}
         </HelperText>
       )}
@@ -32,8 +56,26 @@ export default React.forwardRef(function FormField(
 });
 
 const styles = StyleSheet.create({
-  group: { marginBottom: spacing.lg },
-  input: { backgroundColor: colors.white },
-  content: { ...typography.body, minHeight: control.minHeight },
-  outline: { borderRadius: radius.input },
+  group: {
+    marginBottom: spacing.lg
+  },
+  input: {
+    backgroundColor: colors.white
+  },
+  content: {
+    ...typography.body,
+    minHeight: control.minHeight
+  },
+  outline: {
+    borderRadius: radius.input
+  },
+  focused: Platform.select({
+    web: {
+      outlineStyle: "solid",
+      outlineWidth: 2,
+      outlineColor: colors.primary,
+      outlineOffset: 3
+    },
+    default: {}
+  })
 });

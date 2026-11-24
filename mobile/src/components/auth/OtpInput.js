@@ -23,7 +23,12 @@ export default function OtpInput({ value, onChange, disabled = false }) {
       });
     if (!numeric) next[index] = "";
     // Giữ vị trí các chữ số phía sau khi người dùng xóa một ô ở giữa.
-    onChange(next.map((digit) => digit || " ").join("").trimEnd());
+    onChange(
+      next
+        .map((digit) => digit || " ")
+        .join("")
+        .trimEnd(),
+    );
     if (numeric) inputs.current[Math.min(index + numeric.length, 5)]?.focus();
   };
   return (

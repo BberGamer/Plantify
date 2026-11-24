@@ -1,4 +1,6 @@
-import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomSheetFrame } from "../../common/ModalFrames";
+import { componentStyles } from "../../../theme/componentStyles";
+
 import { spacing, typography } from "../../../theme/tokens";
 
 import {
@@ -6,7 +8,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Modal,
   ScrollView,
 } from "react-native";
 import { Button } from "react-native-paper";
@@ -41,17 +42,11 @@ export default function UserRoleModal({
   onClose,
   onConfirm,
 }) {
-  const close = () => { if (!submitting) onClose(); };
+  const close = () => {
+    if (!submitting) onClose();
+  };
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={close}
-    >
-      <View style={styles.modalOverlay}>
-        <SafeAreaView edges={["bottom", "left", "right"]} style={styles.modalCard}>
-          {/* HEADER */}
+    <BottomSheetFrame visible={visible} onRequestClose={close} animationType="fade" style={{ maxWidth: 560 }}>
           <View style={styles.modalHeader}>
             <View>
               <Text style={styles.modalTitle}>Phân quyền vai trò</Text>
@@ -60,7 +55,8 @@ export default function UserRoleModal({
               </Text>
             </View>
             <TouchableOpacity
-              disabled={submitting} onPress={close}
+              disabled={submitting}
+              onPress={close}
               style={styles.closeBtn}
               accessibilityRole="button"
               accessibilityLabel="Đóng"
@@ -70,7 +66,10 @@ export default function UserRoleModal({
           </View>
 
           {/* BODY */}
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalBody}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.modalBody}
+          >
             {ROLE_OPTIONS.map((item) => {
               const isSelected = selectedRole === item.key;
               return (
@@ -80,7 +79,8 @@ export default function UserRoleModal({
                     styles.roleOptionCard,
                     isSelected && styles.roleOptionCardSelected,
                   ]}
-                  disabled={submitting} onPress={() => onSelectRole(item.key)}
+                  disabled={submitting}
+                  onPress={() => onSelectRole(item.key)}
                   activeOpacity={0.7}
                 >
                   <View style={styles.roleOptionLeft}>
@@ -105,7 +105,9 @@ export default function UserRoleModal({
                       >
                         {item.title}
                       </Text>
-                      <Text style={styles.roleOptionSub}>{item.description}</Text>
+                      <Text style={styles.roleOptionSub}>
+                        {item.description}
+                      </Text>
                     </View>
                   </View>
 
@@ -121,37 +123,25 @@ export default function UserRoleModal({
 
           {/* FOOTER */}
           <View style={styles.modalFooter}>
-            <Button onPress={close} disabled={submitting}>Hủy</Button>
-            <Button mode="contained" onPress={onConfirm} disabled={submitting} loading={submitting}>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={close} disabled={submitting}>
+              Hủy
+            </Button>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
+              mode="contained"
+              onPress={onConfirm}
+              disabled={submitting}
+              loading={submitting}
+            >
               Lưu vai trò
             </Button>
           </View>
-        </SafeAreaView>
-      </View>
-    </Modal>
+    </BottomSheetFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: garden.overlay,
-    justifyContent: "flex-end",
-    alignItems: "center",
-  },
-  modalCard: {
-    maxHeight: "90%",
-    width: "100%",
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    overflow: "hidden",
-    shadowColor: garden.forestDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 8,
-  },
+  
+  
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -161,16 +151,17 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     backgroundColor: garden.cream,
     borderBottomWidth: 1,
-    borderBottomColor: garden.line,
+    borderBottomColor: garden.line
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: colors.textPrimary,
+    color: colors.textPrimary
   },
   modalSubtitle: {
-    ...typography.caption, color: colors.textSecondary,
-    marginTop: 2,
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2
   },
   closeBtn: {
     width: 44,
@@ -178,10 +169,10 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: garden.mint,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   modalBody: {
-    padding: 18,
+    padding: 18
   },
   roleOptionCard: {
     flexDirection: "row",
@@ -192,31 +183,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: garden.line,
     backgroundColor: garden.cream,
-    marginBottom: 10,
+    marginBottom: 10
   },
   roleOptionCardSelected: {
     borderWidth: 2,
     borderColor: garden.moss,
-    backgroundColor: colors.softMintBg,
+    backgroundColor: colors.softMintBg
   },
   roleOptionLeft: {
     flex: 1,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "center"
   },
   roleLeaf: {
     ...leafShape(42),
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   roleOptionTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: colors.textPrimary,
+    color: colors.textPrimary
   },
   roleOptionSub: {
-    ...typography.caption, color: colors.textSecondary,
-    marginTop: 2,
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2
   },
   modalFooter: {
     flexWrap: "wrap",
@@ -227,7 +219,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     borderTopWidth: 1,
     borderTopColor: garden.line,
-    gap: 10,
-  },
-
+    gap: 10
+  }
 });

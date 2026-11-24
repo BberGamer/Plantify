@@ -19,7 +19,9 @@ export default function PasswordField({ onChange, disabled, ...props }) {
           accessibilityLabel={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
           disabled={disabled}
           forceTextInputFocus={false}
-          onPress={() => { if (!disabled) setVisible((previous) => !previous); }}
+          onPress={() => {
+            if (!disabled) setVisible((previous) => !previous);
+          }}
         />
       }
     />

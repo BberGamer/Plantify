@@ -1,130 +1,91 @@
 import React from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
-import {
-  Ionicons,
-  FontAwesome5,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
-import { Card, Text } from "react-native-paper";
+import { View, StyleSheet, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Text } from "react-native-paper";
 import { useRouter } from "expo-router";
-
-// chieu rong cua cua so ung dung hien tai
-const { width } = Dimensions.get("window");
+import { colors, radius, spacing, typography } from "../../theme";
 
 const FEATURES = [
-  {
-    id: "1",
-    title: "Nhận diện cây",
-    href: "/customer/identification",
-    subtitle: "Gợi ý tên cây từ ảnh",
-    bgColor: "#EEF8F1",
-    icon: <Ionicons name="leaf-outline" size={20} color="#247855" />,
-  },
-  {
-    id: "2",
-    title: "Chẩn đoán bệnh",
-    href: "/customer/diagnosis",
-    subtitle: "Kiểm tra dấu hiệu lạ",
-    bgColor: "#FFF8EE",
-    icon: <FontAwesome5 name="stethoscope" size={17} color="#C26D2B" />,
-  },
-  {
-    id: "3",
-    title: "Vườn của tôi",
-    href: "/customer/garden",
-    subtitle: "Quản lý cây trong vườn",
-    bgColor: "#F4FBF7",
-    icon: (
-      <MaterialCommunityIcons name="sprout-outline" size={20} color="#247855" />
-    ),
-  },
-  {
-    id: "4",
-    title: "Trợ lý AI",
-    href: "/customer/chat",
-    subtitle: "Hỏi đáp chăm cây",
-    bgColor: "#F6F4FC",
-    icon: (
-      <MaterialCommunityIcons
-        name="robot-happy-outline"
-        size={20}
-        color="#7C3AED"
-      />
-    ),
-  },
+  { title: "Nhận diện cây", href: "/customer/identification", subtitle: "Tìm tên cây từ ảnh", icon: "leaf-outline" },
+  { title: "Chẩn đoán bệnh", href: "/customer/diagnosis", subtitle: "Kiểm tra dấu hiệu lạ", icon: "medkit-outline" },
+  { title: "Vườn của tôi", href: "/customer/garden", subtitle: "Theo dõi cây đang trồng", icon: "flower-outline" },
+  { title: "Trợ lý AI", href: "/customer/chat", subtitle: "Hỏi đáp về chăm cây", icon: "chatbubbles-outline" },
 ];
 
 export default function FeatureGrid() {
   const router = useRouter();
-  return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Khám phá Plantify</Text>
-      <View style={styles.grid}>
-        {FEATURES.map((item) => (
-          <Card
-            key={item.id}
-            mode="contained"
-            onPress={item.href ? () => router.navigate(item.href) : undefined}
-            accessibilityLabel={item.title}
-            style={[styles.card, { backgroundColor: item.bgColor }]}
-          >
-            <View style={styles.cardTop}>
-              <View style={styles.iconCircle}>{item.icon}</View>
-              <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-            </View>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-          </Card>
-        ))}
-      </View>
+  return <View style={styles.section}>
+    <Text accessibilityRole="header" style={styles.heading}>Chăm cây cùng Plantify</Text>
+    <View style={styles.grid}>
+      {FEATURES.map(item => <Pressable key={item.href} accessibilityRole="button"
+        accessibilityLabel={`${item.title}. ${item.subtitle}`}
+        onPress={() => router.navigate(item.href)}
+        style={({ pressed, hovered }) => [styles.card, hovered && styles.hovered, pressed && styles.pressed]}>
+        <View style={styles.top}><View style={styles.icon}><Ionicons name={item.icon} size={24} color={colors.primary} /></View>
+          <Ionicons name="arrow-forward" size={18} color={colors.textSecondary} /></View>
+        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.subtitle}>{item.subtitle}</Text>
+      </Pressable>)}
     </View>
-  );
+  </View>;
 }
-
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 26,
+  section: {
+    marginTop: spacing.xxxl
   },
-  sectionTitle: {
-    fontSize: 19,
-    fontWeight: "800",
-    color: "#183B2B",
-    marginBottom: 12,
-    letterSpacing: -0.3,
+  heading: {
+    ...typography.section,
+    color: colors.textPrimary,
+    marginBottom: spacing.lg
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    gap: spacing.md
   },
   card: {
-    width: (width - 36 - 12) / 2,
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 12,
+    flexBasis: "46%",
+    flexGrow: 1,
+    minWidth: 130,
+    padding: spacing.lg,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white
   },
-  cardTop: {
+  hovered: {
+    borderColor: colors.primaryLight,
+    transform: [{
+      translateY: -2
+    }]
+  },
+  pressed: {
+    backgroundColor: colors.lightMint,
+    transform: [{
+      scale: 0.98
+    }]
+  },
+  top: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: spacing.lg
+  },
+  icon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    backgroundColor: colors.softMintBg,
     alignItems: "center",
+    justifyContent: "center"
   },
-  iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
+  title: {
+    ...typography.label,
+    color: colors.textPrimary
   },
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#183B2B",
-    marginTop: 14,
-  },
-  cardSubtitle: {
-    fontSize: 12,
-    color: "#6B7280",
-    marginTop: 3,
-  },
+  subtitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: spacing.xs
+  }
 });

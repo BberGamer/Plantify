@@ -1,3 +1,5 @@
+import { componentStyles } from "../../theme/componentStyles";
+import { radius } from "../../theme";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -7,10 +9,10 @@ import { colors } from "../../theme/colors";
 export default function AccountLockedDialog({ visible, onDismiss }) {
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={onDismiss} style={styles.dialog}>
+      <Dialog visible={visible} onDismiss={onDismiss} style={[componentStyles.dialog, styles.dialog]}>
         <ScrollView bounces={false} style={styles.scroll}>
           <LinearGradient
-            colors={["#15803D", "#166534"]}
+            colors={[colors.primaryLight, "#166534"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.header}
@@ -22,23 +24,37 @@ export default function AccountLockedDialog({ visible, onDismiss }) {
             >
               <Ionicons name="leaf" size={24} color={colors.white} />
             </View>
-            <Text variant="titleLarge" style={styles.brand}>Plantify</Text>
+            <Text variant="titleLarge" style={styles.brand}>
+              Plantify
+            </Text>
           </LinearGradient>
           <View style={styles.content}>
-            <Text variant="titleLarge" accessibilityRole="header" style={styles.title}>
+            <Text
+              variant="titleLarge"
+              accessibilityRole="header"
+              style={styles.title}
+            >
               Tài khoản đã bị khóa
             </Text>
             <Text variant="bodyMedium" style={styles.description}>
               Vui lòng liên hệ Plantify để được hỗ trợ mở khóa tài khoản.
             </Text>
             <View style={styles.contact}>
-              <Text variant="labelLarge" style={styles.contactLabel}>Hỗ trợ qua Zalo</Text>
-              <Text variant="headlineSmall" style={styles.phone} selectable>0337774204</Text>
+              <Text variant="labelLarge" style={styles.contactLabel}>
+                Hỗ trợ qua Zalo
+              </Text>
+              <Text variant="headlineSmall" style={styles.phone} selectable>
+                0337774204
+              </Text>
             </View>
           </View>
         </ScrollView>
         <View style={styles.footer}>
-          <Button mode="contained" onPress={onDismiss} contentStyle={styles.buttonContent}>
+          <Button style={componentStyles.buttonShape}
+            mode="contained"
+            onPress={onDismiss}
+            contentStyle={styles.buttonContent}
+          >
             Đóng
           </Button>
         </View>
@@ -55,20 +71,20 @@ const styles = StyleSheet.create({
     maxHeight: "85%",
     marginHorizontal: 0,
     paddingTop: 0,
-    borderRadius: 20,
+    borderRadius: radius.sheet,
     overflow: "hidden",
-    backgroundColor: colors.white,
+    backgroundColor: colors.white
   },
   scroll: {
     marginTop: 0,
     flexGrow: 0,
-    flexShrink: 1,
+    flexShrink: 1
   },
   header: {
     alignItems: "center",
     gap: 8,
     paddingVertical: 20,
-    paddingHorizontal: 24,
+    paddingHorizontal: 24
   },
   brandIcon: {
     width: 44,
@@ -76,22 +92,22 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.22)",
+    backgroundColor: "rgba(255, 255, 255, 0.22)"
   },
   brand: {
     color: colors.white,
-    fontWeight: "700",
+    fontWeight: "700"
   },
   content: {
     padding: 24,
-    gap: 12,
+    gap: 12
   },
   title: {
     color: colors.textPrimary,
-    fontWeight: "700",
+    fontWeight: "700"
   },
   description: {
-    color: colors.textSecondary,
+    color: colors.textSecondary
   },
   contact: {
     marginTop: 4,
@@ -102,26 +118,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: "dashed",
     borderColor: colors.primaryLight,
-    backgroundColor: colors.lightMint,
+    backgroundColor: colors.lightMint
   },
   contactLabel: {
     color: colors.accentGreen,
     fontWeight: "600",
-    textAlign: "center",
+    textAlign: "center"
   },
   phone: {
     color: colors.primary,
     fontWeight: "700",
-    textAlign: "center",
+    textAlign: "center"
   },
   footer: {
     paddingVertical: 12,
     paddingHorizontal: 24,
     backgroundColor: colors.background,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
+    borderTopColor: colors.border
   },
   buttonContent: {
-    minHeight: 44,
-  },
+    minHeight: 44
+  }
 });

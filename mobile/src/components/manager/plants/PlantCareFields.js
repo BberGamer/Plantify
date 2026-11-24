@@ -14,32 +14,32 @@ export default function PlantCareFields({ value, disabled, onChange }) {
       </Text>
       <View style={styles.careCard}>
         {[
-["light", "Ánh sáng", "sunny-outline", "Ví dụ: Ánh sáng gián tiếp"],
-["water", "Tưới nước", "water-outline", "Ví dụ: 2–3 lần mỗi tuần"],
-["temperature", "Nhiệt độ", "thermometer-outline", "Ví dụ: 20–35°C"],
-["humidity", "Độ ẩm", "cloud-outline", "Ví dụ: Trung bình"],
+          ["light", "Ánh sáng", "sunny-outline", "Ví dụ: Ánh sáng gián tiếp"],
+          ["water", "Tưới nước", "water-outline", "Ví dụ: 2–3 lần mỗi tuần"],
+          ["temperature", "Nhiệt độ", "thermometer-outline", "Ví dụ: 20–35°C"],
+          ["humidity", "Độ ẩm", "cloud-outline", "Ví dụ: Trung bình"],
         ].map(([key, label, icon, placeholder], index, fields) => (
-<View
-  key={key}
-  style={[
-    styles.careRow,
-    index === fields.length - 1 && styles.careRowLast,
-  ]}
->
-  <View style={styles.careLabel}>
-    <Ionicons name={icon} size={17} color={colors.primaryLight} />
-    <Text style={styles.careLabelText}>{label}</Text>
-  </View>
-  <TextInput
-    value={typeof value[key] === "string" ? value[key] : ""}
-    onChangeText={(text) => onChange(key, text)}
-    editable={!disabled}
-    accessibilityLabel={label}
-    placeholder={placeholder}
-    placeholderTextColor={colors.textMuted}
-    style={styles.careInput}
-  />
-</View>
+          <View
+            key={key}
+            style={[
+              styles.careRow,
+              index === fields.length - 1 && styles.careRowLast,
+            ]}
+          >
+            <View style={styles.careLabel}>
+              <Ionicons name={icon} size={17} color={colors.primaryLight} />
+              <Text style={styles.careLabelText}>{label}</Text>
+            </View>
+            <TextInput
+              value={typeof value[key] === "string" ? value[key] : ""}
+              onChangeText={(text) => onChange(key, text)}
+              editable={!disabled}
+              accessibilityLabel={label}
+              placeholder={placeholder}
+              placeholderTextColor={colors.textMuted}
+              style={styles.careInput}
+            />
+          </View>
         ))}
       </View>
     </View>
@@ -47,41 +47,57 @@ export default function PlantCareFields({ value, disabled, onChange }) {
 }
 
 const styles = StyleSheet.create({
-  field: { marginBottom: 15 },
+  field: {
+    marginBottom: 15
+  },
   fieldLabel: {
     color: colors.textPrimary,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: "700",
-    marginBottom: 7,
+    marginBottom: 7
   },
   fieldHint: {
     color: colors.textSecondary,
-    fontSize: 11,
+    fontSize: 13,
     marginTop: -3,
     marginBottom: 8,
-    lineHeight: 16,
+    lineHeight: 20
   },
   careCard: {
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 12
   },
   careRow: {
     minHeight: 54,
     flexDirection: "row",
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: colors.borderLight
   },
-  careRowLast: { borderBottomWidth: 0 },
-  careLabel: { width: 104, flexDirection: "row", alignItems: "center", gap: 7 },
-  careLabelText: { color: colors.textPrimary, fontSize: 12, fontWeight: "600" },
+  careRowLast: {
+    borderBottomWidth: 0
+  },
+  careLabel: {
+    width: 104,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7
+  },
+  careLabelText: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "600"
+  },
   careInput: {
     flex: 1,
     minHeight: 42,
     color: colors.textPrimary,
-    fontSize: 12,
-  },
+    fontSize: 13,
+    lineHeight: 20
+  }
 });

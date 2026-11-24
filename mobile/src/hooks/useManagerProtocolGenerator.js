@@ -16,7 +16,8 @@ const collectPages = async (fetchPage) => {
     if (response?.success !== true || !Array.isArray(pageItems))
       throw new Error("Dữ liệu phân trang không hợp lệ.");
     items.push(...pageItems);
-    totalPages = response.data.pagination?.totalPages ?? response.data.totalPages;
+    totalPages =
+      response.data.pagination?.totalPages ?? response.data.totalPages;
     if (!Number.isSafeInteger(totalPages) || totalPages < 0)
       throw new Error("Dữ liệu phân trang không hợp lệ.");
     page += 1;
@@ -44,15 +45,21 @@ export default function useManagerProtocolGenerator() {
     setError("");
     try {
       const [diseaseItems, plantItems] = await Promise.all([
-        collectPages((page) => diseaseService.getManagerDiseases({ page, limit: 100 })),
-        collectPages((page) => plantService.getManagerPlants({ page, limit: 100 })),
+        collectPages((page) =>
+          diseaseService.getManagerDiseases({ page, limit: 100 }),
+        ),
+        collectPages((page) =>
+          plantService.getManagerPlants({ page, limit: 100 }),
+        ),
       ]);
       if (requestId !== request.current) return;
       setDiseases(diseaseItems);
       setPlants(plantItems);
     } catch (failure) {
       if (requestId === request.current)
-        setError(getErrorMessage(failure, "Không thể tải danh mục cây và bệnh."));
+        setError(
+          getErrorMessage(failure, "Không thể tải danh mục cây và bệnh."),
+        );
     } finally {
       if (requestId === request.current) setLoading(false);
     }
@@ -60,15 +67,21 @@ export default function useManagerProtocolGenerator() {
 
   useEffect(() => {
     void load();
-    return () => { request.current += 1; };
+    return () => {
+      request.current += 1;
+    };
   }, [load, sessionVersion]);
 
   const eligiblePlants = useMemo(() => {
     const disease = diseases.find((item) => item._id === diseaseId);
     const linkedIds = new Set(
-      (disease?.plant_ids || disease?.plants || []).map((item) => item._id || item),
+      (disease?.plant_ids || disease?.plants || []).map(
+        (item) => item._id || item,
+      ),
     );
-    return linkedIds.size ? plants.filter((plant) => linkedIds.has(plant._id)) : [];
+    return linkedIds.size
+      ? plants.filter((plant) => linkedIds.has(plant._id))
+      : [];
   }, [diseaseId, diseases, plants]);
 
   const selectDisease = (value) => {
@@ -82,7 +95,9 @@ export default function useManagerProtocolGenerator() {
   const togglePlant = (id) => {
     if (mutation.current) return;
     setPlantIds((current) =>
-      current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
+      current.includes(id)
+        ? current.filter((value) => value !== id)
+        : [...current, id],
     );
     setResult(null);
     setError("");
@@ -130,7 +145,9 @@ export default function useManagerProtocolGenerator() {
         throw new Error("Dữ liệu phác đồ không hợp lệ.");
       setResult(response.data);
     } catch (failure) {
-      setError(getErrorMessage(failure, "Không thể tạo phác đồ từ tài liệu DOCX."));
+      setError(
+        getErrorMessage(failure, "Không thể tạo phác đồ từ tài liệu DOCX."),
+      );
     } finally {
       mutation.current = false;
       setGenerating(false);
@@ -146,7 +163,21 @@ export default function useManagerProtocolGenerator() {
     setError("");
   };
 
-  return { diseases, eligiblePlants, diseaseId, plantIds, document, result,
-    loading, generating, error, retry: load, selectDisease, togglePlant,
-    chooseDocument, generate, reset };
+  return {
+    diseases,
+    eligiblePlants,
+    diseaseId,
+    plantIds,
+    document,
+    result,
+    loading,
+    generating,
+    error,
+    retry: load,
+    selectDisease,
+    togglePlant,
+    chooseDocument,
+    generate,
+    reset,
+  };
 }

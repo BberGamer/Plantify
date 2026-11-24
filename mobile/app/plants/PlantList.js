@@ -1,7 +1,9 @@
+import LoadingState from "../../src/components/common/LoadingState";
+import { componentStyles } from "../../src/theme/componentStyles";
 // PlantList.js - Ghép giao diện và hành động màn chi tiết cây.
 
 import { View, StyleSheet, ScrollView } from "react-native";
-import { ActivityIndicator, Button, Text } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { colors } from "../../src/theme/colors";
@@ -31,16 +33,13 @@ export default function PlantDetailScreen() {
       />
       {!!detail.favoriteError && <ListError message={detail.favoriteError} onRetry={detail.retryFavorite} />}
       {detail.loading ? (
-        <View style={styles.centerBox}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Đang tải thông tin cây...</Text>
-        </View>
+        <LoadingState style={{ flex: 1 }} message="Đang tải thông tin cây..." />
       ) : detail.error || !detail.plant ? (
         <View style={styles.centerBox}>
           <Text style={styles.errorText} accessibilityRole="alert">
             {detail.error || "Không tìm thấy cây này."}
           </Text>
-          <Button onPress={detail.refetch}>Thử lại</Button>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={detail.refetch}>Thử lại</Button>
         </View>
       ) : (
         <>
@@ -69,27 +68,30 @@ export default function PlantDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FAFCFA",
+    backgroundColor: colors.background
   },
   // States
   centerBox: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 16,
+    gap: 16
   },
   loadingText: {
     fontSize: 14,
-    color: colors.textMuted,
+    color: colors.textMuted
   },
   errorText: {
     fontSize: 15,
     color: colors.statusError,
     textAlign: "center",
     paddingHorizontal: 32,
-    fontWeight: "600",
+    fontWeight: "600"
   },
   scroll: {
-    paddingBottom: 124,
-  },
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    paddingBottom: 32
+  }
 });

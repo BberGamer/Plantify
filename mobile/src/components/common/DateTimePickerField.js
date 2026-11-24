@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { useState } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
@@ -14,11 +15,12 @@ const timeFromText = (value) => {
   return new Date(2000, 0, 1, hours, minutes, 0, 0);
 };
 
-const dateKey = (value) => [
-  value.getFullYear(),
-  String(value.getMonth() + 1).padStart(2, "0"),
-  String(value.getDate()).padStart(2, "0"),
-].join("-");
+const dateKey = (value) =>
+  [
+    value.getFullYear(),
+    String(value.getMonth() + 1).padStart(2, "0"),
+    String(value.getDate()).padStart(2, "0"),
+  ].join("-");
 
 const timeText = (value) =>
   `${String(value.getHours()).padStart(2, "0")}:${String(value.getMinutes()).padStart(2, "0")}`;
@@ -71,7 +73,11 @@ export default function DateTimePickerField({
             value={value}
             editable={false}
             disabled={disabled}
-            right={<TextInput.Icon icon={isDate ? "calendar-outline" : "clock-outline"} />}
+            right={
+              <TextInput.Icon
+                icon={isDate ? "calendar-outline" : "clock-outline"}
+              />
+            }
           />
         </View>
       </Pressable>
@@ -86,7 +92,9 @@ export default function DateTimePickerField({
             is24Hour
             onChange={handleChange}
           />
-          {Platform.OS === "ios" && <Button onPress={() => setOpen(false)}>Xong</Button>}
+          {Platform.OS === "ios" && (
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={() => setOpen(false)}>Xong</Button>
+          )}
         </View>
       )}
     </View>
@@ -107,8 +115,26 @@ const webInputStyle = {
 };
 
 const styles = StyleSheet.create({
-  nativeField: { flex: 1 },
-  webField: { flex: 1, minWidth: 120, position: "relative" },
-  webLabel: { ...typography.caption, position: "absolute", zIndex: 1, left: 12, top: 4, color: colors.textMuted },
-  pickerBox: { marginTop: spacing.xs, borderRadius: radius.md, backgroundColor: colors.white, overflow: "hidden" },
+  nativeField: {
+    flex: 1
+  },
+  webField: {
+    flex: 1,
+    minWidth: 120,
+    position: "relative"
+  },
+  webLabel: {
+    ...typography.caption,
+    position: "absolute",
+    zIndex: 1,
+    left: 12,
+    top: 4,
+    color: colors.textMuted
+  },
+  pickerBox: {
+    marginTop: spacing.xs,
+    borderRadius: radius.md,
+    backgroundColor: colors.white,
+    overflow: "hidden"
+  }
 });

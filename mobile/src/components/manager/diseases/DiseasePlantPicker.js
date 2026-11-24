@@ -1,3 +1,5 @@
+import SearchField from "../../common/SearchField";
+import { componentStyles } from "../../../theme/componentStyles";
 import React, { useState } from "react";
 import { View } from "react-native";
 import {
@@ -5,7 +7,6 @@ import {
   Button,
   Checkbox,
   Text,
-  TextInput,
 } from "react-native-paper";
 
 export default function DiseasePlantPicker({
@@ -29,18 +30,17 @@ export default function DiseasePlantPicker({
       <Text variant="titleMedium">
         Cây liên quan * ({selected.length} đã chọn)
       </Text>
-      <TextInput
-        label="Tìm cây theo tên"
+      <SearchField
+        placeholder="Tìm cây theo tên…" accessibilityLabel="Tìm cây liên quan theo tên"
         value={search}
         onChangeText={setSearch}
         disabled={disabled}
-        mode="outlined"
       />
       {loading && <ActivityIndicator accessibilityLabel="Đang tải cây" />}
       {!!error && (
         <View>
           <Text accessibilityRole="alert">{error}</Text>
-          <Button onPress={onRetry} disabled={disabled || loading}>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onRetry} disabled={disabled || loading}>
             Thử tải lại cây
           </Button>
         </View>

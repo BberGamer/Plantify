@@ -109,82 +109,88 @@ export default function ResetPasswordScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.background
   },
   keyboardView: {
-    flex: 1,
+    flex: 1
   },
   headerBar: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: colors.borderLight
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: colors.textPrimary,
+    color: colors.textPrimary
   },
   scrollContent: {
+    width: "100%",
+    maxWidth: 560,
+    alignSelf: "center",
     paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 36,
+    paddingTop: 24,
+    paddingBottom: 36
   },
   titleContainer: {
-    marginBottom: 20,
+    marginBottom: 20
   },
   pageTitle: {
     fontSize: 22,
     fontWeight: "700",
     color: colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: 8
   },
   pageSubtitle: {
     fontSize: 14,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 20
   },
   errorBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEF2F2",
+    backgroundColor: colors.errorBackground,
     borderWidth: 1,
     borderColor: "#FCA5A5",
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 8,
     marginBottom: 16,
-    gap: 8,
+    gap: 8
   },
   errorText: {
-    color: "#B91C1C",
+    color: colors.statusError,
     fontSize: 13,
-    flex: 1,
+    flex: 1
   },
   successBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0FDF4",
+    backgroundColor: colors.softMintBg,
     borderWidth: 1,
     borderColor: "#86EFAC",
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 8,
     marginBottom: 16,
-    gap: 8,
+    gap: 8
   },
   successText: {
-    color: "#15803D",
+    color: colors.primaryLight,
     fontSize: 13,
-    flex: 1,
-  },
+    flex: 1
+  }
 });
