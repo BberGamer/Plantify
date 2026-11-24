@@ -18,7 +18,6 @@ const plantSchema = new mongoose.Schema(
       required: [true, 'Tên khoa học là bắt buộc'],
       trim: true,
     },
-    diagnosis_aliases: [{ type: String, trim: true, maxlength: 200 }],
     botanical_family: { type: String, default: '' },
     description: { type: String, default: '' },
     plant_image: { type: String, default: '' },

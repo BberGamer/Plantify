@@ -242,7 +242,7 @@ const createCatalogEnricher =
           : diseaseModel
               .findOne({ _id: mapping.disease_id, status: "active" })
               .select(
-                "_id catalog_key identity_sources content_status disease_name scientific_name diagnosis_aliases pathogen_type typical_symptoms environmental_cause disease_image_url status treatment_protocol created_at __v",
+                "_id catalog_key disease_name scientific_name pathogen_type typical_symptoms environmental_cause disease_image_url status treatment_protocol created_at __v",
               )
               .lean(),
       ]);
@@ -272,11 +272,7 @@ const createCatalogEnricher =
         display_name: disease
           ? `${plant.common_name} - ${disease.disease_name}`
           : plant.common_name,
-        symptoms:
-          disease?.content_status === "verified"
-            ? disease.typical_symptoms || null
-            : null,
-        content_status: disease?.content_status || "unverified",
+        symptoms: disease?.typical_symptoms || null,
         disease_details: disease
           ? {
               ...disease,
