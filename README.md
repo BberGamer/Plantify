@@ -1,8 +1,24 @@
 # Plantify
 
-Ứng dụng chăm sóc cây gồm mobile React Native/Expo và REST API Node.js/Express, lưu dữ liệu bằng MongoDB. Có ba vai trò `customer`, `manager`, `admin`; khu vực quản trị nằm trong ứng dụng mobile, chưa có web CMS riêng.
+Website quản trị riêng nằm trong `web/`: chạy `npm install` và `npm run dev` tại
+thư mục đó, mở `http://localhost:5173/web/login`. Admin dùng `/web/admin/*`, Manager
+dùng `/web/manager/*`. Xem [hướng dẫn web](web/README.md) để cấu hình API, chạy test
+và build. Ứng dụng điện thoại tiếp tục nằm trong `mobile/`, cùng sử dụng backend hiện có.
+
+Ứng dụng chăm sóc cây gồm mobile React Native/Expo, web quản trị và REST API Node.js/Express, lưu dữ liệu bằng MongoDB. Có ba vai trò `customer`, `manager`, `admin`; Admin và Manager có thể sử dụng web quản trị riêng.
 
 README được đối chiếu với source ngày **31/10/2026**. Trạng thái dưới đây mô tả phần đã triển khai trong mã nguồn, không đồng nghĩa đã kiểm thử tích hợp hoặc sẵn sàng production.
+
+### Đơn nạp hết hạn (2026-11-24)
+
+Đơn nạp có hạn thanh toán 15 phút. Backend tự chuyển đơn `pending` đã hết hạn
+sang `rejected`, ghi lý do tự động và thời điểm kết thúc. Tác vụ chạy khi khởi động
+và mỗi 5 giây; API đọc/duyệt đơn cũng kiểm tra hạn để không phụ thuộc việc mở app.
+Admin không thể duyệt lại đơn đã hết hạn. Tiền chuyển đến muộn vẫn được lưu trong
+giao dịch SePay cần đối soát, không tự cộng ví; Admin xử lý khoản tiền thực nhận
+qua chức năng cộng số dư có lý do. Khi backend tắt, đơn quá hạn được cập nhật lại
+khi khởi động backend.
+
 
 ### AI diagnosis (2026-11-24)
 
