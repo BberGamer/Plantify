@@ -1,4 +1,6 @@
-import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomSheetFrame } from "../../common/ModalFrames";
+import { componentStyles } from "../../../theme/componentStyles";
+
 import { spacing, radius, typography } from "../../../theme/tokens";
 
 import {
@@ -6,10 +8,7 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Modal,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { Button, HelperText } from "react-native-paper";
 import FormField from "../../common/FormField";
@@ -34,21 +33,7 @@ export default function UserStatusModal({
     if (!loading) onClose();
   };
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={close}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.modalOverlay}
-      >
-        <SafeAreaView
-          edges={["bottom", "left", "right"]}
-          style={styles.modalCard}
-        >
-          {/* HEADER */}
+    <BottomSheetFrame visible={visible} onRequestClose={close} animationType="fade" style={{ maxWidth: 560 }}>
           <View style={styles.modalHeader}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <View
@@ -149,10 +134,10 @@ export default function UserStatusModal({
 
           {/* FOOTER */}
           <View style={styles.modalFooter}>
-            <Button onPress={close} disabled={loading}>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={close} disabled={loading}>
               Hủy
             </Button>
-            <Button
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
               mode="contained"
               onPress={onConfirm}
               disabled={loading}
@@ -162,32 +147,13 @@ export default function UserStatusModal({
               {isCurrentlyActive ? "Xác nhận khóa" : "Xác nhận kích hoạt"}
             </Button>
           </View>
-        </SafeAreaView>
-      </KeyboardAvoidingView>
-    </Modal>
+    </BottomSheetFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: garden.overlay,
-    justifyContent: "flex-end",
-    alignItems: "center",
-  },
-  modalCard: {
-    maxHeight: "90%",
-    width: "100%",
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    overflow: "hidden",
-    shadowColor: garden.forestDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 8,
-  },
+  
+  
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -197,22 +163,22 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     backgroundColor: garden.cream,
     borderBottomWidth: 1,
-    borderBottomColor: garden.line,
+    borderBottomColor: garden.line
   },
   confirmIconCircle: {
     ...leafShape(42),
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: colors.textPrimary,
+    color: colors.textPrimary
   },
   modalSubtitle: {
     ...typography.caption,
     color: colors.textSecondary,
-    marginTop: 2,
+    marginTop: 2
   },
   closeBtn: {
     width: 44,
@@ -220,15 +186,15 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: garden.mint,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   modalBody: {
-    padding: 18,
+    padding: 18
   },
   confirmPromptText: {
     fontSize: 14,
     color: colors.textPrimary,
-    lineHeight: 20,
+    lineHeight: 20
   },
   confirmUserBox: {
     backgroundColor: garden.cream,
@@ -236,30 +202,30 @@ const styles = StyleSheet.create({
     borderColor: garden.line,
     borderRadius: radius.card,
     padding: spacing.md,
-    marginVertical: spacing.md,
+    marginVertical: spacing.md
   },
   confirmUserName: {
     fontSize: 15,
     fontWeight: "700",
-    color: colors.textPrimary,
+    color: colors.textPrimary
   },
   confirmUserEmail: {
     fontSize: 13,
     color: colors.textSecondary,
-    marginTop: 2,
+    marginTop: 2
   },
   noteBox: {
     flexDirection: "row",
     alignItems: "flex-start",
     padding: spacing.md,
     borderRadius: 14,
-    gap: spacing.sm,
+    gap: spacing.sm
   },
   confirmNoteText: {
     flex: 1,
     fontSize: 13,
     color: garden.inkSoft,
-    lineHeight: 18,
+    lineHeight: 18
   },
   modalFooter: {
     flexWrap: "wrap",
@@ -270,6 +236,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     borderTopWidth: 1,
     borderTopColor: garden.line,
-    gap: 10,
-  },
+    gap: 10
+  }
 });

@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 // LoginForm.js - Khối giao diện LoginForm.
 import { useState } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
@@ -67,6 +68,7 @@ export default function LoginForm({
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={styles.forgotButton}
           onPress={() => onForgotPassword()}
           disabled={isLoading}
           activeOpacity={0.7}
@@ -78,7 +80,7 @@ export default function LoginForm({
       {/* Primary Button: Sign In */}
       <Button
         mode="contained"
-        style={styles.submit}
+        style={[styles.submit, componentStyles.buttonShape]}
         contentStyle={{ minHeight: control.minHeight }}
         loading={isLoading}
         onPress={onSubmit}
@@ -93,9 +95,11 @@ export default function LoginForm({
   );
 }
 const styles = StyleSheet.create({
-  submit: { marginBottom: spacing.xl },
+  submit: {
+    marginBottom: spacing.xl
+  },
   form: {
-    width: "100%",
+    width: "100%"
   },
   optionRow: {
     flexDirection: "row",
@@ -104,12 +108,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     marginBottom: 22,
     flexWrap: "wrap",
-    gap: spacing.md,
+    gap: spacing.md
   },
   rememberMeContainer: {
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
+    gap: spacing.sm
   },
   checkbox: {
     width: 18,
@@ -118,19 +123,23 @@ const styles = StyleSheet.create({
     borderColor: colors.inputBorder,
     borderRadius: 4,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   checkboxActive: {
     backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    borderColor: colors.primary
   },
   rememberText: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: colors.textSecondary
   },
   forgotText: {
     fontSize: 13,
     fontWeight: "600",
-    color: colors.primary,
+    color: colors.primary
   },
+  forgotButton: {
+    minHeight: 44,
+    justifyContent: "center"
+  }
 });

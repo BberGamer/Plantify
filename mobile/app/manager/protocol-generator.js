@@ -1,3 +1,4 @@
+import { componentStyles } from "../../src/theme/componentStyles";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Checkbox, RadioButton, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,7 +28,7 @@ export default function ManagerProtocolGeneratorScreen() {
           <View style={styles.errorBox}>
             <Text style={styles.error} accessibilityRole="alert">{generator.error}</Text>
             {!generator.diseases.length && !generator.generating && (
-              <Button onPress={generator.retry}>Thử lại</Button>
+              <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={generator.retry}>Thử lại</Button>
             )}
           </View>
         )}
@@ -68,7 +69,7 @@ export default function ManagerProtocolGeneratorScreen() {
               <Text style={styles.subtitle}>
                 File tối đa 10 MB. Tài liệu nên ghi rõ lịch ngày, giờ, liều lượng và an toàn.
               </Text>
-              <Button mode="outlined" icon="file-word-outline" onPress={generator.chooseDocument}
+              <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" icon="file-word-outline" onPress={generator.chooseDocument}
                 disabled={generator.generating}>Chọn file DOCX</Button>
               {!!generator.document && (
                 <View style={styles.fileRow}>
@@ -76,7 +77,7 @@ export default function ManagerProtocolGeneratorScreen() {
                   <Text style={styles.fileName}>{generator.document.name}</Text>
                 </View>
               )}
-              <Button mode="contained" icon="creation" onPress={generator.generate}
+              <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="contained" icon="creation" onPress={generator.generate}
                 loading={generator.generating} disabled={generator.generating || !generator.document ||
                   !generator.diseaseId || !generator.plantIds.length}>
                 Đọc DOCX và tạo phác đồ
@@ -94,7 +95,7 @@ export default function ManagerProtocolGeneratorScreen() {
             <Text style={styles.meta}>
               {generator.result.duration_days} ngày · {generator.result.stages?.length || 0} công việc
             </Text>
-            <Button mode="outlined" onPress={generator.reset}>Tạo phác đồ khác</Button>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" onPress={generator.reset}>Tạo phác đồ khác</Button>
           </View>
         )}
       </ScrollView>
@@ -103,28 +104,107 @@ export default function ManagerProtocolGeneratorScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  content: { width: "100%", maxWidth: 760, alignSelf: "center", padding: spacing.xl,
-    paddingBottom: spacing.xxxl, gap: spacing.lg },
-  flex: { flex: 1, minWidth: 0 },
-  heading: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
-  headingIcon: { width: 48, height: 48, borderRadius: radius.md, backgroundColor: colors.lightMint,
-    alignItems: "center", justifyContent: "center" },
-  eyebrow: { ...typography.caption, fontWeight: "700", letterSpacing: 1.1, color: colors.textMuted },
-  title: { fontSize: 28, lineHeight: 38, fontWeight: "700", color: colors.textPrimary },
-  subtitle: { ...typography.body, color: colors.textSecondary },
-  card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border,
-    borderRadius: radius.card, padding: spacing.lg, gap: spacing.md },
-  sectionTitle: { ...typography.section, fontWeight: "700", color: colors.textPrimary },
-  fileRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm,
-    backgroundColor: colors.softMintBg, borderRadius: radius.md, padding: spacing.md },
-  fileName: { ...typography.label, color: colors.textPrimary, flex: 1 },
-  center: { minHeight: 240, alignItems: "center", justifyContent: "center", gap: spacing.md },
-  errorBox: { padding: spacing.md, backgroundColor: colors.errorBackground,
-    borderRadius: radius.md, gap: spacing.sm },
-  error: { ...typography.body, color: colors.statusError },
-  successCard: { backgroundColor: colors.softMintBg, borderWidth: 1, borderColor: colors.primary,
-    borderRadius: radius.card, padding: spacing.lg, gap: spacing.md },
-  resultTitle: { ...typography.label, color: colors.textPrimary },
-  meta: { ...typography.label, color: colors.primaryLight },
+  safe: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  content: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    padding: 24,
+    paddingBottom: spacing.xxxl,
+    gap: spacing.lg
+  },
+  flex: {
+    flex: 1,
+    minWidth: 0
+  },
+  heading: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md
+  },
+  headingIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    backgroundColor: colors.lightMint,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  eyebrow: {
+    ...typography.caption,
+    fontWeight: "700",
+    letterSpacing: 1.1,
+    color: colors.textMuted
+  },
+  title: {
+    fontSize: 28,
+    lineHeight: 38,
+    fontWeight: "700",
+    color: colors.textPrimary
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.textSecondary
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    padding: spacing.lg,
+    gap: spacing.md
+  },
+  sectionTitle: {
+    ...typography.section,
+    fontWeight: "700",
+    color: colors.textPrimary
+  },
+  fileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.softMintBg,
+    borderRadius: radius.md,
+    padding: spacing.md
+  },
+  fileName: {
+    ...typography.label,
+    color: colors.textPrimary,
+    flex: 1
+  },
+  center: {
+    minHeight: 240,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md
+  },
+  errorBox: {
+    padding: spacing.md,
+    backgroundColor: colors.errorBackground,
+    borderRadius: radius.md,
+    gap: spacing.sm
+  },
+  error: {
+    ...typography.body,
+    color: colors.statusError
+  },
+  successCard: {
+    backgroundColor: colors.softMintBg,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radius.card,
+    padding: spacing.lg,
+    gap: spacing.md
+  },
+  resultTitle: {
+    ...typography.label,
+    color: colors.textPrimary
+  },
+  meta: {
+    ...typography.label,
+    color: colors.primaryLight
+  }
 });

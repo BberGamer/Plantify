@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { useRef, useState } from "react";
 import { Button, Text } from "react-native-paper";
 import {
@@ -94,7 +95,7 @@ export default function GoogleSignInButton({ onCredential, disabled }) {
   return (
     <>
       {!!error && <Text accessibilityRole="alert">{error}</Text>}
-      <Button
+      <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
         mode="outlined"
         icon="google"
         onPress={signIn}

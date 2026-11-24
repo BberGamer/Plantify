@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { useCallback, useRef, useState } from "react";
 import { View } from "react-native";
 import { ActivityIndicator, Button, Text } from "react-native-paper";
@@ -113,7 +114,7 @@ export default function GoogleSignInButton({ onCredential, disabled }) {
       {!!error && (
         <View>
           <Text accessibilityRole="alert">{error}</Text>
-          <Button
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
             disabled={disabled}
             onPress={() => setGeneration((value) => value + 1)}
           >

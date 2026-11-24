@@ -1,8 +1,11 @@
+import { colors } from "../../src/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useAuthStore from "../../store/authStore";
 
 export default function ManagerLayout() {
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
   const ready = useAuthStore(
     (state) => state.hasHydrated && !state.isRestoring && state.isAuthenticated,
@@ -13,16 +16,17 @@ export default function ManagerLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#144D37",
-        tabBarInactiveTintColor: "#8A938D",
+        tabBarLabelStyle: { fontSize: 12, fontWeight: "600" },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          height: 64,
+          height: 64 + insets.bottom,
           paddingTop: 7,
-          paddingBottom: 7,
-          borderTopColor: "#E8ECE9",
+          paddingBottom: Math.max(8, insets.bottom),
+          borderTopColor: colors.border,
           backgroundColor: "#FFFFFF",
         },
-        contentStyle: { backgroundColor: "#F9FAF9" },
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
       <Tabs.Screen

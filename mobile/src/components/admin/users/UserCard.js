@@ -42,7 +42,7 @@ export default function UserCard({ item, currentAdminId, onOpenDetail }) {
         {/* User Info */}
         <View style={styles.userInfo}>
           <View style={styles.userNameRow}>
-            <Text style={styles.userName} numberOfLines={1}>
+            <Text style={styles.userName}>
               {item.fullName}
             </Text>
             {isSelf && (
@@ -88,77 +88,79 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: garden.line,
-    overflow: "hidden",
+    overflow: "hidden"
   },
   userCardDormant: {
-    backgroundColor: "#FBFBF8",
+    backgroundColor: "#FBFBF8"
   },
   cardHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "center"
   },
   avatarWrap: {
     width: 50,
-    height: 50,
+    height: 50
   },
   avatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   avatarText: {
     color: garden.white,
     fontWeight: "800",
-    fontSize: 16,
+    fontSize: 16
   },
   userInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 12
   },
   userNameRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "center"
   },
   userName: {
+    lineHeight: 24,
     flexShrink: 1,
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
-    color: garden.ink,
+    color: garden.ink
   },
   selfTag: {
     marginLeft: 6,
     backgroundColor: garden.sunBg,
     paddingHorizontal: 7,
     paddingVertical: 1,
-    borderRadius: 8,
+    borderRadius: 8
   },
   selfTagText: {
-    fontSize: 11,
+    fontSize: 13,
+    lineHeight: 20,
     color: garden.sun,
-    fontWeight: "700",
+    fontWeight: "700"
   },
   metaLine: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 3,
-    gap: 5,
+    gap: 5
   },
   userEmail: {
     flex: 1,
     fontSize: 13,
-    color: garden.inkSoft,
+    color: garden.inkSoft
   },
   userPhone: {
     fontSize: 13,
-    color: garden.inkSoft,
+    color: garden.inkSoft
   },
   tagsRow: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 12,
     flexWrap: "wrap",
-    gap: 6,
-  },
+    gap: 6
+  }
 });

@@ -1,13 +1,12 @@
+import { BottomSheetFrame } from "../../common/ModalFrames";
+import { componentStyles } from "../../../theme/componentStyles";
 import {
-  Modal,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   View,
   Text,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { Button, HelperText } from "react-native-paper";
 import FormField from "../../common/FormField";
 import PasswordField from "../../common/PasswordField";
@@ -25,20 +24,10 @@ export default function UserCreateModal({
   onSubmit,
 }) {
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <SafeAreaView edges={["bottom", "left", "right"]} style={styles.card}>
+    <BottomSheetFrame visible={visible} onRequestClose={onClose} style={{ maxWidth: 600, maxHeight: "92%" }}>
           <View style={styles.header}>
             <Text style={styles.title}>Thêm người dùng</Text>
-            <Button onPress={onClose} disabled={submitting}>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onClose} disabled={submitting}>
               Đóng
             </Button>
           </View>
@@ -88,7 +77,7 @@ export default function UserCreateModal({
             <Text style={styles.label}>Vai trò</Text>
             <View style={styles.roles}>
               {Object.entries(ROLE_LABELS).map(([role, label]) => (
-                <Button
+                <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
                   key={role}
                   mode={draft.role === role ? "contained" : "outlined"}
                   disabled={submitting}
@@ -115,10 +104,10 @@ export default function UserCreateModal({
             )}
           </ScrollView>
           <View style={styles.footer}>
-            <Button onPress={onClose} disabled={submitting}>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onClose} disabled={submitting}>
               Hủy
             </Button>
-            <Button
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
               mode="contained"
               onPress={onSubmit}
               loading={submitting}
@@ -127,53 +116,45 @@ export default function UserCreateModal({
               Thêm người dùng
             </Button>
           </View>
-        </SafeAreaView>
-      </KeyboardAvoidingView>
-    </Modal>
+    </BottomSheetFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
-    alignItems: "center",
-  },
-  card: {
-    width: "100%",
-    maxWidth: 600,
-    maxHeight: "92%",
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
+  
+  
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
-    gap: 8,
+    gap: 8
   },
   title: {
     flex: 1,
     fontSize: 22,
     fontWeight: "700",
-    color: colors.textPrimary,
+    color: colors.textPrimary
   },
-  body: { padding: 16 },
+  body: {
+    padding: 16
+  },
   label: {
     fontSize: 15,
     fontWeight: "600",
     color: colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: 8
   },
-  roles: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  roles: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
   hint: {
     color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 20,
-    marginTop: 16,
+    marginTop: 16
   },
   footer: {
     flexDirection: "row",
@@ -182,6 +163,6 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
+    borderTopColor: colors.border
+  }
 });

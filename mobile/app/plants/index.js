@@ -1,7 +1,10 @@
+import EmptyState from "../../src/components/common/EmptyState";
+import LoadingState from "../../src/components/common/LoadingState";
+import { componentStyles } from "../../src/theme/componentStyles";
 // index.js - Ghép giao diện danh mục cây và hook tìm kiếm.
 
-import { View, StyleSheet, FlatList } from "react-native";
-import { ActivityIndicator, Button, Text } from "react-native-paper";
+import { View, StyleSheet, FlatList, useWindowDimensions } from "react-native";
+import { Button, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors } from "../../src/theme/colors";
@@ -14,6 +17,9 @@ import PlantDirectoryCard from "../../src/components/plants/PlantDirectoryCard";
 import ListPagination from "../../src/components/common/ListPagination";
 import ListError from "../../src/components/common/ListError";
 export default function PlantDirectoryScreen() {
+  const { width } = useWindowDimensions();
+  const columns = width >= 1000 ? 3 : width >= 600 ? 2 : 1;
+  const cardStyle = { width: `${(100 - (columns - 1) * 2) / columns}%` };
   const directory = usePlantDirectory();
   const favorite = useFavoriteActions(directory.plants);
   const router = useRouter();
@@ -35,7 +41,7 @@ export default function PlantDirectoryScreen() {
       {!!directory.categoriesError && (
         <View>
           <Text accessibilityRole="alert">{directory.categoriesError}</Text>
-          <Button onPress={directory.retryCategories}>Thử lại danh mục</Button>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={directory.retryCategories}>Thử lại danh mục</Button>
         </View>
       )}
       <View style={styles.resultRow}>
@@ -43,10 +49,7 @@ export default function PlantDirectoryScreen() {
       </View>
       {!!favorite.error && <ListError message={favorite.error} onRetry={favorite.retry} />}
       {directory.loading ? (
-        <View style={styles.centerBox}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Đang tải danh sách cây...</Text>
-        </View>
+        <LoadingState style={{ flex: 1 }} message="Đang tải danh sách cây..." />
       ) : directory.error ? (
         <View style={styles.centerBox}>
           <ListError
@@ -56,7 +59,7 @@ export default function PlantDirectoryScreen() {
           />
         </View>
       ) : (
-        <FlatList
+        <FlatList key={columns}
           style={styles.list}
           data={directory.plants}
           extraData={favorite}
@@ -64,7 +67,7 @@ export default function PlantDirectoryScreen() {
           onRefresh={directory.refresh}
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => (
-            <PlantDirectoryCard
+            <PlantDirectoryCard style={cardStyle}
               item={item}
               showFavorite={favorite.enabled}
               isFavorite={favorite.favorites[item._id] === true}
@@ -80,8 +83,8 @@ export default function PlantDirectoryScreen() {
               }
             />
           )}
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
+          numColumns={columns}
+          columnWrapperStyle={columns > 1 ? styles.columnWrapper : undefined}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.grid}
           ListFooterComponent={
@@ -92,9 +95,7 @@ export default function PlantDirectoryScreen() {
             />
           }
           ListEmptyComponent={
-            <View style={styles.emptyBox}>
-              <Text style={styles.emptyText}>Không tìm thấy cây nào</Text>
-            </View>
+            <EmptyState title="Không tìm thấy cây nào" icon="search-outline" />
           }
         />
       )}
@@ -103,55 +104,63 @@ export default function PlantDirectoryScreen() {
   );
 }
 const styles = StyleSheet.create({
-  list: { flex: 1 },
+  list: {
+    flex: 1
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: "#F9FAF9",
+    backgroundColor: colors.background
   },
   // Result row
   resultRow: {
+    width: "100%",
+    maxWidth: 1040,
+    alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 14,
-    paddingBottom: 6,
+    paddingBottom: 6
   },
   resultCount: {
     fontSize: 13,
     color: colors.textSecondary,
-    fontWeight: "600",
+    fontWeight: "600"
   },
   // Grid
   grid: {
-    paddingHorizontal: 12,
+    width: "100%",
+    maxWidth: 1040,
+    alignSelf: "center",
+    paddingHorizontal: 20,
     paddingBottom: 40,
-    paddingTop: 4,
+    paddingTop: 12
   },
   columnWrapper: {
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 12
   },
   // States
   centerBox: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 12,
+    gap: 12
   },
   loadingText: {
     fontSize: 14,
-    color: colors.textMuted,
+    color: colors.textMuted
   },
   emptyBox: {
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 80,
-    gap: 12,
+    gap: 12
   },
   emptyText: {
     fontSize: 15,
     color: colors.textMuted,
-    fontWeight: "600",
-  },
+    fontWeight: "600"
+  }
 });
