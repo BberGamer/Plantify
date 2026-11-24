@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { Button, Switch, Text } from "react-native-paper";
 import ProfileInfoRow from "./ProfileInfoRow";
 import useNotificationPreferences from "../../hooks/useNotificationPreferences";
@@ -31,7 +32,7 @@ export default function NotificationPreferences({ disabled }) {
       />
       {!!error && <Text accessibilityRole="alert">{error}</Text>}
       {!!error && enabled === null && (
-        <Button disabled={disabled || busy} onPress={refresh}>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} disabled={disabled || busy} onPress={refresh}>
           Thử lại
         </Button>
       )}

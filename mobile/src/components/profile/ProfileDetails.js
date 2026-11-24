@@ -1,6 +1,9 @@
+import SectionCard from "../common/SectionCard";
+import { componentStyles } from "../../theme/componentStyles";
+
 import { spacing } from "../../theme/tokens";
 
-import { View, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { Text, Button } from "react-native-paper";
 import ProfileInfoRow from "./ProfileInfoRow";
 import ProfileEditForm from "./ProfileEditForm";
@@ -25,19 +28,10 @@ export default function ProfileDetails({
   const showReminders = user?.role === "customer";
   return (
     <>
-      <View style={styles.sectionHeading}>
-        <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
-        {!editing && (
-          <Button
-            icon="pencil-outline"
-            onPress={startEditing}
-            disabled={isLoggingOut}
-          >
-            Chỉnh sửa
-          </Button>
-        )}
-      </View>
-      <View style={styles.card}>
+      <SectionCard title="Thông tin cá nhân" icon="person-outline" action={!editing ? (
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} icon="pencil-outline"
+          onPress={startEditing} disabled={isLoggingOut}>Chỉnh sửa</Button>
+      ) : null}>
         {editing ? (
           <ProfileEditForm
             form={form}
@@ -67,7 +61,7 @@ export default function ProfileDetails({
           </>
         )}
         {showReminders && <NotificationPreferences disabled={isLoggingOut} />}
-      </View>
+      </SectionCard>
       {!!message && (
         <Text style={styles.formMessage} accessibilityRole="alert">
           {message}
@@ -84,23 +78,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginTop: 18,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm
   },
   formMessage: {
     marginTop: spacing.md,
     color: colors.primaryText,
-    fontSize: 13,
+    fontSize: 13
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "800",
-    color: colors.primaryText,
+    color: colors.primaryText
   },
   card: {
     paddingHorizontal: 14,
-    borderRadius: 20,
+    borderRadius: 16,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.border,
-  },
+    borderColor: colors.border
+  }
 });

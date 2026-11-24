@@ -1,3 +1,5 @@
+import { componentStyles } from "../../theme/componentStyles";
+import { colors } from "../../theme";
 import { ScrollView, View } from "react-native";
 import { ActivityIndicator, Button, Icon, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -40,7 +42,7 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         {!admin && (
-          <Button onPress={() => router.back()} icon="arrow-left">
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={() => router.back()} icon="arrow-left">
             Quay lại
           </Button>
         )}
@@ -59,7 +61,7 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
         keyboardShouldPersistTaps="handled"
       >
         {!admin && !showHistory && (
-          <LinearGradient colors={["#103B2D", "#247855"]} style={styles.hero}>
+          <LinearGradient colors={[colors.primaryDark, colors.primaryLight]} style={styles.hero}>
             <Icon
               source={showVip ? "crown" : "wallet-outline"}
               color="#F8D884"
@@ -118,7 +120,7 @@ export default function FinanceScreen({ admin = false, section = "vip" }) {
           />
         )}
         {!admin && !showHistory && (
-          <Button
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
             icon="history"
             disabled={f.busy}
             onPress={() => router.push("/customer/transactions")}

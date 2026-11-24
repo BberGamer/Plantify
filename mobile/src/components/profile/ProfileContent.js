@@ -1,3 +1,4 @@
+import { radius } from "../../theme";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { List, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -213,16 +214,39 @@ export default function ProfileContent({
 }
 
 const styles = StyleSheet.create({
-  favorites: { marginTop: 20, marginBottom: 8, gap: 10 },
-  sectionTitle: { color: colors.textPrimary, fontWeight: "700" },
+  favorites: {
+    marginTop: 24,
+    marginBottom: 8,
+    gap: 8
+  },
+  sectionTitle: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: colors.textPrimary,
+    fontWeight: "700"
+  },
   favoriteLink: {
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 20,
+    borderRadius: 16
   },
-  safeArea: { flex: 1, backgroundColor: colors.white },
-  scroll: { flex: 1 },
-  navContent: { paddingBottom: 40 },
-  content: { padding: 18, paddingBottom: 28, backgroundColor: "#FAFCFA" },
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  scroll: {
+    flex: 1
+  },
+  navContent: {
+    paddingBottom: 40
+  },
+  content: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    padding: 20,
+    paddingBottom: 28,
+    backgroundColor: colors.background
+  }
 });
