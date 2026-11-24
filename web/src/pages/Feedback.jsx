@@ -55,7 +55,8 @@ export default function Feedback() {
     [page, setPage] = useState(1),
     [version, setVersion] = useState(0),
     [detail, setDetail] = useState(null),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [exporting, setExporting] = useState(false);
   const state = useResource(
     "/feedback/manager" + params({ ...query, page, limit: 20 }),
     version,
@@ -121,6 +122,22 @@ export default function Feedback() {
           onChange={(e) => setFilters({ ...filters, to: e.target.value })}
         />
         <button className="primary">Lọc / Tải lại</button>
+      <button type="button" disabled={exporting} onClick={async () => {
+        setExporting(true);
+        setError("");
+        try {
+          const blob = await api("/feedback/manager/export-images" + params(query), { blob: true });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "feedback-plantify.zip";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (e) { setError(e.message); }
+        finally { setExporting(false); }
+      }}>{exporting ? "Đang tạo file ZIP…" : "Tải ảnh đã tiếp nhận (.zip)"}</button>
       </form>
       <Notice>{error}</Notice>
       <div className="panel">

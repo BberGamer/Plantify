@@ -2,6 +2,7 @@ const service = require("../services/feedback.service");
 const validate = require("../validators/feedback.validator");
 const { success } = require("../utils/api-response");
 const AppError = require("../utils/app-error");
+const archiver = require("archiver");
 
 const action = (handler) => async (req, res, next) => {
   try {
@@ -99,6 +100,22 @@ const managerHistoryImage = action(async (req, res, next) => {
   );
 });
 
+const exportImages = action(async (req, res) => {
+  const data = await service.exportImages(validate.list(req.query, true));
+  res.set({ "Content-Type": "application/zip", "Content-Disposition": 'attachment; filename="feedback-plantify.zip"', "Cache-Control": "private, no-store" });
+  const archive = new archiver.ZipArchive({ zlib: { level: 5 } });
+  archive.on("error", () => res.destroy());
+  res.on("close", () => { if (!res.writableFinished) archive.abort(); });
+  archive.pipe(res);
+  for (const image of data.images) {
+    archive.append(image.buffer, { name: `tat-ca-anh/${image.id}_anh-${image.index}.jpg` });
+    archive.append(image.buffer, { name: `theo-ngay/${image.day}/${image.id}/anh-${image.index}.jpg` });
+  }
+  archive.append(data.csv, { name: "danh-sach.csv" });
+  if (data.errors.length) archive.append(data.errors.join("\n"), { name: "loi-tai-anh.txt" });
+  await archive.finalize();
+});
+
 module.exports = {
   requireVip,
   create,
@@ -107,4 +124,5 @@ module.exports = {
   review,
   image,
   managerHistoryImage,
+  exportImages,
 };

@@ -8,6 +8,7 @@ const validate = require("../validators/common");
 const AppError = require("../utils/app-error");
 const { isVip } = require("../utils/vip");
 const { notifyChanged } = require("./notification.service");
+const fs = require("node:fs/promises");
 
 const missing = () =>
   new AppError("FEEDBACK_NOT_FOUND", 404, "Không tìm thấy đóng góp.");
@@ -233,6 +234,40 @@ async function managerHistoryImage(id) {
   return diagnosis.historyImage(String(row.user_id), String(row.diagnosis_id));
 }
 
+async function exportImages({ filter, email }) {
+  if (filter.status && filter.status !== "accepted") throw new AppError("FEEDBACK_EXPORT_EMPTY", 404, "Không có ảnh từ feedback đã tiếp nhận phù hợp bộ lọc.");
+  filter.status = "accepted";
+  if (email) {
+    const user = await User.findOne({ email }).select("_id").lean();
+    if (!user) throw new AppError("FEEDBACK_EXPORT_EMPTY", 404, "Không có ảnh phù hợp bộ lọc.");
+    filter.user_id = user._id;
+  }
+  const rows = await Feedback.find(filter).select("_id type created_at images").sort({ created_at: -1, _id: -1 }).limit(501).lean();
+  if (rows.reduce((sum, row) => sum + row.images.length, 0) > 500 || rows.length > 500)
+    throw new AppError("FEEDBACK_EXPORT_LIMIT", 413, "Vượt giới hạn 500 ảnh; hãy thu hẹp bộ lọc.");
+  const images = [], errors = [], csv = ["ma_feedback,loai,ngay_gui,so_anh"];
+  let total = 0;
+  for (const row of rows) {
+    const id = String(row._id);
+    const day = new Date(row.created_at.getTime() + 7 * 3600000).toISOString().slice(0, 10).replace(/-/g, "/");
+    csv.push(`${id},${row.type},${day},${row.images.length}`);
+    for (const [i, image] of row.images.entries()) {
+      try {
+        const source = await photos.read(image);
+        const buffer = Buffer.isBuffer(source) ? source : await fs.readFile(source);
+        total += buffer.length;
+        if (total > 500 * 1024 * 1024) throw new AppError("FEEDBACK_EXPORT_LIMIT", 413, "Vượt giới hạn 500 MB; hãy thu hẹp bộ lọc.");
+        images.push({ id, day, index: i + 1, buffer });
+      } catch (error) {
+        if (error.code === "FEEDBACK_EXPORT_LIMIT") throw error;
+        errors.push(`${id}/anh-${i + 1}.jpg: Không tải được ảnh`);
+      }
+    }
+  }
+  if (!images.length) throw new AppError("FEEDBACK_EXPORT_EMPTY", 404, "Không có ảnh phù hợp hoặc ảnh không còn khả dụng.");
+  return { images, errors, csv: "\uFEFF" + csv.join("\r\n") };
+}
+
 async function image(id, index, userId) {
   if (!/^[0-4]$/.test(index)) throw missing();
   const row = await Feedback.findOne(filterFor(id, userId))
@@ -256,4 +291,5 @@ module.exports = {
   review,
   image,
   managerHistoryImage,
+  exportImages,
 };
