@@ -14,8 +14,10 @@ const CARE_META = {
 };
 
 const readableValue = (value) => {
-  if (typeof value === "string" || typeof value === "number") return String(value);
-  if (Array.isArray(value)) return value.map(readableValue).filter(Boolean).join(" · ");
+  if (typeof value === "string" || typeof value === "number")
+    return String(value);
+  if (Array.isArray(value))
+    return value.map(readableValue).filter(Boolean).join(" · ");
   if (value && typeof value === "object")
     return Object.values(value).map(readableValue).filter(Boolean).join(" · ");
   return "";
@@ -23,8 +25,9 @@ const readableValue = (value) => {
 
 export default function PlantCareRequirements({ requirements }) {
   const [expanded, setExpanded] = useState(null);
-  const careEntries = Object.entries(requirements || {})
-    .filter(([key, value]) => CARE_META[key] && readableValue(value));
+  const careEntries = Object.entries(requirements || {}).filter(
+    ([key, value]) => CARE_META[key] && readableValue(value),
+  );
 
   if (!careEntries.length) return null;
   return (
@@ -70,26 +73,74 @@ export default function PlantCareRequirements({ requirements }) {
 }
 
 const styles = StyleSheet.create({
-  section: { marginHorizontal: 14, marginTop: 14, gap: 12 },
-  sectionHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 4 },
-  sectionHeading: { flex: 1, fontSize: 17, fontWeight: "800", color: colors.textPrimary },
-  list: { gap: 12 },
+  section: {
+    marginHorizontal: 14,
+    marginTop: 14,
+    gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 4,
+  },
+  sectionHeading: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: "800",
+    color: colors.textPrimary,
+  },
+  list: {
+    gap: 12,
+  },
   item: {
     backgroundColor: colors.white,
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.borderLight,
     overflow: "hidden",
-    shadowColor: "#144D37",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0,
     shadowRadius: 6,
-    elevation: 2,
+    elevation: 0,
   },
-  itemOpen: { borderColor: "#CFE8DA" },
-  itemHeader: { minHeight: 76, flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
-  iconBox: { width: 48, height: 48, borderRadius: 15, backgroundColor: colors.softMintBg, alignItems: "center", justifyContent: "center" },
-  label: { flex: 1, fontSize: 16, fontWeight: "800", color: colors.textPrimary },
-  detail: { borderTopWidth: 1, borderTopColor: colors.borderLight, padding: 16, paddingLeft: 74, gap: 5 },
-  value: { fontSize: 14, lineHeight: 22, color: colors.textSecondary },
+  itemOpen: {
+    borderColor: "#CFE8DA",
+  },
+  itemHeader: {
+    minHeight: 76,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+  },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 15,
+    backgroundColor: colors.softMintBg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  label: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.textPrimary,
+  },
+  detail: {
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+    padding: 16,
+    gap: 5,
+  },
+  value: {
+    fontSize: 16,
+    lineHeight: 26,
+    color: colors.textSecondary,
+  },
 });

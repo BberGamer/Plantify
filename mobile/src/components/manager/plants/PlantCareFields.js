@@ -47,41 +47,57 @@ export default function PlantCareFields({ value, disabled, onChange }) {
 }
 
 const styles = StyleSheet.create({
-  field: { marginBottom: 15 },
+  field: {
+    marginBottom: 15
+  },
   fieldLabel: {
     color: colors.textPrimary,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: "700",
-    marginBottom: 7,
+    marginBottom: 7
   },
   fieldHint: {
     color: colors.textSecondary,
-    fontSize: 11,
+    fontSize: 13,
     marginTop: -3,
     marginBottom: 8,
-    lineHeight: 16,
+    lineHeight: 20
   },
   careCard: {
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 12
   },
   careRow: {
     minHeight: 54,
     flexDirection: "row",
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: colors.borderLight
   },
-  careRowLast: { borderBottomWidth: 0 },
-  careLabel: { width: 104, flexDirection: "row", alignItems: "center", gap: 7 },
-  careLabelText: { color: colors.textPrimary, fontSize: 12, fontWeight: "600" },
+  careRowLast: {
+    borderBottomWidth: 0
+  },
+  careLabel: {
+    width: 104,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7
+  },
+  careLabelText: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "600"
+  },
   careInput: {
     flex: 1,
     minHeight: 42,
     color: colors.textPrimary,
-    fontSize: 12,
-  },
+    fontSize: 13,
+    lineHeight: 20
+  }
 });
