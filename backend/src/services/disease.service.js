@@ -1,9 +1,12 @@
+const catalogAi = require("./catalog-ai.service");
 const withTransactionResult = require("../utils/transaction-result");
 const AppError = require("../utils/app-error");
 // services/disease.service.js - Nghiệp vụ đọc danh mục bệnh cây
 const mongoose = require("mongoose");
 const Disease = require("../models/disease.model");
 const Plant = require("../models/plant.model");
+const TreatmentProtocol = require("../models/treatmentProtocol.model");
+const TreatmentSchedule = require("../models/treatmentSchedule.model");
 
 const DISEASE_STATUSES = ["active", "inactive"];
 const PATHOGEN_TYPES = [
@@ -304,6 +307,7 @@ const runDiseaseMutation = async (operation) => {
 };
 
 const createDisease = async (input) => {
+  const ids = await catalogAi.validateIds(input?.ai_class_ids);
   const { diseaseData, plantIds } = normalizeDiseaseInput(input);
   return runDiseaseMutation(async (session) => {
     await assertDiseaseNameAvailable(diseaseData.disease_name, null, session);
@@ -311,6 +315,7 @@ const createDisease = async (input) => {
 
     const [disease] = await Disease.create([diseaseData], { session });
     await synchronizeDiseasePlants(disease._id, plantIds, session);
+    await catalogAi.synchronize("disease", disease, ids, session);
     return getDiseaseById(disease._id, true, session);
   });
 };
@@ -319,6 +324,7 @@ const updateDisease = async (id, input) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw createError("Định dạng ID bệnh không hợp lệ.", 400);
   }
+  const ids = await catalogAi.validateIds(input?.ai_class_ids);
   const { diseaseData, plantIds } = normalizeDiseaseInput(input);
 
   return runDiseaseMutation(async (session) => {
@@ -331,6 +337,7 @@ const updateDisease = async (id, input) => {
     Object.assign(disease, diseaseData);
     await disease.save({ session });
     await synchronizeDiseasePlants(disease._id, plantIds, session);
+    await catalogAi.synchronize("disease", disease, ids, session);
     return getDiseaseById(id, true, session);
   });
 };
@@ -348,6 +355,10 @@ const deleteDisease = async (id) => {
       .lean();
     if (!disease) throw createError("Không tìm thấy bệnh cây này.", 404);
 
+    await catalogAi.assertCanDelete("disease", id, session);
+    if (await TreatmentProtocol.exists({ disease_id: id }).session(session) ||
+        await TreatmentSchedule.exists({ disease_id: id }).session(session))
+      throw new AppError("CATALOG_IN_USE", 409, "Bệnh đang có phác đồ hoặc lịch điều trị. Hãy tạm ẩn thay vì xóa.");
     await Disease.deleteOne({ _id: disease._id }, { session });
     await Plant.updateMany(
       { common_disease_ids: disease._id },

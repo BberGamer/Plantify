@@ -103,6 +103,11 @@ const deletePlant = async (req, res, next) => {
 };
 
 module.exports = {
+  getManagerPlantById: async (req, res, next) => {
+    try {
+      return success(res, "Lấy thông tin cây thành công.", await plantService.getManagerPlantById(req.params.id));
+    } catch (error) { next(error); }
+  },
   getCategories,
   getPlants,
   getPlantById,

@@ -52,6 +52,22 @@ def file_sha256(path):
     return digest.hexdigest()
 
 
+def class_probabilities(values, *, logits=False):
+    """Chuẩn hóa toàn bộ class khi caller xác định đầu vào là logits."""
+    import torch
+
+    values = torch.as_tensor(values).detach().to(dtype=torch.float32, device="cpu")
+    if values.ndim != 1 or values.numel() != CLASS_COUNT or not torch.isfinite(values).all():
+        raise RuntimeError("Đầu ra classification không hợp lệ.")
+    if logits:
+        values = values.softmax(dim=-1)
+    if (values < 0).any() or (values > 1).any() or not math.isclose(
+        float(values.sum()), 1.0, rel_tol=0, abs_tol=1e-5
+    ):
+        raise RuntimeError("Tổng xác suất classification không bằng 1.")
+    return values
+
+
 # Mục đích: Xác minh bộ model trước khi nạp.
 # Cách chạy: Đối chiếu run, epoch, hash weights và thứ tự 78 nhãn; sai thì báo lỗi.
 def verify_bundle(settings):
@@ -225,7 +241,9 @@ class PlantClassifier:
         )
         if len(results) != 1 or results[0].probs is None or len(results[0].probs.data) != CLASS_COUNT:
             raise RuntimeError("Model trả kết quả không hợp lệ.")
-        return results[0].probs
+        # Ultralytics 8.4.198 Classify.forward eval dùng softmax(1);
+        # ClassificationPredictor.postprocess đưa nguyên vector đó vào Results.probs.
+        return class_probabilities(results[0].probs.data)
 
     # Mục đích: Phân tích ảnh và trả 5 nhóm có điểm cao nhất.
     # Cách chạy: Khóa lượt chạy, xử lý ảnh, gọi model, ghép nhãn và luôn mở khóa khi xong.
@@ -237,9 +255,9 @@ class PlantClassifier:
             image, dimensions = decode_image(content, content_type, self.settings)
             probabilities = self._predict(image)
             candidates = []
-            for index in probabilities.top5:
+            for index in probabilities.argsort(descending=True, stable=True)[:5]:
                 index = int(index)
-                score = float(probabilities.data[index])
+                score = float(probabilities[index])
                 if not math.isfinite(score) or not 0 <= score <= 1:
                     raise RuntimeError("Confidence không hợp lệ.")
                 entry = self.mapping[index]
@@ -250,8 +268,10 @@ class PlantClassifier:
                 })
             return {
                 "prediction": candidates[0], "top5": candidates,
-                # Đủ điểm theo đúng thứ tự class để backend gộp theo cây từ mapping DB.
-                "class_scores": [float(score) for score in probabilities.data],
+                "class_scores": probabilities.tolist(),
+                "scores": {"top1": candidates[0]["confidence"],
+                           "top2": candidates[1]["confidence"],
+                           "margin": candidates[0]["confidence"] - candidates[1]["confidence"]},
                 "image": dimensions, "model": dict(self.info),
                 "processing_ms": round((time.perf_counter() - started) * 1000, 2),
             }

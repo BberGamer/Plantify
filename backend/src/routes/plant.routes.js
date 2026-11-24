@@ -6,7 +6,9 @@ const { authenticate, authorizeManager } = require('../middlewares/auth.middlewa
 const catalogUpload = require('../middlewares/catalog-upload.middleware');
 
 router.use('/manager', authenticate, authorizeManager);
+router.get("/manager/ai-labels", require("../controllers/catalog-ai.controller").plantLabels);
 router.get('/manager', getManagerPlants);
+router.get('/manager/:id', require('../controllers/plant.controller').getManagerPlantById);
 router.post('/manager', catalogUpload, createPlant);
 router.put('/manager/:id', catalogUpload, updatePlant);
 router.delete('/manager/:id', deletePlant);

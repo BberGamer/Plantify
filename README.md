@@ -4,7 +4,62 @@
 
 README được đối chiếu với source ngày **31/10/2026**. Trạng thái dưới đây mô tả phần đã triển khai trong mã nguồn, không đồng nghĩa đã kiểm thử tích hợp hoặc sẵn sàng production.
 
-### AI diagnosis (2026-11-17)
+### AI diagnosis (2026-11-24)
+
+Manager thêm/sửa cây và bệnh có mục **Nhãn AI nhận diện**. Danh mục và các nhãn
+được chọn lưu cùng transaction; `ai_class_ids` là danh sách class ID của checkpoint
+hiện tại. Không chọn nhãn vẫn tạo danh mục được, nhưng không tự thêm class cho model.
+Chọn nhãn đã có chủ sẽ chuyển assignment sang bản ghi đang lưu (form hiện cảnh báo),
+không xóa bản ghi cũ. Bệnh chỉ chọn được nhãn không khỏe, thuộc cây liên quan đã
+chọn; nhãn chưa có cây cần gán tại form cây trước. Nhãn khỏe không có disease_id.
+Aliases không tự sinh mapping trong CRUD; runtime chỉ đọc mapping theo run/hash.
+
+Bỏ chọn nhãn làm assignment tương ứng pending, không để tham chiếu đến bản ghi đã
+xóa. Ẩn/hiện cây hoặc bệnh cập nhật trạng thái mapping, giữ assignment để khôi phục
+khi hiện lại. Xóa bị chặn nếu còn mapping; cây có vườn/yêu thích/phác đồ, hoặc bệnh
+có phác đồ/lịch điều trị cũng bị chặn (409, nên tạm ẩn). Liên kết cây–bệnh được sửa
+qua form bệnh; không gửi `common_disease_ids` ở API lưu cây. Bỏ một cây vẫn cần cho
+nhãn AI đang giữ sẽ bị từ chối và rollback, cần bỏ/chuyển nhãn đó trước.
+
+API manager mới (giữ middleware đăng nhập/manager hiện có):
+`GET /api/plants/manager/ai-labels`, `GET /api/diseases/manager/ai-labels`,
+`GET /api/plants/manager/:id`. API labels trả nhãn checkpoint và assignment hiện tại.
+Form đợi nhãn tải xong trước khi lưu để tránh vô tình xóa mapping khi mạng lỗi;
+chỉ chỉnh danh mục qua client cũ không gửi ai_class_ids vẫn giữ assignment.
+Danh sách tải lại khi trở về màn/tab; xóa trực tiếp bằng Compass không phát realtime,
+cần tải lại hoặc quay lại tab. Sửa cây luôn tải chi tiết mới nhất, hỗ trợ thử lại.
+
+CRUD dùng transaction; MongoDB cần hỗ trợ replica set hoặc Atlas.
+
+Luồng hiện tại: mobile `useDiagnosis` → `diagnosisService.analyze` → Express
+`/diagnosis` hoặc `/identification` → kiểm tra JWT/customer/VIP và upload → Python
+`/predict` → checkpoint classification → backend quyết định và tra mapping DB.
+Đã bỏ MobileCLIP, `/check-image`, cấu hình guard và dependency OpenCLIP/timm;
+startup và `/health` chỉ cần model classification. Không cần xóa thư mục weights
+guard cũ để chạy; runtime không đọc thư mục đó. Khởi động lại Python và Express
+sau cập nhật; các biến `DIAGNOSIS_REQUIRE_INPUT_GUARD`, `DIAGNOSIS_GUARD_*`,
+`PLANTIFY_GUARD_*` cũ không còn được sử dụng.
+
+Ultralytics được pin `8.4.198`: `Classify.forward` ở eval tính `softmax(1)`;
+`ClassificationPredictor.postprocess` đưa vector này vào `Results.probs`.
+Dùng nguyên đủ 78 xác suất, không softmax hoặc chuẩn hóa top 5 lần nữa.
+Python và backend kiểm tra vector hữu hạn, phạm vi [0,1], tổng xấp xỉ 1;
+backend còn đối chiếu top 5 và nhãn với metadata checkpoint. Tổng này chỉ dùng
+xác minh hợp đồng, không dùng chấp nhận ảnh. Confidence chưa được hiệu chuẩn,
+không phải xác suất dự đoán đúng hay bộ phát hiện ảnh ngoài phân phối.
+
+Cả hai chế độ yêu cầu confidence class đứng đầu và margin giữa hai class đầu
+đạt ngưỡng tương ứng. Bằng ngưỡng được chấp nhận, thấp hơn bị từ chối.
+`scores.top1`, `scores.top2`, `scores.margin` luôn là điểm class;
+`prediction.confidence` là confidence của kết quả theo chế độ.
+Nhận diện cây giữ phép gom theo mapping DB đã có và kiểm tra ngưỡng cây tiếp
+sau ngưỡng class; `plant_scores` tách riêng điểm gom, không coi là xác suất loài
+đã hiệu chuẩn. Không thêm mapping hoặc suy diễn loài từ tên nhãn.
+`*_UNRECOGNIZED_BELOW` giữ tương thích trường `status` cũ; mọi trường hợp thiếu
+confidence/margin hoặc chất lượng ảnh đều có `result_status=uncertain`, không
+kết luận “không phải lá”, không tạo lịch sử/ảnh/phác đồ và hiển thị:
+“Chưa xác định được cây/bệnh. Vui lòng chụp rõ lá, đủ ánh sáng và thử lại.”
+Kiểm tra định dạng, dung lượng, decode, pixel/ảnh động và xác thực giữ nguyên.
 
 Đã bỏ màn hình/API Admin cấu hình AI. Backend đọc metadata đúng checkpoint và
 mapping ObjectId theo run/hash/class trong collection `diagnosis_mappings`.
@@ -14,6 +69,14 @@ Ngưỡng lấy từ `backend/.env`: `DIAGNOSIS_MIN_CONFIDENCE`, `DIAGNOSIS_MIN_
 `DIAGNOSIS_UNRECOGNIZED_BELOW`. Thiếu, rỗng hoặc sai phạm vi thì trả 503;
 không dùng ngưỡng fallback. URL và timeout dùng `DIAGNOSIS_INFERENCE_URL`, `DIAGNOSIS_TIMEOUT_MS`.
 Mobile chỉ hiển thị quyết định backend, không tính lại confidence/margin.
+
+Kết quả nhận diện cây accepted trả thêm `prediction.plant_details` từ bản ghi `plants`
+đúng `plant_id` của mapping checkpoint: tên cây, tên khoa học, họ thực vật, mô tả
+và sáu trường chăm sóc (ánh sáng, tưới nước, nhiệt độ, độ ẩm, đất, phân bón).
+Tab Nhận diện cây hiện trực tiếp thông tin cây và chăm sóc dưới tên cây, đồng thời
+giữ nút “Xem thông tin cây”. Tab Chẩn đoán bệnh chỉ hiện kết quả và thông tin bệnh.
+Trường thiếu hiện “Chưa cập nhật”. Không tra tên gần giống hoặc gọi inference lần nữa. Frontend
+kiểm tra ID và kiểu dữ liệu; response backend cũ thiếu plant_details vẫn đọc được.
 
 Hai tính năng dùng chung model và camera nhưng có quyết định riêng:
 
@@ -80,19 +143,27 @@ Tích hợp dùng [Upload API](https://cloudinary.com/documentation/image_upload
 và asset authenticated của Cloudinary, không thêm SDK/dependency. Đã thử upload,
 đọc và xóa một ảnh mẫu thật; không tạo bản ghi DB thử hoặc chuyển ảnh cũ lên cloud.
 
-Các ngưỡng trong `.env.example` chỉ là giá trị ban đầu, cần hiệu chỉnh bằng dữ liệu
-đánh giá. `DIAGNOSIS_REQUIRE_INPUT_GUARD=true` bắt buộc bộ lọc đầu vào;
-`false` hoặc chưa đặt thì không bật. Khi bật, phải đặt thêm
-`DIAGNOSIS_GUARD_MIN_SIMILARITY` và `DIAGNOSIS_GUARD_MIN_MARGIN` trong `backend/.env`,
-không có fallback. `.env.example` dùng lần lượt `0.23` và `0.025` làm điểm bắt đầu,
-không phải ngưỡng đã được hiệu chỉnh. Giá trị sai hoặc thiếu trả lỗi cấu hình.
-
 Danh mục và mapping được lưu trong DB. Runtime không dùng danh sách seed hoặc
 đoán lại tên/alias để lấp mapping thiếu.
 
-Ngày 17/11/2026 đã dùng lại 29 cây, thêm 45 bệnh unverified, 78 mapping (74 ready,
-4 pending), 48 liên kết cây–bệnh. Chạy lại apply không tạo thêm bản ghi/liên kết.
-Không tạo bệnh healthy, không tạo/phê duyệt phác đồ hoặc bịa triệu chứng/nguyên nhân.
+Ngày 24/11/2026 đã khôi phục collection mapping sau khi bị xóa: 78 mapping đúng
+checkpoint hiện tại, 73 ready và 5 pending; tái sử dụng 29 cây và các bệnh có sẵn.
+Seed chỉ ghép bệnh bằng alias `diagnosis_aliases` bằng chính xác nhãn checkpoint,
+thêm 2 liên kết còn thiếu (dưa chuột–phấn trắng, cà chua–mốc sương), không tạo bệnh
+hoặc sửa/phê duyệt phác đồ. Năm nhãn chưa có alias chính xác giữ pending:
+`apple rust`, `banana panama disease`, `bell pepper leaf spot`, `garlic leaf blight`,
+`grape leaf spot`. Các mapping này vẫn có plant_id hợp lệ để nhận diện cây.
+Không suy diễn bệnh từ tên gần giống hoặc tự dùng mapping pending cho chẩn đoán.
+
+
+Đã kiểm tra 73 mapping ready qua service đọc danh mục với MongoDB thật, không có
+lỗi runtime; 4 test seed và 5 test classification Node đạt. Kiểm tra này không
+tạo lịch sử/ảnh/phác đồ và không thay kiểm thử đăng nhập hoặc giao diện thiết bị.
+Sau đó người dùng xác nhận 5 cặp bệnh trên: đã thêm alias vào đúng bản ghi bệnh
+hiện có và chuyển 5 mapping sang ready bằng transaction. Hiện có **78 ready,
+0 pending**. Các file test và script seed/audit tạm đã được xóa theo yêu cầu;
+dữ liệu đã seed trong DB được giữ nguyên. Các kết quả kiểm tra bên dưới ghi nhận
+những lần chạy trước khi xóa các script này.
 Định danh mapping ready độc lập với việc nội dung điều trị đã được xác minh.
 
 Thiếu/pending/sai mapping, bệnh inactive hoặc mất liên kết trả lỗi dữ liệu riêng;
@@ -105,55 +176,42 @@ approved đầy đủ, qua kiểm tra schema ở cả danh sách và lúc tạo 
 Kết quả chưa xác định/ảnh không phù hợp hiển thị lý do ngay dưới tiêu đề trong khung
 kết quả hiện có, kèm nút **Chụp lại**; không chuyển sang màn từ chối riêng.
 
-Bộ lọc đầu vào dùng [MobileCLIP2-S0](https://huggingface.co/timm/MobileCLIP2-S0-OpenCLIP)
-chạy cục bộ qua OpenCLIP. Revision, hash weights/config và mô tả ảnh nằm riêng trong
-`inference/input_guard.json`; đây là cấu hình so khớp ảnh, không phải danh mục cây/bệnh.
-Ảnh được so với nhóm mô tả lá cây thật, quả đang trên cây và nhóm ngoài phạm vi. Guard trả `passed`,
-`unsupported` hoặc `uncertain`; hai trạng thái sau dừng trước model bệnh và không tạo lịch sử.
-Chỉ `unsupported` đổi thành `unsupported_image`; phân vân giữ `uncertain`.
-Nếu guard bắt buộc nhưng model thiếu, hỏng hoặc dịch vụ không chạy, backend không bỏ qua.
-Khi không bật, response ghi rõ `input_check.status=disabled`.
-Lỗi cấu hình, mapping thiếu/pending, danh mục không hợp lệ và lỗi lưu lịch sử có
-mã lỗi riêng. Lịch sử giữ status identified và metadata model, không ghi policy.
-Identification và kết quả healthy không tạo evidence như trước. Không sửa/xóa dữ liệu DB cũ.
-Confidence/margin không bảo đảm từ chối mọi ảnh ngoài phạm vi; điểm mô hình không
-phải xác suất nhận diện đúng. Metadata class giữ đúng thứ tự checkpoint.
 
-Thiết lập guard từ thư mục gốc (weights khoảng 300 MB, không commit):
 
-```powershell
-# Trên Windows không có C++ Build Tools, dùng PyYAML thuần Python.
-$env:PYYAML_FORCE_LIBYAML="0"
-inference/.venv/Scripts/python.exe -m pip install -r inference/requirements.txt
-inference/.venv/Scripts/python.exe -c "from huggingface_hub import snapshot_download; snapshot_download('timm/MobileCLIP2-S0-OpenCLIP', revision='095906d28bf54d7584dc411e8ffe448f34289e05', allow_patterns=['open_clip_model.safetensors','open_clip_config.json','README.md'], local_dir='inference/input_guard_model')"
-```
+Kiểm chứng ngày 24/11/2026: 6 test Python và 5 test Node đều đạt (vector đầy đủ,
+không softmax hai lần, logits, class ID/nhãn, sát dưới/bằng/trên ngưỡng,
+từ chối không lưu lịch sử, startup/API không import guard). Checkpoint thật
+`best_macro_f1.pt`, epoch 63, SHA-256
+`44c774ac1d86f5869813a7b3abde7bf94741697c4ac264c8a6d339ad2b991ff2`
+khởi động qua FastAPI TestClient trên CPU, `/health` ready và `/predict` 200
+khi chặn import `open_clip`/`timm` và chặn mở mọi đường dẫn `input_guard`
+(giả lập file model guard không có); không gỡ package khỏi môi trường dùng chung.
+Runtime không truy cập weights MobileCLIP; thư mục cũ vẫn được giữ để bảo toàn
+ảnh mẫu và tài nguyên local. Tổng 78 xác suất của các mẫu sai khác 1 dưới 1,4e-7.
 
-Model/tokenizer dùng cách nạp [OpenCLIP chính thức của Apple](https://github.com/apple/ml-mobileclip#openclip-support).
-Giữ model card và license `apple-amlr` của checkpoint. Runtime chỉ đọc file cục bộ,
-kiểm SHA-256 rồi nạp model một lần; không tải model hoặc gọi API ngoài khi nhận ảnh.
-Có thể đặt `PLANTIFY_GUARD_MODEL_DIR`, `PLANTIFY_GUARD_CONFIG` cho Python nếu đổi đường dẫn.
-Khởi động lại Python inference và backend sau khi thiết lập.
+Ảnh thử cũ nằm tại `inference/input_guard_model/samples` (local, không phải
+dependency runtime). Với ngưỡng ví dụ confidence 0,70/margin 0,15:
 
-Kiểm thử hồi quy (mock, không thay đánh giá model):
+| Ảnh | Class đứng đầu | Confidence | Margin | Qua bộ lọc class |
+| --- | --- | ---: | ---: | --- |
+| `healthy.jpg`, lá rõ | apple leaf | 0,736521 | 0,568494 | Có |
+| `diseased.jpg`, lá bệnh | potato early blight | 0,974672 | 0,950649 | Có |
+| `healthy.jpg` làm mờ Gaussian radius 18 | grape downy mildew | 0,958199 | 0,942869 | Có, đổi nhãn sai sau làm mờ |
+| Cây lưỡi hổ ngoài danh sách | rice leaf | 0,904384 | 0,812806 | Có, sai loài |
+| `bus.jpg` | apple mosaic virus | 0,565652 | 0,398344 | Không |
+| `person.jpg` | corn smut | 0,614281 | 0,298408 | Không |
+| `food.png` | apple leaf | 0,531808 | 0,387068 | Không |
+| `anime.png` | corn leaf | 0,987905 | 0,981696 | Có, ảnh không phải cây |
 
-```powershell
-node --test backend/src/integrations/ai/input-guard.test.cjs
-node --test backend/src/integrations/cloudinary-photo.test.cjs
-node --test backend/src/services/__tests__/identification.test.cjs
-node --test backend/src/services/__tests__/diagnosis-history.test.cjs
-node --test mobile/src/services/__tests__/recognition.test.cjs
-# Dependency riêng cho FastAPI TestClient, không cần để phục vụ inference.
-inference/.venv/Scripts/python.exe -m pip install httpx==0.28.1
-inference/.venv/Scripts/python.exe -m unittest inference.test_input_guard -v
-```
-
-Smoke test ngày 17/11/2026 với model thật: lá khỏe/lá bệnh được guard cho qua;
-anime bị từ chối; xe/người/đồ ăn trả uncertain và không chạy model bệnh; ảnh hỏng
-trả INVALID_IMAGE. Đã kiểm tra mapping DB chỉ đọc, không tạo lịch sử. Bộ mẫu nhỏ này
-không chứng minh độ chính xác: ảnh lá cà chua mẫu vẫn bị classifier bệnh đoán thành
-khoai tây. Guard không xác minh loài/bệnh, không bảo đảm phát hiện mọi ảnh ngoài phạm vi.
-Cần tập đánh giá riêng gồm ảnh thực địa, ảnh không liên quan và các trường hợp khó
-để đo tỷ lệ ảnh sai lọt qua/ảnh hợp lệ bị chặn và hiệu chỉnh cả prompt lẫn ngưỡng.
+Ảnh lưỡi hổ lấy từ [Wikipedia/Wikimedia](https://en.wikipedia.org/wiki/Dracaena_trifasciata),
+file `Snake Plant (Sansevieria trifasciata 'Laurentii').jpg`, thumbnail 330px;
+đã kiểm tra metadata 78 class không có Dracaena/Sansevieria/snake plant.
+Đây là đánh giá bộ lọc class với model thật và ngưỡng mẫu, không phải quyết định
+accepted cuối cùng qua mapping DB. Chưa kiểm thử phiên đăng nhập, DB/history,
+Cloudinary hoặc thiết bị mobile trong đợt này. Lá bệnh mẫu không có ground truth
+đáng tin cậy đi kèm, nên không khẳng định dự đoán bệnh đúng. Bộ ảnh nhỏ không đủ
+hiệu chỉnh ngưỡng; basic image quality không phát hiện được mọi ảnh mờ. Ảnh ngoài
+danh sách và ảnh không phải cây vẫn có thể lọt với confidence rất cao.
 
 Chat lưu câu hỏi–trả lời theo tài khoản/hội thoại trong `chat_turns`, tải lại lịch sử
 gần nhất và hiển thị thời gian phản hồi. Đã bỏ tự chấm và bảng CCC khỏi màn chat;

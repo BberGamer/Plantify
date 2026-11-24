@@ -271,6 +271,9 @@ export default function getErrorMessage(
     );
     if (field) return FINANCE_FIELD_MESSAGES[field];
   }
+  if (["CATALOG_AI_CONFLICT", "CATALOG_IN_USE"].includes(code) && typeof data?.message === "string") {
+    return data.message;
+  }
   if (code === "VALIDATION_ERROR" && typeof data?.errors?.phone === "string") {
     return data.errors.phone;
   }

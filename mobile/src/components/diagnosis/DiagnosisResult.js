@@ -24,7 +24,7 @@ export default function DiagnosisResult({
     !!prediction.disease_id;
   const title = identified
     ? prediction.is_healthy
-      ? "Chưa phát hiện bệnh trong phạm vi hỗ trợ"
+      ? `${prediction.plant_name} — chưa phát hiện bệnh`
       : prediction.disease_name
     : "Chưa chẩn đoán được";
 

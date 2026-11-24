@@ -5,7 +5,6 @@ const Disease = require("../models/disease.model");
 const DiagnosisMapping = require("../models/diagnosisMapping.model");
 const DiseaseDiagnosis = require("../models/diseaseDiagnosis.model");
 const inference = require("../integrations/ai/diagnosis.service");
-const inputGuard = require("../integrations/ai/input-guard.service");
 const {
   getDiagnosisConfig,
   loadModelMetadata,
@@ -113,6 +112,25 @@ const validateResult = (data, metadata) => {
     (!quality.usable && quality.reasons.length === 0)
   )
     throw invalidResponse();
+  const scores = data.class_scores;
+  if (
+    !Array.isArray(scores) ||
+    scores.length !== metadata.classes ||
+    scores.some(
+      (score) => !Number.isFinite(score) || score < 0 || score > 1,
+    ) ||
+    Math.abs(scores.reduce((sum, score) => sum + score, 0) - 1) > 1e-4 ||
+    data.top5.some(
+      (candidate) =>
+        Math.abs(scores[candidate.class_id] - candidate.confidence) > 1e-7,
+    ) ||
+    scores.some(
+      (score, id) =>
+        !data.top5.some((candidate) => candidate.class_id === id) &&
+        score > data.top5[4].confidence + 1e-7,
+    )
+  )
+    throw invalidResponse();
   return data;
 };
 
@@ -152,6 +170,18 @@ const careText = (requirements) =>
     .join("\n") || null;
 const hasText = (value) => typeof value === "string" && value.trim().length > 0;
 // Chỉ dùng mapping DB đúng phiên bản; thiếu dữ liệu là lỗi danh mục, không phải uncertain.
+const toPlantDetails = (plant) => ({
+  _id: String(plant._id),
+  common_name: plant.common_name,
+  scientific_name: hasText(plant.scientific_name) ? plant.scientific_name : null,
+  botanical_family: hasText(plant.botanical_family) ? plant.botanical_family : null,
+  description: hasText(plant.description) ? plant.description : null,
+  care_requirements: Object.fromEntries(
+    Object.keys(careLabels).map(key => [key,
+      hasText(plant.care_requirements?.[key]) ? plant.care_requirements[key] : null]),
+  ),
+});
+
 const createCatalogEnricher =
   ({
     plantModel = Plant,
@@ -205,7 +235,7 @@ const createCatalogEnricher =
       const [plant, disease] = await Promise.all([
         plantModel
           .findOne({ _id: mapping.plant_id, is_published: true })
-          .select("_id common_name common_disease_ids care_requirements")
+          .select("_id common_name scientific_name botanical_family description common_disease_ids care_requirements")
           .lean(),
         entry.is_healthy
           ? null
@@ -236,6 +266,7 @@ const createCatalogEnricher =
         ...candidate,
         plant_id: String(plant._id),
         plant_name: plant.common_name,
+        plant_details: toPlantDetails(plant),
         disease_id: disease ? String(disease._id) : null,
         disease_name: disease?.disease_name || null,
         display_name: disease
@@ -269,11 +300,11 @@ const messages = {
   confident:
     "Model gợi ý kết quả bên dưới. Hãy đối chiếu với tình trạng thực tế của cây.",
   low_confidence:
-    "Chưa đủ cơ sở để xác định cây hoặc bệnh. Vui lòng chụp rõ lá cây và thử lại.",
+    "Chưa xác định được cây/bệnh. Vui lòng chụp rõ lá, đủ ánh sáng và thử lại.",
   ambiguous:
-    "Kết quả còn phân vân giữa nhiều nhóm cây/bệnh. Vui lòng chụp rõ vùng có triệu chứng và thử lại.",
+    "Chưa xác định được cây/bệnh. Vui lòng chụp rõ lá, đủ ánh sáng và thử lại.",
   poor_image_quality:
-    "Ảnh quá nhỏ, quá tối/sáng hoặc thiếu chi tiết. Vui lòng chụp lại ảnh rõ hơn.",
+    "Chưa xác định được cây/bệnh. Vui lòng chụp rõ lá, đủ ánh sáng và thử lại.",
 };
 
 const decideResult = (data, thresholds) => {
@@ -283,7 +314,7 @@ const decideResult = (data, thresholds) => {
     return { status: "unrecognized", reason: "poor_image_quality" };
   if (top1 < thresholds.unrecognized_below)
     return { status: "unrecognized", reason: "low_confidence" };
-  if (margin + 1e-9 < thresholds.min_margin)
+  if (margin < thresholds.min_margin)
     return { status: "uncertain", reason: "ambiguous" };
   if (top1 < thresholds.min_confidence)
     return { status: "uncertain", reason: "low_confidence" };
@@ -295,33 +326,20 @@ const createPlantIdentifier =
   ({ mappingModel = DiagnosisMapping, plantModel = Plant } = {}) =>
   async (data, metadata, thresholds) => {
     const scores = data.class_scores;
-    if (
-      !Array.isArray(scores) ||
-      scores.length !== metadata.classes ||
-      scores.some(
-        (score) => !Number.isFinite(score) || score < 0 || score > 1,
-      ) ||
-      Math.abs(scores.reduce((sum, score) => sum + score, 0) - 1) > 1e-4 ||
-      data.top5.some(
-        (candidate) =>
-          Math.abs(scores[candidate.class_id] - candidate.confidence) > 1e-7,
-      ) ||
-      scores.some(
-        (score, id) =>
-          !data.top5.some((candidate) => candidate.class_id === id) &&
-          score > data.top5[4].confidence + 1e-7,
-      )
-    )
-      throw invalidResponse();
-    if (!data.image.quality.usable)
+    const classDecision = decideResult(data, thresholds);
+    if (classDecision.status !== "identified")
       return {
-        status: "unrecognized",
+        ...classDecision,
         result_kind: "plant",
         result_status: "uncertain",
-        reason: "poor_image_quality",
         prediction: null,
         alternatives: [],
-        message: messages.poor_image_quality,
+        scores: {
+          top1: data.top5[0].confidence,
+          top2: data.top5[1].confidence,
+          margin: data.top5[0].confidence - data.top5[1].confidence,
+        },
+        message: messages[classDecision.reason],
       };
     let mappings, plants;
     try {
@@ -367,7 +385,7 @@ const createPlantIdentifier =
       ];
       plants = await plantModel
         .find({ _id: { $in: plantIds }, is_published: true })
-        .select("_id common_name scientific_name")
+        .select("_id common_name scientific_name botanical_family description care_requirements")
         .lean();
       if (
         plants.length !== plantIds.length ||
@@ -423,15 +441,21 @@ const createPlantIdentifier =
       result_kind: "plant",
       result_status:
         decision.status === "identified" ? "accepted" : "uncertain",
-      prediction: decision.status === "identified" ? ranked[0] : null,
+      prediction: decision.status === "identified" ? {
+        ...ranked[0],
+        plant_details: toPlantDetails(plants.find(plant => String(plant._id) === ranked[0].plant_id)),
+      } : null,
       alternatives: ranked.slice(0, 5),
-      scores: { top1, top2, margin: top1 - top2 },
+      scores: {
+        top1: data.top5[0].confidence,
+        top2: data.top5[1].confidence,
+        margin: data.top5[0].confidence - data.top5[1].confidence,
+      },
+      plant_scores: { top1, top2, margin: top1 - top2 },
       message:
         decision.status === "identified"
           ? "Tên cây gợi ý từ mô hình. Hãy đối chiếu với cây thực tế."
-          : decision.reason === "poor_image_quality"
-            ? messages.poor_image_quality
-            : "Chưa đủ cơ sở để xác định cây. Vui lòng chụp rõ cây hoặc lá và thử lại.",
+          : messages[decision.reason],
     };
   };
 const checkCancellation = (signal) => {
@@ -459,7 +483,6 @@ const historyCatalog = [
 ];
 
 const createDiagnosisService = ({
-  guard = inputGuard,
   predictor = inference,
   enrich = createCatalogEnricher(),
   identifyPlant = createPlantIdentifier(),
@@ -570,49 +593,8 @@ const createDiagnosisService = ({
     });
     const metadata = await metadataProvider();
     checkCancellation(options.signal);
-    const inputCheck = await guard.check(photo, {
-      ...options,
-      config,
-      enabled: config.requireInputGuard,
-    });
-    if (
-      !inputCheck ||
-      typeof inputCheck.reason !== "string" ||
-      !inputCheck.reason.trim() ||
-      !["passed", "disabled", "unsupported", "uncertain"].includes(
-        inputCheck.status,
-      ) ||
-      (config.requireInputGuard && inputCheck.status === "disabled") ||
-      (inputCheck.status === "disabled"
-        ? inputCheck.active !== false
-        : inputCheck.active !== true)
-    ) {
-      throw new AppError(
-        "DIAGNOSIS_INPUT_GUARD_UNAVAILABLE",
-        503,
-        "Bộ kiểm tra đầu vào chưa trả được trạng thái hợp lệ.",
-      );
-    }
-    checkCancellation(options.signal);
-    if (["unsupported", "uncertain"].includes(inputCheck.status))
-      return {
-        status:
-          inputCheck.status === "unsupported" ? "unrecognized" : "uncertain",
-        result_status:
-          inputCheck.status === "unsupported"
-            ? "unsupported_image"
-            : "uncertain",
-        reason: inputCheck.reason,
-        message:
-          inputCheck.status === "unsupported"
-            ? "Ảnh không phù hợp hoặc cây nằm ngoài phạm vi hỗ trợ."
-            : "Chưa đủ cơ sở để xác định cây hoặc bệnh. Vui lòng chụp rõ lá cây và thử lại.",
-        prediction: null,
-        alternatives: [],
-        diagnosis_id: null,
-        input_check: inputCheck,
-        result_kind: options.identification === true ? "plant" : "disease",
-      };
+    // Giữ field cũ cho consumer; không còn nạp/gọi guard độc lập.
+    const inputCheck = { status: "disabled", active: false, reason: "classifier_thresholds" };
     const data = validateResult(
       await predictor.predict(photo, { ...options, config }),
       metadata,

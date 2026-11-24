@@ -85,6 +85,10 @@ export default function ManagerPlantsScreen() {
         Thêm cây mới
       </Button>
       <PlantFormModal
+        ai={manager.ai}
+        loading={manager.formLoading}
+        ready={manager.formReady}
+        onRetryDetail={manager.retryEdit}
         visible={manager.visible}
         editing={Boolean(manager.editing)}
         form={manager.form}

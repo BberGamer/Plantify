@@ -36,25 +36,8 @@ const getDiagnosisConfig = (env = process.env, { identification = false } = {}) 
       thresholds.unrecognized_below >= thresholds.min_confidence
     )
       throw new Error();
-    const guard = env.DIAGNOSIS_REQUIRE_INPUT_GUARD;
-    if (guard !== undefined && !["true", "false"].includes(guard))
-      throw new Error();
-    const inputGuard =
-      guard === "true"
-        ? {
-            minSimilarity: score("DIAGNOSIS_GUARD_MIN_SIMILARITY"),
-            minMargin: score("DIAGNOSIS_GUARD_MIN_MARGIN"),
-          }
-        : null;
-    if (
-      inputGuard &&
-      (inputGuard.minSimilarity <= 0 || inputGuard.minMargin <= 0)
-    )
-      throw new Error();
     return {
       thresholds,
-      inputGuard,
-      requireInputGuard: guard === "true",
       inferenceUrl: `${url.toString().replace(/\/$/, "")}/predict`,
       timeoutMs,
     };

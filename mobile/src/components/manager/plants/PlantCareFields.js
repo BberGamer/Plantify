@@ -18,6 +18,8 @@ export default function PlantCareFields({ value, disabled, onChange }) {
           ["water", "Tưới nước", "water-outline", "Ví dụ: 2–3 lần mỗi tuần"],
           ["temperature", "Nhiệt độ", "thermometer-outline", "Ví dụ: 20–35°C"],
           ["humidity", "Độ ẩm", "cloud-outline", "Ví dụ: Trung bình"],
+          ["soil", "Đất trồng", "earth-outline", "Ví dụ: Đất tơi xốp, thoát nước tốt"],
+          ["fertilizer", "Phân bón", "leaf-outline", "Ví dụ: Bón theo giai đoạn phát triển"],
         ].map(([key, label, icon, placeholder], index, fields) => (
           <View
             key={key}

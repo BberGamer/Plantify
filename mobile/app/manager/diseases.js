@@ -94,6 +94,7 @@ export default function ManagerDiseasesScreen() {
         />
       )}
       <DiseaseFormModal
+        ai={manager.ai}
         visible={manager.visible}
         editing={manager.editing}
         form={manager.form}
