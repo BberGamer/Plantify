@@ -148,7 +148,8 @@ export default function useRegister() {
   const goBack = () => {
     if (pending.current) return;
     if (step === 1) {
-      router.back();
+      if (router.canGoBack()) router.back();
+      else router.replace("/auth/login");
       return;
     }
     setStep(1);

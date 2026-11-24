@@ -4,17 +4,16 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../src/theme/colors";
 import { useRouter } from "expo-router";
 import useRegister from "../../src/hooks/useRegister";
 import useFormBack from "../../src/hooks/useFormBack";
+import ScreenHeader from "../../src/components/common/ScreenHeader";
 import RegisterForm from "../../src/components/auth/RegisterForm";
 import RegisterOtpForm from "../../src/components/auth/RegisterOtpForm";
 export default function RegisterScreen() {
@@ -27,13 +26,18 @@ export default function RegisterScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
+        <ScreenHeader
+          title={
+            registration.step === 1 ? "Đăng ký tài khoản" : "Xác thực email"
+          }
+          onBack={registration.goBack}
+          disabled={registration.loading}
+        />
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.topBar}>
-          </View>
           {!!registration.errorMsg && (
             <View style={styles.errorBox}>
               <Text accessibilityRole="alert" style={styles.errorText}>
@@ -71,10 +75,10 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   keyboardView: {
-    flex: 1
+    flex: 1,
   },
   scrollContent: {
     width: "100%",
@@ -83,17 +87,7 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingBottom: 32
-  },
-  topBar: {
-    paddingVertical: 12
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center"
+    paddingBottom: 32,
   },
   errorBox: {
     flexDirection: "row",
@@ -105,11 +99,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     marginBottom: 16,
-    gap: 8
+    gap: 8,
   },
   errorText: {
     color: colors.statusError,
     fontSize: 13,
-    flex: 1
-  }
+    flex: 1,
+  },
 });

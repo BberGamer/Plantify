@@ -162,7 +162,10 @@ export default function useResetPassword() {
       }
     },
     goBack: () => {
-      if (!pending.current) router.back();
+      if (!pending.current) {
+        if (router.canGoBack()) router.back();
+        else router.replace("/auth/login");
+      }
     },
   };
 }

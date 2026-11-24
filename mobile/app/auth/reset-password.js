@@ -4,16 +4,15 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../src/theme/colors";
 import useResetPassword from "../../src/hooks/useResetPassword";
 import useFormBack from "../../src/hooks/useFormBack";
+import ScreenHeader from "../../src/components/common/ScreenHeader";
 import ResetEmailForm from "../../src/components/auth/ResetEmailForm";
 import ResetOtpForm from "../../src/components/auth/ResetOtpForm";
 import ResetPasswordForm from "../../src/components/auth/ResetPasswordForm";
@@ -34,21 +33,11 @@ export default function ResetPasswordScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
-        <View style={styles.headerBar}>
-          <TouchableOpacity
-            onPress={reset.goBack}
-            disabled={busy}
-            style={styles.backButton}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={colors.textPrimary}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Đặt lại mật khẩu</Text>
-          <View style={styles.backButton} />
-        </View>
+        <ScreenHeader
+          title="Đặt lại mật khẩu"
+          onBack={reset.goBack}
+          disabled={busy}
+        />
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
@@ -109,33 +98,10 @@ export default function ResetPasswordScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   keyboardView: {
-    flex: 1
-  },
-  headerBar: {
-    width: "100%",
-    maxWidth: 760,
-    alignSelf: "center",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: colors.textPrimary
+    flex: 1,
   },
   scrollContent: {
     width: "100%",
@@ -143,21 +109,21 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 36
+    paddingBottom: 36,
   },
   titleContainer: {
-    marginBottom: 20
+    marginBottom: 20,
   },
   pageTitle: {
     fontSize: 22,
     fontWeight: "700",
     color: colors.textPrimary,
-    marginBottom: 8
+    marginBottom: 8,
   },
   pageSubtitle: {
     fontSize: 14,
     color: colors.textSecondary,
-    lineHeight: 20
+    lineHeight: 20,
   },
   errorBox: {
     flexDirection: "row",
@@ -169,12 +135,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     marginBottom: 16,
-    gap: 8
+    gap: 8,
   },
   errorText: {
     color: colors.statusError,
     fontSize: 13,
-    flex: 1
+    flex: 1,
   },
   successBox: {
     flexDirection: "row",
@@ -186,11 +152,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     marginBottom: 16,
-    gap: 8
+    gap: 8,
   },
   successText: {
     color: colors.primaryLight,
     fontSize: 13,
-    flex: 1
-  }
+    flex: 1,
+  },
 });
