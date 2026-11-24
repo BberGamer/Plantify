@@ -1,3 +1,4 @@
+import { componentStyles } from "../../../theme/componentStyles";
 import { View } from "react-native";
 import { Button, Card, Text } from "react-native-paper";
 import { money, styles } from "./presentation";
@@ -16,7 +17,7 @@ export default function VipSection({ f, router, setDialog }) {
                 {plan.days} ngày · {money(plan.price)}
               </Text>
             </View>
-            <Button
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
               mode="contained"
               disabled={f.busy}
               onPress={() => {
@@ -44,14 +45,14 @@ export default function VipSection({ f, router, setDialog }) {
           </Card.Content>
         </Card>
       ))}
-      <Button
+      <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
         icon="wallet-outline"
         disabled={f.busy}
         onPress={() => router.push("/customer/wallet")}
       >
         Đến ví tiền
       </Button>
-      <Button
+      <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
         disabled={f.busy}
         onPress={() => router.navigate("/customer/profile")}
       >

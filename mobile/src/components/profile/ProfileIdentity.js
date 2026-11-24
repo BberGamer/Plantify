@@ -76,8 +76,14 @@ export default function ProfileIdentity({ user, finance }) {
 
 // Style riêng của component.
 const styles = StyleSheet.create({
-  vipCard: { borderWidth: 1, borderColor: "#D6BA71" },
-  vipAvatar: { borderColor: "#F2D790", backgroundColor: "#32745A" },
+  vipCard: {
+    borderWidth: 1,
+    borderColor: "#D6BA71"
+  },
+  vipAvatar: {
+    borderColor: "#F2D790",
+    backgroundColor: "#32745A"
+  },
   vipBadge: {
     flexDirection: "row",
     gap: 5,
@@ -85,41 +91,58 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 5,
     backgroundColor: "#F2D790",
-    borderRadius: 20,
+    borderRadius: 20
   },
-  vipLabel: { color: "#64470F", fontWeight: "800", fontSize: 12 },
-  freeLabel: { marginTop: 14, color: colors.primary, fontWeight: "700" },
-  vipName: { color: "#FFF5D8" },
-  vipEmail: { color: "#DBEBDD", marginTop: 5, textAlign: "center" },
+  vipLabel: {
+    color: "#64470F",
+    fontWeight: "800",
+    fontSize: 13,
+    lineHeight: 20
+  },
+  freeLabel: {
+    marginTop: 14,
+    color: colors.primary,
+    fontWeight: "700"
+  },
+  vipName: {
+    color: "#FFF5D8"
+  },
+  vipEmail: {
+    color: "#DBEBDD",
+    marginTop: 5,
+    textAlign: "center"
+  },
   identityCard: {
     alignItems: "center",
     padding: spacing.xxl,
     borderRadius: 24,
     backgroundColor: colors.lightMint,
-    overflow: "hidden",
+    overflow: "hidden"
   },
   decorLeaf: {
     position: "absolute",
     right: -20,
     top: -10,
-    transform: [{ rotate: "-25deg" }],
+    transform: [{
+      rotate: "-25deg"
+    }]
   },
   avatar: {
     backgroundColor: colors.avatarBg,
     borderWidth: 4,
-    borderColor: colors.white,
+    borderColor: colors.white
   },
   name: {
     marginTop: 14,
     fontSize: 23,
     fontWeight: "800",
     color: colors.primaryText,
-    textAlign: "center",
+    textAlign: "center"
   },
   email: {
     marginTop: 5,
     fontSize: 14,
     color: colors.textSecondary,
-    textAlign: "center",
-  },
+    textAlign: "center"
+  }
 });

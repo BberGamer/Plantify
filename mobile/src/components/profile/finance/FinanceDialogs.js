@@ -1,3 +1,4 @@
+import { componentStyles } from "../../../theme/componentStyles";
 import OrderDetails from "./OrderDetails";
 import { ScrollView } from "react-native";
 import { Button, Dialog, Portal, Text, TextInput } from "react-native-paper";
@@ -17,7 +18,7 @@ export default function FinanceDialogs({
 }) {
   return (
     <Portal>
-      <Dialog
+      <Dialog style={componentStyles.dialog}
         visible={!!dialog && !validationError}
         dismissable={!f.busy}
         dismissableBackButton={!f.busy}
@@ -60,17 +61,17 @@ export default function FinanceDialogs({
           </ScrollView>
         </Dialog.ScrollArea>
         <Dialog.Actions>
-          <Button disabled={f.busy} onPress={() => setDialog(null)}>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} disabled={f.busy} onPress={() => setDialog(null)}>
             Đóng
           </Button>
           {!dialog?.view && (
-            <Button loading={f.busy} disabled={f.busy} onPress={confirm}>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} loading={f.busy} disabled={f.busy} onPress={confirm}>
               Xác nhận
             </Button>
           )}
         </Dialog.Actions>
       </Dialog>
-      <Dialog
+      <Dialog style={componentStyles.dialog}
         visible={!!validationError}
         onDismiss={() => setValidationError("")}
       >
@@ -80,7 +81,7 @@ export default function FinanceDialogs({
           <Text accessibilityRole="alert">{validationError}</Text>
         </Dialog.Content>
         <Dialog.Actions>
-          <Button onPress={() => setValidationError("")}>Đã hiểu</Button>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={() => setValidationError("")}>Đã hiểu</Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>

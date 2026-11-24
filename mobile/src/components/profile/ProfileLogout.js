@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { spacing } from "../../theme/tokens";
 
 import { StyleSheet } from "react-native";
@@ -16,7 +17,7 @@ export default function ProfileLogout({
       <Button
         mode="outlined"
         icon="logout"
-        style={styles.logoutButton}
+        style={[styles.logoutButton, componentStyles.buttonShape]}
         contentStyle={styles.logoutContent}
         labelStyle={styles.logoutLabel}
         loading={isLoggingOut}
@@ -41,14 +42,20 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxl,
     borderRadius: 14,
     borderColor: colors.primary,
-    backgroundColor: colors.lightMint,
+    backgroundColor: colors.lightMint
   },
-  logoutContent: { minHeight: 48 },
-  logoutLabel: { fontSize: 14, fontWeight: "700" },
+  logoutContent: {
+    minHeight: 48
+  },
+  logoutLabel: {
+    fontSize: 14,
+    fontWeight: "700"
+  },
   logoutError: {
     marginTop: 10,
     color: colors.statusError,
-    fontSize: 12,
-    textAlign: "center",
-  },
+    fontSize: 13,
+    lineHeight: 20,
+    textAlign: "center"
+  }
 });

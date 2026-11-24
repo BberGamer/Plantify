@@ -1,6 +1,7 @@
-import { Image, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
 import { colors, spacing, typography } from "../../theme";
+import PlantImage from "../plants/PlantImage";
 import { TreatmentStatusBadge } from "./TreatmentProgress";
 
 export default function TreatmentSummary({
@@ -13,8 +14,8 @@ export default function TreatmentSummary({
 }) {
   return (
     <View style={[styles.summary, style]}>
-      <Image
-        source={{ uri: plant.image_url }}
+      <PlantImage
+        uri={plant.image_url}
         style={[styles.image, imageStyle]}
         accessibilityLabel={`Ảnh cây ${plant.plant_nickname}`}
       />
@@ -29,9 +30,25 @@ export default function TreatmentSummary({
 }
 
 const styles = StyleSheet.create({
-  summary: { flexDirection: "row", gap: spacing.lg },
-  image: { backgroundColor: colors.lightMint },
-  content: { flex: 1, minWidth: 0, justifyContent: "center", gap: spacing.xs },
-  plant: { ...typography.section, color: colors.textPrimary },
-  disease: { ...typography.body, color: colors.textSecondary },
+  summary: {
+    flexDirection: "row",
+    gap: spacing.lg
+  },
+  image: {
+    backgroundColor: colors.lightMint
+  },
+  content: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: "center",
+    gap: spacing.xs
+  },
+  plant: {
+    ...typography.section,
+    color: colors.textPrimary
+  },
+  disease: {
+    ...typography.body,
+    color: colors.textSecondary
+  }
 });

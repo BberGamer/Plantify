@@ -1,3 +1,4 @@
+import { componentStyles } from "../../../theme/componentStyles";
 import WalletOrder from "./WalletOrder";
 import { Button, Card, Text, TextInput } from "react-native-paper";
 import { styles } from "./presentation";
@@ -32,7 +33,7 @@ export default function WalletSection({
             onChangeText={setAmount}
             disabled={f.busy}
           />
-          <Button
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
             mode="contained"
             loading={f.busy}
             disabled={f.busy}

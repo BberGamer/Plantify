@@ -1,36 +1,17 @@
+import StatusBadge from "../../common/StatusBadge";
+import ListPagination from "../../common/ListPagination";
+import { componentStyles } from "../../../theme/componentStyles";
 import { View } from "react-native";
-import { Button, Card, Chip, Icon, Text } from "react-native-paper";
-import { money, date, labels, tones, toneFor, styles } from "./presentation";
-function FinanceChip({ selected, tone = tones.green, children, ...props }) {
-  return (
-    <Chip
-      {...props}
-      selected={selected}
-      showSelectedOverlay={false}
-      selectedColor={selected ? "#FFFFFF" : tone.text}
-      style={[
-        styles.filterChip,
-        {
-          backgroundColor: selected ? tone.text : tone.background,
-          borderColor: tone.border,
-        },
-      ]}
-      textStyle={{
-        color: selected ? "#FFFFFF" : tone.text,
-        fontWeight: selected ? "700" : "500",
-      }}
-    >
-      {children}
-    </Chip>
-  );
-}
+import { Button, Card, Icon, Text } from "react-native-paper";
+import { money, date, labels, toneFor, styles } from "./presentation";
+import { FilterChip, FilterRow } from "../../common/FilterControls";
 export default function HistorySection({ f, admin, setReason, setDialog }) {
   return (
     <>
-      <View style={styles.wrap}>
+      <FilterRow>
         {["orders", "transactions", ...(admin ? ["events"] : [])].map(
           (kind) => (
-            <FinanceChip
+            <FilterChip
               key={kind}
               selected={f.kind === kind}
               disabled={f.busy}
@@ -43,11 +24,11 @@ export default function HistorySection({ f, admin, setReason, setDialog }) {
                   events: "SePay / Đối soát",
                 }[kind]
               }
-            </FinanceChip>
+            </FilterChip>
           ),
         )}
-      </View>
-      <View style={styles.wrap}>
+      </FilterRow>
+      <FilterRow>
         {[
           "",
           ...(f.kind === "orders"
@@ -56,18 +37,17 @@ export default function HistorySection({ f, admin, setReason, setDialog }) {
               ? ["review", "credited", "already_processed"]
               : ["topup", "purchase", "adjustment"]),
         ].map((value) => (
-          <FinanceChip
+          <FilterChip
             key={value}
-            tone={value ? toneFor(value) : tones.green}
             selected={f.filter === value}
             disabled={f.busy}
             onPress={() => f.selectFilter(value)}
           >
             {labels[value] || "Tất cả"}
-          </FinanceChip>
+          </FilterChip>
         ))}
-      </View>
-      <Button disabled={f.busy} onPress={f.refresh} icon="refresh">
+      </FilterRow>
+      <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} disabled={f.busy} onPress={f.refresh} icon="refresh">
         Tải lại
       </Button>
       {!f.loading && !f.list.items.length && (
@@ -132,25 +112,7 @@ export default function HistorySection({ f, admin, setReason, setDialog }) {
                   {f.kind === "transactions" && item.amount > 0 ? "+" : ""}
                   {money(item.amount)}
                 </Text>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    {
-                      backgroundColor: statusTone.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusText,
-                      {
-                        color: statusTone.text,
-                      },
-                    ]}
-                  >
-                    {labels[status] || "Đã ghi nhận"}
-                  </Text>
-                </View>
+                <StatusBadge label={labels[status] || "Đã ghi nhận"} tone={{ color: statusTone.text, background: statusTone.border }} />
               </View>
               <Text style={styles.secondaryText}>
                 {date(item.createdAt || item.created_at)}
@@ -183,7 +145,7 @@ export default function HistorySection({ f, admin, setReason, setDialog }) {
               {f.kind === "events" && <Text selectable>{item.content}</Text>}
               {admin && f.kind === "orders" && item.status === "pending" && (
                 <View style={styles.row}>
-                  <Button
+                  <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
                     disabled={f.busy}
                     onPress={() => {
                       setReason("");
@@ -196,7 +158,7 @@ export default function HistorySection({ f, admin, setReason, setDialog }) {
                   >
                     Duyệt cộng ví
                   </Button>
-                  <Button
+                  <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
                     disabled={f.busy}
                     textColor="#B42318"
                     onPress={() => {
@@ -212,7 +174,7 @@ export default function HistorySection({ f, admin, setReason, setDialog }) {
                 </View>
               )}
               {!admin && f.kind === "orders" && (
-                <Button
+                <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
                   disabled={f.busy}
                   onPress={() => {
                     f.openOrder(item);
@@ -228,23 +190,9 @@ export default function HistorySection({ f, admin, setReason, setDialog }) {
           </Card>
         );
       })}
-      <View style={styles.row}>
-        <Button
-          disabled={f.page <= 1 || f.busy}
-          onPress={() => f.changePage(f.page - 1)}
-        >
-          Trước
-        </Button>
-        <Text>
-          Trang {f.page}/{Math.max(1, f.list.totalPages)}
-        </Text>
-        <Button
-          disabled={f.page >= f.list.totalPages || f.busy}
-          onPress={() => f.changePage(f.page + 1)}
-        >
-          Sau
-        </Button>
-      </View>
+      <ListPagination pagination={{ page: f.page, totalPages: f.list.totalPages,
+        hasPrevPage: f.page > 1, hasNextPage: f.page < f.list.totalPages }}
+        disabled={f.busy} onPageChange={f.changePage} />
     </>
   );
 }

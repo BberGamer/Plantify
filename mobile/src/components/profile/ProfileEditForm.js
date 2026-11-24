@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { View, StyleSheet } from "react-native";
 import { Text, Button } from "react-native-paper";
 import FormField from "../common/FormField";
@@ -64,10 +65,10 @@ export default function ProfileEditForm({
         thiểu 8 ký tự.
       </Text>
       <View style={styles.formActions}>
-        <Button disabled={saving} onPress={cancelEditing}>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} disabled={saving} onPress={cancelEditing}>
           Hủy
         </Button>
-        <Button
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
           mode="contained"
           loading={saving}
           disabled={saving}
@@ -81,13 +82,18 @@ export default function ProfileEditForm({
 }
 
 const styles = StyleSheet.create({
-  editForm: { paddingVertical: spacing.md },
+  editForm: {
+    paddingVertical: spacing.md
+  },
   formActions: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "flex-end",
     marginTop: spacing.lg,
-    gap: spacing.sm,
+    gap: spacing.sm
   },
-  fieldLabel: { ...typography.caption, color: colors.primaryText },
+  fieldLabel: {
+    ...typography.caption,
+    color: colors.primaryText
+  }
 });

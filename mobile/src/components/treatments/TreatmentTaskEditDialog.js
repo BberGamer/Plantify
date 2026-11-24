@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Button, Dialog, HelperText, TextInput } from "react-native-paper";
@@ -71,7 +72,7 @@ export default function TreatmentTaskEditDialog({
   }
 
   return (
-    <Dialog visible={Boolean(task)} onDismiss={onDismiss} dismissable={!busy}>
+    <Dialog style={componentStyles.dialog} visible={Boolean(task)} onDismiss={onDismiss} dismissable={!busy}>
       <Dialog.Title>Chỉnh sửa công việc điều trị</Dialog.Title>
       <Dialog.ScrollArea style={styles.scrollArea}>
         <ScrollView
@@ -141,10 +142,10 @@ export default function TreatmentTaskEditDialog({
         </ScrollView>
       </Dialog.ScrollArea>
       <Dialog.Actions>
-        <Button onPress={onDismiss} disabled={busy}>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onDismiss} disabled={busy}>
           Hủy
         </Button>
-        <Button onPress={submit} loading={busy} disabled={busy}>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={submit} loading={busy} disabled={busy}>
           Lưu thay đổi
         </Button>
       </Dialog.Actions>
@@ -153,12 +154,21 @@ export default function TreatmentTaskEditDialog({
 }
 
 const styles = StyleSheet.create({
-  scrollArea: { maxHeight: 520 },
-  form: { gap: spacing.md, paddingVertical: spacing.md },
+  scrollArea: {
+    maxHeight: 520
+  },
+  form: {
+    gap: spacing.md,
+    paddingVertical: spacing.md
+  },
   dateTimeRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "flex-start",
-    gap: spacing.md,
+    gap: spacing.md
   },
-  timeField: { width: 150 },
+  timeField: {
+    flexGrow: 1,
+    flexBasis: 140
+  }
 });

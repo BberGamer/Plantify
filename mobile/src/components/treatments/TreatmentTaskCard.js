@@ -1,3 +1,4 @@
+import { componentStyles } from "../../theme/componentStyles";
 import { StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
@@ -43,7 +44,7 @@ export default function TreatmentTaskCard({
       </View>
       {editable && (
         <View style={styles.actions}>
-          <Button
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
             mode="outlined"
             icon="pencil-outline"
             onPress={() => onEdit(task)}
@@ -52,7 +53,7 @@ export default function TreatmentTaskCard({
             Chỉnh sửa
           </Button>
           {task.status === "pending" && (
-            <Button
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
               mode="outlined"
               onPress={() => onComplete(task)}
               loading={busy}
@@ -72,28 +73,44 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.card,
+    borderRadius: 16,
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.md
   },
-  row: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
-  content: { flex: 1, minWidth: 0, gap: spacing.xs },
-  title: { ...typography.label, color: colors.textPrimary },
-  status: { ...typography.caption, fontWeight: "600" },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md
+  },
+  content: {
+    flex: 1,
+    minWidth: 0,
+    gap: spacing.xs
+  },
+  title: {
+    ...typography.label,
+    color: colors.textPrimary
+  },
+  status: {
+    ...typography.caption,
+    fontWeight: "600"
+  },
   body: {
     ...typography.body,
     color: colors.textSecondary,
-    marginTop: spacing.xs,
+    marginTop: spacing.xs
   },
   dosage: {
     ...typography.label,
     color: colors.primaryLight,
-    marginTop: spacing.xs,
+    marginTop: spacing.xs
   },
   important: {
     ...typography.body,
     color: colors.statusError,
-    marginTop: spacing.xs,
+    marginTop: spacing.xs
   },
-  actions: { gap: spacing.sm },
+  actions: {
+    gap: spacing.sm
+  }
 });

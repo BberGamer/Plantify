@@ -1,3 +1,5 @@
+import SearchField from "../../common/SearchField";
+import { componentStyles } from "../../../theme/componentStyles";
 import { Button, Card, Text, TextInput } from "react-native-paper";
 import { styles } from "./presentation";
 import { amountError } from "../../../utils/financeValidation";
@@ -20,20 +22,20 @@ export default function AdminAdjustment({
     <Card style={styles.card}>
       <Card.Content style={styles.gap}>
         <Text variant="titleMedium">Cộng số dư thủ công</Text>
-        <TextInput
-          label="Tìm Customer theo tên hoặc email"
+        <SearchField
+          placeholder="Tìm khách hàng theo tên hoặc email…" accessibilityLabel="Tìm khách hàng theo tên hoặc email"
           value={search}
           onChangeText={(v) => {
             setSearch(v);
             setCustomer(null);
           }}
         />
-        <Button disabled={f.busy} onPress={findCustomers}>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} disabled={f.busy} onPress={findCustomers}>
           Tìm người dùng
         </Button>
         {!!searchError && <Text>{searchError}</Text>}
         {customers.map((u) => (
-          <Button
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
             key={u._id}
             mode={customer?._id === u._id ? "contained" : "text"}
             onPress={() => setCustomer(u)}
@@ -48,7 +50,7 @@ export default function AdminAdjustment({
           onChangeText={setAmount}
           disabled={f.busy}
         />
-        <Button
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
           disabled={f.busy}
           onPress={() => {
             const invalid = !customer

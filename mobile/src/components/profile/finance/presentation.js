@@ -1,3 +1,4 @@
+import { colors, radius } from "../../../theme";
 import { StyleSheet } from "react-native";
 
 const money = (value) => `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
@@ -19,9 +20,9 @@ const labels = {
 };
 const tones = {
   green: {
-    background: "#EDF8F1",
+    background: colors.lightMint,
     border: "#BDDCC9",
-    text: "#17603D",
+    text: colors.primary,
     icon: "wallet-plus-outline",
   },
   gold: {
@@ -31,9 +32,9 @@ const tones = {
     icon: "crown-outline",
   },
   blue: {
-    background: "#EEF5FF",
+    background: colors.infoBackground,
     border: "#C2D6F0",
-    text: "#285B92",
+    text: colors.info,
     icon: "account-cash-outline",
   },
   red: {
@@ -70,66 +71,137 @@ const toneFor = (value) =>
   })[value] || tones.neutral;
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F6F9F6" },
-  header: { padding: 14, gap: 6 },
+  safe: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  header: {
+    width: "100%",
+    maxWidth: 900,
+    alignSelf: "center",
+    padding: 20,
+    gap: 6
+  },
   content: {
-    padding: 18,
-    gap: 14,
+    padding: 20,
+    gap: 20,
     paddingBottom: 40,
     maxWidth: 900,
     width: "100%",
-    alignSelf: "center",
+    alignSelf: "center"
   },
-  heading: { fontWeight: "800", color: "#144D37" },
-  hero: { borderRadius: 26, padding: 26, gap: 9 },
-  heroTitle: { color: "#F8D884", fontSize: 23, fontWeight: "800" },
-  light: { color: "#E2F1E7" },
-  balance: { color: "white", fontSize: 32, fontWeight: "800" },
-  card: { backgroundColor: "white", borderRadius: 20 },
-  gap: { gap: 12, paddingVertical: 12 },
+  heading: {
+    fontWeight: "800",
+    color: colors.primary
+  },
+  hero: {
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    padding: 24,
+    gap: 9
+  },
+  heroTitle: {
+    lineHeight: 32,
+    color: colors.white,
+    fontSize: 24,
+    fontWeight: "800"
+  },
+  light: {
+    color: "#E2F1E7"
+  },
+  balance: {
+    lineHeight: 42,
+    flexShrink: 1,
+    color: "white",
+    fontSize: 32,
+    fontWeight: "800"
+  },
+  card: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: "white",
+    borderRadius: radius.card
+  },
+  gap: {
+    gap: 12,
+    paddingVertical: 12
+  },
   row: {
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 10
   },
-  wrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  flex: { flex: 1, minWidth: 150 },
+  wrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  flex: {
+    flex: 1,
+    minWidth: 0
+  },
   notice: {
-    color: "#805A13",
-    backgroundColor: "#FFF5DB",
+    color: colors.statusWarning,
+    backgroundColor: colors.warmPeachBg,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 12
   },
-  qr: { width: "100%", height: 240 },
-  filterChip: { borderWidth: 1, borderRadius: 24 },
-  transactionCard: { borderWidth: 1, borderLeftWidth: 4, borderRadius: 14 },
-  transactionContent: { gap: 6, paddingHorizontal: 12, paddingVertical: 10 },
-  transactionHeading: { flexDirection: "row", alignItems: "center", gap: 8 },
+  qr: {
+    width: "100%",
+    height: 240
+  },
+  transactionCard: {
+    borderWidth: 1,
+    borderLeftWidth: 4,
+    borderRadius: radius.card
+  },
+  transactionContent: {
+    padding: 16,
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10
+  },
+  transactionHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8
+  },
   transactionIcon: {
     width: 30,
     height: 30,
     borderRadius: 10,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   transactionTitle: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "700",
     flexShrink: 1,
-    minWidth: 0,
+    minWidth: 0
   },
-  transactionAmount: { fontSize: 18, lineHeight: 24, fontWeight: "800" },
+  transactionAmount: {
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "800"
+  },
   statusBadge: {
     borderRadius: 14,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    flexShrink: 1,
+    flexShrink: 1
   },
-  statusText: { fontSize: 12, fontWeight: "700" },
-  secondaryText: { color: "#52645D", fontSize: 13 },
+  statusText: {
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700"
+  },
+  secondaryText: {
+    color: colors.textSecondary,
+    fontSize: 13
+  },
   balanceRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -137,9 +209,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     borderTopWidth: 1,
-    paddingTop: 6,
+    paddingTop: 6
   },
-  balanceValue: { color: "#183B2B", fontWeight: "700" },
+  balanceValue: {
+    color: colors.textPrimary,
+    fontWeight: "700"
+  }
 });
 
 export { money, date, labels, tones, toneFor, styles };

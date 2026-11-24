@@ -64,15 +64,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.card,
-    overflow: "hidden",
+    borderRadius: 16,
+    overflow: "hidden"
   },
   header: {
     minHeight: 64,
     flexDirection: "row",
     alignItems: "center",
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.md
   },
   number: {
     width: 30,
@@ -80,36 +80,53 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.lightMint,
+    backgroundColor: colors.lightMint
   },
-  numberText: { ...typography.label, color: colors.primary },
-  heading: { flex: 1, minWidth: 0 },
-  title: { ...typography.label, color: colors.textPrimary },
-  days: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+  numberText: {
+    ...typography.label,
+    color: colors.primary
+  },
+  heading: {
+    flex: 1,
+    minWidth: 0
+  },
+  title: {
+    ...typography.label,
+    color: colors.textPrimary
+  },
+  days: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2
+  },
   content: {
     borderTopWidth: 1,
     borderTopColor: colors.borderLight,
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.md
   },
   instruction: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: spacing.sm,
+    gap: spacing.sm
   },
-  body: { ...typography.body, flex: 1, color: colors.textSecondary },
+  body: {
+    ...typography.body,
+    flex: 1,
+    color: colors.textSecondary
+  },
   note: {
     ...typography.caption,
-    color: "#946017",
+    color: colors.statusWarning,
     backgroundColor: colors.warmPeachBg,
     borderRadius: radius.sm,
-    padding: spacing.md,
+    padding: spacing.md
   },
   dosage: {
     ...typography.label,
     color: colors.primaryLight,
     backgroundColor: colors.lightMint,
     borderRadius: radius.sm,
-    padding: spacing.md,
-  },
+    padding: spacing.md
+  }
 });
