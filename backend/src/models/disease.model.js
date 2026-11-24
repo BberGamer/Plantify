@@ -16,12 +16,6 @@ const DISEASE_STATUSES = ["active", "inactive"];
 const diseaseSchema = new mongoose.Schema(
   {
     catalog_key: { type: String, trim: true },
-    identity_sources: [String],
-    content_status: {
-      type: String,
-      enum: ["unverified", "verified"],
-      default: "unverified",
-    },
     disease_name: {
       type: String,
       required: [true, "Tên bệnh là bắt buộc"],
@@ -34,7 +28,6 @@ const diseaseSchema = new mongoose.Schema(
       maxlength: [200, "Tên khoa học không được vượt quá 200 ký tự"],
       default: "",
     },
-    diagnosis_aliases: [{ type: String, trim: true, maxlength: 200 }],
     pathogen_type: {
       type: String,
       enum: {
@@ -45,9 +38,7 @@ const diseaseSchema = new mongoose.Schema(
     },
     typical_symptoms: {
       type: String,
-      required: function () {
-        return this.content_status === "verified";
-      },
+      required: [true, "Triệu chứng điển hình là bắt buộc"],
       default: "",
       trim: true,
       maxlength: [5000, "Triệu chứng điển hình không được vượt quá 5000 ký tự"],

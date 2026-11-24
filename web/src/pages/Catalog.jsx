@@ -253,6 +253,7 @@ function CatalogForm({ kind, initial, onClose, onSaved }) {
               "environmental_cause",
             ].includes(k) ? (
               <textarea
+                required={k === "typical_symptoms"}
                 value={values[k] || ""}
                 onChange={(e) => change(k, e.target.value)}
               />
@@ -377,7 +378,7 @@ function CatalogForm({ kind, initial, onClose, onSaved }) {
       <h3>Nhãn AI nhận diện</h3>
       <p className="muted">
         Chọn nhãn đã có chủ sẽ chuyển liên kết sang bản ghi này. Nhãn bệnh cần
-        được gán cây trước.
+        được gán cây trước. Thêm danh mục không làm model học thêm class.
       </p>
       <div className="label-list">
         {initial.labels.map((l) => (

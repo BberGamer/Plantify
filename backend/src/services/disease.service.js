@@ -21,7 +21,6 @@ const PATHOGEN_TYPES = [
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 const DISEASE_FIELDS = [
-  "diagnosis_aliases",
   "disease_name",
   "scientific_name",
   "pathogen_type",
@@ -121,7 +120,7 @@ const getDiseases = async (query = {}, managerView = false) => {
   const skip = (page - 1) * limit;
 
   const [diseases, total] = await Promise.all([
-    Disease.find(filter)
+    Disease.find(filter).select("-content_status")
       .sort({ disease_name: 1, _id: 1 })
       .skip(skip)
       .limit(limit)
@@ -167,7 +166,7 @@ const getDiseaseById = async (id, managerView = false, session = null) => {
   const filter = { _id: id };
   if (!managerView) filter.status = "active";
 
-  const disease = await Disease.findOne(filter).session(session).lean();
+  const disease = await Disease.findOne(filter).select("-content_status").session(session).lean();
   if (!disease) throw createError("Không tìm thấy bệnh cây này.", 404);
 
   const plantFilter = { common_disease_ids: disease._id };
@@ -186,10 +185,6 @@ const normalizeDiseaseInput = (input = {}) => {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     throw createError("Dữ liệu bệnh cây không hợp lệ.", 400);
   }
-  if (input.diagnosis_aliases !== undefined &&
-      (!Array.isArray(input.diagnosis_aliases) || input.diagnosis_aliases.length > 50 ||
-       input.diagnosis_aliases.some(x => typeof x !== "string" || !x.trim() || x.length > 200)))
-    throw createError("Tên đối chiếu chẩn đoán không hợp lệ.", 400);
 
   const requiredFields = ["disease_name", "typical_symptoms"];
   for (const field of requiredFields) {
