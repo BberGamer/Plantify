@@ -3,6 +3,7 @@ import useAuthStore from "../../store/authStore";
 import diagnosisService from "../services/diagnosisService";
 import { getSessionContext } from "../services/sessionAccess";
 import getErrorMessage from "../utils/getErrorMessage";
+import useActionNotice from "./useActionNotice";
 import useScreenScope from "./useScreenScope";
 
 const invalidResult = (
@@ -23,6 +24,7 @@ export default function useDiagnosis(
   operationLock,
   identification = false,
 ) {
+  const notice = useActionNotice();
   const version = useAuthStore((state) => state.sessionVersion);
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -43,6 +45,7 @@ export default function useDiagnosis(
     setBusy(false);
     setResult(null);
     setError("");
+    notice.dismiss();
   }
 
   const { capture, isActive } = useScreenScope(
@@ -80,6 +83,7 @@ export default function useDiagnosis(
       !controller.signal.aborted &&
       latestPhoto.current === selected;
     setBusy(true);
+    notice.dismiss();
     setError("");
     setResult(null);
     try {
@@ -92,6 +96,7 @@ export default function useDiagnosis(
       setResult({ photo: selected, data: response.data });
     } catch (failure) {
       if (isCurrent()) {
+        if (notice.showLimit(failure)) return;
         if (failure?.diagnosisResult) {
           setImageInvalid(true);
           setResult({
@@ -120,6 +125,7 @@ export default function useDiagnosis(
     if (pending.current || operationLock.current) return;
     setResult(null);
     setError("");
+    notice.dismiss();
   };
   const onImageError = () => {
     if (!photo || latestPhoto.current !== photo || !isActive()) return;
@@ -128,6 +134,7 @@ export default function useDiagnosis(
     setResult({ photo, data: invalidResult("DIAGNOSIS_INVALID_PHOTO") });
   };
   return {
+    noticeDialog: notice.dialogProps,
     result: result?.photo === photo ? result.data : null,
     busy,
     error,

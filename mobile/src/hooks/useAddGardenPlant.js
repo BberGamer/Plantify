@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import gardenService from "../services/gardenService";
 import plantService from "../services/plantService";
+import useActionNotice from "./useActionNotice";
 import useScreenScope from "./useScreenScope";
 import getErrorMessage from "../utils/getErrorMessage";
 import useAuthStore from "../../store/authStore";
@@ -22,6 +23,7 @@ export default function useAddGardenPlant(
   treatmentReturn,
 ) {
   const router = useRouter();
+  const notice = useActionNotice();
   const editing = gardenPlantId !== undefined;
   const [draft, setDraft] = useState(emptyDraft);
   const [plant, setPlant] = useState(null);
@@ -174,6 +176,7 @@ export default function useAddGardenPlant(
     pending.current = true;
     setBusy(true);
     setError("");
+    notice.dismiss();
     const current = capture();
     try {
       const response = editing
@@ -206,6 +209,7 @@ export default function useAddGardenPlant(
       }
     } catch (failure) {
       if (current()) {
+        if (notice.showLimit(failure)) return;
         const fieldErrors = failure.response?.data?.errors;
         if (fieldErrors && typeof fieldErrors === "object")
           setErrors(fieldErrors);
@@ -230,6 +234,7 @@ export default function useAddGardenPlant(
       : plant?.display_image_url
     : plant?.plant_image;
   return {
+    noticeDialog: notice.dialogProps,
     draft,
     plant,
     photo,
@@ -253,7 +258,10 @@ export default function useAddGardenPlant(
       else setPhotoRemoved(true);
     },
     cancel: () => {
-      if (!pending.current) router.back();
+      if (!pending.current) {
+        if (router.canGoBack()) router.back();
+        else router.replace("/customer/garden");
+      }
     },
   };
 }

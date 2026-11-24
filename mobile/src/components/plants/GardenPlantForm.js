@@ -1,3 +1,5 @@
+import ScreenHeader from "../common/ScreenHeader";
+import ActionNoticeDialog from "../common/ActionNoticeDialog";
 import PhotoUploadField from "../common/PhotoUploadField";
 import { componentStyles } from "../../theme/componentStyles";
 import {
@@ -41,19 +43,9 @@ export default function GardenPlantForm({ form }) {
         style={styles.safe}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.header}>
-          <Button
-            style={componentStyles.buttonShape}
-            contentStyle={componentStyles.button}
-            disabled={form.busy}
-            onPress={form.cancel}
-          >
-            Hủy
-          </Button>
-          <Text variant="titleLarge">
-            {form.editing ? "Sửa cây trong vườn" : "Thêm cây vào vườn"}
-          </Text>
-        </View>
+        <ScreenHeader title={form.editing ? "Sửa cây trong vườn" : "Thêm cây vào vườn"}
+          onBack={form.cancel} disabled={form.busy} />
+        <ActionNoticeDialog {...form.noticeDialog} />
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
@@ -124,12 +116,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    padding: spacing.md,
   },
   content: {
     padding: 20,

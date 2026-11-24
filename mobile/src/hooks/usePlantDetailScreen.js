@@ -23,6 +23,7 @@ export default function usePlantDetailScreen(id) {
     showFavorite: favorite.enabled,
     favoriteBusy:
       !!favorite.pending[plantId] || favorite.favorites[plantId] === undefined,
+    noticeDialog: favorite.noticeDialog,
     favoriteError: favorite.error,
     retryFavorite: favorite.retry,
     toggleSaved: () => favorite.toggle(plantId),
