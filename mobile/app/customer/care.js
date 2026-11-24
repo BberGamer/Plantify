@@ -4,10 +4,10 @@ import { ActivityIndicator, Button, Dialog, Portal, Text } from "react-native-pa
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import useCareTasks, { gardenToday, shiftDay } from "../../src/hooks/useCareTasks";
+import useCareTasks from "../../src/hooks/useCareTasks";
+import { gardenToday, shiftDay } from "../../src/utils/gardenDate";
 import useScreenScope from "../../src/hooks/useScreenScope";
-import gardenService from "../../src/services/gardenService";
-import getErrorMessage from "../../src/utils/getErrorMessage";
+import useCarePlants from "../../src/hooks/useCarePlants";
 import CareTaskCard from "../../src/components/care/CareTaskCard";
 import CareScheduleForm from "../../src/components/care/CareScheduleForm";
 import { colors } from "../../src/theme/colors";
@@ -47,29 +47,10 @@ export default function CareScreen() {
   const firstDay = startOfWeek(day);
   const days = Array.from({ length: 7 }, (_, i) => shiftDay(firstDay, i));
   const care = useCareTasks(week ? firstDay : day, week ? shiftDay(firstDay, 6) : day, plantId);
-  const [plants, setPlants] = useState([]);
-  const [plantLoading, setPlantLoading] = useState(true);
-  const [plantError, setPlantError] = useState("");
+  const { plants, plantLoading, plantError, loadPlants } = useCarePlants();
   const [formOpen, setFormOpen] = useState(params.create === "1");
   const [deleting, setDeleting] = useState(null);
-  const scope = useScreenScope(loadPlants);
-  async function loadPlants() {
-    const current = scope.capture();
-    setPlantLoading(true); setPlantError("");
-    try {
-      const items = [];
-      let page = 1;
-      while (true) {
-        const result = await gardenService.getPlants({ page, limit: 50 });
-        items.push(...result.data.items);
-        if (!current()) return;
-        if (!result.data.pagination.hasNextPage) break;
-        page++;
-      }
-      if (current()) setPlants(items);
-    } catch (e) { if (current()) setPlantError(getErrorMessage(e, "Không tải được cây trong vườn.")); }
-    finally { if (current()) setPlantLoading(false); }
-  }
+  const scope = useScreenScope();
   async function save(body) {
     const current = scope.capture();
     const ok = await care.create(body);

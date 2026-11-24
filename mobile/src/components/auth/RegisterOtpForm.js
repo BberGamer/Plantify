@@ -1,9 +1,6 @@
 // RegisterOtpForm.js - Khối giao diện RegisterOtpForm.
 
-import {
-  View,
-  StyleSheet,
-} from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { control, spacing } from "../../theme/tokens";
 import { colors } from "../../theme/colors";
@@ -46,8 +43,15 @@ export default function RegisterOtpForm({
       <OtpResend countdown={countdown} disabled={loading} onResend={onResend} />
 
       {/* Verify Button */}
-      <Button mode="contained" style={styles.submit} contentStyle={{ minHeight: control.minHeight }} onPress={onVerify} disabled={loading} loading={loading}>
-          Xác nhận và kích hoạt tài khoản
+      <Button
+        mode="contained"
+        style={styles.submit}
+        contentStyle={{ minHeight: control.minHeight }}
+        onPress={onVerify}
+        disabled={loading}
+        loading={loading}
+      >
+        Xác nhận và kích hoạt tài khoản
       </Button>
     </View>
   );
@@ -83,5 +87,4 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
   },
-
 });

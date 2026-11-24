@@ -41,7 +41,9 @@ export default function UserDetailModal({
 }) {
   const readOnly = user?.role === "admin" && user?._id !== currentAdminId;
   const permissionsReadOnly = user?.role === "admin";
-  const close = () => { if (!submitting) onClose(); };
+  const close = () => {
+    if (!submitting) onClose();
+  };
   return (
     <Modal
       visible={visible}
@@ -53,22 +55,32 @@ export default function UserDetailModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.modalOverlay}
       >
-        <SafeAreaView edges={["bottom", "left", "right"]} style={styles.modalCard}>
+        <SafeAreaView
+          edges={["bottom", "left", "right"]}
+          style={styles.modalCard}
+        >
           {/* MODAL HEADER */}
           <View style={styles.modalHeader}>
             <View style={styles.headerLeft}>
               <View style={styles.headerLeaf}>
-                <Ionicons name={getRoleMeta(user?.role).icon} size={20} color={garden.white} />
+                <Ionicons
+                  name={getRoleMeta(user?.role).icon}
+                  size={20}
+                  color={garden.white}
+                />
               </View>
               <View style={{ flexShrink: 1 }}>
                 <Text style={styles.modalTitle}>Chi tiết tài khoản</Text>
                 <Text style={styles.modalSubtitle}>
-                  {readOnly ? "Tài khoản cùng vai trò chỉ được xem" : "Xem và cập nhật thông tin"}
+                  {readOnly
+                    ? "Tài khoản cùng vai trò chỉ được xem"
+                    : "Xem và cập nhật thông tin"}
                 </Text>
               </View>
             </View>
             <TouchableOpacity
-              disabled={submitting} onPress={close}
+              disabled={submitting}
+              onPress={close}
               style={styles.closeBtn}
               accessibilityRole="button"
               accessibilityLabel="Đóng"
@@ -78,51 +90,54 @@ export default function UserDetailModal({
           </View>
 
           {/* MODAL BODY */}
-          <ScrollView keyboardShouldPersistTaps="handled"
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.modalBody}
           >
             {user ? (
               <>
                 <View style={styles.infoCard}>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Mã người dùng:</Text>
-                  <Text style={styles.infoValue} numberOfLines={1}>
-                    {user._id}
-                  </Text>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Mã người dùng:</Text>
+                    <Text style={styles.infoValue} numberOfLines={1}>
+                      {user._id}
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Địa chỉ email:</Text>
+                    <Text style={styles.infoValueBold}>{user.email}</Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Ngày tạo:</Text>
+                    <Text style={styles.infoValue}>
+                      {user.createdAt
+                        ? new Date(user.createdAt).toLocaleString("vi-VN")
+                        : "—"}
+                    </Text>
+                  </View>
                 </View>
 
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Địa chỉ email:</Text>
-                  <Text style={styles.infoValueBold}>{user.email}</Text>
-                </View>
+                <FormField
+                  label="Họ và tên *"
+                  disabled={submitting || readOnly}
+                  value={fullName}
+                  onChangeText={onChangeFullName}
+                  placeholder="Nhập họ và tên"
+                  placeholderTextColor={garden.muted}
+                />
 
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Ngày tạo:</Text>
-                  <Text style={styles.infoValue}>
-                    {user.createdAt
-                      ? new Date(user.createdAt).toLocaleString("vi-VN")
-                      : "—"}
-                  </Text>
-                </View>
-                </View>
-
-                <FormField label="Họ và tên *" disabled={submitting || readOnly}
-
-                    value={fullName}
-                    onChangeText={onChangeFullName}
-                    placeholder="Nhập họ và tên"
-                    placeholderTextColor={garden.muted}
-                  />
-
-                <FormField label="Số điện thoại" disabled={submitting || readOnly}
-
-                    value={phone}
-                    onChangeText={onChangePhone}
-                    placeholder="Nhập số điện thoại (10 chữ số)"
-                    placeholderTextColor={garden.muted}
-                    keyboardType="phone-pad"
-                  />
+                <FormField
+                  label="Số điện thoại"
+                  disabled={submitting || readOnly}
+                  value={phone}
+                  onChangeText={onChangePhone}
+                  placeholder="Nhập số điện thoại (10 chữ số)"
+                  placeholderTextColor={garden.muted}
+                  keyboardType="phone-pad"
+                />
 
                 <View style={styles.inputGroup}>
                   <Text style={styles.inputLabel}>Vai trò hệ thống</Text>
@@ -138,7 +153,10 @@ export default function UserDetailModal({
                           ]}
                           disabled={submitting || user?.role === "admin"}
                           accessibilityRole="button"
-                          accessibilityState={{ disabled: submitting || user?.role === "admin", selected: isActive }}
+                          accessibilityState={{
+                            disabled: submitting || user?.role === "admin",
+                            selected: isActive,
+                          }}
                           onPress={() => onChangeRole(r)}
                         >
                           <Text
@@ -154,7 +172,9 @@ export default function UserDetailModal({
                     })}
                   </View>
                   {user?.role === "admin" && (
-                    <Text style={styles.inputLabel}>Không thể thay đổi vai trò quản trị viên.</Text>
+                    <Text style={styles.inputLabel}>
+                      Không thể thay đổi vai trò quản trị viên.
+                    </Text>
                   )}
                 </View>
 
@@ -166,7 +186,8 @@ export default function UserDetailModal({
                         styles.roleChoiceBtn,
                         status === true && styles.statusChoiceActive,
                       ]}
-                      disabled={submitting || permissionsReadOnly} onPress={() => onChangeStatus(true)}
+                      disabled={submitting || permissionsReadOnly}
+                      onPress={() => onChangeStatus(true)}
                     >
                       <Text
                         style={[
@@ -183,7 +204,8 @@ export default function UserDetailModal({
                         styles.roleChoiceBtn,
                         status === false && styles.statusChoiceBanned,
                       ]}
-                      disabled={submitting || permissionsReadOnly} onPress={() => onChangeStatus(false)}
+                      disabled={submitting || permissionsReadOnly}
+                      onPress={() => onChangeStatus(false)}
                     >
                       <Text
                         style={[
@@ -196,29 +218,42 @@ export default function UserDetailModal({
                     </TouchableOpacity>
                   </View>
                 </View>
-                {!permissionsReadOnly && user.status !== false && status === false && (
-                  <FormField
-                    label="Lý do khóa tài khoản"
-                    value={lockReason}
-                    onChangeText={onChangeLockReason}
-                    error={lockReasonError}
-                    hint="Lý do sẽ được gửi đến email của người dùng."
-                    multiline
-                    disabled={submitting}
-                  />
+                {!permissionsReadOnly &&
+                  user.status !== false &&
+                  status === false && (
+                    <FormField
+                      label="Lý do khóa tài khoản"
+                      value={lockReason}
+                      onChangeText={onChangeLockReason}
+                      error={lockReasonError}
+                      hint="Lý do sẽ được gửi đến email của người dùng."
+                      multiline
+                      disabled={submitting}
+                    />
+                  )}
+                {!!submitError && (
+                  <HelperText type="error" accessibilityRole="alert">
+                    {submitError}
+                  </HelperText>
                 )}
-                {!!submitError && <HelperText type="error" accessibilityRole="alert">{submitError}</HelperText>}
               </>
             ) : null}
           </ScrollView>
 
           {/* MODAL FOOTER */}
           <View style={styles.modalFooter}>
-            <Button onPress={close} disabled={submitting}>{readOnly ? "Đóng" : "Hủy"}</Button>
-            {!readOnly && (
-            <Button mode="contained" onPress={onSave} disabled={submitting} loading={submitting}>
-              Lưu thay đổi
+            <Button onPress={close} disabled={submitting}>
+              {readOnly ? "Đóng" : "Hủy"}
             </Button>
+            {!readOnly && (
+              <Button
+                mode="contained"
+                onPress={onSave}
+                disabled={submitting}
+                loading={submitting}
+              >
+                Lưu thay đổi
+              </Button>
             )}
           </View>
         </SafeAreaView>
@@ -284,7 +319,8 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   modalSubtitle: {
-    ...typography.caption, color: colors.textSecondary,
+    ...typography.caption,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   closeBtn: {
@@ -377,5 +413,4 @@ const styles = StyleSheet.create({
     borderTopColor: garden.line,
     gap: 10,
   },
-
 });

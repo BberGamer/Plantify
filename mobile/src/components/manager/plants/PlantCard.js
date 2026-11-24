@@ -25,7 +25,8 @@ function PlantThumbnail({ uri, name }) {
 }
 
 export default function PlantCard({ item, disabled, onEdit, onDelete }) {
-  const imageUri = typeof item.plant_image === "string" ? item.plant_image.trim() : "";
+  const imageUri =
+    typeof item.plant_image === "string" ? item.plant_image.trim() : "";
   return (
     <View style={styles.card}>
       <View style={styles.cardTop}>

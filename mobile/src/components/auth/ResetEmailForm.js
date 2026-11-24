@@ -1,9 +1,6 @@
 // ResetEmailForm.js - Khối giao diện ResetEmailForm.
 
-import {
-  View,
-  StyleSheet,
-} from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Button, Text } from "react-native-paper";
 import FormField from "../common/FormField";
 import { control, spacing, radius } from "../../theme/tokens";
@@ -28,20 +25,20 @@ export default function ResetEmailForm({
 
       <View style={styles.emailRow}>
         <View style={styles.emailField}>
-        <FormField
-          label="Địa chỉ email"
-          containerStyle={styles.emailGroup}
-          placeholder="Địa chỉ email"
-          placeholderTextColor={colors.textMuted}
-          value={email}
-          disabled={busy}
-          onChangeText={(val) => {
-            onEmailChange(val);
-          }}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-        />
+          <FormField
+            label="Địa chỉ email"
+            containerStyle={styles.emailGroup}
+            placeholder="Địa chỉ email"
+            placeholderTextColor={colors.textMuted}
+            value={email}
+            disabled={busy}
+            onChangeText={(val) => {
+              onEmailChange(val);
+            }}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+          />
         </View>
         <Button
           mode="outlined"
@@ -92,5 +89,4 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 10,
   },
-
 });

@@ -10,7 +10,10 @@ export default function UserToastBanner({ toast }) {
 
   return (
     <View
-      style={[styles.toastBanner, isError ? styles.toastError : styles.toastSuccess]}
+      style={[
+        styles.toastBanner,
+        isError ? styles.toastError : styles.toastSuccess,
+      ]}
       accessibilityLiveRegion="polite"
       accessibilityRole="alert"
     >

@@ -15,9 +15,10 @@ export default function DiagnosisPreview({
   onAnalyze,
   identification = false,
 }) {
-  const imageRatio = photo.width > 0 && photo.height > 0
-    ? Math.max(0.65, Math.min(1.8, photo.width / photo.height))
-    : 1;
+  const imageRatio =
+    photo.width > 0 && photo.height > 0
+      ? Math.max(0.65, Math.min(1.8, photo.width / photo.height))
+      : 1;
   return (
     <View style={styles.card}>
       <Image
@@ -45,7 +46,11 @@ export default function DiagnosisPreview({
         disabled={busy || imageInvalid}
         style={styles.resultButton}
       >
-        {analyzing ? "Đang phân tích ảnh…" : identification ? "Nhận diện cây" : "Chẩn đoán bệnh"}
+        {analyzing
+          ? "Đang phân tích ảnh…"
+          : identification
+            ? "Nhận diện cây"
+            : "Chẩn đoán bệnh"}
       </Button>
       {analyzing && (
         <Text style={styles.progress} accessibilityLiveRegion="polite">

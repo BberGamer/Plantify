@@ -1,11 +1,9 @@
-import { useCallback, useState } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Card, Chip, IconButton, SegmentedButtons, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import useAuthStore from "../../store/authStore";
-import diagnosisService from "../../src/services/diagnosisService";
-import usePaginatedList from "../../src/hooks/usePaginatedList";
+import useDiagnosisHistoryList from "../../src/hooks/useDiagnosisHistoryList";
 import ListError from "../../src/components/common/ListError";
 import ListPagination from "../../src/components/common/ListPagination";
 import Navbar from "../../src/components/navigation/Navbar";
@@ -19,11 +17,7 @@ const formatTime = value => value ? new Date(value).toLocaleString("vi-VN", {
 export default function DiagnosisHistoryScreen() {
   const router = useRouter();
   const enabled = useAuthStore(state => state.isAuthenticated && state.user?.role === "customer");
-  const [kind, setKind] = useState("all");
-  const fetchHistory = useCallback(params => diagnosisService.history({
-    ...params, result_kind: kind === "all" ? undefined : kind,
-  }), [kind]);
-  const history = usePaginatedList(fetchHistory, { limit: 20, enabled });
+  const { kind, setKind, history } = useDiagnosisHistoryList({ limit: 20, enabled });
   if (!enabled) return null;
   return (
     <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>

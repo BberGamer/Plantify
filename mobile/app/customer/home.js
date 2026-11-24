@@ -5,7 +5,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ActivityIndicator, Button, Text, Card } from "react-native-paper";
 import useHomeGarden from "../../src/hooks/useHomeGarden";
-import useCareTasks, { gardenToday } from "../../src/hooks/useCareTasks";
+import useCareTasks from "../../src/hooks/useCareTasks";
+import { gardenToday } from "../../src/utils/gardenDate";
 
 import HomeHeader from "../../src/components/home/HomeHeader";
 import FeatureGrid from "../../src/components/home/FeatureGrid";

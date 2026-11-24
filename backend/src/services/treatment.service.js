@@ -1,3 +1,10 @@
+const {
+  getManagerProtocols,
+  getManagerProtocol,
+  createProtocol,
+  updateProtocol,
+  deprecateProtocol,
+} = require("./treatment-protocol.service");
 const mongoose = require("mongoose");
 const AppError = require("../utils/app-error");
 const TreatmentProtocol = require("../models/treatmentProtocol.model");
@@ -15,15 +22,7 @@ const treatmentAI = require("./treatment-ai.service");
 const DAY_MS = 24 * 60 * 60 * 1000;
 const terminalStatuses = ["recovered", "failed", "cancelled"];
 
-// Một số MongoDB driver trả metadata commit thay vì giá trị callback.
-// Giữ kết quả nghiệp vụ tách khỏi giá trị trả về của transaction driver.
-const withTransactionResult = async (operation) => {
-  let result;
-  await mongoose.connection.transaction(async (session) => {
-    result = await operation(session);
-  });
-  return result;
-};
+const withTransactionResult = require("../utils/transaction-result");
 
 const assertTransition = (current, next) => {
   const allowed =
@@ -60,7 +59,9 @@ const careScheduleIdsToPause = (careSchedules) =>
   careSchedules.filter((care) => !care.is_paused).map((care) => care._id);
 
 const careScheduleIdsToResume = (snapshot) =>
-  snapshot.filter((item) => !item.was_paused).map((item) => item.care_schedule_id);
+  snapshot
+    .filter((item) => !item.was_paused)
+    .map((item) => item.care_schedule_id);
 
 const createReminderOperations = (schedule) =>
   schedule.tasks.map((task) => ({
@@ -87,7 +88,9 @@ const createReminderOperations = (schedule) =>
 const addDays = (date, days) => new Date(date.getTime() + days * DAY_MS);
 const withVietnamTime = (date, time) => {
   const [hours, minutes] = time.split(":").map(Number);
-  return new Date(date.getTime() + (hours - 7) * 60 * 60 * 1000 + minutes * 60 * 1000);
+  return new Date(
+    date.getTime() + (hours - 7) * 60 * 60 * 1000 + minutes * 60 * 1000,
+  );
 };
 const utcToday = () => {
   const now = new Date();
@@ -112,8 +115,11 @@ const createProtocolSnapshot = (protocol) => ({
   version: protocol.version,
   approved_instructions: [...protocol.approved_instructions],
   safety_guidelines: [...protocol.safety_guidelines],
-  reference_status: protocol.reference_status ||
-    (protocol.instruction_source === "ai_unverified" ? "ai_unverified" : "document_assisted"),
+  reference_status:
+    protocol.reference_status ||
+    (protocol.instruction_source === "ai_unverified"
+      ? "ai_unverified"
+      : "document_assisted"),
   reference_notice: protocol.reference_notice || "",
   stages: protocol.stages.map((stage) => ({
     source_stage_id: stage._id,
@@ -136,7 +142,10 @@ const createTasks = (protocol, startDate) =>
         tasks.push({
           stage_order: stage.order,
           title: stage.title,
-          scheduled_date: withVietnamTime(addDays(startDate, day - 1), stage.time || "08:00"),
+          scheduled_date: withVietnamTime(
+            addDays(startDate, day - 1),
+            stage.time || "08:00",
+          ),
           time: stage.time || "08:00",
           instructions: [...stage.instructions],
           dosage_note: stage.dosage_note || "",
@@ -150,11 +159,15 @@ const createTasks = (protocol, startDate) =>
 
 const progress = (schedule) => {
   const tasks = schedule.tasks || [];
-  const completedTasks = tasks.filter((task) => task.status === "completed").length;
+  const completedTasks = tasks.filter(
+    (task) => task.status === "completed",
+  ).length;
   return {
     completed_tasks: completedTasks,
     total_tasks: tasks.length,
-    percent: tasks.length ? Math.round((completedTasks / tasks.length) * 100) : 0,
+    percent: tasks.length
+      ? Math.round((completedTasks / tasks.length) * 100)
+      : 0,
   };
 };
 
@@ -193,7 +206,9 @@ const presentSchedule = async (schedule, session) => {
     started_at: value.start_date,
     estimated_end_at: value.end_date,
     current_day:
-      value.status === "generated" ? 0 : Math.max(1, Math.min(duration, elapsed)),
+      value.status === "generated"
+        ? 0
+        : Math.max(1, Math.min(duration, elapsed)),
     current_stage_order: value.current_stage,
     protocol: {
       _id: String(value.treatment_protocol_id),
@@ -214,8 +229,7 @@ const presentSchedule = async (schedule, session) => {
     task_progress: value.tasks.map((task) => ({
       ...task,
       status:
-        task.status === "pending" &&
-        new Date(task.scheduled_date) > utcToday()
+        task.status === "pending" && new Date(task.scheduled_date) > utcToday()
           ? "upcoming"
           : task.status,
       instructions: task.instructions.join(" "),
@@ -260,27 +274,37 @@ const getOwnedPlant = async (userId, plantId, session) => {
 };
 
 // Xác minh cả trạng thái và nội dung thật, kể cả bản ghi được nhập trực tiếp vào DB.
-const isUsableProtocol = async protocol => {
+const isUsableProtocol = async (protocol) => {
   if (!protocol || protocol.status !== "approved") return false;
   try {
-    const doc = protocol instanceof mongoose.Document ? protocol : new TreatmentProtocol(protocol);
+    const doc =
+      protocol instanceof mongoose.Document
+        ? protocol
+        : new TreatmentProtocol(protocol);
     await doc.validate();
     return true;
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 };
 
-const findApprovedProtocols = (diseaseId, plantId) => TreatmentProtocol.find({
-  disease_id: diseaseId,
-  status: "approved",
-  ...(plantId ? { plant_ids: plantId } : {}),
-}).select("-reference_material -source_document -ai_generation").sort({ version: -1, updated_at: -1 }).lean();
+const findApprovedProtocols = (diseaseId, plantId) =>
+  TreatmentProtocol.find({
+    disease_id: diseaseId,
+    status: "approved",
+    ...(plantId ? { plant_ids: plantId } : {}),
+  })
+    .select("-reference_material -source_document -ai_generation")
+    .sort({ version: -1, updated_at: -1 })
+    .lean();
 
 // Caller chẩn đoán đã kiểm tra bệnh và quan hệ cây; chỉ truy vấn phác đồ một lần.
 const hasApprovedProtocol = async (diseaseId, plantId) => {
   v.id(diseaseId, "disease_id");
   v.id(plantId, "plant_id");
   const protocols = await findApprovedProtocols(diseaseId, plantId);
-  for (const protocol of protocols) if (await isUsableProtocol(protocol)) return true;
+  for (const protocol of protocols)
+    if (await isUsableProtocol(protocol)) return true;
   return false;
 };
 
@@ -291,7 +315,11 @@ const getApprovedProtocols = async (diseaseId, plantId) => {
     .select("_id disease_name")
     .lean();
   if (!disease)
-    throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy bệnh cây đang hoạt động.");
+    throw new AppError(
+      "RESOURCE_NOT_FOUND",
+      404,
+      "Không tìm thấy bệnh cây đang hoạt động.",
+    );
   const protocols = await findApprovedProtocols(diseaseId, plantId);
   const usable = await Promise.all(protocols.map(isUsableProtocol));
   return { disease, protocols: protocols.filter((_, index) => usable[index]) };
@@ -304,12 +332,18 @@ const assertDiagnosis = async (diagnosisId, userId, diseaseId, session) => {
     user_id: userId,
   }).session(session || null);
   if (!diagnosis)
-    throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy kết quả chẩn đoán.");
+    throw new AppError(
+      "RESOURCE_NOT_FOUND",
+      404,
+      "Không tìm thấy kết quả chẩn đoán.",
+    );
   if (diagnosis.result_kind === "plant")
-    throw new AppError("DIAGNOSIS_DISEASE_MISMATCH", 400, "Kết quả nhận diện cây không dùng để tạo điều trị bệnh.");
-  if (
-    String(diagnosis.disease_id) !== String(diseaseId)
-  )
+    throw new AppError(
+      "DIAGNOSIS_DISEASE_MISMATCH",
+      400,
+      "Kết quả nhận diện cây không dùng để tạo điều trị bệnh.",
+    );
+  if (String(diagnosis.disease_id) !== String(diseaseId))
     throw new AppError(
       "DIAGNOSIS_DISEASE_MISMATCH",
       400,
@@ -322,16 +356,24 @@ const generateSchedule = async (userId, input) => {
   v.id(userId, "user_id");
   const data = validate.generate(input);
   const preview = treatmentAI.verifyCustomerPreview(data.preview_token, userId);
-  if (String(preview.disease_id) !== String(data.disease_id) ||
-      String(preview.diagnosis_id || "") !== String(data.diagnosis_id || ""))
-    throw new AppError("TREATMENT_PREVIEW_MISMATCH", 400,
-      "Bản xem trước không khớp kết quả chẩn đoán đã chọn.");
+  if (
+    String(preview.disease_id) !== String(data.disease_id) ||
+    String(preview.diagnosis_id || "") !== String(data.diagnosis_id || "")
+  )
+    throw new AppError(
+      "TREATMENT_PREVIEW_MISMATCH",
+      400,
+      "Bản xem trước không khớp kết quả chẩn đoán đã chọn.",
+    );
   try {
     return await withTransactionResult(async (session) => {
       const plant = await getOwnedPlant(userId, data.user_plant_id, session);
       if (String(preview.plant_id) !== String(plant.plant_id))
-        throw new AppError("TREATMENT_PREVIEW_MISMATCH", 400,
-          "Cây trong vườn không khớp bản xem trước phác đồ.");
+        throw new AppError(
+          "TREATMENT_PREVIEW_MISMATCH",
+          400,
+          "Cây trong vườn không khớp bản xem trước phác đồ.",
+        );
       const diagnosis = await assertDiagnosis(
         data.diagnosis_id,
         userId,
@@ -384,24 +426,35 @@ const generateSchedule = async (userId, input) => {
           409,
           "Cây đang có một đợt điều trị hoạt động.",
         );
-      const latest = await TreatmentProtocol.findOne({ disease_id: data.disease_id,
-        protocol_name: preview.protocol.protocol_name }).sort({ version: -1 })
-        .select("version").session(session).lean();
-      const [protocol] = await TreatmentProtocol.create([{
-        ...preview.protocol,
+      const latest = await TreatmentProtocol.findOne({
         disease_id: data.disease_id,
-        plant_ids: [plant.plant_id],
-        version: (latest?.version || 0) + 1,
-        status: "approved",
-        created_by: null,
-        approved_by: null,
-        approved_at: new Date(),
-      }], { session });
+        protocol_name: preview.protocol.protocol_name,
+      })
+        .sort({ version: -1 })
+        .select("version")
+        .session(session)
+        .lean();
+      const [protocol] = await TreatmentProtocol.create(
+        [
+          {
+            ...preview.protocol,
+            disease_id: data.disease_id,
+            plant_ids: [plant.plant_id],
+            version: (latest?.version || 0) + 1,
+            status: "approved",
+            created_by: null,
+            approved_by: null,
+            approved_at: new Date(),
+          },
+        ],
+        { session },
+      );
       const startDate = data.start_date || utcToday();
       const endDate = addDays(startDate, protocol.duration_days - 1);
       const [schedule] = await TreatmentSchedule.create(
         [
           {
+            ...(data.schedule_id ? { _id: data.schedule_id } : {}),
             user_id: userId,
             user_plant_id: data.user_plant_id,
             disease_id: data.disease_id,
@@ -445,7 +498,11 @@ const getSchedule = async (userId, scheduleId) => {
     user_id: userId,
   }).lean();
   if (!schedule)
-    throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy lịch điều trị.");
+    throw new AppError(
+      "RESOURCE_NOT_FOUND",
+      404,
+      "Không tìm thấy lịch điều trị.",
+    );
   return presentSchedule(schedule);
 };
 
@@ -459,7 +516,11 @@ const activateSchedule = async (userId, scheduleId) => {
         user_id: userId,
       }).session(session);
       if (!schedule)
-        throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy lịch điều trị.");
+        throw new AppError(
+          "RESOURCE_NOT_FOUND",
+          404,
+          "Không tìm thấy lịch điều trị.",
+        );
       if (schedule.status !== "generated")
         throw new AppError(
           "INVALID_TREATMENT_TRANSITION",
@@ -467,7 +528,11 @@ const activateSchedule = async (userId, scheduleId) => {
           "Chỉ lịch ở trạng thái chờ áp dụng mới có thể bắt đầu.",
         );
       assertTransition(schedule.status, "in_progress");
-      const plant = await getOwnedPlant(userId, schedule.user_plant_id, session);
+      const plant = await getOwnedPlant(
+        userId,
+        schedule.user_plant_id,
+        session,
+      );
       const otherActive = await TreatmentSchedule.exists({
         _id: { $ne: schedule._id },
         user_plant_id: schedule.user_plant_id,
@@ -487,7 +552,8 @@ const activateSchedule = async (userId, scheduleId) => {
       })
         .session(session)
         .lean();
-      schedule.care_schedule_pause_snapshot = createCarePauseSnapshot(careSchedules);
+      schedule.care_schedule_pause_snapshot =
+        createCarePauseSnapshot(careSchedules);
       schedule.plant_health_status_before_treatment = plant.health_status;
       schedule.status = "in_progress";
       schedule.current_stage = 1;
@@ -599,7 +665,11 @@ const completeTask = async (userId, scheduleId, taskId) => {
       .session(session)
       .lean();
     if (!current)
-      throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy lịch điều trị.");
+      throw new AppError(
+        "RESOURCE_NOT_FOUND",
+        404,
+        "Không tìm thấy lịch điều trị.",
+      );
     if (current.status !== "in_progress")
       throw new AppError(
         "INVALID_TREATMENT_TRANSITION",
@@ -608,10 +678,22 @@ const completeTask = async (userId, scheduleId, taskId) => {
       );
     const task = current.tasks.find((item) => String(item._id) === taskId);
     if (!task)
-      throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy công việc điều trị.");
+      throw new AppError(
+        "RESOURCE_NOT_FOUND",
+        404,
+        "Không tìm thấy công việc điều trị.",
+      );
     if (task.status === "completed")
-      throw new AppError("TASK_ALREADY_COMPLETED", 409, "Công việc đã được hoàn thành.");
-    throw new AppError("TASK_NOT_AVAILABLE", 409, "Công việc chưa thể hoàn thành.");
+      throw new AppError(
+        "TASK_ALREADY_COMPLETED",
+        409,
+        "Công việc đã được hoàn thành.",
+      );
+    throw new AppError(
+      "TASK_NOT_AVAILABLE",
+      409,
+      "Công việc chưa thể hoàn thành.",
+    );
   });
 };
 
@@ -650,11 +732,11 @@ const editTask = async (userId, scheduleId, taskId, input) => {
       : vietnamDateKey(task.scheduled_date);
     const treatmentDate = new Date(`${dateKey}T00:00:00.000Z`);
     const time = result.time || task.time || "08:00";
-    const scheduledDate = withVietnamTime(
-      treatmentDate,
-      time,
-    );
-    if (treatmentDate < schedule.start_date || treatmentDate > schedule.end_date)
+    const scheduledDate = withVietnamTime(treatmentDate, time);
+    if (
+      treatmentDate < schedule.start_date ||
+      treatmentDate > schedule.end_date
+    )
       throw new AppError(
         "TASK_DATE_OUT_OF_RANGE",
         400,
@@ -719,7 +801,11 @@ const rescheduleTask = async (userId, scheduleId, taskId, input) => {
       user_id: userId,
     }).session(session);
     if (!schedule)
-      throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy lịch điều trị.");
+      throw new AppError(
+        "RESOURCE_NOT_FOUND",
+        404,
+        "Không tìm thấy lịch điều trị.",
+      );
     if (schedule.status !== "in_progress")
       throw new AppError(
         "INVALID_TREATMENT_TRANSITION",
@@ -728,21 +814,31 @@ const rescheduleTask = async (userId, scheduleId, taskId, input) => {
       );
     const task = schedule.tasks.id(taskId);
     if (!task)
-      throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy công việc điều trị.");
+      throw new AppError(
+        "RESOURCE_NOT_FOUND",
+        404,
+        "Không tìm thấy công việc điều trị.",
+      );
     if (task.status !== "pending")
       throw new AppError(
         "TASK_ALREADY_COMPLETED",
         409,
         "Không thể đổi lịch công việc đã hoàn thành.",
       );
-    if (result.scheduled_date < schedule.start_date || result.scheduled_date > schedule.end_date)
+    if (
+      result.scheduled_date < schedule.start_date ||
+      result.scheduled_date > schedule.end_date
+    )
       throw new AppError(
         "TASK_DATE_OUT_OF_RANGE",
         400,
         "Ngày thực hiện phải nằm trong thời gian điều trị.",
       );
 
-    task.scheduled_date = withVietnamTime(result.scheduled_date, task.time || "08:00");
+    task.scheduled_date = withVietnamTime(
+      result.scheduled_date,
+      task.time || "08:00",
+    );
     schedule.history.push({
       event: "task_rescheduled",
       task_id: task._id,
@@ -751,12 +847,20 @@ const rescheduleTask = async (userId, scheduleId, taskId, input) => {
     });
     await schedule.save({ session });
     const updatedReminder = await Notification.updateOne(
-      { treatment_schedule_id: schedule._id, treatment_task_id: task._id, status: "scheduled" },
+      {
+        treatment_schedule_id: schedule._id,
+        treatment_task_id: task._id,
+        status: "scheduled",
+      },
       { $set: { scheduled_for: task.scheduled_date } },
       { session },
     );
     if (!updatedReminder.matchedCount) {
-      const reminders = createReminderOperations({ _id: schedule._id, user_id: userId, tasks: [task] });
+      const reminders = createReminderOperations({
+        _id: schedule._id,
+        user_id: userId,
+        tasks: [task],
+      });
       await Notification.bulkWrite(reminders, { session });
     }
     return presentSchedule(schedule, session);
@@ -773,7 +877,11 @@ const finishSchedule = async (userId, scheduleId, input) => {
       user_id: userId,
     }).session(session);
     if (!schedule)
-      throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy lịch điều trị.");
+      throw new AppError(
+        "RESOURCE_NOT_FOUND",
+        404,
+        "Không tìm thấy lịch điều trị.",
+      );
     if (schedule.status !== "in_progress")
       throw new AppError(
         "INVALID_TREATMENT_TRANSITION",
@@ -834,165 +942,6 @@ const finishSchedule = async (userId, scheduleId, input) => {
     await schedule.save({ session });
     return presentSchedule(schedule, session);
   });
-};
-
-const assertProtocolReferences = async (data, session) => {
-  const [disease, plants] = await Promise.all([
-    Disease.findById(data.disease_id)
-      .select("_id disease_name status")
-      .session(session || null)
-      .lean(),
-    Plant.find({ _id: { $in: data.plant_ids } })
-      .select("_id common_name common_disease_ids is_published")
-      .session(session || null)
-      .lean(),
-  ]);
-  if (!disease)
-    throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy bệnh cây.");
-  if (plants.length !== data.plant_ids.length)
-    throw new AppError("RESOURCE_NOT_FOUND", 404, "Có cây áp dụng không tồn tại.");
-  const unrelated = plants.find(
-    (plant) =>
-      !plant.common_disease_ids?.some(
-        (diseaseId) => String(diseaseId) === String(data.disease_id),
-      ),
-  );
-  if (unrelated)
-    throw new AppError(
-      "PROTOCOL_PLANT_DISEASE_MISMATCH",
-      400,
-      `Bệnh chưa được liên kết với cây ${unrelated.common_name}.`,
-    );
-  if (
-    data.status === "approved" &&
-    (disease.status !== "active" || plants.some((plant) => !plant.is_published))
-  )
-    throw new AppError(
-      "PROTOCOL_REFERENCE_INACTIVE",
-      409,
-      "Chỉ có thể phê duyệt phác đồ cho cây và bệnh đang công khai.",
-    );
-  return { disease, plants };
-};
-
-const approvalFields = (data, userId, currentSource = "manager_verified") =>
-  data.status === "approved"
-    ? {
-        instruction_source: currentSource,
-        approved_by: userId,
-        approved_at: new Date(),
-      }
-    : {
-        instruction_source: "manager_verified",
-        approved_by: null,
-        approved_at: null,
-      };
-
-const getManagerProtocols = async (input = {}) => {
-  const page = v.positiveInteger(input.page, 1, "page");
-  const limit = v.positiveInteger(input.limit, 20, "limit", 100);
-  const filter = {};
-  if (input.status) {
-    if (!["draft", "approved", "deprecated"].includes(input.status))
-      v.invalid("status", "Trạng thái phác đồ không hợp lệ.");
-    filter.status = input.status;
-  }
-  if (input.disease_id) filter.disease_id = v.id(input.disease_id, "disease_id");
-  if (typeof input.search === "string" && input.search.trim())
-    filter.protocol_name = new RegExp(v.escapeRegex(input.search.trim()), "i");
-  const [items, total] = await Promise.all([
-    TreatmentProtocol.find(filter)
-      .populate("disease_id", "disease_name status")
-      .populate("plant_ids", "common_name is_published")
-      .sort({ updated_at: -1, _id: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean(),
-    TreatmentProtocol.countDocuments(filter),
-  ]);
-  return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
-};
-
-const getManagerProtocol = async (id) => {
-  v.id(id, "protocol_id");
-  const item = await TreatmentProtocol.findById(id)
-    .populate("disease_id", "disease_name status")
-    .populate("plant_ids", "common_name is_published")
-    .lean();
-  if (!item)
-    throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy phác đồ điều trị.");
-  return item;
-};
-
-const createProtocol = async (userId, input) => {
-  v.id(userId, "user_id");
-  const data = validate.protocol(input);
-  await assertProtocolReferences(data);
-  const latest = await TreatmentProtocol.findOne({
-    disease_id: data.disease_id,
-    protocol_name: data.protocol_name,
-  })
-    .sort({ version: -1 })
-    .select("version")
-    .lean();
-  const item = await TreatmentProtocol.create({
-    ...data,
-    ...approvalFields(data, userId),
-    version: (latest?.version || 0) + 1,
-    created_by: userId,
-  });
-  return getManagerProtocol(String(item._id));
-};
-
-const updateProtocol = async (userId, id, input) => {
-  v.id(userId, "user_id");
-  v.id(id, "protocol_id");
-  const data = validate.protocol(input);
-  return withTransactionResult(async (session) => {
-    const current = await TreatmentProtocol.findById(id).session(session);
-    if (!current)
-      throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy phác đồ điều trị.");
-    if (String(current.disease_id) !== String(data.disease_id))
-      throw new AppError(
-        "PROTOCOL_DISEASE_IMMUTABLE",
-        409,
-        "Không thể đổi bệnh của phác đồ đã tạo.",
-      );
-    await assertProtocolReferences(data, session);
-    if (current.status === "approved") {
-      const [replacement] = await TreatmentProtocol.create(
-        [
-          {
-            ...data,
-            ...approvalFields(data, userId),
-            version: current.version + 1,
-            created_by: userId,
-          },
-        ],
-        { session },
-      );
-      await TreatmentProtocol.updateOne(
-        { _id: current._id, status: "approved" },
-        { $set: { status: "deprecated" } },
-        { session },
-      );
-      return replacement.toObject();
-    }
-    Object.assign(current, data, approvalFields(data, userId, current.instruction_source));
-    await current.save({ session });
-    return current.toObject();
-  });
-};
-
-const deprecateProtocol = async (id) => {
-  v.id(id, "protocol_id");
-  const item = await TreatmentProtocol.findOneAndUpdate(
-    { _id: id, status: { $ne: "deprecated" } },
-    { $set: { status: "deprecated" } },
-    { new: true, runValidators: true },
-  ).lean();
-  if (item) return item;
-  return getManagerProtocol(id);
 };
 
 module.exports = {

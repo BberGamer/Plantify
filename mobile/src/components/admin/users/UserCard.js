@@ -4,11 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { RoleBadge, StatusBadge, GoogleBadge } from "./UserBadges";
 import { garden } from "./theme";
 
-export default function UserCard({
-  item,
-  currentAdminId,
-  onOpenDetail,
-}) {
+export default function UserCard({ item, currentAdminId, onOpenDetail }) {
   const initials = item.fullName
     ? item.fullName
         .split(" ")
@@ -20,7 +16,6 @@ export default function UserCard({
 
   const isSelf = item._id === currentAdminId;
   const isActive = item.status !== false;
-
 
   return (
     <View style={[styles.userCard, !isActive && styles.userCardDormant]}>
@@ -42,7 +37,6 @@ export default function UserCard({
           >
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
-
         </View>
 
         {/* User Info */}
@@ -82,7 +76,6 @@ export default function UserCard({
         <StatusBadge status={item.status} />
         {item.isGoogleAccount && <GoogleBadge />}
       </View>
-
     </View>
   );
 }

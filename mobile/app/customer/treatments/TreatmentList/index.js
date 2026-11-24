@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Portal, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -10,7 +10,7 @@ import {
   TreatmentProgress,
   TreatmentSafetyNotice,
   TreatmentStateView,
-  TreatmentStatusBadge,
+  TreatmentSummary,
   TreatmentTaskCard,
   TreatmentTaskEditDialog,
   TreatmentTimeline,
@@ -56,15 +56,15 @@ export default function TreatmentListScreen() {
     >
       {!!treatment.successMessage && <View style={styles.success}><Text style={styles.successText} accessibilityRole="alert">{treatment.successMessage}</Text></View>}
       {!!treatment.mutationError && <Text style={styles.error} accessibilityRole="alert">{treatment.mutationError}</Text>}
-      <View style={styles.summary}>
-        <Image source={{ uri: data.plant.image_url }} style={styles.image} accessibilityLabel={`Ảnh cây ${data.plant.plant_nickname}`} />
-        <View style={styles.summaryText}>
-          <TreatmentStatusBadge status={data.status} />
-          <Text style={styles.plant}>{data.plant.plant_nickname}</Text>
-          <Text style={styles.disease}>{data.disease.disease_name}</Text>
-          <Text style={styles.dates}>{date(data.started_at)} – {date(data.estimated_end_at)}</Text>
-        </View>
-      </View>
+      <TreatmentSummary
+        plant={data.plant}
+        disease={data.disease}
+        status={data.status}
+        style={styles.summary}
+        imageStyle={styles.image}
+      >
+        <Text style={styles.dates}>{date(data.started_at)} – {date(data.estimated_end_at)}</Text>
+      </TreatmentSummary>
       <TreatmentProgress currentDay={treatment.progress.currentDay} duration={treatment.progress.duration} completedTasks={treatment.progress.completedTasks} totalTasks={treatment.progress.totalTasks} />
       {currentStage && <View style={styles.currentStage}>
         <Text style={styles.eyebrow}>GIAI ĐOẠN HIỆN TẠI</Text>
@@ -119,11 +119,8 @@ const styles = StyleSheet.create({
   successText: { ...typography.body, color: colors.primaryLight, textAlign: "center" },
   error: { ...typography.body, color: colors.statusError, textAlign: "center" },
   notice: { ...typography.body, color: "#946017", backgroundColor: colors.warmPeachBg, borderRadius: radius.md, padding: spacing.md },
-  summary: { flexDirection: "row", gap: spacing.lg, paddingBottom: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
-  image: { width: 108, height: 108, borderRadius: radius.card, backgroundColor: colors.lightMint },
-  summaryText: { flex: 1, minWidth: 0, justifyContent: "center", gap: spacing.xs },
-  plant: { ...typography.section, color: colors.textPrimary },
-  disease: { ...typography.body, color: colors.textSecondary },
+  summary: { paddingBottom: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
+  image: { width: 108, height: 108, borderRadius: radius.card },
   dates: { ...typography.caption, color: colors.textMuted },
   currentStage: { backgroundColor: colors.softMintBg, borderWidth: 1, borderColor: colors.lightMint, borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm },
   eyebrow: { ...typography.caption, color: colors.primaryLight, fontWeight: "800" },

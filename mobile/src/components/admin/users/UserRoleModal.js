@@ -41,7 +41,9 @@ export default function UserRoleModal({
   onClose,
   onConfirm,
 }) {
-  const close = () => { if (!submitting) onClose(); };
+  const close = () => {
+    if (!submitting) onClose();
+  };
   return (
     <Modal
       visible={visible}
@@ -50,7 +52,10 @@ export default function UserRoleModal({
       onRequestClose={close}
     >
       <View style={styles.modalOverlay}>
-        <SafeAreaView edges={["bottom", "left", "right"]} style={styles.modalCard}>
+        <SafeAreaView
+          edges={["bottom", "left", "right"]}
+          style={styles.modalCard}
+        >
           {/* HEADER */}
           <View style={styles.modalHeader}>
             <View>
@@ -60,7 +65,8 @@ export default function UserRoleModal({
               </Text>
             </View>
             <TouchableOpacity
-              disabled={submitting} onPress={close}
+              disabled={submitting}
+              onPress={close}
               style={styles.closeBtn}
               accessibilityRole="button"
               accessibilityLabel="Đóng"
@@ -70,7 +76,10 @@ export default function UserRoleModal({
           </View>
 
           {/* BODY */}
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalBody}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.modalBody}
+          >
             {ROLE_OPTIONS.map((item) => {
               const isSelected = selectedRole === item.key;
               return (
@@ -80,7 +89,8 @@ export default function UserRoleModal({
                     styles.roleOptionCard,
                     isSelected && styles.roleOptionCardSelected,
                   ]}
-                  disabled={submitting} onPress={() => onSelectRole(item.key)}
+                  disabled={submitting}
+                  onPress={() => onSelectRole(item.key)}
                   activeOpacity={0.7}
                 >
                   <View style={styles.roleOptionLeft}>
@@ -105,7 +115,9 @@ export default function UserRoleModal({
                       >
                         {item.title}
                       </Text>
-                      <Text style={styles.roleOptionSub}>{item.description}</Text>
+                      <Text style={styles.roleOptionSub}>
+                        {item.description}
+                      </Text>
                     </View>
                   </View>
 
@@ -121,8 +133,15 @@ export default function UserRoleModal({
 
           {/* FOOTER */}
           <View style={styles.modalFooter}>
-            <Button onPress={close} disabled={submitting}>Hủy</Button>
-            <Button mode="contained" onPress={onConfirm} disabled={submitting} loading={submitting}>
+            <Button onPress={close} disabled={submitting}>
+              Hủy
+            </Button>
+            <Button
+              mode="contained"
+              onPress={onConfirm}
+              disabled={submitting}
+              loading={submitting}
+            >
               Lưu vai trò
             </Button>
           </View>
@@ -169,7 +188,8 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   modalSubtitle: {
-    ...typography.caption, color: colors.textSecondary,
+    ...typography.caption,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   closeBtn: {
@@ -215,7 +235,8 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   roleOptionSub: {
-    ...typography.caption, color: colors.textSecondary,
+    ...typography.caption,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   modalFooter: {
@@ -229,5 +250,4 @@ const styles = StyleSheet.create({
     borderTopColor: garden.line,
     gap: 10,
   },
-
 });

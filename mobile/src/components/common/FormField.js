@@ -6,7 +6,16 @@ import { control, radius, spacing, typography } from "../../theme/tokens";
 
 // Ghép input với lỗi/hướng dẫn: caller giữ draft, focus và validation nghiệp vụ.
 export default React.forwardRef(function FormField(
-  { error, hint, disabled = false, style, contentStyle, containerStyle, ...props }, ref,
+  {
+    error,
+    hint,
+    disabled = false,
+    style,
+    contentStyle,
+    containerStyle,
+    ...props
+  },
+  ref,
 ) {
   return (
     <View style={[styles.group, containerStyle]}>
@@ -23,7 +32,11 @@ export default React.forwardRef(function FormField(
         outlineStyle={styles.outline}
       />
       {!!(error || hint) && (
-        <HelperText type={error ? "error" : "info"} visible accessibilityRole={error ? "alert" : undefined}>
+        <HelperText
+          type={error ? "error" : "info"}
+          visible
+          accessibilityRole={error ? "alert" : undefined}
+        >
           {error || hint}
         </HelperText>
       )}

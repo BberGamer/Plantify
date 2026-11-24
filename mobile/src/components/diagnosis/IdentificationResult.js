@@ -30,10 +30,20 @@ export default function IdentificationResult({
         <Text accessibilityRole={prediction ? undefined : "alert"}>
           {result.message}
         </Text>
-        {!!result.history_id && <Button mode="outlined" icon="history"
-          onPress={() => router.push({ pathname: "/customer/diagnosis-detail", params: { diagnosisId: result.history_id } })}>
-          Xem lần nhận diện đã lưu
-        </Button>}
+        {!!result.history_id && (
+          <Button
+            mode="outlined"
+            icon="history"
+            onPress={() =>
+              router.push({
+                pathname: "/customer/diagnosis-detail",
+                params: { diagnosisId: result.history_id },
+              })
+            }
+          >
+            Xem lần nhận diện đã lưu
+          </Button>
+        )}
         {prediction?.plant_id ? (
           <Button
             mode="contained"

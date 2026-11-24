@@ -1,16 +1,12 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { FlatList, View } from "react-native";
 import { ActivityIndicator, Button, Card, Chip, Text, TextInput } from "react-native-paper";
 import { useRouter } from "expo-router";
-import usePaginatedList from "../../hooks/usePaginatedList";
-import useAuthStore from "../../../store/authStore";
-import { useFinanceSummary } from "../../hooks/useFinance";
-import feedbackService from "../../services/feedbackService";
+import useFeedbackList, { emptyFeedbackFilters as emptyFilters } from "../../hooks/useFeedbackList";
 import ListPagination from "../common/ListPagination";
 import ListError from "../common/ListError";
 import FeedbackFrame, { feedbackStyles as styles, feedbackTime, statusLabels, typeLabels } from "./FeedbackFrame";
 
-const emptyFilters = { type: "", status: "", email: "", from: "", to: "" };
 
 function ManagerFilters({ onApply }) {
   const [draft, setDraft] = useState(emptyFilters);
@@ -48,15 +44,7 @@ function ManagerFilters({ onApply }) {
 
 export default function FeedbackListScreen({ manager = false }) {
   const router = useRouter();
-  const [filters, setFilters] = useState(emptyFilters);
-  const active = useAuthStore(state => state.isAuthenticated && state.user?.role === (manager ? "manager" : "customer"));
-  const finance = useFinanceSummary(active && !manager);
-  const vip = finance?.isproaccount && new Date(finance.vip_expires_at) > new Date();
-  const fetchPage = useCallback(paging => feedbackService.list({
-    ...paging,
-    ...Object.fromEntries(Object.entries(filters).filter(([, value]) => value.trim()).map(([key, value]) => [key, value.trim()])),
-  }, manager), [filters, manager]);
-  const list = usePaginatedList(fetchPage, { limit: 15, enabled: active });
+  const { list, finance, vip, applyFilters: setFilters } = useFeedbackList(manager);
   const open = id => router.push({ pathname: manager ? "/manager/feedback/[id]" : "/customer/feedback/[id]", params: { id } });
 
   return (

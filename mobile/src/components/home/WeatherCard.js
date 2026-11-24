@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Card, Text } from 'react-native-paper';
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Card, Text } from "react-native-paper";
 
 export default function WeatherCard() {
   return (
@@ -15,7 +15,12 @@ export default function WeatherCard() {
       </View>
 
       <View style={styles.advicePill}>
-        <Ionicons name="leaf-outline" size={18} color="#247855" style={{ marginRight: 8 }} />
+        <Ionicons
+          name="leaf-outline"
+          size={18}
+          color="#247855"
+          style={{ marginRight: 8 }}
+        />
         <Text style={styles.adviceText}>
           Hãy kiểm tra độ ẩm đất trước khi tưới cây hôm nay.
         </Text>
@@ -28,32 +33,32 @@ export default function WeatherCard() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#EAF5EE',
+    backgroundColor: "#EAF5EE",
     borderRadius: 20,
     padding: 16,
     marginTop: 20,
   },
   topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   tempCol: {
     marginLeft: 12,
   },
   temp: {
     fontSize: 24,
-    fontWeight: '800',
-    color: '#183B2B',
+    fontWeight: "800",
+    color: "#183B2B",
   },
   status: {
     fontSize: 12.5,
-    color: '#4B7B63',
+    color: "#4B7B63",
     marginTop: 1,
   },
   advicePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -61,13 +66,13 @@ const styles = StyleSheet.create({
   },
   adviceText: {
     fontSize: 12.5,
-    color: '#183B2B',
+    color: "#183B2B",
     flex: 1,
   },
   note: {
     fontSize: 11,
-    color: '#8AA596',
-    textAlign: 'right',
+    color: "#8AA596",
+    textAlign: "right",
     marginTop: 8,
   },
 });

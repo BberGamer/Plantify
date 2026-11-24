@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Navbar from "../../src/components/navigation/Navbar";
+import ListPagination from "../../src/components/common/ListPagination";
 import ListError from "../../src/components/common/ListError";
 import useGarden from "../../src/hooks/useGarden";
 import { colors, radius, spacing, typography } from "../../src/theme";
@@ -75,6 +76,7 @@ export default function GardenScreen() {
     {garden.loading && !garden.refreshing ? <View style={styles.center}><ActivityIndicator size="large" /><Text>Đang tải vườn cây...</Text></View> : garden.error ? <View style={styles.center}><ListError message={garden.error} onRetry={garden.retry} busy={garden.loading} /></View> : <ScrollView style={styles.list} contentContainerStyle={styles.listContent} refreshControl={<RefreshControl refreshing={garden.refreshing} onRefresh={garden.refresh} colors={[colors.primary]} />}>
       <Text style={styles.count}>Tổng: {garden.pagination.total} cây trong vườn</Text>
       {garden.plants.map((plant) => <GardenCard key={plant._id} plant={plant} onOpenPlant={(plantId) => router.push({ pathname: "/customer/garden/PlantList", params: { plantId } })} onOpenTreatment={(treatmentId) => router.push({ pathname: "/customer/treatments/TreatmentList", params: { treatmentId } })} />)}
+      <ListPagination pagination={garden.pagination} onPageChange={garden.changePage} disabled={garden.loading || garden.refreshing} />
       {!garden.plants.length && <View style={styles.empty}><Ionicons name="leaf-outline" size={44} color={colors.primaryLight} /><Text style={styles.emptyTitle}>Chưa có cây phù hợp</Text><Text style={styles.emptyText}>Thử bộ lọc khác hoặc thêm cây vào vườn.</Text></View>}
     </ScrollView>}
     <Navbar />

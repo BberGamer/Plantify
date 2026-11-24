@@ -30,7 +30,9 @@ export default function UserStatusModal({
 }) {
   const isCurrentlyActive = targetUser?.status !== false;
 
-  const close = () => { if (!loading) onClose(); };
+  const close = () => {
+    if (!loading) onClose();
+  };
   return (
     <Modal
       visible={visible}
@@ -42,7 +44,10 @@ export default function UserStatusModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.modalOverlay}
       >
-        <SafeAreaView edges={["bottom", "left", "right"]} style={styles.modalCard}>
+        <SafeAreaView
+          edges={["bottom", "left", "right"]}
+          style={styles.modalCard}
+        >
           {/* HEADER */}
           <View style={styles.modalHeader}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -64,12 +69,15 @@ export default function UserStatusModal({
                 <Text style={styles.modalTitle}>
                   {isCurrentlyActive ? "Khóa tài khoản" : "Kích hoạt tài khoản"}
                 </Text>
-                <Text style={styles.modalSubtitle}>Xác nhận thay đổi trạng thái</Text>
+                <Text style={styles.modalSubtitle}>
+                  Xác nhận thay đổi trạng thái
+                </Text>
               </View>
             </View>
 
             <TouchableOpacity
-              disabled={loading} onPress={close}
+              disabled={loading}
+              onPress={close}
               style={styles.closeBtn}
               accessibilityRole="button"
               accessibilityLabel="Đóng"
@@ -79,7 +87,10 @@ export default function UserStatusModal({
           </View>
 
           {/* BODY */}
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalBody}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.modalBody}
+          >
             <Text style={styles.confirmPromptText}>
               Bạn có chắc chắn muốn{" "}
               <Text style={{ fontWeight: "700" }}>
@@ -89,12 +100,8 @@ export default function UserStatusModal({
             </Text>
 
             <View style={styles.confirmUserBox}>
-              <Text style={styles.confirmUserName}>
-                {targetUser?.fullName}
-              </Text>
-              <Text style={styles.confirmUserEmail}>
-                {targetUser?.email}
-              </Text>
+              <Text style={styles.confirmUserName}>{targetUser?.fullName}</Text>
+              <Text style={styles.confirmUserEmail}>{targetUser?.email}</Text>
             </View>
 
             {isCurrentlyActive && (
@@ -111,11 +118,19 @@ export default function UserStatusModal({
             <View
               style={[
                 styles.noteBox,
-                { backgroundColor: isCurrentlyActive ? garden.terracottaBg : garden.mint },
+                {
+                  backgroundColor: isCurrentlyActive
+                    ? garden.terracottaBg
+                    : garden.mint,
+                },
               ]}
             >
               <Ionicons
-                name={isCurrentlyActive ? "warning-outline" : "checkmark-circle-outline"}
+                name={
+                  isCurrentlyActive
+                    ? "warning-outline"
+                    : "checkmark-circle-outline"
+                }
                 size={18}
                 color={isCurrentlyActive ? garden.terracotta : garden.moss}
               />
@@ -125,13 +140,25 @@ export default function UserStatusModal({
                   : "Sau khi kích hoạt, tài khoản này có thể đăng nhập và sử dụng ứng dụng bình thường."}
               </Text>
             </View>
-            {!!submitError && <HelperText type="error" accessibilityRole="alert">{submitError}</HelperText>}
+            {!!submitError && (
+              <HelperText type="error" accessibilityRole="alert">
+                {submitError}
+              </HelperText>
+            )}
           </ScrollView>
 
           {/* FOOTER */}
           <View style={styles.modalFooter}>
-            <Button onPress={close} disabled={loading}>Hủy</Button>
-            <Button mode="contained" onPress={onConfirm} disabled={loading} loading={loading} buttonColor={isCurrentlyActive ? garden.terracotta : garden.moss}>
+            <Button onPress={close} disabled={loading}>
+              Hủy
+            </Button>
+            <Button
+              mode="contained"
+              onPress={onConfirm}
+              disabled={loading}
+              loading={loading}
+              buttonColor={isCurrentlyActive ? garden.terracotta : garden.moss}
+            >
               {isCurrentlyActive ? "Xác nhận khóa" : "Xác nhận kích hoạt"}
             </Button>
           </View>
@@ -183,7 +210,8 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   modalSubtitle: {
-    ...typography.caption, color: colors.textSecondary,
+    ...typography.caption,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   closeBtn: {
@@ -244,5 +272,4 @@ const styles = StyleSheet.create({
     borderTopColor: garden.line,
     gap: 10,
   },
-
 });

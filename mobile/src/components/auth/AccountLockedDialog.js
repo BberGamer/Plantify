@@ -22,23 +22,37 @@ export default function AccountLockedDialog({ visible, onDismiss }) {
             >
               <Ionicons name="leaf" size={24} color={colors.white} />
             </View>
-            <Text variant="titleLarge" style={styles.brand}>Plantify</Text>
+            <Text variant="titleLarge" style={styles.brand}>
+              Plantify
+            </Text>
           </LinearGradient>
           <View style={styles.content}>
-            <Text variant="titleLarge" accessibilityRole="header" style={styles.title}>
+            <Text
+              variant="titleLarge"
+              accessibilityRole="header"
+              style={styles.title}
+            >
               Tài khoản đã bị khóa
             </Text>
             <Text variant="bodyMedium" style={styles.description}>
               Vui lòng liên hệ Plantify để được hỗ trợ mở khóa tài khoản.
             </Text>
             <View style={styles.contact}>
-              <Text variant="labelLarge" style={styles.contactLabel}>Hỗ trợ qua Zalo</Text>
-              <Text variant="headlineSmall" style={styles.phone} selectable>0337774204</Text>
+              <Text variant="labelLarge" style={styles.contactLabel}>
+                Hỗ trợ qua Zalo
+              </Text>
+              <Text variant="headlineSmall" style={styles.phone} selectable>
+                0337774204
+              </Text>
             </View>
           </View>
         </ScrollView>
         <View style={styles.footer}>
-          <Button mode="contained" onPress={onDismiss} contentStyle={styles.buttonContent}>
+          <Button
+            mode="contained"
+            onPress={onDismiss}
+            contentStyle={styles.buttonContent}
+          >
             Đóng
           </Button>
         </View>

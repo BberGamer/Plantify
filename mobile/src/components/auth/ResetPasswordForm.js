@@ -1,9 +1,6 @@
 // ResetPasswordForm.js - Khối giao diện ResetPasswordForm.
 
-import {
-  View,
-  StyleSheet,
-} from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { control, spacing, radius, typography } from "../../theme/tokens";
 import { Ionicons } from "@expo/vector-icons";
@@ -75,8 +72,15 @@ export default function ResetPasswordForm({
           disabled={!isOtpComplete || busy}
         />
       </View>
-      <Button mode="contained" style={styles.submit} contentStyle={{ minHeight: control.minHeight }} onPress={onSubmit} disabled={!isOtpComplete || busy} loading={updatingPassword}>
-          Xác nhận đổi mật khẩu
+      <Button
+        mode="contained"
+        style={styles.submit}
+        contentStyle={{ minHeight: control.minHeight }}
+        onPress={onSubmit}
+        disabled={!isOtpComplete || busy}
+        loading={updatingPassword}
+      >
+        Xác nhận đổi mật khẩu
       </Button>
     </>
   );
@@ -124,7 +128,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   lockHintText: {
-    ...typography.caption, color: colors.textMuted,
+    ...typography.caption,
+    color: colors.textMuted,
   },
-
 });

@@ -9,7 +9,9 @@ export function RoleBadge({ role }) {
   return (
     <View style={[styles.badge, { backgroundColor: meta.bg }]}>
       <Ionicons name={meta.icon} size={12} color={meta.color} />
-      <Text style={[styles.badgeText, { color: meta.color }]}>{meta.label}</Text>
+      <Text style={[styles.badgeText, { color: meta.color }]}>
+        {meta.label}
+      </Text>
     </View>
   );
 }

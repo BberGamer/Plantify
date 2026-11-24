@@ -1,10 +1,6 @@
 // LoginForm.js - Khối giao diện LoginForm.
 import { useState } from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Button, Text } from "react-native-paper";
 import FormField from "../common/FormField";
 import { control, spacing } from "../../theme/tokens";
@@ -93,7 +89,6 @@ export default function LoginForm({
 
       {/* Divider */}
       <LoginAlternatives onGoogleLogin={onGoogleLogin} disabled={isLoading} />
-
     </View>
   );
 }
@@ -138,5 +133,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.primary,
   },
-
 });

@@ -1,12 +1,11 @@
 import { FlatList, Image, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Card, IconButton, SegmentedButtons, Text, TextInput } from "react-native-paper";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "expo-router";
 import useFeedbackForm from "../../hooks/useFeedbackForm";
 import useFormBack from "../../hooks/useFormBack";
-import usePaginatedList from "../../hooks/usePaginatedList";
+import useDiagnosisHistoryList from "../../hooks/useDiagnosisHistoryList";
 import { useFinanceSummary } from "../../hooks/useFinance";
-import diagnosisService from "../../services/diagnosisService";
 import DiagnosisHistoryPhoto from "../diagnosis/DiagnosisHistoryPhoto";
 import ListPagination from "../common/ListPagination";
 import ListError from "../common/ListError";
@@ -27,12 +26,7 @@ export function DiagnosisSummary({ diagnosis }) {
 }
 
 function HistoryPicker({ onSelect, onClose }) {
-  const [kind, setKind] = useState("all");
-  const fetchHistory = useCallback(
-    (params) => diagnosisService.history({ ...params, result_kind: kind === "all" ? undefined : kind }),
-    [kind],
-  );
-  const list = usePaginatedList(fetchHistory, { limit: 8 });
+  const { kind, setKind, history: list } = useDiagnosisHistoryList({ limit: 8 });
   return (
     <FlatList data={list.loading || list.error ? [] : list.items} keyExtractor={item => item._id}
       contentContainerStyle={styles.content}

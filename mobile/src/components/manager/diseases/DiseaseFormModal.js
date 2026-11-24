@@ -117,17 +117,18 @@ export default function DiseaseFormModal({
               />
             ))}
             <Text variant="titleMedium">Ảnh bệnh</Text>
-            {!!imageUri && (failedImageUri === imageUri ? (
-              <Text variant="bodySmall">Không tải được ảnh xem trước.</Text>
-            ) : (
-              <Image
-                source={{ uri: imageUri }}
-                style={styles.photo}
-                resizeMode="contain"
-                accessibilityLabel="Ảnh bệnh cây"
-                onError={() => setFailedImageUri(imageUri)}
-              />
-            ))}
+            {!!imageUri &&
+              (failedImageUri === imageUri ? (
+                <Text variant="bodySmall">Không tải được ảnh xem trước.</Text>
+              ) : (
+                <Image
+                  source={{ uri: imageUri }}
+                  style={styles.photo}
+                  resizeMode="contain"
+                  accessibilityLabel="Ảnh bệnh cây"
+                  onError={() => setFailedImageUri(imageUri)}
+                />
+              ))}
             <Button
               mode="outlined"
               onPress={onChoosePhoto}

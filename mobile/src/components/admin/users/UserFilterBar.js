@@ -12,8 +12,16 @@ import { garden, ROLE_META } from "./theme";
 
 export const USER_ROLES = [
   { key: "all", label: "Tất cả", icon: "grid-outline" },
-  { key: "customer", label: ROLE_META.customer.label, icon: ROLE_META.customer.icon },
-  { key: "manager", label: ROLE_META.manager.label, icon: ROLE_META.manager.icon },
+  {
+    key: "customer",
+    label: ROLE_META.customer.label,
+    icon: ROLE_META.customer.icon,
+  },
+  {
+    key: "manager",
+    label: ROLE_META.manager.label,
+    icon: ROLE_META.manager.icon,
+  },
   { key: "admin", label: ROLE_META.admin.label, icon: ROLE_META.admin.icon },
 ];
 
@@ -34,7 +42,8 @@ export default function UserFilterBar({
   onSelectStatus,
 }) {
   const [filterOpen, setFilterOpen] = useState(false);
-  const filterCount = Number(selectedRole !== "all") + Number(selectedStatus !== "all");
+  const filterCount =
+    Number(selectedRole !== "all") + Number(selectedStatus !== "all");
   return (
     <View style={styles.container}>
       {/* SEARCH BAR - noi len tren header */}
@@ -72,40 +81,68 @@ export default function UserFilterBar({
           contentStyle={styles.filterMenu}
           anchor={
             <TouchableOpacity
-              style={[styles.filterButton, filterCount > 0 && styles.filterButtonActive]}
+              style={[
+                styles.filterButton,
+                filterCount > 0 && styles.filterButtonActive,
+              ]}
               onPress={() => setFilterOpen(true)}
               activeOpacity={0.8}
               accessibilityRole="button"
               accessibilityLabel={`Lọc người dùng: ${filterCount} bộ lọc đang áp dụng`}
               accessibilityState={{ expanded: filterOpen }}
             >
-              <Ionicons name="options-outline" size={23} color={filterCount > 0 ? garden.white : garden.forest} />
-              {filterCount > 0 ? <View style={styles.filterBadge}><Text style={styles.filterBadgeText}>{filterCount}</Text></View> : null}
+              <Ionicons
+                name="options-outline"
+                size={23}
+                color={filterCount > 0 ? garden.white : garden.forest}
+              />
+              {filterCount > 0 ? (
+                <View style={styles.filterBadge}>
+                  <Text style={styles.filterBadgeText}>{filterCount}</Text>
+                </View>
+              ) : null}
             </TouchableOpacity>
           }
         >
           <Text style={styles.menuHeading}>VAI TRÒ</Text>
-          {USER_ROLES.map(item => <Menu.Item
-            key={`role-${item.key}`}
-            title={item.label}
-            trailingIcon={selectedRole === item.key ? "check" : undefined}
-            titleStyle={selectedRole === item.key ? styles.selectedTitle : undefined}
-            onPress={() => onSelectRole(item.key)}
-          />)}
+          {USER_ROLES.map((item) => (
+            <Menu.Item
+              key={`role-${item.key}`}
+              title={item.label}
+              trailingIcon={selectedRole === item.key ? "check" : undefined}
+              titleStyle={
+                selectedRole === item.key ? styles.selectedTitle : undefined
+              }
+              onPress={() => onSelectRole(item.key)}
+            />
+          ))}
           <Divider />
           <Text style={styles.menuHeading}>TRẠNG THÁI</Text>
-          {USER_STATUSES.map(item => <Menu.Item
-            key={`status-${item.key}`}
-            title={item.label}
-            trailingIcon={selectedStatus === item.key ? "check" : undefined}
-            titleStyle={selectedStatus === item.key ? styles.selectedTitle : undefined}
-            onPress={() => onSelectStatus(item.key)}
-          />)}
+          {USER_STATUSES.map((item) => (
+            <Menu.Item
+              key={`status-${item.key}`}
+              title={item.label}
+              trailingIcon={selectedStatus === item.key ? "check" : undefined}
+              titleStyle={
+                selectedStatus === item.key ? styles.selectedTitle : undefined
+              }
+              onPress={() => onSelectStatus(item.key)}
+            />
+          ))}
           {filterCount > 0 ? <Divider /> : null}
-          {filterCount > 0 ? <Menu.Item title="Xóa bộ lọc" leadingIcon="filter-remove-outline" onPress={() => { onSelectRole("all"); onSelectStatus("all"); setFilterOpen(false); }} /> : null}
+          {filterCount > 0 ? (
+            <Menu.Item
+              title="Xóa bộ lọc"
+              leadingIcon="filter-remove-outline"
+              onPress={() => {
+                onSelectRole("all");
+                onSelectStatus("all");
+                setFilterOpen(false);
+              }}
+            />
+          ) : null}
         </Menu>
       </View>
-
     </View>
   );
 }
@@ -143,18 +180,45 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   filterButton: {
-    width: 48, height: 48, borderRadius: 12,
-    backgroundColor: garden.white, borderWidth: 1, borderColor: garden.line,
-    justifyContent: "center", alignItems: "center",
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: garden.white,
+    borderWidth: 1,
+    borderColor: garden.line,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  filterButtonActive: { backgroundColor: garden.forest, borderColor: garden.forest },
+  filterButtonActive: {
+    backgroundColor: garden.forest,
+    borderColor: garden.forest,
+  },
   filterBadge: {
-    position: "absolute", top: -4, right: -4, width: 18, height: 18,
-    borderRadius: 9, backgroundColor: garden.mint, borderWidth: 1, borderColor: garden.white,
-    alignItems: "center", justifyContent: "center",
+    position: "absolute",
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: garden.mint,
+    borderWidth: 1,
+    borderColor: garden.white,
+    alignItems: "center",
+    justifyContent: "center",
   },
   filterBadgeText: { fontSize: 10, fontWeight: "700", color: garden.forest },
-  filterMenu: { borderRadius: 16, backgroundColor: garden.white, minWidth: 230 },
-  menuHeading: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6, color: garden.muted, fontSize: 11, fontWeight: "700" },
+  filterMenu: {
+    borderRadius: 16,
+    backgroundColor: garden.white,
+    minWidth: 230,
+  },
+  menuHeading: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 6,
+    color: garden.muted,
+    fontSize: 11,
+    fontWeight: "700",
+  },
   selectedTitle: { color: garden.forest, fontWeight: "700" },
 });

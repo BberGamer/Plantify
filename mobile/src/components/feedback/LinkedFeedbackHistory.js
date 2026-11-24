@@ -18,23 +18,36 @@ export default function LinkedFeedbackHistory({ history, managerFeedbackId }) {
           <>
             <Text variant="labelLarge">{historyKindLabel(history)}</Text>
             <Text>Cây: {history.plant_name || "Không còn thông tin"}</Text>
-            {history.result_kind !== "plant" &&
-              <Text>Bệnh: {history.disease_name || "Không còn thông tin"}</Text>}
+            {history.result_kind !== "plant" && (
+              <Text>Bệnh: {history.disease_name || "Không còn thông tin"}</Text>
+            )}
             <Text style={styles.muted}>{feedbackTime(history.created_at)}</Text>
-            <Button mode="outlined" onPress={() => setExpanded(!expanded)}
-              accessibilityState={{ expanded }}>
+            <Button
+              mode="outlined"
+              onPress={() => setExpanded(!expanded)}
+              accessibilityState={{ expanded }}
+            >
               {expanded ? "Thu gọn kết quả" : "Xem kết quả đã liên kết"}
             </Button>
             {expanded && (
               <>
-                {Number.isFinite(history.confidence) &&
-                  <Text>Điểm tin cậy AI: {(history.confidence * 100).toFixed(1)}%</Text>}
-                <DiagnosisHistoryPhoto diagnosisId={history._id} hasImage={history.has_image}
-                  managerFeedbackId={managerFeedbackId} large />
+                {Number.isFinite(history.confidence) && (
+                  <Text>
+                    Điểm tin cậy AI: {(history.confidence * 100).toFixed(1)}%
+                  </Text>
+                )}
+                <DiagnosisHistoryPhoto
+                  diagnosisId={history._id}
+                  hasImage={history.has_image}
+                  managerFeedbackId={managerFeedbackId}
+                  large
+                />
               </>
             )}
           </>
-        ) : <Text>Kết quả đã liên kết không còn khả dụng.</Text>}
+        ) : (
+          <Text>Kết quả đã liên kết không còn khả dụng.</Text>
+        )}
       </Card.Content>
     </Card>
   );

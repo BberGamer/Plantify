@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Dialog, Portal, Text } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { colors, radius, spacing, typography } from "../../../src/theme";
-import { useTreatmentPreview } from "../../../src/hooks/useTreatment";
+import useTreatmentPreview from "../../../src/hooks/useTreatmentPreview";
 import {
   TreatmentHeader,
   TreatmentSafetyNotice,
   TreatmentStageCard,
   TreatmentStateView,
-  TreatmentStatusBadge,
+  TreatmentSummary,
 } from "../../../src/components/treatments";
 
 export default function TreatmentPreviewScreen() {
@@ -25,7 +25,8 @@ export default function TreatmentPreviewScreen() {
     diagnosisId: value(params.diagnosisId) || undefined,
     startDate: value(params.startDate) || undefined,
   });
-  const [confirming, setConfirming] = useState(false);
+  const contextKey = JSON.stringify([params.diseaseId, params.plantId, params.userPlantId, params.diagnosisId, params.startDate]);
+  const [confirming, setConfirming] = useState(null);
   const data = treatment.data;
   const selectedProtocol = treatment.protocols.find(
     (protocol) => protocol._id === treatment.selectedProtocolId,
@@ -57,6 +58,13 @@ export default function TreatmentPreviewScreen() {
 
   return <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
     <TreatmentHeader title="Xem trước phác đồ" onBack={() => router.back()} />
+    {!!treatment.recoveryError && <View style={styles.card}>
+      <Text accessibilityRole="alert" style={styles.error}>{treatment.recoveryError}</Text>
+      <Button onPress={treatment.checkStatus} disabled={treatment.generating || treatment.applying}>Kiểm tra trạng thái</Button>
+    </View>}
+    {data?.status === "in_progress" && <Button mode="outlined" onPress={() => router.replace({
+      pathname: "/customer/treatments/TreatmentList", params: { treatmentId: data._id },
+    })}>Mở lịch điều trị đang áp dụng</Button>}
     {treatment.loading || treatment.error ? (
       <TreatmentStateView loading={treatment.loading} error={treatment.error} onRetry={treatment.retry} />
     ) : !data ? <>
@@ -66,9 +74,14 @@ export default function TreatmentPreviewScreen() {
           <Text style={styles.body}>
             Chỉ những cây cùng loài với kết quả AI mới được hiển thị.
           </Text>
+          {treatment.gardenLoading && <Text>Đang tải cây trong vườn...</Text>}
+          {!!treatment.gardenError && <View>
+            <Text accessibilityRole="alert" style={styles.error}>{treatment.gardenError}</Text>
+            <Button onPress={treatment.retryGarden}>Thử tải lại cây</Button>
+          </View>}
           {treatment.gardenPlants.map((plant) => {
             const selected = treatment.selectedUserPlantId === plant._id;
-            const disabled = Boolean(plant.active_treatment);
+            const disabled = Boolean(plant.active_treatment) || treatment.recovering;
             return (
               <Pressable
                 key={plant._id}
@@ -91,13 +104,13 @@ export default function TreatmentPreviewScreen() {
                   </View>
                   <View style={[styles.radio, selected && styles.radioSelected]} />
                 </View>
-                {disabled && (
+                {!!plant.active_treatment && (
                   <Text style={styles.error}>Cây đang có đợt điều trị hoạt động.</Text>
                 )}
               </Pressable>
             );
           })}
-          {!treatment.gardenPlants.length && (
+          {!treatment.gardenLoading && !treatment.gardenError && !treatment.gardenPlants.length && (
             <View style={styles.missingPlant}>
               <Text style={styles.error}>
                 Vườn của bạn chưa có cây cùng loài với kết quả AI. Cần thêm cây này
@@ -165,7 +178,9 @@ export default function TreatmentPreviewScreen() {
         {!!treatment.generateError && <Text style={styles.error} accessibilityRole="alert">{treatment.generateError}</Text>}
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-        {treatment.gardenPlants.length ? (
+        {treatment.gardenLoading || treatment.gardenError ? (
+          <Button onPress={treatment.retryGarden} disabled={treatment.gardenLoading}>{treatment.gardenLoading ? "Đang tải cây..." : "Thử tải lại cây"}</Button>
+        ) : treatment.gardenPlants.length ? (
           <Button mode="contained" onPress={treatment.generate} loading={treatment.generating} disabled={!treatment.canGenerate || treatment.generating} contentStyle={styles.buttonContent}>Tạo lịch điều trị</Button>
         ) : (
           <Button mode="contained" icon="plus" onPress={addDetectedPlant} contentStyle={styles.buttonContent}>Thêm cây để áp dụng</Button>
@@ -173,14 +188,13 @@ export default function TreatmentPreviewScreen() {
       </View>
     </> : <>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.summary}>
-          <Image source={{ uri: data.plant.image_url }} style={styles.image} accessibilityLabel={`Ảnh cây ${data.plant.plant_nickname}`} />
-          <View style={styles.summaryText}>
-            <TreatmentStatusBadge status={data.status} />
-            <Text style={styles.plant}>{data.plant.plant_nickname}</Text>
-            <Text style={styles.disease}>{data.disease.disease_name}</Text>
-          </View>
-        </View>
+        <TreatmentSummary
+          plant={data.plant}
+          disease={data.disease}
+          status={data.status}
+          style={styles.summary}
+          imageStyle={styles.image}
+        />
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Thông tin bệnh</Text>
           <Text style={styles.body}>{data.disease.description}</Text>
@@ -202,16 +216,16 @@ export default function TreatmentPreviewScreen() {
         {!!treatment.applyError && <Text style={styles.error} accessibilityRole="alert">{treatment.applyError}</Text>}
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-        <Button mode="contained" onPress={() => setConfirming(true)} disabled={!treatment.canApply || treatment.applying} contentStyle={styles.buttonContent}>Áp dụng phác đồ điều trị</Button>
+        <Button mode="contained" onPress={() => setConfirming(contextKey)} disabled={!treatment.canApply || treatment.applying} contentStyle={styles.buttonContent}>Áp dụng phác đồ điều trị</Button>
       </View>
     </>}
     <Portal>
-      <Dialog visible={confirming} onDismiss={() => !treatment.applying && setConfirming(false)} dismissable={!treatment.applying}>
+      <Dialog visible={confirming === contextKey} onDismiss={() => !treatment.applying && setConfirming(false)} dismissable={!treatment.applying}>
         <Dialog.Title>Bắt đầu điều trị?</Dialog.Title>
         <Dialog.Content><Text>Lịch chăm sóc thường ngày của cây sẽ tạm dừng trong thời gian điều trị.</Text></Dialog.Content>
         <Dialog.Actions>
           <Button onPress={() => setConfirming(false)} disabled={treatment.applying}>Hủy</Button>
-          <Button onPress={apply} loading={treatment.applying} disabled={treatment.applying}>Bắt đầu điều trị</Button>
+          <Button onPress={apply} loading={treatment.applying} disabled={!treatment.canApply || treatment.applying}>Bắt đầu điều trị</Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>
@@ -222,11 +236,9 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1 },
   content: { width: "100%", maxWidth: 560, alignSelf: "center", padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg },
-  summary: { flexDirection: "row", gap: spacing.lg, backgroundColor: colors.white, padding: spacing.md, borderRadius: radius.card },
-  image: { width: 92, height: 104, borderRadius: radius.md, backgroundColor: colors.lightMint },
+  summary: { backgroundColor: colors.white, padding: spacing.md, borderRadius: radius.card },
+  image: { width: 92, height: 104, borderRadius: radius.md },
   summaryText: { flex: 1, minWidth: 0, justifyContent: "center", gap: spacing.xs },
-  plant: { ...typography.section, color: colors.textPrimary },
-  disease: { ...typography.body, color: colors.textSecondary },
   card: { backgroundColor: colors.white, borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm },
   section: { gap: spacing.md },
   sectionTitle: { ...typography.section, color: colors.textPrimary },

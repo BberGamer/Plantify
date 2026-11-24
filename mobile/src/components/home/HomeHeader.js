@@ -6,7 +6,14 @@ import useHomeHeader from "../../hooks/useHomeHeader";
 import { colors } from "../../theme/colors";
 
 export default function HomeHeader() {
-  const { user, openAdmin, openProfile, openNotifications, unreadCount, roleLabel } = useHomeHeader();
+  const {
+    user,
+    openAdmin,
+    openProfile,
+    openNotifications,
+    unreadCount,
+    roleLabel,
+  } = useHomeHeader();
 
   const initials = user?.fullName
     ? user.fullName
@@ -40,12 +47,25 @@ export default function HomeHeader() {
             </TouchableOpacity>
           )}
           <View style={styles.bellContainer}>
-            <IconButton icon="bell-outline"
-              accessibilityLabel={unreadCount > 0 ? `Mở thông báo, ${unreadCount} mục chưa đọc` : "Mở thông báo"}
-              onPress={openNotifications} iconColor="#183B2B" size={20} style={styles.bellButton} />
-            {unreadCount > 0 && <View pointerEvents="none" style={styles.unreadBadge}>
-              <Badge size={18}>{unreadCount > 99 ? "99+" : unreadCount}</Badge>
-            </View>}
+            <IconButton
+              icon="bell-outline"
+              accessibilityLabel={
+                unreadCount > 0
+                  ? `Mở thông báo, ${unreadCount} mục chưa đọc`
+                  : "Mở thông báo"
+              }
+              onPress={openNotifications}
+              iconColor="#183B2B"
+              size={20}
+              style={styles.bellButton}
+            />
+            {unreadCount > 0 && (
+              <View pointerEvents="none" style={styles.unreadBadge}>
+                <Badge size={18}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </Badge>
+              </View>
+            )}
           </View>
           <TouchableOpacity
             onPress={openProfile}

@@ -23,7 +23,8 @@ function notifyChanged(userId) {
   for (const listener of subscribers.get(String(userId)) || []) listener();
 }
 
-const fields = "title message scheduled_for is_read type treatment_schedule_id care_schedule_id user_plant_id occurrence_date feedback_id";
+const fields =
+  "title message scheduled_for is_read type treatment_schedule_id care_schedule_id user_plant_id occurrence_date feedback_id";
 const visible = (userId) => ({
   user_id: userId,
   scheduled_for: { $lte: new Date() },
@@ -31,8 +32,11 @@ const visible = (userId) => ({
   $or: [
     { status: { $in: ["published", "sent"] } },
     { is_read: true },
-    { status: "scheduled", dispatch_managed: { $exists: false },
-      scheduled_for: { $lt: new Date(Date.now() - 86400000) } },
+    {
+      status: "scheduled",
+      dispatch_managed: { $exists: false },
+      scheduled_for: { $lt: new Date(Date.now() - 86400000) },
+    },
   ],
 });
 
@@ -41,58 +45,114 @@ const list = async (userId, query = {}) => {
   const limit = v.positiveInteger(query.limit, 20, "limit", 50);
   const filter = visible(userId);
   const [items, total] = await Promise.all([
-    Notification.find(filter).select(fields)
-      .sort({ scheduled_for: -1, _id: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    Notification.find(filter)
+      .select(fields)
+      .sort({ scheduled_for: -1, _id: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
     Notification.countDocuments(filter),
   ]);
   const totalPages = Math.ceil(total / limit);
-  return { items, pagination: { page, limit, total, totalPages,
-    hasNextPage: page < totalPages, hasPrevPage: page > 1 && total > 0 } };
+  return {
+    items,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1 && total > 0,
+    },
+  };
 };
 
 async function unreadCount(userId) {
-  const count = await Notification.countDocuments({ ...visible(userId), is_read: { $ne: true } });
+  const count = await Notification.countDocuments({
+    ...visible(userId),
+    is_read: { $ne: true },
+  });
   return { count };
 }
 
 async function detail(userId, id) {
   v.id(id);
-  const item = await Notification.findOne({ ...visible(userId), _id: id }).select(fields).lean();
-  if (!item) throw new AppError("NOTIFICATION_NOT_FOUND", 404, "Không tìm thấy thông báo.");
+  const item = await Notification.findOne({ ...visible(userId), _id: id })
+    .select(fields)
+    .lean();
+  if (!item)
+    throw new AppError(
+      "NOTIFICATION_NOT_FOUND",
+      404,
+      "Không tìm thấy thông báo.",
+    );
   if (item.type === "feedback_reply") {
-    const available = item.feedback_id && await Feedback.exists({ _id: item.feedback_id, user_id: userId });
+    const available =
+      item.feedback_id &&
+      (await Feedback.exists({ _id: item.feedback_id, user_id: userId }));
     return { ...item, target_available: !!available };
   }
-  const schedule = item.type === "care"
-    ? await Care.findOne({ _id: item.care_schedule_id, user_id: userId, is_active: true }).select("user_plant_id").lean()
-    : await Treatment.findOne({ _id: item.treatment_schedule_id, user_id: userId }).select("user_plant_id").lean();
-  const available = schedule && await Plant.exists({
-    _id: schedule.user_plant_id, user_id: userId, archived_at: null,
-  });
+  const schedule =
+    item.type === "care"
+      ? await Care.findOne({
+          _id: item.care_schedule_id,
+          user_id: userId,
+          is_active: true,
+        })
+          .select("user_plant_id")
+          .lean()
+      : await Treatment.findOne({
+          _id: item.treatment_schedule_id,
+          user_id: userId,
+        })
+          .select("user_plant_id")
+          .lean();
+  const available =
+    schedule &&
+    (await Plant.exists({
+      _id: schedule.user_plant_id,
+      user_id: userId,
+      archived_at: null,
+    }));
   return { ...item, target_available: !!available };
 }
 
 const markRead = async (userId, id) => {
   v.id(id);
   const item = await Notification.findOneAndUpdate(
-    { ...visible(userId), _id: id }, { $set: { is_read: true } }, { new: true },
-  ).select("_id is_read").lean();
-  if (!item) throw new AppError("NOTIFICATION_NOT_FOUND", 404, "Không tìm thấy thông báo.");
+    { ...visible(userId), _id: id },
+    { $set: { is_read: true } },
+    { new: true },
+  )
+    .select("_id is_read")
+    .lean();
+  if (!item)
+    throw new AppError(
+      "NOTIFICATION_NOT_FOUND",
+      404,
+      "Không tìm thấy thông báo.",
+    );
   notifyChanged(userId);
   return item;
 };
 
 async function markAllRead(userId) {
   const { modifiedCount } = await Notification.updateMany(
-    { ...visible(userId), is_read: { $ne: true } }, { $set: { is_read: true } },
+    { ...visible(userId), is_read: { $ne: true } },
+    { $set: { is_read: true } },
   );
   if (modifiedCount > 0) notifyChanged(userId);
   return { modifiedCount };
 }
 
 async function preferences(userId) {
-  const user = await User.findById(userId).select("notification_preferences").lean();
-  return { treatment_reminders: user?.notification_preferences?.treatment_reminders !== false };
+  const user = await User.findById(userId)
+    .select("notification_preferences")
+    .lean();
+  return {
+    treatment_reminders:
+      user?.notification_preferences?.treatment_reminders !== false,
+  };
 }
 
 async function updatePreferences(userId, input) {
@@ -101,9 +161,24 @@ async function updatePreferences(userId, input) {
   if (typeof enabled !== "boolean") v.invalid("treatment_reminders");
   const field = "notification_preferences.treatment_reminders";
   const update = { [field]: enabled };
-  if (enabled) update["notification_preferences.treatment_reminders_enabled_at"] = new Date();
-  await User.updateOne({ _id: userId, [field]: enabled ? false : { $ne: false } }, { $set: update });
+  if (enabled)
+    update["notification_preferences.treatment_reminders_enabled_at"] =
+      new Date();
+  await User.updateOne(
+    { _id: userId, [field]: enabled ? false : { $ne: false } },
+    { $set: update },
+  );
   return preferences(userId);
 }
 
-module.exports = { list, unreadCount, detail, markRead, markAllRead, preferences, updatePreferences, subscribe, notifyChanged };
+module.exports = {
+  list,
+  unreadCount,
+  detail,
+  markRead,
+  markAllRead,
+  preferences,
+  updatePreferences,
+  subscribe,
+  notifyChanged,
+};
