@@ -159,12 +159,29 @@ Tích hợp dùng [Upload API](https://cloudinary.com/documentation/image_upload
 và asset authenticated của Cloudinary, không thêm SDK/dependency. Đã thử upload,
 đọc và xóa một ảnh mẫu thật; không tạo bản ghi DB thử hoặc chuyển ảnh cũ lên cloud.
 
-Danh mục và mapping được lưu trong DB. Runtime không dùng danh sách seed hoặc
+Danh mục và mapping được lưu trong DB. `diagnosis_mappings` là nguồn duy nhất
+ánh xạ class checkpoint → plant_id/disease_id theo model run/hash/class_id.
+Manager chọn nhãn AI riêng; sửa tên không tạo/chuyển assignment.
+Thêm cây/bệnh không làm model học class mới, không thay checkpoint/trọng số,
+preprocessing hoặc thứ tự class. Lưu danh mục, liên kết cây–bệnh và assignment
+vẫn dùng transaction; chuyển nhãn có cảnh báo và kiểm tra xung đột/liên kết.
+
+Đã bỏ `diagnosis_aliases` (tên gọi khác) và `identity_sources` (nguồn tài liệu)
+khỏi schema, form web/mobile và hợp đồng ghi API. Client cũ gửi hai field này sẽ
+bị bỏ qua theo allowlist, không được lưu lại. Tìm kiếm/RAG chỉ dùng tên chính,
+tên khoa học và nội dung. Mapping AI vẫn chỉ nằm trong `diagnosis_mappings`.
+Ngày 25/11/2026 đã xóa hai field này khỏi MongoDB bằng transaction: 29 cây và
+13 bệnh được cập nhật; không đổi các field còn lại hoặc `diagnosis_mappings`.
+Tên bệnh và triệu chứng bắt buộc khi tạo/sửa. Code đã bỏ cơ chế
+`content_status` verified/unverified; field cũ trong DB không bị xóa và không điều khiển
+API/RAG. `status` active/inactive và trạng thái duyệt phác đồ được giữ riêng.
+
+Runtime không dùng danh sách seed hoặc
 đoán lại tên/alias để lấp mapping thiếu.
 
 Ngày 24/11/2026 đã khôi phục collection mapping sau khi bị xóa: 78 mapping đúng
 checkpoint hiện tại, 73 ready và 5 pending; tái sử dụng 29 cây và các bệnh có sẵn.
-Seed chỉ ghép bệnh bằng alias `diagnosis_aliases` bằng chính xác nhãn checkpoint,
+Trong lần khôi phục dữ liệu lịch sử này, seed đã ghép bệnh bằng alias `diagnosis_aliases` bằng chính xác nhãn checkpoint,
 thêm 2 liên kết còn thiếu (dưa chuột–phấn trắng, cà chua–mốc sương), không tạo bệnh
 hoặc sửa/phê duyệt phác đồ. Năm nhãn chưa có alias chính xác giữ pending:
 `apple rust`, `banana panama disease`, `bell pepper leaf spot`, `garlic leaf blight`,
@@ -458,15 +475,32 @@ Kiến thức tiếp tục được quản lý ở các tab Cây trồng, Bệnh
 Luồng chat: xác thực → đọc danh mục hiện tại → chia đoạn → xếp hạng BM25 → đưa
 tối đa 6 đoạn/12.000 ký tự vào prompt → gọi LLM hiện có. Đây là RAG từ khóa,
 chuẩn hóa tiếng Việt không dấu; chưa có embedding/vector search hoặc reranker ngữ nghĩa.
-Không thêm dependency, dịch vụ vector hoặc migration. Tên cây/tên khoa học/alias giới hạn
+Không thêm dependency, dịch vụ vector hoặc migration. Tên cây/tên khoa học giới hạn
 nguồn theo cây; câu nối tiếp ngắn có thể kế thừa chủ thể từ câu hỏi người dùng gần nhất.
 Lịch sử AI không phải nguồn kiến thức đã xác minh.
 
-Nguồn: `plants.is_published=true`; `plant_diseases.status=active` và
-`content_status=verified`; phác đồ `approved`, không phải `ai_unverified`, qua validation
+Chat AI cũng đọc trực tiếp DOCX trong `backend/data/treatment-templates` bằng Mammoth
+đã có sẵn, chia đoạn theo từng mục `Bệnh:` và trả nguồn `type=docx` với tên file,
+mục bệnh, thời điểm file và hash đoạn. Không cần import nội dung file vào MongoDB.
+Cây và bệnh của nguồn DOCX lấy trực tiếp từ `Cây áp dụng:` và `Bệnh:` trong file,
+không cần bản ghi cây/bệnh, trạng thái hay liên kết trong MongoDB; tên file tùy ý.
+Chủ thể tài liệu có định danh riêng để giới hạn theo cây và hỗ trợ câu hỏi nối tiếp,
+không tạo/sửa danh mục hoặc mapping AI. File không có các mục này không được dùng.
+Nội dung được cache theo hash; sửa/xóa file được phản ánh ở lượt chat tiếp theo,
+không cache điều kiện danh mục DB. File tạm Word `~$` bị bỏ qua.
+Giới hạn 100 DOCX, 5 MB/file, tổng 20 MB mỗi lượt; nội dung mỗi file
+phải có 50–250.000 ký tự. File bị lỗi đọc/giải mã trả lỗi truy xuất 503.
+DOCX là tài liệu tham khảo: có thể trả lời chăm sóc/nhận biết/phòng ngừa và tóm tắt
+các bước/lịch mẫu trong file, không tự được duyệt hoặc áp dụng lịch cho người dùng;
+thuốc, hoạt chất và liều lượng vẫn cần phác đồ approved phù hợp.
+Danh sách phác đồ đã duyệt vẫn chỉ lấy từ DB. Tổng đoạn DB + DOCX giữ giới hạn
+20.000, tối đa 6 đoạn/12.000 ký tự vào prompt như trước.
+
+Nguồn MongoDB: `plants.is_published=true`; `plant_diseases.status=active` còn liên kết với cây xuất bản;
+phác đồ `approved`, không phải `ai_unverified`, qua validation
 schema, thuộc bệnh đang active và còn liên kết với cây xuất bản. Việc duyệt phác đồ
-độc lập với `content_status` của nội dung mô tả bệnh; mô tả bệnh chưa xác minh vẫn không
-được đưa vào RAG. Câu hỏi về phác đồ/điều trị ưu tiên các đoạn phác đồ phù hợp. Không dùng trường
+độc lập với nội dung mô tả bệnh. Nội dung bệnh active do manager nhập được chatbot sử dụng ngay,
+không qua bước xác minh nội dung riêng. Câu hỏi về phác đồ/điều trị ưu tiên các đoạn phác đồ phù hợp. Không dùng trường
 `disease.treatment_protocol` legacy làm nguồn thuốc/liều lượng. Không đọc dữ liệu cá nhân
 của vườn/tài khoản/ví cho RAG. Đọc lại danh mục mỗi lượt để phản ánh thay đổi/gỡ duyệt.
 Giới hạn 2.000 bản ghi mỗi loại và 20.000 đoạn; vượt giới hạn hoặc DB lỗi trả
