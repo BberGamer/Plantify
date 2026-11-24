@@ -1,6 +1,7 @@
+import ScreenHeader from "../common/ScreenHeader";
 import { componentStyles } from "../../theme/componentStyles";
 import { StyleSheet, View } from "react-native";
-import { Button, Dialog, IconButton, Portal, Text } from "react-native-paper";
+import { Button, Dialog, Portal, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { colors, spacing } from "../../theme";
@@ -11,20 +12,6 @@ export const feedbackStyles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background
-  },
-  header: {
-    minHeight: 64,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.white,
-    paddingRight: spacing.md
-  },
-  title: {
-    flex: 1,
-    color: colors.textPrimary,
-    fontWeight: "700"
   },
   content: {
     padding: 20,
@@ -80,24 +67,9 @@ export default function FeedbackFrame({ title, fallback, busy, children }) {
       style={feedbackStyles.screen}
       edges={["top", "left", "right", "bottom"]}
     >
-      <View style={feedbackStyles.header}>
-        {!!fallback && (
-          <IconButton
-            icon="arrow-left"
-            accessibilityLabel="Quay lại"
-            disabled={busy}
-            onPress={() =>
-              router.canGoBack() ? router.back() : router.replace(fallback)
-            }
-          />
-        )}
-        <Text
-          variant="titleLarge"
-          style={[feedbackStyles.title, !fallback && { padding: spacing.lg }]}
-        >
-          {title}
-        </Text>
-      </View>
+      <ScreenHeader title={title} disabled={busy} onBack={fallback ? () =>
+        router.canGoBack() ? router.back() : router.replace(fallback)
+      : undefined} />
       {children}
     </SafeAreaView>
   );
