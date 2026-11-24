@@ -6,7 +6,12 @@ import useAuthStore from "../../store/authStore";
 // Blur cũng kết thúc ngữ cảnh, kể cả khi navigator giữ màn hình mounted.
 // Auth establish/logout tự đổi phiên: các caller đó dùng trackSession=false,
 // capture(false), rồi để store xác minh thế hệ phiên của chính thao tác.
-export default function useScreenScope(onFocus, onBlur, contextKey, trackSession = true) {
+export default function useScreenScope(
+  onFocus,
+  onBlur,
+  contextKey,
+  trackSession = true,
+) {
   const sessionVersion = useAuthStore((state) =>
     trackSession ? state.sessionVersion : null,
   );

@@ -74,8 +74,18 @@ export default function TreatmentTaskEditDialog({
     <Dialog visible={Boolean(task)} onDismiss={onDismiss} dismissable={!busy}>
       <Dialog.Title>Chỉnh sửa công việc điều trị</Dialog.Title>
       <Dialog.ScrollArea style={styles.scrollArea}>
-        <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-          <TextInput mode="outlined" label="Tiêu đề" value={form.title} onChangeText={change("title")} maxLength={200} disabled={busy} />
+        <ScrollView
+          contentContainerStyle={styles.form}
+          keyboardShouldPersistTaps="handled"
+        >
+          <TextInput
+            mode="outlined"
+            label="Tiêu đề"
+            value={form.title}
+            onChangeText={change("title")}
+            maxLength={200}
+            disabled={busy}
+          />
           <View style={styles.dateTimeRow}>
             <DateTimePickerField
               type="date"
@@ -96,17 +106,47 @@ export default function TreatmentTaskEditDialog({
               />
             </View>
           </View>
-          <TextInput mode="outlined" label="Hướng dẫn" value={form.instructions} onChangeText={change("instructions")} multiline maxLength={2000} disabled={busy} />
-          <TextInput mode="outlined" label="Liều lượng / lượng nước / dụng cụ" value={form.dosage_note} onChangeText={change("dosage_note")} multiline maxLength={2000} disabled={busy} />
-          <TextInput mode="outlined" label="Lưu ý quan trọng" value={form.important_note} onChangeText={change("important_note")} multiline maxLength={2000} disabled={busy} />
+          <TextInput
+            mode="outlined"
+            label="Hướng dẫn"
+            value={form.instructions}
+            onChangeText={change("instructions")}
+            multiline
+            maxLength={2000}
+            disabled={busy}
+          />
+          <TextInput
+            mode="outlined"
+            label="Liều lượng / lượng nước / dụng cụ"
+            value={form.dosage_note}
+            onChangeText={change("dosage_note")}
+            multiline
+            maxLength={2000}
+            disabled={busy}
+          />
+          <TextInput
+            mode="outlined"
+            label="Lưu ý quan trọng"
+            value={form.important_note}
+            onChangeText={change("important_note")}
+            multiline
+            maxLength={2000}
+            disabled={busy}
+          />
           {!!(error || serverError) && (
-            <HelperText type="error" visible>{error || serverError}</HelperText>
+            <HelperText type="error" visible>
+              {error || serverError}
+            </HelperText>
           )}
         </ScrollView>
       </Dialog.ScrollArea>
       <Dialog.Actions>
-        <Button onPress={onDismiss} disabled={busy}>Hủy</Button>
-        <Button onPress={submit} loading={busy} disabled={busy}>Lưu thay đổi</Button>
+        <Button onPress={onDismiss} disabled={busy}>
+          Hủy
+        </Button>
+        <Button onPress={submit} loading={busy} disabled={busy}>
+          Lưu thay đổi
+        </Button>
       </Dialog.Actions>
     </Dialog>
   );
@@ -115,6 +155,10 @@ export default function TreatmentTaskEditDialog({
 const styles = StyleSheet.create({
   scrollArea: { maxHeight: 520 },
   form: { gap: spacing.md, paddingVertical: spacing.md },
-  dateTimeRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
+  dateTimeRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md,
+  },
   timeField: { width: 150 },
 });

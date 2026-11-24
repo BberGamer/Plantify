@@ -28,7 +28,12 @@ export default function useRegister() {
   const pending = useRef(false);
   const mounted = useRef(false);
   const countdown = useOtpCountdown(step === 2);
-  const { capture, isActive } = useScreenScope(undefined, undefined, undefined, false);
+  const { capture, isActive } = useScreenScope(
+    undefined,
+    undefined,
+    undefined,
+    false,
+  );
 
   useEffect(() => {
     mounted.current = true;
@@ -38,14 +43,24 @@ export default function useRegister() {
   }, []);
 
   const changeField = (key, value) => {
-    if (pending.current || step !== 1 || !Object.prototype.hasOwnProperty.call(form, key)) return;
+    if (
+      pending.current ||
+      step !== 1 ||
+      !Object.prototype.hasOwnProperty.call(form, key)
+    )
+      return;
     setForm((previous) => ({ ...previous, [key]: value }));
     setErrorMsg("");
     setSuccessMsg("");
   };
 
   const send = async (resend) => {
-    if (pending.current || !isActive() || (resend ? step !== 2 || !countdown.canResend() : step !== 1)) return;
+    if (
+      pending.current ||
+      !isActive() ||
+      (resend ? step !== 2 || !countdown.canResend() : step !== 1)
+    )
+      return;
     const isCurrent = capture();
     const message = validateRegistration(form);
     if (message) {
@@ -74,9 +89,7 @@ export default function useRegister() {
         setSuccessMsg("Mã xác thực mới đã được gửi lại tới email của bạn.");
     } catch (error) {
       if (isCurrent())
-        setErrorMsg(
-          getErrorMessage(error, "Gửi mã xác thực thất bại."),
-        );
+        setErrorMsg(getErrorMessage(error, "Gửi mã xác thực thất bại."));
     } finally {
       pending.current = false;
       if (mounted.current) setLoading(false);
@@ -109,17 +122,23 @@ export default function useRegister() {
         );
       }
       if (!inScreen() || !isSessionCurrent(origin)) return;
-      const result = await setAuthSession(response.data.user, response.data.token, origin, inScreen);
+      const result = await setAuthSession(
+        response.data.user,
+        response.data.token,
+        origin,
+        inScreen,
+      );
       if (!inScreen()) return;
       if (result.success) {
-        setForm((previous) => ({ ...previous, password: "", confirmPassword: "" }));
+        setForm((previous) => ({
+          ...previous,
+          password: "",
+          confirmPassword: "",
+        }));
       } else if (!result.cancelled) setErrorMsg(result.error);
-
     } catch (error) {
       if (inScreen() && isSessionCurrent(origin))
-        setErrorMsg(
-          getErrorMessage(error, "Không thể xác thực mã."),
-        );
+        setErrorMsg(getErrorMessage(error, "Không thể xác thực mã."));
     } finally {
       pending.current = false;
       if (mounted.current) setLoading(false);

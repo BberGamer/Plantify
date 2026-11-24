@@ -1,10 +1,14 @@
 // Thông báo theo code là hợp đồng chính; không công khai message tùy ý từ server.
 const ERROR_MESSAGES = {
-  DIAGNOSIS_PHOTO_NOT_CONFIGURED: "Nơi lưu ảnh chẩn đoán chưa được cấu hình. Vui lòng liên hệ hỗ trợ.",
-  DIAGNOSIS_PHOTO_STORAGE_UNAVAILABLE: "Chưa lưu hoặc tải được ảnh chẩn đoán. Vui lòng thử lại.",
-  DIAGNOSIS_HISTORY_NOT_FOUND: "Không tìm thấy chẩn đoán trong lịch sử của bạn.",
+  DIAGNOSIS_PHOTO_NOT_CONFIGURED:
+    "Nơi lưu ảnh chẩn đoán chưa được cấu hình. Vui lòng liên hệ hỗ trợ.",
+  DIAGNOSIS_PHOTO_STORAGE_UNAVAILABLE:
+    "Chưa lưu hoặc tải được ảnh chẩn đoán. Vui lòng thử lại.",
+  DIAGNOSIS_HISTORY_NOT_FOUND:
+    "Không tìm thấy chẩn đoán trong lịch sử của bạn.",
   DIAGNOSIS_IMAGE_NOT_FOUND: "Ảnh của lần chẩn đoán không còn khả dụng.",
-  DIAGNOSIS_HISTORY_LOAD_FAILED: "Không thể tải lịch sử chẩn đoán. Vui lòng thử lại.",
+  DIAGNOSIS_HISTORY_LOAD_FAILED:
+    "Không thể tải lịch sử chẩn đoán. Vui lòng thử lại.",
   DIAGNOSIS_INVALID_PHOTO:
     "Không đọc được ảnh. Vui lòng chụp hoặc chọn ảnh khác.",
   DIAGNOSIS_IMAGE_TOO_LARGE: "Ảnh tối đa 10 MB. Vui lòng chọn ảnh nhỏ hơn.",
@@ -32,7 +36,7 @@ const ERROR_MESSAGES = {
   DIAGNOSIS_INPUT_GUARD_UNAVAILABLE:
     "Dịch vụ kiểm tra ảnh chưa sẵn sàng. Vui lòng thử lại sau.",
   DIAGNOSIS_HISTORY_UNAVAILABLE:
-      "Chưa lưu được lịch sử nhận diện/chẩn đoán. Vui lòng thử lại sau.",
+    "Chưa lưu được lịch sử nhận diện/chẩn đoán. Vui lòng thử lại sau.",
 
   FINANCE_VALIDATION:
     "Thông tin giao dịch chưa hợp lệ. Vui lòng kiểm tra nội dung đã nhập.",
@@ -49,7 +53,8 @@ const ERROR_MESSAGES = {
     "Tài khoản Free được thêm tối đa 3 cây trong vườn. Hãy lưu trữ một cây hoặc mua gói VIP để thêm cây mới.",
   FEEDBACK_VIP_REQUIRED: "Bạn cần gói VIP còn hạn để gửi đóng góp.",
   FEEDBACK_NOT_FOUND: "Không tìm thấy đóng góp.",
-  FEEDBACK_REVIEW_CHANGED: "Đóng góp đã được cập nhật. Hãy tải lại trước khi xử lý.",
+  FEEDBACK_REVIEW_CHANGED:
+    "Đóng góp đã được cập nhật. Hãy tải lại trước khi xử lý.",
   VIP_REQUIRED:
     "Nhận diện và chẩn đoán AI cần gói VIP còn hạn. Hãy vào Tài khoản → Tài khoản VIP để mua hoặc gia hạn gói.",
   CHAT_RETRIEVAL_UNAVAILABLE:
@@ -83,10 +88,13 @@ const ERROR_MESSAGES = {
     "Máy chủ chưa cấu hình lưu ảnh. Bạn có thể bỏ ảnh để lưu cây trước.",
   PLANT_PHOTO_NOT_CONFIGURED:
     "Máy chủ chưa cấu hình lưu ảnh. Bạn có thể bỏ ảnh để lưu cây trước.",
-  GARDEN_PHOTO_STORAGE_UNAVAILABLE: "Chưa tải được ảnh vườn lên. Vui lòng thử lại.",
-  PLANT_PHOTO_STORAGE_UNAVAILABLE: "Chưa tải được ảnh cây lên. Vui lòng thử lại.",
+  GARDEN_PHOTO_STORAGE_UNAVAILABLE:
+    "Chưa tải được ảnh vườn lên. Vui lòng thử lại.",
+  PLANT_PHOTO_STORAGE_UNAVAILABLE:
+    "Chưa tải được ảnh cây lên. Vui lòng thử lại.",
   DISEASE_PHOTO_NOT_CONFIGURED: "Máy chủ chưa cấu hình lưu ảnh bệnh.",
-  DISEASE_PHOTO_STORAGE_UNAVAILABLE: "Chưa tải được ảnh bệnh lên. Vui lòng thử lại.",
+  DISEASE_PHOTO_STORAGE_UNAVAILABLE:
+    "Chưa tải được ảnh bệnh lên. Vui lòng thử lại.",
   AI_NOT_CONFIGURED: "Trợ lý AI chưa được cấu hình. Vui lòng thử lại sau.",
   AI_TIMEOUT: "AI trả lời quá lâu. Vui lòng thử lại.",
   AI_BUSY: "Trợ lý AI đang bận. Vui lòng thử lại sau.",
@@ -94,7 +102,8 @@ const ERROR_MESSAGES = {
   AI_INVALID_RESPONSE:
     "Trợ lý AI trả về dữ liệu không hợp lệ. Vui lòng thử lại.",
   AI_REFERENCE_INCOMPLETE: "Dữ liệu nguồn chưa đủ để tạo phác đồ 14 ngày.",
-  AI_UNGROUNDED_RESPONSE: "AI đã tạo nội dung không có trong dữ liệu nguồn nên bản nháp không được lưu.",
+  AI_UNGROUNDED_RESPONSE:
+    "AI đã tạo nội dung không có trong dữ liệu nguồn nên bản nháp không được lưu.",
   APPROVED_PROTOCOL_NOT_FOUND: "Chưa có phác đồ được phê duyệt cho bệnh này.",
   ACTIVE_TREATMENT_EXISTS: "Cây đang có một đợt điều trị hoạt động.",
   INVALID_TREATMENT_TRANSITION:
@@ -145,7 +154,8 @@ const ERROR_MESSAGES = {
   RESOURCE_NOT_FOUND: "Không tìm thấy tài nguyên.",
   DUPLICATE_RESOURCE: "Dữ liệu đã được sử dụng.",
   SELF_LOCK_FORBIDDEN: "Bạn không thể tự khóa tài khoản của chính mình.",
-  USER_STATUS_CONFLICT: "Trạng thái tài khoản đã thay đổi. Vui lòng thực hiện lại.",
+  USER_STATUS_CONFLICT:
+    "Trạng thái tài khoản đã thay đổi. Vui lòng thực hiện lại.",
   SELF_ROLE_CHANGE_FORBIDDEN:
     "Bạn không thể tự hạ quyền vai trò quản trị viên của chính mình.",
   AUTH_REQUIRED: "Vui lòng đăng nhập để tiếp tục.",
@@ -245,7 +255,11 @@ export default function getErrorMessage(
   const data = error?.response?.data;
   const code = data?.code || error?.code;
   if (code === "FEEDBACK_INVALID_IMAGES") {
-    return data?.errors?.images || error?.message || "Vui lòng kiểm tra ảnh đính kèm.";
+    return (
+      data?.errors?.images ||
+      error?.message ||
+      "Vui lòng kiểm tra ảnh đính kèm."
+    );
   }
   if (
     code === "FINANCE_VALIDATION" &&

@@ -14,32 +14,32 @@ export default function PlantCareFields({ value, disabled, onChange }) {
       </Text>
       <View style={styles.careCard}>
         {[
-["light", "Ánh sáng", "sunny-outline", "Ví dụ: Ánh sáng gián tiếp"],
-["water", "Tưới nước", "water-outline", "Ví dụ: 2–3 lần mỗi tuần"],
-["temperature", "Nhiệt độ", "thermometer-outline", "Ví dụ: 20–35°C"],
-["humidity", "Độ ẩm", "cloud-outline", "Ví dụ: Trung bình"],
+          ["light", "Ánh sáng", "sunny-outline", "Ví dụ: Ánh sáng gián tiếp"],
+          ["water", "Tưới nước", "water-outline", "Ví dụ: 2–3 lần mỗi tuần"],
+          ["temperature", "Nhiệt độ", "thermometer-outline", "Ví dụ: 20–35°C"],
+          ["humidity", "Độ ẩm", "cloud-outline", "Ví dụ: Trung bình"],
         ].map(([key, label, icon, placeholder], index, fields) => (
-<View
-  key={key}
-  style={[
-    styles.careRow,
-    index === fields.length - 1 && styles.careRowLast,
-  ]}
->
-  <View style={styles.careLabel}>
-    <Ionicons name={icon} size={17} color={colors.primaryLight} />
-    <Text style={styles.careLabelText}>{label}</Text>
-  </View>
-  <TextInput
-    value={typeof value[key] === "string" ? value[key] : ""}
-    onChangeText={(text) => onChange(key, text)}
-    editable={!disabled}
-    accessibilityLabel={label}
-    placeholder={placeholder}
-    placeholderTextColor={colors.textMuted}
-    style={styles.careInput}
-  />
-</View>
+          <View
+            key={key}
+            style={[
+              styles.careRow,
+              index === fields.length - 1 && styles.careRowLast,
+            ]}
+          >
+            <View style={styles.careLabel}>
+              <Ionicons name={icon} size={17} color={colors.primaryLight} />
+              <Text style={styles.careLabelText}>{label}</Text>
+            </View>
+            <TextInput
+              value={typeof value[key] === "string" ? value[key] : ""}
+              onChangeText={(text) => onChange(key, text)}
+              editable={!disabled}
+              accessibilityLabel={label}
+              placeholder={placeholder}
+              placeholderTextColor={colors.textMuted}
+              style={styles.careInput}
+            />
+          </View>
         ))}
       </View>
     </View>

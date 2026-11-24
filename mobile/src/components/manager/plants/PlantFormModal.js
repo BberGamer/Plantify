@@ -36,7 +36,9 @@ export default function PlantFormModal({
   onChoosePhoto,
   onRemovePhoto,
 }) {
-  const close = () => { if (!saving) onClose(); };
+  const close = () => {
+    if (!saving) onClose();
+  };
   const imageUri = photo?.uri || form.plant_image || null;
   const hasImage = typeof imageUri === "string" && imageUri.trim().length > 0;
   return (
@@ -52,11 +54,15 @@ export default function PlantFormModal({
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           <View style={styles.modalHeader}>
-            <Button onPress={close} disabled={saving}>Hủy</Button>
+            <Button onPress={close} disabled={saving}>
+              Hủy
+            </Button>
             <Text style={styles.modalTitle}>
               {editing ? "Cập nhật cây" : "Thêm cây mới"}
             </Text>
-            <Button onPress={onSave} disabled={saving} loading={saving}>Lưu</Button>
+            <Button onPress={onSave} disabled={saving} loading={saving}>
+              Lưu
+            </Button>
           </View>
           <ScrollView
             keyboardShouldPersistTaps="handled"
@@ -164,7 +170,9 @@ export default function PlantFormModal({
               >
                 {hasImage ? "Chọn ảnh khác từ máy" : "Tải ảnh từ máy"}
               </Button>
-              <Text style={styles.photoHint}>JPG / PNG · Tối đa 10 MB · Ảnh được tải lên khi lưu cây</Text>
+              <Text style={styles.photoHint}>
+                JPG / PNG · Tối đa 10 MB · Ảnh được tải lên khi lưu cây
+              </Text>
               {hasImage ? (
                 <Button disabled={saving} onPress={onRemovePhoto}>
                   {photo ? "Bỏ ảnh đã chọn" : "Xóa ảnh hiện tại"}
@@ -219,8 +227,23 @@ const styles = StyleSheet.create({
   },
   multilineInput: { minHeight: 78 },
   photoSection: { gap: 10, marginBottom: 22 },
-  photoPreview: { width: "100%", height: 200, borderRadius: 16, backgroundColor: colors.lightMint, resizeMode: "contain" },
-  photoPlaceholder: { height: 110, borderWidth: 1, borderStyle: "dashed", borderColor: colors.inputBorder, borderRadius: 16, justifyContent: "center", alignItems: "center", backgroundColor: colors.white },
+  photoPreview: {
+    width: "100%",
+    height: 200,
+    borderRadius: 16,
+    backgroundColor: colors.lightMint,
+    resizeMode: "contain",
+  },
+  photoPlaceholder: {
+    height: 110,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: colors.inputBorder,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.white,
+  },
   photoHint: { fontSize: 12, color: colors.textSecondary, lineHeight: 18 },
   categoryScroll: { flexGrow: 0, marginBottom: 19 },
   categoryChip: {

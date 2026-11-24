@@ -19,7 +19,9 @@ export default async function saveCatalogEntry(method, url, data, photo) {
   }
   const response = await api[method](url, body, {
     sessionContext,
-    headers: { "Content-Type": Platform.OS === "web" ? false : "multipart/form-data" },
+    headers: {
+      "Content-Type": Platform.OS === "web" ? false : "multipart/form-data",
+    },
   });
   return response.data;
 }

@@ -24,10 +24,13 @@ export default function useGardenPlant(id) {
     try {
       const response = await gardenService.getPlant(id);
       if (response?.success !== true || !response.data?._id)
-        throw Object.assign(new Error("Dữ liệu cây không hợp lệ."), { code: "INVALID_RESPONSE" });
+        throw Object.assign(new Error("Dữ liệu cây không hợp lệ."), {
+          code: "INVALID_RESPONSE",
+        });
       if (isCurrent()) setPlant(response.data);
     } catch (failure) {
-      if (isCurrent()) setError(getErrorMessage(failure, "Không thể tải thông tin cây."));
+      if (isCurrent())
+        setError(getErrorMessage(failure, "Không thể tải thông tin cây."));
     } finally {
       if (isCurrent()) setLoading(false);
     }

@@ -6,17 +6,29 @@ function subscribe(session, onChange) {
   const controller = new AbortController();
   let retry;
   async function connect() {
-    if (!session.token || controller.signal.aborted || !isSessionCurrent(session)) return;
+    if (
+      !session.token ||
+      controller.signal.aborted ||
+      !isSessionCurrent(session)
+    )
+      return;
     try {
-      const response = await fetch(api.getUri({ url: "/notifications/events" }), {
-        headers: { Authorization: `Bearer ${session.token}`, Accept: "text/event-stream" },
-        signal: controller.signal,
-      });
+      const response = await fetch(
+        api.getUri({ url: "/notifications/events" }),
+        {
+          headers: {
+            Authorization: `Bearer ${session.token}`,
+            Accept: "text/event-stream",
+          },
+          signal: controller.signal,
+        },
+      );
       if (response.status === 401) {
         expireRequestSession(session);
         return;
       }
-      if (!response.ok || !response.body) throw new Error("Notification stream unavailable");
+      if (!response.ok || !response.body)
+        throw new Error("Notification stream unavailable");
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -29,7 +41,12 @@ function subscribe(session, onChange) {
           while ((boundary = buffer.indexOf("\n\n")) >= 0) {
             const frame = buffer.slice(0, boundary);
             buffer = buffer.slice(boundary + 2);
-            if (frame === "data: changed" && !controller.signal.aborted && isSessionCurrent(session)) onChange();
+            if (
+              frame === "data: changed" &&
+              !controller.signal.aborted &&
+              isSessionCurrent(session)
+            )
+              onChange();
           }
         }
       } finally {
@@ -39,7 +56,8 @@ function subscribe(session, onChange) {
     } catch {
       // Kết nối lại sau khi mạng hoặc backend hoạt động trở lại.
     }
-    if (!controller.signal.aborted && isSessionCurrent(session)) retry = setTimeout(connect, 3000);
+    if (!controller.signal.aborted && isSessionCurrent(session))
+      retry = setTimeout(connect, 3000);
   }
   void connect();
   return () => {
@@ -51,11 +69,18 @@ function subscribe(session, onChange) {
 export default {
   subscribe,
   list: async (params) => (await api.get("/notifications", { params })).data,
-  unreadCount: async (sessionContext) => (await api.get("/notifications/unread-count", { sessionContext })).data,
-  detail: async (id, sessionContext) => (await api.get(`/notifications/${id}`, { sessionContext })).data,
-  markRead: async (id, sessionContext) => (await api.patch(`/notifications/${id}/read`, {}, { sessionContext })).data,
+  unreadCount: async (sessionContext) =>
+    (await api.get("/notifications/unread-count", { sessionContext })).data,
+  detail: async (id, sessionContext) =>
+    (await api.get(`/notifications/${id}`, { sessionContext })).data,
+  markRead: async (id, sessionContext) =>
+    (await api.patch(`/notifications/${id}/read`, {}, { sessionContext })).data,
   markAllRead: async () => (await api.patch("/notifications/read-all")).data,
   preferences: async () => (await api.get("/notifications/preferences")).data,
-  updatePreferences: async (enabled) => (await api.patch("/notifications/preferences",
-    { treatment_reminders: enabled })).data,
+  updatePreferences: async (enabled) =>
+    (
+      await api.patch("/notifications/preferences", {
+        treatment_reminders: enabled,
+      })
+    ).data,
 };

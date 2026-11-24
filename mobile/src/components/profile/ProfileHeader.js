@@ -7,33 +7,33 @@ import { colors } from "../../theme/colors";
 
 export default function ProfileHeader({ onBack }) {
   return (
-      <View style={styles.header}>
-        {/* Về đúng Home kể cả khi mở thẳng đường dẫn profile, không cần lịch sử back. */}
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Về trang chủ"
-          hitSlop={8}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.primaryText} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Hồ sơ của tôi</Text>
-        {/* Giữ tiêu đề nằm giữa, cân đối với nút quay lại bên trái. */}
-        <View style={styles.headerSpacer} />
-      </View>
+    <View style={styles.header}>
+      {/* Về đúng Home kể cả khi mở thẳng đường dẫn profile, không cần lịch sử back. */}
+      <Pressable
+        onPress={onBack}
+        style={styles.backButton}
+        accessibilityRole="button"
+        accessibilityLabel="Về trang chủ"
+        hitSlop={8}
+      >
+        <Ionicons name="arrow-back" size={22} color={colors.primaryText} />
+      </Pressable>
+      <Text style={styles.headerTitle}>Hồ sơ của tôi</Text>
+      {/* Giữ tiêu đề nằm giữa, cân đối với nút quay lại bên trái. */}
+      <View style={styles.headerSpacer} />
+    </View>
   );
 }
 
 // Style riêng của component.
 const styles = StyleSheet.create({
-header: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 18,
     paddingVertical: spacing.md,
   },
-backButton: {
+  backButton: {
     width: 44,
     height: 44,
     borderRadius: 14,
@@ -41,13 +41,13 @@ backButton: {
     alignItems: "center",
     justifyContent: "center",
   },
-headerSpacer: { width: 44 },
-headerTitle: {
+  headerSpacer: { width: 44 },
+  headerTitle: {
     flex: 1,
     textAlign: "center",
     fontSize: 20,
     lineHeight: 28,
     fontWeight: "700",
     color: colors.primaryText,
-  }
+  },
 });

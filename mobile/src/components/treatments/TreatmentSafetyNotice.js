@@ -16,7 +16,14 @@ export default function TreatmentSafetyNotice({ children }) {
 }
 
 const styles = StyleSheet.create({
-  notice: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md, padding: spacing.lg, borderRadius: radius.card, backgroundColor: colors.warmPeachBg },
+  notice: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius.card,
+    backgroundColor: colors.warmPeachBg,
+  },
   content: { flex: 1, gap: spacing.xs },
   title: { ...typography.label, color: colors.textPrimary },
   body: { ...typography.body, color: colors.textSecondary },

@@ -32,9 +32,11 @@ const diseaseService = {
     return response.data;
   },
 
-  createDisease: (disease, photo) => saveCatalogEntry("post", "/diseases/manager", disease, photo),
+  createDisease: (disease, photo) =>
+    saveCatalogEntry("post", "/diseases/manager", disease, photo),
 
-  updateDisease: (id, disease, photo) => saveCatalogEntry("put", `/diseases/manager/${id}`, disease, photo),
+  updateDisease: (id, disease, photo) =>
+    saveCatalogEntry("put", `/diseases/manager/${id}`, disease, photo),
 
   deleteDisease: async (id) => {
     const response = await api.delete(`/diseases/manager/${id}`);

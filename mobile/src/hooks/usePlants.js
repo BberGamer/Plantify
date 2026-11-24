@@ -10,7 +10,11 @@ function usePlantResource(fetchResource, initialData) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const request = useRef(0);
-  const { capture, isActive } = useScreenScope(() => refetch(), undefined, fetchResource);
+  const { capture, isActive } = useScreenScope(
+    () => refetch(),
+    undefined,
+    fetchResource,
+  );
   const refetch = useCallback(async () => {
     if (!isActive()) return;
     const requestId = ++request.current;
@@ -28,7 +32,12 @@ function usePlantResource(fetchResource, initialData) {
       if (isCurrent()) setLoading(false);
     }
   }, [fetchResource, capture, isActive]);
-  return { data: result.source === fetchResource ? result.data : initialData, loading, error, refetch };
+  return {
+    data: result.source === fetchResource ? result.data : initialData,
+    loading,
+    error,
+    refetch,
+  };
 }
 
 export function usePlants(categoryId = "", search = "", enabled = true) {

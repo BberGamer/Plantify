@@ -18,7 +18,8 @@ export default function usePlantDirectory() {
   const changeSearch = (value) => {
     setInputValue(value);
     list.invalidate();
-    if (value.trim() === debounced.value && !debounced.pending) list.changePage(1);
+    if (value.trim() === debounced.value && !debounced.pending)
+      list.changePage(1);
   };
   const selectCategory = (id) => {
     if (id === activeCatId && !debounced.pending) return;
@@ -36,7 +37,10 @@ export default function usePlantDirectory() {
     refresh: list.refresh,
     changePage: list.changePage,
     loading: list.loading || debounced.pending,
-    categories: [{ _id: "", category_name: "Tất cả" }, ...categories.categories],
+    categories: [
+      { _id: "", category_name: "Tất cả" },
+      ...categories.categories,
+    ],
     categoriesLoading: categories.loading,
     categoriesError: categories.error,
     retryCategories: categories.refetch,

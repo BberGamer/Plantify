@@ -10,7 +10,8 @@ import { clearPushBinding } from "../src/services/notificationDevice";
 
 const emptySession = { user: null, token: null, isAuthenticated: false };
 const cancelled = () => ({ success: false, cancelled: true });
-const detachNotifications = () => Promise.resolve(clearPushBinding()).catch(() => {});
+const detachNotifications = () =>
+  Promise.resolve(clearPushBinding()).catch(() => {});
 
 const useAuthStore = create((set, get) => {
   let hydration = null;
@@ -59,7 +60,12 @@ const useAuthStore = create((set, get) => {
         error: getErrorMessage(sessionError("REQUEST_IN_PROGRESS")),
       };
     if (get().user) void detachNotifications();
-    const attempt = { context: reset({ isLoggingIn: loggingIn, googleRegistration: registration }) };
+    const attempt = {
+      context: reset({
+        isLoggingIn: loggingIn,
+        googleRegistration: registration,
+      }),
+    };
     authentication = attempt;
     const cleanup = sessionStorage.clear();
     try {
@@ -72,12 +78,26 @@ const useAuthStore = create((set, get) => {
       if (response?.success !== true) throw sessionError("INVALID_RESPONSE");
       if (response.data?.nextStep === "complete_profile") {
         const data = response.data;
-        if (typeof data.registrationTicket !== "string" || !/^[\w-]{43}$/.test(data.registrationTicket) ||
-            !Number.isFinite(data.expiresAt) || data.expiresAt <= Date.now() ||
-            typeof data.profile?.email !== "string" || typeof data.profile?.fullName !== "string")
+        if (
+          typeof data.registrationTicket !== "string" ||
+          !/^[\w-]{43}$/.test(data.registrationTicket) ||
+          !Number.isFinite(data.expiresAt) ||
+          data.expiresAt <= Date.now() ||
+          typeof data.profile?.email !== "string" ||
+          typeof data.profile?.fullName !== "string"
+        )
           throw sessionError("INVALID_RESPONSE");
-        set({ googleRegistration: { registrationTicket: data.registrationTicket, expiresAt: data.expiresAt,
-          profile: { email: data.profile.email, fullName: data.profile.fullName } }, isLoggingIn: false });
+        set({
+          googleRegistration: {
+            registrationTicket: data.registrationTicket,
+            expiresAt: data.expiresAt,
+            profile: {
+              email: data.profile.email,
+              fullName: data.profile.fullName,
+            },
+          },
+          isLoggingIn: false,
+        });
         return { success: true, requiresProfile: true };
       }
       const session = normalizeSession(response.data);
@@ -87,7 +107,12 @@ const useAuthStore = create((set, get) => {
       );
       if (!saved || !matches(attempt.context) || !canCommit())
         return cancelled();
-      set({ ...session, isAuthenticated: true, isLoggingIn: false, googleRegistration: null });
+      set({
+        ...session,
+        isAuthenticated: true,
+        isLoggingIn: false,
+        googleRegistration: null,
+      });
       return { success: true, user: session.user };
     } catch (error) {
       await cleanup;
@@ -159,17 +184,35 @@ const useAuthStore = create((set, get) => {
       ),
 
     loginGoogle: (idToken, challengeToken, canCommit) =>
-      establish(() => authService.loginGoogle({ idToken, challengeToken }), null, true, canCommit),
+      establish(
+        () => authService.loginGoogle({ idToken, challengeToken }),
+        null,
+        true,
+        canCommit,
+      ),
 
     completeGoogle: (fields, expected, canCommit) => {
       const registration = get().googleRegistration;
-      if (!registration || registration.expiresAt <= Date.now()) return Promise.resolve({
-        success: false, error: getErrorMessage({ code: "GOOGLE_FLOW_EXPIRED" }),
-      });
-      return establish(() => authService.completeGoogle({ ...fields, registrationTicket: registration.registrationTicket }),
-        expected, true, canCommit, registration);
+      if (!registration || registration.expiresAt <= Date.now())
+        return Promise.resolve({
+          success: false,
+          error: getErrorMessage({ code: "GOOGLE_FLOW_EXPIRED" }),
+        });
+      return establish(
+        () =>
+          authService.completeGoogle({
+            ...fields,
+            registrationTicket: registration.registrationTicket,
+          }),
+        expected,
+        true,
+        canCommit,
+        registration,
+      );
     },
-    clearGoogleRegistration: () => { if (!authentication) set({ googleRegistration: null }); },
+    clearGoogleRegistration: () => {
+      if (!authentication) set({ googleRegistration: null });
+    },
 
     setAuthSession: (user, token, expected, canCommit) => {
       if (get().isAuthenticated) return Promise.resolve(cancelled());

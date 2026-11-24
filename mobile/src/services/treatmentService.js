@@ -20,6 +20,8 @@ const treatmentService = {
     previewToken,
     diagnosisId,
     startDate,
+    scheduleId,
+    sessionContext,
   }) => {
     const payload = {
       user_plant_id: userPlantId,
@@ -28,17 +30,18 @@ const treatmentService = {
     };
     if (diagnosisId) payload.diagnosis_id = diagnosisId;
     if (startDate) payload.start_date = startDate;
-    const response = await api.post("/treatments/schedules", payload);
+    if (scheduleId) payload.schedule_id = scheduleId;
+    const response = await api.post("/treatments/schedules", payload, { sessionContext });
     return response.data;
   },
 
-  getSchedule: async (id) => {
-    const response = await api.get(`/treatments/schedules/${id}`);
+  getSchedule: async (id, sessionContext) => {
+    const response = await api.get(`/treatments/schedules/${id}`, { sessionContext });
     return response.data;
   },
 
-  activateSchedule: async (id) => {
-    const response = await api.post(`/treatments/schedules/${id}/activate`);
+  activateSchedule: async (id, sessionContext) => {
+    const response = await api.post(`/treatments/schedules/${id}/activate`, undefined, { sessionContext });
     return response.data;
   },
 

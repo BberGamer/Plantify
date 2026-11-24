@@ -22,9 +22,9 @@ export default function InfoRow({ icon, label, value, last, action }) {
 
 // Style riêng của component.
 const styles = StyleSheet.create({
-infoRow: { flexDirection: "row", alignItems: "center", paddingVertical: 15 },
-divider: { borderBottomWidth: 1, borderBottomColor: colors.borderLight },
-iconBox: {
+  infoRow: { flexDirection: "row", alignItems: "center", paddingVertical: 15 },
+  divider: { borderBottomWidth: 1, borderBottomColor: colors.borderLight },
+  iconBox: {
     width: 40,
     height: 40,
     borderRadius: radius.md,
@@ -33,11 +33,11 @@ iconBox: {
     backgroundColor: colors.lightMint,
     marginRight: spacing.md,
   },
-rowContent: { flex: 1, minWidth: 0 },
-fieldLabel: { ...typography.caption, color: colors.primaryText },
-fieldValue: {
+  rowContent: { flex: 1, minWidth: 0 },
+  fieldLabel: { ...typography.caption, color: colors.primaryText },
+  fieldValue: {
     marginTop: spacing.xs,
     ...typography.label,
     color: colors.primaryText,
-  }
+  },
 });

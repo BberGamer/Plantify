@@ -57,9 +57,13 @@ export default function Navbar() {
     <View style={[styles.navbar, { paddingBottom: insets.bottom }]}>
       {ITEMS.map((item) => {
         // Dựa vào trang thực tế, không cố định Home đang active như bản cũ.
-        const isActive = pathname === item.path ||
+        const isActive =
+          pathname === item.path ||
           (item.camera && pathname === "/customer/identification") ||
-          (item.path === "/customer/profile" && ["/customer/favorites", "/customer/diagnosis-history"].includes(pathname));
+          (item.path === "/customer/profile" &&
+            ["/customer/favorites", "/customer/diagnosis-history"].includes(
+              pathname,
+            ));
         const canNavigate = Boolean(item.href);
         return (
           <Pressable
@@ -73,7 +77,9 @@ export default function Navbar() {
             accessibilityRole="button"
             accessibilityLabel={item.label.replace("\n", " ")}
             accessibilityHint={
-              item.camera ? "Mở camera nhận diện cây và chẩn đoán bệnh" : undefined
+              item.camera
+                ? "Mở camera nhận diện cây và chẩn đoán bệnh"
+                : undefined
             }
             accessibilityState={{ selected: isActive, disabled: !canNavigate }}
             // navigate tái sử dụng trang trong stack khi có thể, tránh push lặp trang.

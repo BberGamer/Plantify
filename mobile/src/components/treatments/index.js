@@ -6,3 +6,4 @@ export { default as TreatmentTaskCard } from "./TreatmentTaskCard";
 export { default as TreatmentTaskEditDialog } from "./TreatmentTaskEditDialog";
 export { default as TreatmentSafetyNotice } from "./TreatmentSafetyNotice";
 export { default as TreatmentStateView } from "./TreatmentStateView";
+export { default as TreatmentSummary } from "./TreatmentSummary";

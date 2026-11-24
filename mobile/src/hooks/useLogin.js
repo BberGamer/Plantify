@@ -16,10 +16,17 @@ export default function useLogin() {
   const [accountLocked, setAccountLocked] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const pending = useRef(null);
-  const { capture, isActive } = useScreenScope(undefined, undefined, undefined, false);
+  const { capture, isActive } = useScreenScope(
+    undefined,
+    undefined,
+    undefined,
+    false,
+  );
   const isPending = () => {
     const state = useAuthStore.getState();
-    return state.isLoggingIn || pending.current?.version === state.sessionVersion;
+    return (
+      state.isLoggingIn || pending.current?.version === state.sessionVersion
+    );
   };
   const handleLoginFailure = (response, fallback) => {
     if (response.cancelled) return;
@@ -86,8 +93,12 @@ export default function useLogin() {
         setLocalError("");
       }
     },
-    forgotPassword: () => { if (!isPending()) router.push("/auth/reset-password"); },
-    register: () => { if (!isPending()) router.push("/auth/register"); },
+    forgotPassword: () => {
+      if (!isPending()) router.push("/auth/reset-password");
+    },
+    register: () => {
+      if (!isPending()) router.push("/auth/register");
+    },
     googleLogin: async (idToken, challengeToken) => {
       if (isPending() || !isActive()) return;
       const inScreen = capture(false);
@@ -107,8 +118,11 @@ export default function useLogin() {
           handleLoginFailure(response, "Đăng nhập Google thất bại.");
         }
       } catch (failure) {
-        if (inScreen() && pending.current === attempt) setLocalError(getErrorMessage(failure, "Đăng nhập Google thất bại."));
-      } finally { if (pending.current === attempt) pending.current = null; }
+        if (inScreen() && pending.current === attempt)
+          setLocalError(getErrorMessage(failure, "Đăng nhập Google thất bại."));
+      } finally {
+        if (pending.current === attempt) pending.current = null;
+      }
     },
   };
 }
