@@ -35,7 +35,7 @@ const responseText = async (response) => {
 };
 
 const createInferenceClient = ({ fetchImpl = globalThis.fetch } = {}) => {
-  const request = async (photo, { signal, config = getDiagnosisConfig() } = {}, checkInput = false) => {
+  const request = async (photo, { signal, config = getDiagnosisConfig() } = {}) => {
     if (signal?.aborted) throw new AppError("REQUEST_ABORTED", 499, "Yêu cầu đã được hủy.");
     const controller = new AbortController();
     let timedOut = false;
@@ -52,11 +52,6 @@ const createInferenceClient = ({ fetchImpl = globalThis.fetch } = {}) => {
       const extension = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }[photo.mimetype];
       form.append("photo", new Blob([photo.buffer], { type: photo.mimetype }), `plant.${extension}`);
       const url = new URL(config.inferenceUrl);
-      if (checkInput) {
-        url.pathname = url.pathname.replace(/\/predict$/, "/check-image");
-        url.searchParams.set("min_similarity", config.inputGuard.minSimilarity);
-        url.searchParams.set("min_margin", config.inputGuard.minMargin);
-      }
       const response = await fetchImpl(url.toString(), {
         method: "POST", body: form, signal: controller.signal, redirect: "error",
         headers: { Accept: "application/json" },
@@ -65,8 +60,6 @@ const createInferenceClient = ({ fetchImpl = globalThis.fetch } = {}) => {
       let body;
       try { body = JSON.parse(text); } catch { throw invalidResponse(); }
       if (!response.ok) {
-        if (checkInput && (response.status === 404 || response.status >= 500) && body.code !== "INFERENCE_BUSY")
-          throw new AppError("DIAGNOSIS_INPUT_GUARD_UNAVAILABLE", 503, "Dịch vụ kiểm tra ảnh chưa sẵn sàng.");
         if (response.status === 503 && body.code === "INFERENCE_BUSY")
           throw new AppError("DIAGNOSIS_BUSY", 503, "Model đang xử lý ảnh khác. Vui lòng thử lại sau ít giây.");
         if (response.status >= 500) throw unavailable();
@@ -88,12 +81,7 @@ const createInferenceClient = ({ fetchImpl = globalThis.fetch } = {}) => {
       if (timedOut)
         throw new AppError("DIAGNOSIS_TIMEOUT", 504,
           "Phân tích ảnh mất quá nhiều thời gian. Vui lòng thử lại.");
-      if (error instanceof AppError) {
-        if (checkInput && error.code === "DIAGNOSIS_INVALID_RESPONSE")
-          throw new AppError("DIAGNOSIS_INPUT_GUARD_UNAVAILABLE", 503, "Dịch vụ kiểm tra ảnh trả kết quả không hợp lệ.");
-        throw error;
-      }
-      if (checkInput) throw new AppError("DIAGNOSIS_INPUT_GUARD_UNAVAILABLE", 503, "Không kết nối được dịch vụ kiểm tra ảnh.");
+      if (error instanceof AppError) throw error;
       throw unavailable();
     } finally {
       clearTimeout(timer);
@@ -102,7 +90,6 @@ const createInferenceClient = ({ fetchImpl = globalThis.fetch } = {}) => {
   };
   return {
     predict: (photo, options) => request(photo, options),
-    checkInput: (photo, options) => request(photo, options, true),
   };
 };
 

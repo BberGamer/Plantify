@@ -4,6 +4,7 @@ import { Image, StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { colors } from "../../theme/colors";
+import PlantDetails from "./PlantDetails";
 
 export default function IdentificationResult({
   photo,
@@ -32,6 +33,7 @@ export default function IdentificationResult({
         <Text accessibilityRole={prediction ? undefined : "alert"}>
           {result.message}
         </Text>
+        {prediction && <PlantDetails plant={prediction.plant_details} />}
         {!!result.history_id && (
           <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
             mode="outlined"

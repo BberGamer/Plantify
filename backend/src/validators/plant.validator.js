@@ -13,6 +13,9 @@ const fields = [
 ];
 const payload = (input, creating = false) => {
   v.object(input);
+  // Quan hệ cây–bệnh có một luồng ghi duy nhất ở CRUD bệnh để đồng bộ mapping.
+  if (input.common_disease_ids !== undefined)
+    v.invalid("common_disease_ids", "Hãy chỉnh danh sách cây liên quan tại màn quản lý bệnh.");
   const result = {};
   if (input.diagnosis_aliases !== undefined &&
       (!Array.isArray(input.diagnosis_aliases) || input.diagnosis_aliases.length > 50 ||

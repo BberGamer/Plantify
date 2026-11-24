@@ -1,3 +1,5 @@
+import useRefreshOnResume from "./useRefreshOnResume";
+import useCatalogAiLabels from "./useCatalogAiLabels";
 // useManagerDiseases.js - Quản lý danh sách và thao tác CRUD bệnh cây.
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
@@ -48,6 +50,7 @@ export default function useManagerDiseases() {
   const [visible, setVisible] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(createDiseaseForm);
+  const ai = useCatalogAiLabels("disease", visible, editing?._id);
   const [photo, setPhoto] = useState(null);
   const [choosingPhoto, setChoosingPhoto] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
@@ -76,6 +79,7 @@ export default function useManagerDiseases() {
     limit: 100,
     enabled: !debounced.pending,
   });
+  useRefreshOnResume(diseaseList.refresh);
   const {
     items: diseases,
     setItems: setDiseases,
@@ -337,6 +341,7 @@ export default function useManagerDiseases() {
   };
 
   const save = async () => {
+    if (!ai.ready) return;
     if (
       mutationPending.current ||
       photoPending.current ||
@@ -374,7 +379,7 @@ export default function useManagerDiseases() {
     setSaving(true);
     setFormError("");
     try {
-      const payload = createDiseasePayload(form);
+      const payload = { ...createDiseasePayload(form), ai_class_ids: ai.selected };
       const response = editing
         ? await diseaseService.updateDisease(editing._id, payload, photo)
         : await diseaseService.createDisease(payload, photo);
@@ -439,6 +444,7 @@ export default function useManagerDiseases() {
   };
 
   return {
+    ai,
     diseases,
     total: pagination.total,
     pagination,

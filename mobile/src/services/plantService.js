@@ -4,6 +4,7 @@ import { adaptPlantsList, mapPlantsParams } from "./listAdapters";
 import saveCatalogEntry from "./saveCatalogEntry";
 
 const plantService = {
+  getManagerPlantById: async (id) => (await api.get(`/plants/manager/${id}`)).data,
   /**
    * Lay danh sach danh muc cay
    * GET /api/plants/categories

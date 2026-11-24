@@ -1,12 +1,17 @@
+const withTransactionResult = require("../utils/transaction-result");
+const catalogAi = require("./catalog-ai.service");
 const AppError = require("../utils/app-error");
 const v = require("../validators/common");
 const validate = require("../validators/plant.validator");
 // services/plant.service.js - Business logic cho Plants & PlantCategories
 const Plant = require("../models/plant.model");
 const PlantCategory = require("../models/plantCategory.model");
+const UserPlant = require("../models/userPlant.model");
+const FavoritePlant = require("../models/favoritePlant.model");
+const TreatmentProtocol = require("../models/treatmentProtocol.model");
 
-const assertCategory = async (categoryId) => {
-  if (!(await PlantCategory.exists({ _id: categoryId }))) {
+const assertCategory = async (categoryId, session) => {
+  if (!(await PlantCategory.exists({ _id: categoryId }).session(session))) {
     throw new AppError(
       "CATEGORY_NOT_FOUND",
       404,
@@ -16,6 +21,12 @@ const assertCategory = async (categoryId) => {
 };
 
 const plantService = {
+  getManagerPlantById: async (id) => {
+    v.id(id);
+    const plant = await Plant.findById(id).populate("category_id", "category_name");
+    if (!plant) throw new AppError("PLANT_NOT_FOUND", 404, "Không tìm thấy cây này.");
+    return plant;
+  },
   /**
    * Lay danh sach tat ca danh muc cay (is_published = true)
    */
@@ -105,36 +116,45 @@ const plantService = {
     };
   },
 
-  createPlant: async (data) => {
-    data = validate.payload(data, true);
-    await assertCategory(data.category_id);
-    const plant = await Plant.create(data);
-    return plant.populate("category_id", "category_name");
+  createPlant: async (input) => {
+    const ids = await catalogAi.validateIds(input?.ai_class_ids);
+    const data = validate.payload(input, true);
+    return withTransactionResult(async session => {
+      await assertCategory(data.category_id, session);
+      const [plant] = await Plant.create([data], { session });
+      await catalogAi.synchronize("plant", plant, ids, session);
+      return Plant.findById(plant._id).session(session).populate("category_id", "category_name");
+    });
   },
-
-  updatePlant: async (id, data) => {
+  updatePlant: async (id, input) => {
     v.id(id);
-    data = validate.payload(data);
-    if (data.category_id !== undefined) await assertCategory(data.category_id);
-    const plant = await Plant.findByIdAndUpdate(
-      id,
-      { $set: data },
-      { new: true, runValidators: true },
-    ).populate("category_id", "category_name");
-    if (!plant) {
-      throw new AppError("PLANT_NOT_FOUND", 404, "Không tìm thấy cây này.");
-    }
-    return plant;
+    const ids = await catalogAi.validateIds(input?.ai_class_ids);
+    const data = validate.payload(input);
+    return withTransactionResult(async session => {
+      const plant = await Plant.findById(id).session(session);
+      if (!plant) throw new AppError("PLANT_NOT_FOUND", 404, "Không tìm thấy cây này.");
+      if (data.category_id !== undefined) await assertCategory(data.category_id, session);
+      Object.assign(plant, data);
+      await plant.save({ session });
+      await catalogAi.synchronize("plant", plant, ids, session);
+      return Plant.findById(id).session(session).populate("category_id", "category_name");
+    });
   },
-
   deletePlant: async (id) => {
     v.id(id);
-    const plant = await Plant.findByIdAndDelete(id);
-    if (!plant) {
-      throw new AppError("PLANT_NOT_FOUND", 404, "Không tìm thấy cây này.");
-    }
-    return plant;
+    return withTransactionResult(async session => {
+      const plant = await Plant.findById(id).session(session);
+      if (!plant) throw new AppError("PLANT_NOT_FOUND", 404, "Không tìm thấy cây này.");
+      await catalogAi.assertCanDelete("plant", id, session);
+      if (await UserPlant.exists({ plant_id: id }).session(session) ||
+          await FavoritePlant.exists({ plant_id: id }).session(session) ||
+          await TreatmentProtocol.exists({ plant_ids: id }).session(session))
+        throw new AppError("CATALOG_IN_USE", 409, "Cây đang có trong vườn, danh sách yêu thích hoặc phác đồ. Hãy tạm ẩn thay vì xóa.");
+      await Plant.deleteOne({ _id: id }, { session });
+      return plant;
+    });
   },
+
 };
 
 module.exports = plantService;

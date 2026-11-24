@@ -1,3 +1,5 @@
+import useRefreshOnResume from "./useRefreshOnResume";
+import useCatalogAiLabels from "./useCatalogAiLabels";
 import getErrorMessage from "../utils/getErrorMessage";
 // useManagerPlants.js - Quản lý danh sách, tìm kiếm và form cây của Manager.
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -9,7 +11,7 @@ import useAuthStore from "../../store/authStore";
 import { usePlantCategories } from "./usePlants";
 import * as ImagePicker from "expo-image-picker";
 
-const CARE_FIELDS = ["light", "water", "temperature", "humidity"];
+const CARE_FIELDS = ["light", "water", "temperature", "humidity", "soil", "fertilizer"];
 
 const createPlantForm = (plant = {}) => ({
   category_id: plant.category_id?._id || plant.category_id || "",
@@ -64,7 +66,11 @@ export default function useManagerPlants() {
   const [visible, setVisible] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(createPlantForm);
+  const ai = useCatalogAiLabels("plant", visible, editing?._id);
   const [formError, setFormError] = useState("");
+  const [formReady, setFormReady] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const detailRequest = useRef(0);
   const [photo, setPhoto] = useState(null);
   const [choosingPhoto, setChoosingPhoto] = useState(false);
   const photoPending = useRef(false);
@@ -89,6 +95,7 @@ export default function useManagerPlants() {
     limit: 100,
     enabled: !debounced.pending,
   });
+  useRefreshOnResume(plantList.refresh);
   const {
     items: plants,
     setItems: setPlants,
@@ -110,6 +117,9 @@ export default function useManagerPlants() {
   }, []);
 
   useEffect(() => {
+    ++detailRequest.current;
+    setFormReady(false);
+    setFormLoading(false);
     setVisible(false);
     setPhoto(null);
     setEditing(null);
@@ -137,12 +147,15 @@ export default function useManagerPlants() {
       return;
     setPhoto(null);
     setEditing(null);
+    ++detailRequest.current;
+    setFormReady(true);
+    setFormLoading(false);
     setForm(createPlantForm({ category_id: categories[0]?._id || "" }));
     setFormError("");
     setVisible(true);
   };
 
-  const openEdit = (plant) => {
+  const openEdit = async (plant) => {
     if (
       mutationPending.current ||
       photoPending.current ||
@@ -150,15 +163,35 @@ export default function useManagerPlants() {
       !isActive()
     )
       return;
+    const requestId = ++detailRequest.current;
+    const inScope = capture();
+    const current = () => requestId === detailRequest.current && inScope();
     setPhoto(null);
     setEditing(plant);
     setForm(createPlantForm(plant));
     setFormError("");
+    setFormLoading(true);
+    setFormReady(false);
     setVisible(true);
+    try {
+      const response = await plantService.getManagerPlantById(plant._id);
+      if (!response?.success || !response.data) throw new Error("Invalid response");
+      if (!current()) return;
+      setEditing(response.data);
+      setForm(createPlantForm(response.data));
+      setFormReady(true);
+    } catch (error) {
+      if (current()) setFormError(getErrorMessage(error));
+    } finally {
+      if (current()) setFormLoading(false);
+    }
   };
 
   const closeForm = () => {
     if (mutationPending.current || photoPending.current) return;
+    ++detailRequest.current;
+    setFormReady(false);
+    setFormLoading(false);
     setPhoto(null);
     setVisible(false);
     setEditing(null);
@@ -242,6 +275,7 @@ export default function useManagerPlants() {
   };
 
   const save = async () => {
+    if (!ai.ready || !formReady || formLoading) return;
     if (
       mutationPending.current ||
       photoPending.current ||
@@ -264,7 +298,7 @@ export default function useManagerPlants() {
     setSaving(true);
     setFormError("");
     try {
-      const payload = createPlantPayload(form, editing);
+      const payload = { ...createPlantPayload(form, editing), ai_class_ids: ai.selected };
       const response = editing
         ? await plantService.updatePlant(editing._id, payload, photo)
         : await plantService.createPlant(payload, photo);
@@ -326,6 +360,7 @@ export default function useManagerPlants() {
   };
 
   return {
+    ai,
     plants,
     total: pagination.total,
     pagination,
@@ -341,6 +376,9 @@ export default function useManagerPlants() {
     editing,
     form,
     formError,
+    formReady,
+    formLoading,
+    retryEdit: () => editing && openEdit(editing),
     photo,
     choosingPhoto,
     choosePhoto,

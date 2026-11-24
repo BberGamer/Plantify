@@ -1,3 +1,4 @@
+import CatalogAiPicker from "../CatalogAiPicker";
 import { FormModalFrame } from "../../common/ModalFrames";
 import PhotoUploadField from "../../common/PhotoUploadField";
 import { componentStyles } from "../../../theme/componentStyles";
@@ -19,6 +20,10 @@ import PlantCareFields from "./PlantCareFields";
 import { colors } from "../../../theme/colors";
 
 export default function PlantFormModal({
+  ai,
+  loading,
+  ready,
+  onRetryDetail,
   visible,
   editing,
   form,
@@ -36,6 +41,7 @@ export default function PlantFormModal({
   onChoosePhoto,
   onRemovePhoto,
 }) {
+  const locked = saving || loading || !ready;
   const close = () => {
     if (!saving) onClose();
   };
@@ -50,7 +56,7 @@ export default function PlantFormModal({
             <Text style={styles.modalTitle}>
               {editing ? "Cập nhật cây" : "Thêm cây mới"}
             </Text>
-            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onSave} disabled={saving} loading={saving}>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onSave} disabled={locked || !ai.ready} loading={saving}>
               Lưu
             </Button>
           </View>
@@ -63,6 +69,8 @@ export default function PlantFormModal({
                 {error}
               </Text>
             )}
+            {loading && <Text>Đang tải thông tin cây…</Text>}
+            {!loading && !ready && <Button onPress={onRetryDetail}>Thử tải lại chi tiết cây</Button>}
             <Text style={styles.fieldLabel}>Danh mục *</Text>
             {categoriesLoading && (
               <Text style={styles.fieldLabel}>Đang tải danh mục…</Text>
@@ -95,7 +103,7 @@ export default function PlantFormModal({
                       styles.categoryChipActive,
                   ]}
                   onPress={() => onFieldChange("category_id", category._id)}
-                  disabled={saving}
+                  disabled={locked}
                 >
                   <Text
                     style={[
@@ -127,7 +135,7 @@ export default function PlantFormModal({
                     label={label}
                     value={form[key]}
                     onChangeText={(value) => onFieldChange(key, value)}
-                    disabled={saving}
+                    disabled={locked}
                     accessibilityLabel={label}
                     placeholder={label.replace(" *", "")}
                     placeholderTextColor={colors.textMuted}
@@ -139,14 +147,15 @@ export default function PlantFormModal({
                 </View>
               );
             })}
-            <PhotoUploadField label="Hình ảnh cây" uri={hasImage ? imageUri : null} disabled={saving}
+            <CatalogAiPicker ai={ai} disabled={locked} />
+            <PhotoUploadField label="Hình ảnh cây" uri={hasImage ? imageUri : null} disabled={locked}
               onChoose={onChoosePhoto} onRemove={hasImage ? onRemovePhoto : undefined}
               chooseLabel={hasImage ? "Chọn ảnh khác từ máy" : "Tải ảnh từ máy"}
               removeLabel={photo ? "Bỏ ảnh đã chọn" : "Xóa ảnh hiện tại"}
               hint="JPG / PNG · Tối đa 10 MB · Ảnh được tải lên khi lưu cây" />
             <PlantCareFields
               value={form.care_requirements}
-              disabled={saving}
+              disabled={locked}
               onChange={onCareChange}
             />
             <View style={styles.publishRow}>
@@ -159,7 +168,7 @@ export default function PlantFormModal({
               <Switch
                 value={!!form.is_published}
                 onValueChange={(value) => onFieldChange("is_published", value)}
-                disabled={saving}
+                disabled={locked}
                 accessibilityLabel="Hiển thị công khai"
                 trackColor={{ true: colors.primaryLight }}
               />

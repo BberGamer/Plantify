@@ -1,3 +1,4 @@
+import CatalogAiPicker from "../CatalogAiPicker";
 import { FormModalFrame } from "../../common/ModalFrames";
 import PhotoUploadField from "../../common/PhotoUploadField";
 import { componentStyles } from "../../../theme/componentStyles";
@@ -37,6 +38,7 @@ const FIELDS = [
 ];
 
 export default function DiseaseFormModal({
+  ai,
   visible,
   editing,
   form,
@@ -72,7 +74,7 @@ export default function DiseaseFormModal({
             <Text variant="titleMedium">
               {editing ? "Sửa bệnh cây" : "Thêm bệnh cây"}
             </Text>
-            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onSave} disabled={locked} loading={saving}>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onSave} disabled={locked || !ai.ready} loading={saving}>
               Lưu
             </Button>
           </View>
@@ -136,6 +138,7 @@ export default function DiseaseFormModal({
                 disabled={locked}
               />
             </View>
+            <CatalogAiPicker ai={ai} disabled={locked} plantIds={form.plant_ids} />
             <DiseasePlantPicker
               key={`${visible}-${editing?._id || "new"}`}
               plants={plants}

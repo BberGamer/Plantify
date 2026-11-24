@@ -22,6 +22,7 @@ const plantCandidateValid = (item) =>
   text(item.plant_name) &&
   text(item.display_name) &&
   optionalText(item.scientific_name) &&
+  plantDetailsValid(item.plant_details, item.plant_id) &&
   Number.isFinite(item.confidence) &&
   item.confidence >= 0 &&
   item.confidence <= 1;
@@ -47,6 +48,17 @@ const historyPath = (id) => {
   return `/diagnosis/history/${id}`;
 };
 
+const plantDetailsValid = (plant, plantId) =>
+  plant == null || (
+    plant._id === plantId &&
+    text(plant.common_name) &&
+    ["scientific_name", "botanical_family", "description"].every(key => optionalText(plant[key])) &&
+    plant.care_requirements &&
+    ["light", "water", "temperature", "humidity", "soil", "fertilizer"].every(
+      key => optionalText(plant.care_requirements[key]),
+    )
+  );
+
 const candidateValid = (item) =>
   item &&
   Number.isInteger(item.class_id) &&
@@ -60,6 +72,7 @@ const candidateValid = (item) =>
   item.confidence >= 0 &&
   item.confidence <= 1 &&
   optionalId(item.plant_id) &&
+  plantDetailsValid(item.plant_details, item.plant_id) &&
   optionalId(item.disease_id) &&
   optionalText(item.symptoms) &&
   optionalText(item.care_advice) &&

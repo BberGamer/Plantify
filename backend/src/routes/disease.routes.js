@@ -10,6 +10,7 @@ const {
 const router = express.Router();
 
 router.use("/manager", authenticate, authorizeManager);
+router.get("/manager/ai-labels", require("../controllers/catalog-ai.controller").diseaseLabels);
 router.get("/manager", diseaseController.getManagerDiseases);
 router.post("/manager", catalogUpload, diseaseController.createDisease);
 router.get("/manager/:id", diseaseController.getManagerDiseaseById);
