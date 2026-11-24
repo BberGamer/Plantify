@@ -45,19 +45,6 @@ export default function VipSection({ f, router, setDialog }) {
           </Card.Content>
         </Card>
       ))}
-      <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
-        icon="wallet-outline"
-        disabled={f.busy}
-        onPress={() => router.push("/customer/wallet")}
-      >
-        Đến ví tiền
-      </Button>
-      <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
-        disabled={f.busy}
-        onPress={() => router.navigate("/customer/profile")}
-      >
-        Về hồ sơ của tôi
-      </Button>
     </>
   );
 }

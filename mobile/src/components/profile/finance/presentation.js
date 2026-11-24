@@ -148,6 +148,15 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12
   },
+  shortcuts: { gap: 12, marginTop: 4 },
+  shortcut: { borderWidth: 1, borderColor: "#BDDCC9", borderRadius: radius.card, paddingVertical: 8 },
+  shortcutTitle: { fontSize: 16, fontWeight: "700", color: colors.primary },
+  orderGroup: { padding: 16, gap: 12, borderRadius: radius.card, backgroundColor: colors.background,
+    borderWidth: 1, borderColor: colors.border },
+  orderGroupTitle: { fontSize: 16, fontWeight: "700", color: colors.primary },
+  transferCode: { backgroundColor: colors.lightMint, borderColor: "#BDDCC9" },
+  orderAmount: { fontSize: 24, lineHeight: 32, fontWeight: "800", color: colors.primary },
+  countdown: { color: "#88580C", backgroundColor: "#FFF5E7", padding: 10, borderRadius: radius.sm },
   qr: {
     width: "100%",
     height: 240
