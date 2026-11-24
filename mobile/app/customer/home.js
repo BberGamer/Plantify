@@ -1,3 +1,4 @@
+import { componentStyles } from "../../src/theme/componentStyles";
 // trang homepage
 
 import { StyleSheet, ScrollView, RefreshControl } from "react-native";
@@ -15,6 +16,7 @@ import TodayTasks from "../../src/components/home/TodayTasks";
 import WeatherCard from "../../src/components/home/WeatherCard";
 import PlantList from "../../src/components/home/PlantList";
 import Navbar from "../../src/components/navigation/Navbar";
+import { colors, layout } from "../../src/theme";
 
 export default function HomeScreen() {
   const garden = useHomeGarden();
@@ -37,7 +39,7 @@ export default function HomeScreen() {
         {garden.loading ? <ActivityIndicator style={{ marginTop: 24 }} accessibilityLabel="Đang tải vườn cây" /> : garden.error ? (
           <Card style={{ marginTop: 24 }}><Card.Content>
             <Text accessibilityRole="alert">{garden.error}</Text>
-            <Button onPress={garden.reload}>Thử lại dữ liệu vườn</Button>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={garden.reload}>Thử lại dữ liệu vườn</Button>
           </Card.Content></Card>
         ) : garden.data && <GardenSummary summary={garden.data} />}
         <TodayTasks care={care} />
@@ -51,14 +53,17 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.background
   },
   container: {
     flex: 1,
-    backgroundColor: "#FAFCFA",
+    backgroundColor: colors.background
   },
   scrollContent: {
-    paddingHorizontal: 18,
-    paddingBottom: 40,
-  },
+    width: "100%",
+    maxWidth: layout.content,
+    alignSelf: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 40
+  }
 });

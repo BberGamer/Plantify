@@ -1,7 +1,9 @@
+import BottomActionBar from "../../../src/components/common/BottomActionBar";
+import { componentStyles } from "../../../src/theme/componentStyles";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Dialog, Portal, Text } from "react-native-paper";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { colors, radius, spacing, typography } from "../../../src/theme";
 import useTreatmentPreview from "../../../src/hooks/useTreatmentPreview";
@@ -16,7 +18,6 @@ import {
 export default function TreatmentPreviewScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const insets = useSafeAreaInsets();
   const value = (input) => (typeof input === "string" ? input : "");
   const treatment = useTreatmentPreview({
     diseaseId: value(params.diseaseId),
@@ -60,9 +61,9 @@ export default function TreatmentPreviewScreen() {
     <TreatmentHeader title="Xem trước phác đồ" onBack={() => router.back()} />
     {!!treatment.recoveryError && <View style={styles.card}>
       <Text accessibilityRole="alert" style={styles.error}>{treatment.recoveryError}</Text>
-      <Button onPress={treatment.checkStatus} disabled={treatment.generating || treatment.applying}>Kiểm tra trạng thái</Button>
+      <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={treatment.checkStatus} disabled={treatment.generating || treatment.applying}>Kiểm tra trạng thái</Button>
     </View>}
-    {data?.status === "in_progress" && <Button mode="outlined" onPress={() => router.replace({
+    {data?.status === "in_progress" && <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" onPress={() => router.replace({
       pathname: "/customer/treatments/TreatmentList", params: { treatmentId: data._id },
     })}>Mở lịch điều trị đang áp dụng</Button>}
     {treatment.loading || treatment.error ? (
@@ -77,7 +78,7 @@ export default function TreatmentPreviewScreen() {
           {treatment.gardenLoading && <Text>Đang tải cây trong vườn...</Text>}
           {!!treatment.gardenError && <View>
             <Text accessibilityRole="alert" style={styles.error}>{treatment.gardenError}</Text>
-            <Button onPress={treatment.retryGarden}>Thử tải lại cây</Button>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={treatment.retryGarden}>Thử tải lại cây</Button>
           </View>}
           {treatment.gardenPlants.map((plant) => {
             const selected = treatment.selectedUserPlantId === plant._id;
@@ -116,7 +117,7 @@ export default function TreatmentPreviewScreen() {
                 Vườn của bạn chưa có cây cùng loài với kết quả AI. Cần thêm cây này
                 vào vườn để tạo và áp dụng lịch điều trị.
               </Text>
-              <Button mode="outlined" icon="plus" onPress={addDetectedPlant}>
+              <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" icon="plus" onPress={addDetectedPlant}>
                 Thêm cây đã nhận diện vào vườn
               </Button>
             </View>
@@ -177,15 +178,15 @@ export default function TreatmentPreviewScreen() {
         )}
         {!!treatment.generateError && <Text style={styles.error} accessibilityRole="alert">{treatment.generateError}</Text>}
       </ScrollView>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+      <BottomActionBar>
         {treatment.gardenLoading || treatment.gardenError ? (
-          <Button onPress={treatment.retryGarden} disabled={treatment.gardenLoading}>{treatment.gardenLoading ? "Đang tải cây..." : "Thử tải lại cây"}</Button>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={treatment.retryGarden} disabled={treatment.gardenLoading}>{treatment.gardenLoading ? "Đang tải cây..." : "Thử tải lại cây"}</Button>
         ) : treatment.gardenPlants.length ? (
-          <Button mode="contained" onPress={treatment.generate} loading={treatment.generating} disabled={!treatment.canGenerate || treatment.generating} contentStyle={styles.buttonContent}>Tạo lịch điều trị</Button>
+          <Button style={componentStyles.buttonShape} mode="contained" onPress={treatment.generate} loading={treatment.generating} disabled={!treatment.canGenerate || treatment.generating} contentStyle={styles.buttonContent}>Tạo lịch điều trị</Button>
         ) : (
-          <Button mode="contained" icon="plus" onPress={addDetectedPlant} contentStyle={styles.buttonContent}>Thêm cây để áp dụng</Button>
+          <Button style={componentStyles.buttonShape} mode="contained" icon="plus" onPress={addDetectedPlant} contentStyle={styles.buttonContent}>Thêm cây để áp dụng</Button>
         )}
-      </View>
+      </BottomActionBar>
     </> : <>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <TreatmentSummary
@@ -215,17 +216,17 @@ export default function TreatmentPreviewScreen() {
         )}
         {!!treatment.applyError && <Text style={styles.error} accessibilityRole="alert">{treatment.applyError}</Text>}
       </ScrollView>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-        <Button mode="contained" onPress={() => setConfirming(contextKey)} disabled={!treatment.canApply || treatment.applying} contentStyle={styles.buttonContent}>Áp dụng phác đồ điều trị</Button>
-      </View>
+      <BottomActionBar>
+        <Button style={componentStyles.buttonShape} mode="contained" onPress={() => setConfirming(contextKey)} disabled={!treatment.canApply || treatment.applying} contentStyle={styles.buttonContent}>Áp dụng phác đồ điều trị</Button>
+      </BottomActionBar>
     </>}
     <Portal>
-      <Dialog visible={confirming === contextKey} onDismiss={() => !treatment.applying && setConfirming(false)} dismissable={!treatment.applying}>
+      <Dialog style={componentStyles.dialog} visible={confirming === contextKey} onDismiss={() => !treatment.applying && setConfirming(false)} dismissable={!treatment.applying}>
         <Dialog.Title>Bắt đầu điều trị?</Dialog.Title>
         <Dialog.Content><Text>Lịch chăm sóc thường ngày của cây sẽ tạm dừng trong thời gian điều trị.</Text></Dialog.Content>
         <Dialog.Actions>
-          <Button onPress={() => setConfirming(false)} disabled={treatment.applying}>Hủy</Button>
-          <Button onPress={apply} loading={treatment.applying} disabled={!treatment.canApply || treatment.applying}>Bắt đầu điều trị</Button>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={() => setConfirming(false)} disabled={treatment.applying}>Hủy</Button>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={apply} loading={treatment.applying} disabled={!treatment.canApply || treatment.applying}>Bắt đầu điều trị</Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>
@@ -233,32 +234,146 @@ export default function TreatmentPreviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  scroll: { flex: 1 },
-  content: { width: "100%", maxWidth: 560, alignSelf: "center", padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg },
-  summary: { backgroundColor: colors.white, padding: spacing.md, borderRadius: radius.card },
-  image: { width: 92, height: 104, borderRadius: radius.md },
-  summaryText: { flex: 1, minWidth: 0, justifyContent: "center", gap: spacing.xs },
-  card: { backgroundColor: colors.white, borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm },
-  section: { gap: spacing.md },
-  sectionTitle: { ...typography.section, color: colors.textPrimary },
-  body: { ...typography.body, color: colors.textSecondary },
-  metrics: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
-  metric: { flexGrow: 1, flexBasis: 130, alignItems: "center", padding: spacing.lg, backgroundColor: colors.white, borderRadius: radius.card },
-  metricValue: { ...typography.title, color: colors.primary },
-  metricLabel: { ...typography.caption, color: colors.textSecondary },
-  protocolCard: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm },
-  plantOption: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing.md, gap: spacing.xs },
-  disabled: { opacity: 0.55 },
-  protocolSelected: { borderColor: colors.primaryLight, backgroundColor: colors.softMintBg },
-  protocolHeader: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  protocolName: { ...typography.label, flex: 1, color: colors.textPrimary },
-  protocolMeta: { ...typography.caption, color: colors.primaryLight, fontWeight: "600" },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.inputBorder },
-  radioSelected: { borderWidth: 6, borderColor: colors.primaryLight },
-  error: { ...typography.body, color: colors.statusError, textAlign: "center" },
-  referenceNotice: { ...typography.body, color: "#946017", backgroundColor: colors.warmPeachBg, borderRadius: radius.md, padding: spacing.md },
-  missingPlant: { gap: spacing.md },
-  footer: { backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-  buttonContent: { minHeight: 48 },
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  scroll: {
+    flex: 1
+  },
+  content: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    padding: 20,
+    paddingBottom: spacing.xxxl,
+    gap: spacing.lg
+  },
+  summary: {
+    backgroundColor: colors.white,
+    padding: spacing.md,
+    borderRadius: radius.card
+  },
+  image: {
+    width: 92,
+    height: 104,
+    borderRadius: radius.md
+  },
+  summaryText: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: "center",
+    gap: spacing.xs
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: radius.card,
+    padding: spacing.lg,
+    gap: spacing.sm
+  },
+  section: {
+    gap: spacing.md
+  },
+  sectionTitle: {
+    ...typography.section,
+    color: colors.textPrimary
+  },
+  body: {
+    ...typography.body,
+    color: colors.textSecondary
+  },
+  metrics: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.md
+  },
+  metric: {
+    flexGrow: 1,
+    flexBasis: 130,
+    alignItems: "center",
+    padding: spacing.lg,
+    backgroundColor: colors.white,
+    borderRadius: radius.card
+  },
+  metricValue: {
+    ...typography.title,
+    color: colors.primary
+  },
+  metricLabel: {
+    ...typography.caption,
+    color: colors.textSecondary
+  },
+  protocolCard: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    padding: spacing.lg,
+    gap: spacing.sm
+  },
+  plantOption: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.xs
+  },
+  disabled: {
+    opacity: 0.55
+  },
+  protocolSelected: {
+    borderColor: colors.primaryLight,
+    backgroundColor: colors.softMintBg
+  },
+  protocolHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md
+  },
+  protocolName: {
+    ...typography.label,
+    flex: 1,
+    color: colors.textPrimary
+  },
+  protocolMeta: {
+    ...typography.caption,
+    color: colors.primaryLight,
+    fontWeight: "600"
+  },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.inputBorder
+  },
+  radioSelected: {
+    borderWidth: 6,
+    borderColor: colors.primaryLight
+  },
+  error: {
+    ...typography.body,
+    color: colors.statusError,
+    textAlign: "center"
+  },
+  referenceNotice: {
+    ...typography.body,
+    color: colors.statusWarning,
+    backgroundColor: colors.warmPeachBg,
+    borderRadius: radius.md,
+    padding: spacing.md
+  },
+  missingPlant: {
+    gap: spacing.md
+  },
+  footer: {
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md
+  },
+  buttonContent: {
+    minHeight: 48
+  }
 });

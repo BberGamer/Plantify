@@ -1,5 +1,9 @@
+import SectionCard from "../../../src/components/common/SectionCard";
+import DetailField from "../../../src/components/common/DetailField";
+import LoadingState from "../../../src/components/common/LoadingState";
+import { componentStyles } from "../../../src/theme/componentStyles";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Button, Text } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,34 +20,74 @@ export default function PlantListScreen() {
   const plant = detail.plant;
   return <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
     <TreatmentHeader title="Chi tiết cây trong vườn" onBack={() => router.back()} />
-    {detail.loading ? <View style={styles.center}><ActivityIndicator size="large" /><Text>Đang tải thông tin cây...</Text></View> : detail.error || !plant ? <View style={styles.center}><ListError message={detail.error || "Không tìm thấy cây."} onRetry={detail.retry} /></View> : <ScrollView contentContainerStyle={styles.content}>
+    {detail.loading ? <LoadingState style={{ flex: 1 }} message="Đang tải thông tin cây..." /> : detail.error || !plant ? <View style={styles.center}><ListError message={detail.error || "Không tìm thấy cây."} onRetry={detail.retry} /></View> : <ScrollView contentContainerStyle={styles.content}>
       {plant.display_image_url ? <Image source={{ uri: plant.display_image_url }} style={styles.image} /> : <View style={[styles.image, styles.placeholder]}><Ionicons name="leaf-outline" size={48} color={colors.primaryLight} /></View>}
-      <View style={styles.card}>
-        {!plant.archived_at && <Button mode="outlined" icon="calendar" onPress={() => router.push({ pathname: "/customer/care", params: { plantId } })}>Lịch tưới nước / bón phân</Button>}
-        <Text style={styles.title}>{plant.plant_nickname}</Text>
-        <Text style={styles.body}>{plant.species_name || "Chưa xác định loài"}</Text>
-        <Text style={styles.body}>{plant.placement_location || "Chưa có vị trí đặt cây"}</Text>
-        {!plant.archived_at && <Button mode="outlined" icon="pencil-outline" onPress={() => router.push({ pathname: "/customer/garden/edit", params: { plantId } })}>Sửa thông tin cây</Button>}
-      </View>
-      {plant.active_treatment ? <View style={styles.treatment}>
-        <Text style={styles.sectionTitle}>Đang điều trị</Text>
+      <SectionCard title="Thông tin cây" icon="leaf-outline">
+        {!plant.archived_at && <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" icon="calendar" onPress={() => router.push({ pathname: "/customer/care", params: { plantId } })}>Lịch tưới nước / bón phân</Button>}
+        <DetailField label="Biệt danh cây" value={plant.plant_nickname} />
+        <DetailField label="Loài cây" value={plant.species_name || "Chưa xác định loài"} />
+        <DetailField label="Vị trí đặt cây" value={plant.placement_location || "Chưa có vị trí đặt cây"} />
+        {!plant.archived_at && <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" icon="pencil-outline" onPress={() => router.push({ pathname: "/customer/garden/edit", params: { plantId } })}>Sửa thông tin cây</Button>}
+      </SectionCard>
+      {plant.active_treatment ? <SectionCard title="Đang điều trị" icon="medkit-outline">
         <Text style={styles.body}>Ngày {plant.active_treatment.current_day}/{plant.active_treatment.duration_days}</Text>
         <Text style={styles.body}>{plant.active_treatment.completed_tasks}/{plant.active_treatment.total_tasks} công việc đã hoàn thành</Text>
-        <Button mode="contained" onPress={() => router.push({ pathname: "/customer/treatments/TreatmentList", params: { treatmentId: plant.active_treatment._id } })}>Xem tiến độ điều trị</Button>
-      </View> : <View style={styles.card}><Text style={styles.sectionTitle}>Không có đợt điều trị hoạt động</Text><Text style={styles.body}>Cây hiện không áp dụng phác đồ điều trị.</Text></View>}
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="contained" onPress={() => router.push({ pathname: "/customer/treatments/TreatmentList", params: { treatmentId: plant.active_treatment._id } })}>Xem tiến độ điều trị</Button>
+      </SectionCard> : <SectionCard title="Không có đợt điều trị hoạt động" icon="leaf-outline"><Text style={styles.body}>Cây hiện không áp dụng phác đồ điều trị.</Text></SectionCard>}
     </ScrollView>}
   </SafeAreaView>;
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.md },
-  content: { width: "100%", maxWidth: 560, alignSelf: "center", padding: spacing.lg, gap: spacing.lg },
-  image: { width: "100%", aspectRatio: 1.5, borderRadius: radius.card, backgroundColor: colors.lightMint },
-  placeholder: { alignItems: "center", justifyContent: "center" },
-  card: { backgroundColor: colors.white, borderRadius: radius.card, padding: spacing.lg, gap: spacing.sm },
-  treatment: { backgroundColor: colors.warmPeachBg, borderRadius: radius.card, padding: spacing.lg, gap: spacing.md },
-  title: { ...typography.title, color: colors.textPrimary },
-  sectionTitle: { ...typography.section, color: colors.textPrimary },
-  body: { ...typography.body, color: colors.textSecondary },
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md
+  },
+  content: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    padding: 20,
+    gap: spacing.lg
+  },
+  image: {
+    width: "100%",
+    aspectRatio: 1.5,
+    borderRadius: radius.card,
+    backgroundColor: colors.lightMint
+  },
+  placeholder: {
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: radius.card,
+    padding: spacing.lg,
+    gap: spacing.sm
+  },
+  treatment: {
+    backgroundColor: colors.warmPeachBg,
+    borderRadius: radius.card,
+    padding: spacing.lg,
+    gap: spacing.md
+  },
+  title: {
+    ...typography.title,
+    color: colors.textPrimary
+  },
+  sectionTitle: {
+    ...typography.section,
+    color: colors.textPrimary
+  },
+  body: {
+    ...typography.body,
+    color: colors.textSecondary
+  }
 });

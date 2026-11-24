@@ -1,3 +1,4 @@
+import { componentStyles } from "../../src/theme/componentStyles";
 import { useRef } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Text } from "react-native-paper";
@@ -23,8 +24,8 @@ export default function ChatScreen() {
     <SafeAreaView style={styles.screen}>
       <ChatHeader onBack={handleBack} />
       <View style={styles.tools}>
-        <Button onPress={chat.newConversation} disabled={chat.sending}>Cuộc trò chuyện mới</Button>
-        <Button onPress={chat.reloadHistory} disabled={chat.sending || chat.loadingHistory}>Tải lịch sử</Button>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={chat.newConversation} disabled={chat.sending}>Cuộc trò chuyện mới</Button>
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={chat.reloadHistory} disabled={chat.sending || chat.loadingHistory}>Tải lịch sử</Button>
       </View>
       <KeyboardAvoidingView style={styles.body} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <ScrollView ref={scroll} contentContainerStyle={[styles.content, !chat.messages.length && styles.empty]}
@@ -71,17 +72,74 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  body: { flex: 1 },
-  tools: { flexDirection: "row", justifyContent: "space-between", flexWrap: "wrap" },
-  content: { flexGrow: 1, padding: spacing.xl, paddingVertical: spacing.xxxl },
-  empty: { justifyContent: "center" },
-  thread: { width: "100%", maxWidth: 560, alignSelf: "center", gap: spacing.md },
-  bubble: { padding: spacing.lg, borderRadius: 16, marginBottom: spacing.md, maxWidth: "95%" },
-  user: { alignSelf: "flex-end", backgroundColor: colors.lightMint },
-  assistant: { alignSelf: "flex-start", backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border },
-  speaker: { fontSize: 12, fontWeight: "700", color: colors.primary, marginBottom: spacing.xs },
-  message: { fontSize: 15, lineHeight: 23, color: colors.textPrimary },
-  pending: { color: colors.textSecondary, marginVertical: spacing.sm },
-  timing: { color: colors.textSecondary, fontSize: 12, marginTop: spacing.sm },
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  body: {
+    flex: 1
+  },
+  tools: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap"
+  },
+  content: {
+    flexGrow: 1,
+    padding: spacing.xl,
+    paddingVertical: spacing.xxxl
+  },
+  empty: {
+    justifyContent: "center"
+  },
+  thread: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    gap: spacing.md
+  },
+  bubble: {
+    padding: spacing.lg,
+    borderRadius: 16,
+    marginBottom: spacing.md,
+    maxWidth: "95%"
+  },
+  user: {
+    alignSelf: "flex-end",
+    backgroundColor: colors.lightMint
+  },
+  assistant: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  speaker: {
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700",
+    color: colors.primary,
+    marginBottom: spacing.xs
+  },
+  message: {
+    fontSize: 16,
+    lineHeight: 26,
+    color: colors.textPrimary
+  },
+  pending: {
+    color: colors.textSecondary,
+    marginVertical: spacing.sm
+  },
+  timing: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: spacing.sm
+  }
 });

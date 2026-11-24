@@ -1,5 +1,9 @@
+import EmptyState from "../../src/components/common/EmptyState";
+import SearchField from "../../src/components/common/SearchField";
+import { FilterMenuButton, filterStyles } from "../../src/components/common/FilterControls";
+import { componentStyles } from "../../src/theme/componentStyles";
 import { useState } from "react";
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Menu, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,8 +36,8 @@ function GardenCard({ plant, onOpenPlant, onOpenTreatment }) {
       </View>
     </View>
     <View style={styles.actions}>
-      <Button mode="text" onPress={() => onOpenPlant(plant._id)}>Xem chi tiết</Button>
-      {treatment && <Button mode="outlined" icon="clipboard-pulse-outline" onPress={() => onOpenTreatment(treatment._id)}>Xem điều trị</Button>}
+      <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="text" onPress={() => onOpenPlant(plant._id)}>Xem chi tiết</Button>
+      {treatment && <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" icon="clipboard-pulse-outline" onPress={() => onOpenTreatment(treatment._id)}>Xem điều trị</Button>}
     </View>
   </View>;
 }
@@ -57,19 +61,13 @@ export default function GardenScreen() {
           <Text style={styles.actionLabel}>Thêm lịch chăm sóc</Text>
         </Pressable>
       </View>
-      <View style={styles.searchRow}>
-        <View style={styles.search}>
-          <Ionicons name="search-outline" size={19} color={colors.textSecondary} />
-          <TextInput value={garden.search} onChangeText={garden.changeSearch} placeholder="Tìm cây trong vườn..." placeholderTextColor={colors.textMuted} accessibilityLabel="Tìm cây trong vườn" style={styles.input} />
-          {!!garden.search && <Pressable accessibilityRole="button" onPress={garden.clearSearch} accessibilityLabel="Xóa tìm kiếm" style={styles.clear}><Ionicons name="close-circle" size={19} color={colors.textSecondary} /></Pressable>}
-        </View>
-        <Menu visible={filterOpen} onDismiss={() => setFilterOpen(false)} anchorPosition="bottom" contentStyle={styles.filterMenu} anchor={
-          <Pressable accessibilityRole="button" accessibilityLabel={`Lọc sức khỏe cây: ${FILTERS.find(item => item.id === garden.healthStatus)?.label || "Tất cả"}`} accessibilityState={{ expanded: filterOpen }} onPress={() => setFilterOpen(true)} style={({ pressed }) => [styles.filterButton, garden.healthStatus !== "all" && styles.filterButtonActive, pressed && styles.pressed]}>
-            <Ionicons name="options-outline" size={23} color={garden.healthStatus !== "all" ? colors.white : colors.primary} />
-            {garden.healthStatus !== "all" && <View style={styles.filterDot} />}
-          </Pressable>
-        }>
-          {FILTERS.map(item => <Menu.Item key={item.id} title={item.label} leadingIcon={item.id === "all" ? "view-grid-outline" : item.id === "healthy" ? "leaf" : "medical-bag"} trailingIcon={garden.healthStatus === item.id ? "check" : undefined} titleStyle={garden.healthStatus === item.id ? styles.selectedFilterTitle : undefined} onPress={() => { garden.selectHealthStatus(item.id); setFilterOpen(false); }} />)}
+      <View style={filterStyles.toolbar}>
+        <SearchField style={filterStyles.search} value={garden.search} onChangeText={garden.changeSearch}
+          onClear={garden.clearSearch} placeholder="Tìm cây trong vườn…" accessibilityLabel="Tìm cây trong vườn" />
+        <Menu visible={filterOpen} onDismiss={() => setFilterOpen(false)} anchorPosition="bottom" contentStyle={filterStyles.menu} anchor={<FilterMenuButton count={garden.healthStatus !== "all" ? 1 : 0} expanded={filterOpen}
+            accessibilityLabel={`Lọc sức khỏe cây: ${FILTERS.find(item => item.id === garden.healthStatus)?.label || "Tất cả"}`}
+            onPress={() => setFilterOpen(true)} />}>
+          {FILTERS.map(item => <Menu.Item key={item.id} title={item.label} leadingIcon={item.id === "all" ? "view-grid-outline" : item.id === "healthy" ? "leaf" : "medical-bag"} trailingIcon={garden.healthStatus === item.id ? "check" : undefined} titleStyle={garden.healthStatus === item.id ? filterStyles.menuSelectedTitle : undefined} onPress={() => { garden.selectHealthStatus(item.id); setFilterOpen(false); }} />)}
         </Menu>
       </View>
     </View>
@@ -77,55 +75,200 @@ export default function GardenScreen() {
       <Text style={styles.count}>Tổng: {garden.pagination.total} cây trong vườn</Text>
       {garden.plants.map((plant) => <GardenCard key={plant._id} plant={plant} onOpenPlant={(plantId) => router.push({ pathname: "/customer/garden/PlantList", params: { plantId } })} onOpenTreatment={(treatmentId) => router.push({ pathname: "/customer/treatments/TreatmentList", params: { treatmentId } })} />)}
       <ListPagination pagination={garden.pagination} onPageChange={garden.changePage} disabled={garden.loading || garden.refreshing} />
-      {!garden.plants.length && <View style={styles.empty}><Ionicons name="leaf-outline" size={44} color={colors.primaryLight} /><Text style={styles.emptyTitle}>Chưa có cây phù hợp</Text><Text style={styles.emptyText}>Thử bộ lọc khác hoặc thêm cây vào vườn.</Text></View>}
+      {!garden.plants.length && <EmptyState title="Chưa có cây phù hợp" description="Thử bộ lọc khác hoặc thêm cây vào vườn." />}
     </ScrollView>}
     <Navbar />
   </SafeAreaView>;
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.white },
-  header: { minHeight: 60, flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: spacing.lg },
-  headerSide: { width: 44 },
-  title: { ...typography.section, flex: 1, textAlign: "center", color: colors.textPrimary },
-  controls: { padding: spacing.lg, gap: spacing.md, backgroundColor: colors.background },
-  primaryActions: { flexDirection: "row", alignItems: "stretch", gap: 10 },
-  actionButton: { flex: 1, minWidth: 0, minHeight: 56, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 7, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 12, borderWidth: 1 },
-  addPlantButton: { backgroundColor: colors.primary, borderColor: colors.primary },
-  addScheduleButton: { backgroundColor: colors.white, borderColor: "#D5E2D8" },
-  actionLabel: { flexShrink: 1, fontSize: 12, lineHeight: 18, fontWeight: "700", color: colors.primary, textAlign: "center" },
-  addPlantLabel: { color: colors.white },
-  pressed: { opacity: 0.75 },
-  searchRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  search: { flex: 1, minWidth: 0, minHeight: 50, flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.white, paddingLeft: spacing.md, paddingRight: spacing.sm },
-  input: { flex: 1, minWidth: 0, fontSize: 13, color: colors.textPrimary, paddingVertical: 14 },
-  clear: { minWidth: 36, minHeight: 44, alignItems: "center", justifyContent: "center" },
-  filterButton: { width: 50, height: 50, borderRadius: 14, backgroundColor: colors.white, borderWidth: 1, borderColor: "#D5E2D8", alignItems: "center", justifyContent: "center" },
-  filterButtonActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterDot: { position: "absolute", top: 9, right: 9, width: 6, height: 6, borderRadius: 3, backgroundColor: "#C7E2AF" },
-  filterMenu: { backgroundColor: colors.white, borderRadius: 16 },
-  selectedFilterTitle: { color: colors.primary, fontWeight: "700" },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.md },
-  list: { flex: 1, backgroundColor: colors.background },
-  listContent: { width: "100%", maxWidth: 720, alignSelf: "center", padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxxl },
-  count: { ...typography.caption, color: colors.textSecondary },
-  card: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: spacing.md, gap: spacing.md },
-  plantRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
-  thumbnail: { width: 76, height: 92, borderRadius: radius.card, backgroundColor: colors.lightMint },
-  placeholder: { alignItems: "center", justifyContent: "center" },
-  plantInfo: { flex: 1, minWidth: 0, gap: spacing.xs },
-  plantName: { ...typography.label, color: colors.textPrimary },
-  metadata: { ...typography.caption, color: colors.textSecondary },
-  badge: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 5, borderRadius: radius.sm, backgroundColor: colors.lightMint, paddingHorizontal: 8, paddingVertical: 5 },
-  treatmentBadge: { backgroundColor: colors.warmPeachBg },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.statusSuccess },
-  treatmentDot: { backgroundColor: colors.statusWarning },
-  badgeText: { ...typography.caption, color: colors.primaryLight, fontWeight: "700" },
-  treatmentText: { color: "#946017" },
-  task: { ...typography.caption, color: colors.textPrimary },
-  taskPrefix: { color: colors.textSecondary },
-  actions: { flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", gap: spacing.sm },
-  empty: { alignItems: "center", padding: 48, gap: spacing.md },
-  emptyTitle: { ...typography.section, color: colors.textPrimary },
-  emptyText: { ...typography.body, color: colors.textSecondary, textAlign: "center" },
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  header: {
+    backgroundColor: colors.white,
+    minHeight: 60,
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingHorizontal: spacing.lg
+  },
+  headerSide: {
+    width: 44
+  },
+  title: {
+    ...typography.section,
+    flex: 1,
+    textAlign: "center",
+    color: colors.textPrimary
+  },
+  controls: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    padding: 20,
+    gap: spacing.md,
+    backgroundColor: colors.background
+  },
+  primaryActions: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 10
+  },
+  actionButton: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 56,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 7,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    borderWidth: 1
+  },
+  addPlantButton: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary
+  },
+  addScheduleButton: {
+    backgroundColor: colors.white,
+    borderColor: colors.border
+  },
+  actionLabel: {
+    flexShrink: 1,
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700",
+    color: colors.primary,
+    textAlign: "center"
+  },
+  addPlantLabel: {
+    color: colors.white
+  },
+  pressed: {
+    opacity: 0.75
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md
+  },
+  list: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  listContent: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    padding: spacing.lg,
+    gap: spacing.md,
+    paddingBottom: spacing.xxxl
+  },
+  count: {
+    ...typography.caption,
+    color: colors.textSecondary
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    padding: 16,
+    gap: spacing.md
+  },
+  plantRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md
+  },
+  thumbnail: {
+    width: 76,
+    height: 92,
+    borderRadius: radius.card,
+    backgroundColor: colors.lightMint
+  },
+  placeholder: {
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  plantInfo: {
+    flex: 1,
+    minWidth: 0,
+    gap: spacing.xs
+  },
+  plantName: {
+    fontSize: 17,
+    lineHeight: 24,
+    ...typography.label,
+    color: colors.textPrimary
+  },
+  metadata: {
+    ...typography.caption,
+    color: colors.textSecondary
+  },
+  badge: {
+    flexShrink: 1,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderRadius: radius.sm,
+    backgroundColor: colors.lightMint,
+    paddingHorizontal: 8,
+    paddingVertical: 5
+  },
+  treatmentBadge: {
+    backgroundColor: colors.warmPeachBg
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.statusSuccess
+  },
+  treatmentDot: {
+    backgroundColor: colors.statusWarning
+  },
+  badgeText: {
+    flexShrink: 1,
+    ...typography.caption,
+    color: colors.primaryLight,
+    fontWeight: "700"
+  },
+  treatmentText: {
+    color: colors.statusWarning
+  },
+  task: {
+    ...typography.caption,
+    color: colors.textPrimary
+  },
+  taskPrefix: {
+    color: colors.textSecondary
+  },
+  actions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    gap: spacing.sm
+  },
+  empty: {
+    alignItems: "center",
+    padding: 48,
+    gap: spacing.md
+  },
+  emptyTitle: {
+    ...typography.section,
+    color: colors.textPrimary
+  },
+  emptyText: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: "center"
+  }
 });

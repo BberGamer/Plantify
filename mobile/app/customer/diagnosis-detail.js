@@ -72,16 +72,36 @@ export default function DiagnosisDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  header: { flexDirection: "row", alignItems: "center" },
-  content: { padding: spacing.lg, gap: spacing.lg },
-  kind: { alignSelf: "flex-start", backgroundColor: colors.lightMint },
-  secondary: { color: colors.textSecondary },
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  header: {
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  content: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+    padding: 20,
+    gap: spacing.lg
+  },
+  kind: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.lightMint
+  },
+  secondary: {
+    color: colors.textSecondary
+  },
   center: {
     flex: 1,
     padding: spacing.xl,
     gap: spacing.md,
     alignItems: "center",
-    justifyContent: "center",
-  },
+    justifyContent: "center"
+  }
 });
