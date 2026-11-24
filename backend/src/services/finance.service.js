@@ -13,6 +13,18 @@ const AppError = require("../utils/app-error");
 const fail = (code, message, status = 409) => {
   throw new AppError(code, status, message);
 };
+async function expireTopups(filter = {}) {
+  const now = new Date();
+  return Order.updateMany(
+    { ...filter, status: "pending", expires_at: { $lte: now } },
+    { $set: {
+      status: "rejected",
+      reason: "Đơn nạp đã hết thời hạn thanh toán 15 phút và tự động bị từ chối.",
+      completed_at: now,
+    } },
+    { runValidators: true },
+  );
+}
 let ready;
 async function transaction(work) {
   if (!ready)
@@ -103,6 +115,7 @@ async function createTopup(userId, input) {
   v.fields(input, ["amount", "request_key"]);
   const amount = v.amount(input.amount),
     key = v.key(input.request_key);
+  await expireTopups({ user_id: userId });
   return transaction(async (session) => {
     await account(userId, session);
     const existing = await Order.findOne({
@@ -224,6 +237,7 @@ async function review(adminId, id, input) {
   if (!["success", "rejected"].includes(input.status))
     v.fail("Trạng thái không hợp lệ.", "status");
   const reason = v.reason(input.reason);
+  await expireTopups({ _id: id });
   return transaction(async (session) => {
     await account(adminId, session, "admin");
     const order = await Order.findById(id).session(session);
@@ -235,7 +249,7 @@ async function review(adminId, id, input) {
         ? await account(String(order.user_id), session)
         : null;
     const claimed = await Order.findOneAndUpdate(
-      { _id: order._id, status: "pending" },
+      { _id: order._id, status: "pending", expires_at: { $gt: new Date() } },
       {
         $set: {
           status: input.status,
@@ -326,6 +340,7 @@ async function webhook(payload) {
       message:
         "Đã nhận webhook thử SePay. Không phát sinh giao dịch hoặc thay đổi số dư.",
     };
+  await expireTopups();
   const hash = crypto
     .createHash("sha256")
     .update(JSON.stringify(payload))
@@ -466,6 +481,8 @@ async function list(kind, userId, input = {}) {
       v.fail("Loại giao dịch không hợp lệ.");
     filter.type = input.type;
   }
+  if (kind === "orders")
+    await expireTopups(userId ? { user_id: userId } : {});
   const [items, total] = await Promise.all([
     model
       .find(filter)
@@ -484,11 +501,13 @@ async function list(kind, userId, input = {}) {
 }
 async function orderDetail(userId, id) {
   common.id(id);
+  await expireTopups({ _id: id, user_id: userId });
   const order = await Order.findOne({ _id: id, user_id: userId }).lean();
   if (!order) fail("ORDER_NOT_FOUND", "Không tìm thấy đơn nạp.", 404);
   return presentOrder(order);
 }
 module.exports = {
+  expireTopups,
   summary,
   createTopup,
   purchase,

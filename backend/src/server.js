@@ -19,6 +19,16 @@ const startServer = async () => {
   ).catch(() => console.error("[VIP] Không đồng bộ được trạng thái hết hạn."));
   await expireVip();
   setInterval(expireVip, 60000).unref();
+  const expireTopups = async () => {
+    try {
+      await require("./services/finance.service").expireTopups();
+    } catch (error) {
+      console.error("[Finance] Không cập nhật được đơn nạp hết hạn.", error.code || error.name);
+    }
+  };
+  await expireTopups();
+  // Quét cả khi khách hàng đã đóng app; API cũng kiểm tra hạn trước mỗi thao tác.
+  setInterval(expireTopups, 5000).unref();
   app.listen(PORT, () => {
     console.log(`[Server] Plantify API dang chay tai port ${PORT}`);
     console.log(`[Server] Moi truong: ${process.env.NODE_ENV || 'development'}`);

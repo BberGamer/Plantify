@@ -13,6 +13,7 @@ const order = new Schema({
   reviewed_by: { type: oid, ref: "User" }, reason: String, completed_at: Date,
 }, { timestamps: true });
 order.index({ user_id: 1, request_key: 1 }, { unique: true });
+order.index({ status: 1, expires_at: 1 });
 const ledger = new Schema({
   user_id: { type: oid, ref: "User", required: true, index: true },
   actor_id: { type: oid, ref: "User", required: true },
