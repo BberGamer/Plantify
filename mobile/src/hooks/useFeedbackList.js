@@ -38,5 +38,9 @@ export default function useFeedbackList(manager) {
     [filters, manager],
   );
   const list = usePaginatedList(fetchPage, { limit: 15, enabled: active });
-  return { list, finance, vip, applyFilters: setFilters };
+  const changeFilter = (field, value) => {
+    if (!["type", "status"].includes(field)) return;
+    setFilters(previous => previous[field] === value ? previous : { ...previous, [field]: value });
+  };
+  return { list, finance, vip, filters, changeFilter, applyFilters: setFilters };
 }
