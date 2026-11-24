@@ -8,7 +8,7 @@ const chatTurnSchema = new mongoose.Schema({
   // Giữ giá trị lịch sử cũ; lượt mới chỉ ghi rag hoặc model.
   answer_source: { type: String, enum: ["faq", "model", "rag"], required: true },
   sources: { type: [new mongoose.Schema({
-    number: Number, type: { type: String, enum: ["plant", "disease", "protocol"] },
+    number: Number, type: { type: String, enum: ["plant", "disease", "protocol", "docx"] },
     id: String, title: String, section: String, version: Number,
     updated_at: Date, content_hash: String,
   }, { _id: false })], default: () => [] },
