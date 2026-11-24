@@ -55,7 +55,7 @@ export default function HomeHeader() {
                   : "Mở thông báo"
               }
               onPress={openNotifications}
-              iconColor="#183B2B"
+              iconColor={colors.textPrimary}
               size={20}
               style={styles.bellButton}
             />
@@ -99,7 +99,7 @@ export default function HomeHeader() {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 4,
+    marginBottom: 4
   },
   headerRow: {
     flexDirection: "row",
@@ -107,11 +107,11 @@ const styles = StyleSheet.create({
     gap: 8,
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: 12
   },
   logoContainer: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "center"
   },
   logoIcon: {
     width: 34,
@@ -119,18 +119,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: colors.primary,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   logoText: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#183B2B",
+    color: colors.textPrimary,
     marginLeft: 8,
-    letterSpacing: -0.3,
+    letterSpacing: -0.3
   },
   headerRight: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "center"
   },
   adminBadgeBtn: {
     flexDirection: "row",
@@ -139,51 +139,58 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 14,
-    marginRight: 8,
+    marginRight: 8
   },
   adminBadgeBtnText: {
     color: "#FFFFFF",
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 20,
     fontWeight: "700",
-    marginLeft: 4,
+    marginLeft: 4
   },
   bellButton: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     borderRadius: 19,
     borderWidth: 1,
-    borderColor: "#E2E8E4",
+    borderColor: colors.border,
     backgroundColor: "#FFFFFF",
     margin: 0,
-    marginRight: 10,
+    marginRight: 10
   },
-  bellContainer: { position: "relative" },
-  unreadBadge: { position: "absolute", top: -3, right: 4 },
+  bellContainer: {
+    position: "relative"
+  },
+  unreadBadge: {
+    position: "absolute",
+    top: -3,
+    right: 4
+  },
   avatarButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.avatarBg,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.avatarBg
   },
   avatarText: {
     color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "700"
   },
   greetingSection: {
-    marginTop: 10,
+    marginTop: 20
   },
   greetingSub: {
     fontSize: 14,
     fontWeight: "600",
     color: colors.accentGreen,
-    marginBottom: 4,
+    marginBottom: 4
   },
   greetingMain: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "700",
-    color: "#183B2B",
-    lineHeight: 32,
-    letterSpacing: -0.4,
-  },
+    color: colors.textPrimary,
+    lineHeight: 36,
+    letterSpacing: -0.4
+  }
 });

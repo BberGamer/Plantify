@@ -1,5 +1,9 @@
+import EmptyState from "../common/EmptyState";
+import LoadingState from "../common/LoadingState";
+import { FilterOptions } from "../common/FilterControls";
+import { componentStyles } from "../../theme/componentStyles";
 import { FlatList, Image, ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Button, Card, IconButton, SegmentedButtons, Text, TextInput } from "react-native-paper";
+import { ActivityIndicator, Button, Card, IconButton, Text, TextInput } from "react-native-paper";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import useFeedbackForm from "../../hooks/useFeedbackForm";
@@ -31,16 +35,16 @@ function HistoryPicker({ onSelect, onClose }) {
     <FlatList data={list.loading || list.error ? [] : list.items} keyExtractor={item => item._id}
       contentContainerStyle={styles.content}
       ListHeaderComponent={<>
-        <Button onPress={onClose}>Quay lại bản nháp</Button>
-        <SegmentedButtons value={kind} onValueChange={setKind} buttons={[
+        <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={onClose}>Quay lại bản nháp</Button>
+        <FilterOptions value={kind} onChange={setKind} options={[
           { value: "all", label: "Tất cả" },
           { value: "plant", label: "Nhận diện cây" },
           { value: "disease", label: "Bệnh cây" },
         ]} />
       </>}
-      ListEmptyComponent={list.loading ? <ActivityIndicator /> : list.error
+      ListEmptyComponent={list.loading ? <LoadingState /> : list.error
         ? <ListError message={list.error} onRetry={list.retry} />
-        : <Text>Chưa có kết quả đã lưu.</Text>}
+        : <EmptyState title="Chưa có kết quả đã lưu." icon="document-text-outline" />}
       renderItem={({ item }) => (
         <Card style={styles.card} onPress={() => onSelect(item)} accessibilityLabel="Chọn kết quả đã lưu">
           <Card.Content><DiagnosisSummary diagnosis={item} /></Card.Content>
@@ -72,7 +76,7 @@ export default function FeedbackFormScreen({ diagnosisId }) {
         : <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           {blocked ? <>
             <Text>Bạn cần gói VIP còn hạn để gửi đóng góp.</Text>
-            <Button mode="contained" onPress={() => router.push("/customer/vip")}>Xem gói VIP</Button>
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="contained" onPress={() => router.push("/customer/vip")}>Xem gói VIP</Button>
           </> : <>
             <TextInput mode="outlined" label="Mô tả" value={form.description} multiline maxLength={250}
               onChangeText={form.changeDescription} disabled={form.busy} style={local.description} />
@@ -88,18 +92,18 @@ export default function FeedbackFormScreen({ diagnosisId }) {
                 </View>
               ))}
             </View>
-            <Button mode="outlined" icon="image-plus" onPress={form.pickImages}
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" icon="image-plus" onPress={form.pickImages}
               disabled={form.busy || form.images.length >= 5}>Thêm ảnh</Button>
             <Text variant="titleMedium">Kết quả đã lưu (không bắt buộc)</Text>
             {form.loadingDiagnosis && <ActivityIndicator />}
             {!!form.diagnosis && <DiagnosisSummary diagnosis={form.diagnosis} />}
             <View style={styles.row}>
-              <Button onPress={() => setChoosing(true)} disabled={form.busy || form.loadingDiagnosis}>
+              <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={() => setChoosing(true)} disabled={form.busy || form.loadingDiagnosis}>
                 {form.diagnosis ? "Đổi lịch sử" : "Chọn lịch sử"}
               </Button>
-              {!!form.diagnosis && <Button disabled={form.busy} onPress={() => form.selectDiagnosis(null)}>Bỏ chọn</Button>}
+              {!!form.diagnosis && <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} disabled={form.busy} onPress={() => form.selectDiagnosis(null)}>Bỏ chọn</Button>}
             </View>
-            <Button mode="contained" onPress={form.submit} loading={form.busy}
+            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="contained" onPress={form.submit} loading={form.busy}
               disabled={form.busy || form.loadingDiagnosis}>Gửi đóng góp</Button>
           </>}
         </ScrollView>}
@@ -109,9 +113,25 @@ export default function FeedbackFormScreen({ diagnosisId }) {
 }
 
 const local = StyleSheet.create({
-  description: { minHeight: 110 },
-  preview: { width: 84, height: 84 },
-  image: { width: "100%", height: "100%", borderRadius: 10 },
-  remove: { position: "absolute", right: 0, top: 0 },
-  summary: { flex: 1, gap: 4 },
+  description: {
+    minHeight: 110
+  },
+  preview: {
+    width: 84,
+    height: 84
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10
+  },
+  remove: {
+    position: "absolute",
+    right: 0,
+    top: 0
+  },
+  summary: {
+    flex: 1,
+    gap: 4
+  }
 });

@@ -1,3 +1,5 @@
+import { componentStyles } from "../../theme/componentStyles";
+import { colors, radius } from "../../theme";
 import React from "react";
 import { useRouter } from "expo-router";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
@@ -27,14 +29,14 @@ export default function GardenSummary({ summary }) {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statCol}>
-            <Text style={[styles.statNumber, { color: "#16A34A" }]}>
+            <Text style={[styles.statNumber, { color: colors.primaryLight }]}>
               {summary.healthy}
             </Text>
             <Text style={styles.statLabel}>Khỏe mạnh</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statCol}>
-            <Text style={[styles.statNumber, { color: "#D97706" }]}>
+            <Text style={[styles.statNumber, { color: colors.statusWarning }]}>
               {summary.treatment}
             </Text>
             <Text style={styles.statLabel}>Đang điều trị</Text>
@@ -52,7 +54,7 @@ export default function GardenSummary({ summary }) {
           </View>
           <ProgressBar
             progress={summary.healthyRatio}
-            color="#2E8B57"
+            color={colors.primaryLight}
             style={styles.progressTrack}
           />
         </View>
@@ -60,11 +62,11 @@ export default function GardenSummary({ summary }) {
         <Button
           onPress={openGarden}
           mode="contained"
-          buttonColor="#EAF5EE"
-          textColor="#1A5B40"
+          buttonColor={colors.lightMint}
+          textColor={colors.primary}
           contentStyle={styles.cardButtonContent}
           labelStyle={styles.buttonText}
-          style={styles.cardButton}
+          style={[styles.cardButton, componentStyles.buttonShape]}
         >
           Xem vườn của tôi
         </Button>
@@ -75,93 +77,100 @@ export default function GardenSummary({ summary }) {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 24,
+    marginTop: 24
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 12
   },
   title: {
-    fontSize: 19,
+    lineHeight: 26,
+    flexShrink: 1,
+    fontSize: 18,
     fontWeight: "800",
-    color: "#183B2B",
+    color: colors.textPrimary
   },
   linkText: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#247855",
+    color: colors.primaryLight
   },
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    borderRadius: radius.card,
     borderWidth: 1,
-    borderColor: "#EBF0EC",
-    padding: 16,
-    elevation: 2,
+    borderColor: colors.border,
+    padding: 20,
+    elevation: 0
   },
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 4,
+    paddingVertical: 4
   },
   statCol: {
     flex: 1,
-    alignItems: "center",
+    alignItems: "center"
   },
   statNumber: {
     fontSize: 23,
     fontWeight: "800",
-    color: "#183B2B",
+    color: colors.textPrimary
   },
   statLabel: {
-    fontSize: 12,
-    color: "#6B7280",
-    marginTop: 4,
+    textAlign: "center",
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.textSecondary,
+    marginTop: 4
   },
   statDivider: {
     width: 1,
     height: 36,
-    backgroundColor: "#EBF0EC",
+    backgroundColor: colors.border
   },
   healthSection: {
-    marginTop: 18,
+    marginTop: 18
   },
   healthLabelRow: {
+    flexWrap: "wrap",
+    gap: 8,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 8
   },
   healthTitle: {
     fontSize: 13,
-    color: "#374151",
+    color: colors.textPrimary
   },
   healthValue: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#16A34A",
+    color: colors.primaryLight
   },
   progressTrack: {
     height: 8,
     borderRadius: 4,
     backgroundColor: "#F5ECE1",
-    overflow: "hidden",
+    overflow: "hidden"
   },
   cardButton: {
-    backgroundColor: "#EAF5EE",
+    backgroundColor: colors.lightMint,
     borderRadius: 14,
-    marginTop: 16,
+    marginTop: 16
   },
   cardButtonContent: {
-    height: 45,
+    minHeight: 48,
+    height: undefined
   },
   buttonText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1A5B40",
-    marginVertical: 0,
-  },
+    color: colors.primary,
+    marginVertical: 0
+  }
 });

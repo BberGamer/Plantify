@@ -1,18 +1,20 @@
-﻿import { View } from "react-native";
+import { componentStyles } from "../../theme/componentStyles";
+﻿import { View, StyleSheet } from "react-native";
 import { ActivityIndicator, Button, Card, Text } from "react-native-paper";
 import { useRouter } from "expo-router";
+import { colors, radius, spacing, typography } from "../../theme";
 
 export default function TodayTasks({ care }) {
   const router = useRouter();
   return (
-    <View style={{ marginTop: 24, gap: 12 }}>
-      <Text variant="titleLarge">Chăm sóc thường hôm nay</Text>
+    <View style={styles.section}>
+      <Text accessibilityRole="header" style={styles.title}>Lịch chăm sóc hôm nay</Text>
       {care.loading ? (
         <ActivityIndicator />
       ) : care.error ? (
         <>
-          <Text>{care.error}</Text>
-          <Button onPress={care.reload}>Thử lại</Button>
+          <Text accessibilityRole="alert" style={styles.error}>{care.error}</Text>
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={care.reload}>Thử lại</Button>
         </>
       ) : (
         <>
@@ -22,7 +24,7 @@ export default function TodayTasks({ care }) {
           {care.tasks.slice(0, 5).map((task) => (
             <Card
               key={`${task.schedule_id}:${task.date}`}
-              style={{ backgroundColor: "white" }}
+              style={styles.card}
             >
               <Card.Content>
                 <Text variant="titleMedium">
@@ -37,7 +39,7 @@ export default function TodayTasks({ care }) {
                       : "Chưa hoàn thành"}
                 </Text>
                 {task.status === "pending" && (
-                  <Button
+                  <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
                     disabled={care.busy}
                     onPress={() => care.complete(task)}
                   >
@@ -49,7 +51,7 @@ export default function TodayTasks({ care }) {
           ))}
         </>
       )}
-      <Button
+      <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
         icon="calendar"
         mode="outlined"
         onPress={() => router.push("/customer/care")}
@@ -59,3 +61,24 @@ export default function TodayTasks({ care }) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  section: {
+    marginTop: spacing.xxxl,
+    gap: spacing.md
+  },
+  title: {
+    ...typography.section,
+    color: colors.textPrimary
+  },
+  error: {
+    ...typography.body,
+    color: colors.statusError
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.card
+  }
+});

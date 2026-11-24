@@ -1,5 +1,7 @@
-import React from "react";
-import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import ImageWithFallback from "../../common/ImageWithFallback";
+import { radius } from "../../../theme";
+
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../theme/colors";
@@ -16,27 +18,13 @@ const PATHOGEN_LABELS = {
 
 export default function DiseaseCard({ item, disabled, onEdit, onDelete }) {
   const active = item.status === "active";
-  const [imageFailed, setImageFailed] = React.useState(false);
   const hasActions =
     typeof onEdit === "function" && typeof onDelete === "function";
   return (
     <View style={styles.card}>
       <View style={styles.cardTop}>
-        <View style={styles.imageWrap}>
-          {item.disease_image_url && !imageFailed ? (
-            <Image
-              source={{ uri: item.disease_image_url }}
-              style={styles.image}
-              onError={() => setImageFailed(true)}
-            />
-          ) : (
-            <Ionicons
-              name="bug-outline"
-              size={24}
-              color={colors.primaryLight}
-            />
-          )}
-        </View>
+        <ImageWithFallback uri={item.disease_image_url} style={styles.imageWrap}
+          accessibilityLabel={`Ảnh ${item.disease_name}`} placeholderIcon="bug-outline" placeholderLabel="Ảnh bệnh chưa khả dụng" />
         <View style={styles.info}>
           <View style={styles.titleRow}>
             <Text style={styles.name} numberOfLines={1}>
@@ -111,10 +99,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 15,
-    padding: 13,
+    borderRadius: radius.card,
+    padding: 16
   },
-  cardTop: { flexDirection: "row", alignItems: "center" },
+  cardTop: {
+    flexWrap: "wrap",
+    gap: 8,
+    flexDirection: "row",
+    alignItems: "flex-start"
+  },
   imageWrap: {
     width: 52,
     height: 52,
@@ -122,70 +115,111 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: colors.warmPeachBg,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
-  image: { width: "100%", height: "100%" },
-  info: { flex: 1, marginLeft: 11, minWidth: 0 },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  name: { flex: 1, color: colors.textPrimary, fontSize: 15, fontWeight: "800" },
+  image: {
+    width: "100%",
+    height: "100%"
+  },
+  info: {
+    flex: 1,
+    marginLeft: 11,
+    minWidth: 0
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8
+  },
+  name: {
+    lineHeight: 24,
+    flex: 1,
+    color: colors.textPrimary,
+    fontSize: 17,
+    fontWeight: "800"
+  },
   scientificName: {
     color: colors.textSecondary,
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 20,
     fontStyle: "italic",
-    marginTop: 2,
+    marginTop: 2
   },
   pathogenRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginTop: 5,
+    marginTop: 5
   },
-  pathogen: { color: colors.textSecondary, fontSize: 11 },
+  pathogen: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20
+  },
   status: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
     borderRadius: 7,
     paddingHorizontal: 7,
-    paddingVertical: 4,
+    paddingVertical: 4
   },
-  active: { backgroundColor: colors.lightMint },
-  inactive: { backgroundColor: colors.borderLight },
-  statusDot: { width: 5, height: 5, borderRadius: 3 },
-  activeDot: { backgroundColor: colors.statusSuccess },
-  inactiveDot: { backgroundColor: colors.textMuted },
-  statusText: { color: colors.primaryLight, fontSize: 9, fontWeight: "800" },
-  inactiveText: { color: colors.textSecondary },
+  active: {
+    backgroundColor: colors.lightMint
+  },
+  inactive: {
+    backgroundColor: colors.borderLight
+  },
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3
+  },
+  activeDot: {
+    backgroundColor: colors.statusSuccess
+  },
+  inactiveDot: {
+    backgroundColor: colors.textMuted
+  },
+  statusText: {
+    color: colors.primaryLight,
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "800"
+  },
+  inactiveText: {
+    color: colors.textSecondary
+  },
   symptoms: {
     color: colors.textSecondary,
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 20,
     marginTop: 11,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
+    borderTopColor: colors.borderLight
   },
   actions: {
     flexDirection: "row",
     justifyContent: "flex-end",
     gap: 9,
-    marginTop: 11,
+    marginTop: 11
   },
   editButton: {
-    width: 38,
-    height: 36,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 9,
+    borderRadius: radius.input
   },
   deleteButton: {
-    width: 38,
-    height: 36,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.warmPeachBg,
-    borderRadius: 9,
-  },
+    borderRadius: radius.input
+  }
 });

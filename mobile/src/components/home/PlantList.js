@@ -1,3 +1,4 @@
+import { colors, radius } from "../../theme";
 import React from "react";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -56,11 +57,11 @@ export default function PlantList({ plants }) {
                     {
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: "#EAF5EE",
+                      backgroundColor: colors.lightMint,
                     },
                   ]}
                 >
-                  <Ionicons name="leaf-outline" size={40} color="#247855" />
+                  <Ionicons name="leaf-outline" size={40} color={colors.primaryLight} />
                 </View>
               )}
               <View
@@ -69,8 +70,8 @@ export default function PlantList({ plants }) {
                   {
                     backgroundColor:
                       plant.health_status === "treatment"
-                        ? "#F59E0B"
-                        : "#22C55E",
+                        ? colors.statusWarning
+                        : colors.statusSuccess,
                   },
                 ]}
               />
@@ -92,46 +93,48 @@ export default function PlantList({ plants }) {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 24,
+    marginTop: 24
   },
   headerRow: {
+    flexWrap: "wrap",
+    gap: 8,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 12
   },
   title: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#183B2B",
+    color: colors.textPrimary
   },
   linkText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#247855",
+    color: colors.primaryLight
   },
   scrollList: {
-    paddingRight: 8,
+    paddingRight: 8
   },
   card: {
-    width: 148,
+    width: 176,
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    borderRadius: radius.card,
     marginRight: 14,
     borderWidth: 1,
-    borderColor: "#EBF0EC",
+    borderColor: colors.border,
     overflow: "hidden",
-    elevation: 2,
+    elevation: 0
   },
   imageWrapper: {
     width: "100%",
-    height: 140,
-    position: "relative",
+    height: 156,
+    position: "relative"
   },
   image: {
     width: "100%",
     height: "100%",
-    borderRadius: 0,
+    borderRadius: 0
   },
   statusDot: {
     position: "absolute",
@@ -141,19 +144,21 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: "#FFFFFF"
   },
   cardContent: {
-    padding: 12,
+    padding: 12
   },
   plantName: {
-    fontSize: 14.5,
+    lineHeight: 24,
+    fontSize: 16,
     fontWeight: "700",
-    color: "#183B2B",
+    color: colors.textPrimary
   },
   plantStatus: {
-    fontSize: 11.5,
-    color: "#6B7280",
-    marginTop: 3,
-  },
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.textSecondary,
+    marginTop: 3
+  }
 });
