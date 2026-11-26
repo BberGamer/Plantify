@@ -22,7 +22,7 @@ LOGGER = logging.getLogger(__name__)
 ULTRALYTICS_VERSION = "8.4.198"
 CHECKPOINT = "best_macro_f1.pt"
 IMAGE_SIZE = 384
-CLASS_COUNT = 78
+CLASS_COUNT = 60
 IMAGE_FORMATS = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 
 
@@ -69,7 +69,7 @@ def class_probabilities(values, *, logits=False):
 
 
 # Mục đích: Xác minh bộ model trước khi nạp.
-# Cách chạy: Đối chiếu run, epoch, hash weights và thứ tự 78 nhãn; sai thì báo lỗi.
+# Cách chạy: Đối chiếu run, epoch, hash weights và thứ tự 60 nhãn; sai thì báo lỗi.
 def verify_bundle(settings):
     root = settings.model_dir
     summary = read_json(root / "run_summary.json")
@@ -80,7 +80,7 @@ def verify_bundle(settings):
         or summary.get("image_size") != IMAGE_SIZE
         or summary.get("classes") != CLASS_COUNT
     ):
-        raise ValueError("Bundle phải là run YOLO26m classification COMPLETED, 384×384, 78 class.")
+        raise ValueError("Bundle phải là run YOLO26m classification COMPLETED, 384×384, 60 class.")
     run_id = summary.get("run_id")
     completed = summary.get("epochs_completed")
     if not isinstance(run_id, str) or not run_id or type(completed) is not int or completed <= 0:
@@ -100,7 +100,7 @@ def verify_bundle(settings):
         raise ValueError("SHA-256/kích thước weights không khớp bundle; không nạp model.")
     mapping = read_json(root / "metadata" / "class_mapping.json")
     if not isinstance(mapping, list) or len(mapping) != CLASS_COUNT:
-        raise ValueError("Mapping phải có đủ 78 class.")
+        raise ValueError("Mapping phải có đủ 60 class.")
     folders = []
     for class_id, entry in enumerate(mapping):
         if (
@@ -233,7 +233,7 @@ class PlantClassifier:
                     self.info["run_id"], CHECKPOINT, self.info["checkpoint_epoch"], settings.device)
 
     # Mục đích: Chạy phân loại trên ảnh đã chuẩn bị.
-    # Cách chạy: Gọi YOLO với cấu hình cố định, kiểm tra rồi trả điểm của 78 class.
+    # Cách chạy: Gọi YOLO với cấu hình cố định, kiểm tra rồi trả điểm của 60 class.
     def _predict(self, image):
         results = self.model.predict(
             image, imgsz=IMAGE_SIZE, device=self.settings.device,
