@@ -71,5 +71,5 @@ __pycache__/
 *.pt
 
 # Local runtime model bundle (weights and metadata)
+/model/
 /inference/model/
-/inference/input_guard_model/

@@ -98,14 +98,35 @@ export async function syncPushDevice(session, rotatedToken) {
   }
   if (!current()) return;
   if (!permission.granted) {
+    if (__DEV__) console.warn("[Push] Plantify chưa có quyền thông báo Android.");
     if ((await storage()).binding && current()) await clearPushBinding();
     return;
   }
-  if (!(await TaskManager.isTaskRegisteredAsync(TASK)))
-    await Notifications.registerTaskAsync(TASK);
-  const token =
-    rotatedToken ?? (await Notifications.getDevicePushTokenAsync()).data;
+  let token = rotatedToken;
+  if (token === undefined) {
+    try {
+      token = (await Notifications.getDevicePushTokenAsync()).data;
+    } catch (error) {
+      if (__DEV__) {
+        console.warn(
+          "[Push] Không lấy được FCM token.",
+          error.code || error.name,
+          error.message,
+        );
+      }
+      throw error;
+    }
+  }
   if (typeof token !== "string" || !current()) return;
+  try {
+    if (!(await TaskManager.isTaskRegisteredAsync(TASK)))
+      await Notifications.registerTaskAsync(TASK);
+  } catch (error) {
+    if (__DEV__) {
+      console.warn("[Push] Không đăng ký được tác vụ nhận push.", error.code || error.name);
+    }
+    throw error;
+  }
 
   const registration = await serialize(async () => {
     if (!current()) return;
@@ -134,6 +155,12 @@ export async function syncPushDevice(session, rotatedToken) {
       { sessionContext: session, timeout: 10000 },
     );
   } catch (error) {
+    if (__DEV__) {
+      console.warn(
+        "[Push] API đăng ký thiết bị thất bại.",
+        error.response?.status ?? error.code ?? error.name,
+      );
+    }
     if (error.response?.data?.code === "DEVICE_BINDING_INACTIVE" && current()) {
       await clearPushBinding();
     }

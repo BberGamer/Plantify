@@ -14,7 +14,7 @@ export default function CatalogAiPicker({ ai, disabled, plantIds }) {
     row[ai.kind === "plant" ? "plant_id" : "disease_id"] !== ai.targetId);
   return <View style={styles.section}>
     <Text variant="titleMedium">Nhãn AI nhận diện</Text>
-    <Text>Chỉ chọn nhãn đúng với cây/bệnh này. Không chọn nhãn vẫn lưu được danh mục, nhưng AI sẽ không trỏ đến bản ghi mới.</Text>
+    <Text>Thêm danh mục không làm model học thêm class. Chỉ chọn nhãn đúng với cây/bệnh này. Không chọn nhãn vẫn lưu được danh mục, nhưng AI sẽ không trỏ đến bản ghi mới.</Text>
     {plantIds && <Text>Nhãn bệnh được lọc theo cây liên quan đã chọn. Nhãn chưa có cây cần được gán tại màn quản lý cây trước.</Text>}
     {ai.loading && <ActivityIndicator accessibilityLabel="Đang tải nhãn AI" />}
     {!!ai.error && <View><Text accessibilityRole="alert" style={styles.error}>{ai.error}</Text><Button onPress={ai.retry} disabled={disabled}>Thử lại nhãn AI</Button></View>}

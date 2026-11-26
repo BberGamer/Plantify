@@ -3,6 +3,7 @@ const Plant = require("../models/plant.model");
 const Disease = require("../models/disease.model");
 const TreatmentProtocol = require("../models/treatmentProtocol.model");
 const AppError = require("../utils/app-error");
+const docx = require("./chatDocx.service");
 
 const normalize = (value) =>
   String(value || "")
@@ -64,13 +65,10 @@ const buildDocuments = async (plants, diseases, protocols, validProtocol) => {
   const activeDiseases = diseases.filter(
     (disease) => disease.status === "active",
   );
-  const verified = activeDiseases.filter(
-    (disease) => disease.content_status === "verified",
-  );
   const plantMap = new Map(
     published.map((plant) => [String(plant._id), plant]),
   );
-  // Duyệt phác đồ độc lập với xác minh mô tả bệnh; chỉ dùng bệnh active để nối tên/ID.
+  // Duyệt phác đồ độc lập với nội dung mô tả bệnh; chỉ dùng bệnh active để nối tên/ID.
   const diseaseMap = new Map(
     activeDiseases.map((disease) => [String(disease._id), disease]),
   );
@@ -99,7 +97,6 @@ const buildDocuments = async (plants, diseases, protocols, validProtocol) => {
     const names = [
       plant.common_name,
       plant.scientific_name,
-      ...(plant.diagnosis_aliases || []),
     ].filter(Boolean);
     add("plant", plant, plant.common_name, [String(plant._id)], names, [
       [
@@ -112,16 +109,16 @@ const buildDocuments = async (plants, diseases, protocols, validProtocol) => {
       ]),
     ]);
   }
-  for (const disease of verified) {
+  for (const disease of activeDiseases) {
     const related = published.filter((plant) =>
       (plant.common_disease_ids || []).some(
         (id) => String(id) === String(disease._id),
       ),
     );
+    if (!related.length) continue;
     const names = [
       disease.disease_name,
       disease.scientific_name,
-      ...(disease.diagnosis_aliases || []),
     ].filter(Boolean);
     add(
       "disease",
@@ -268,7 +265,6 @@ const namedPlants = (message, plants) => {
       [
         plant.common_name,
         plant.scientific_name,
-        ...(plant.diagnosis_aliases || []),
       ].some(
         (name) =>
           normalize(name).length >= 3 && query.includes(` ${normalize(name)} `),
@@ -278,13 +274,20 @@ const namedPlants = (message, plants) => {
 };
 
 const rank = (documents, message, history = [], plants = []) => {
+  // Chủ thể DOCX lấy từ nội dung file, không cần ObjectId hoặc bản ghi danh mục.
+  const subjects = new Map(plants.map((plant) => [String(plant._id), plant]));
+  for (const doc of documents) {
+    if (doc.type === "docx" && doc.plantName)
+      subjects.set(doc.plantIds[0], { _id: doc.plantIds[0], common_name: doc.plantName });
+  }
+  const retrievalPlants = [...subjects.values()];
   const treatmentIntent =
     /\b(phac do|dieu tri|chua benh|tri benh|thuoc|lieu luong|giai doan)\b/.test(
       normalize(message),
     );
   const current = new Set(tokens(message));
   if (!current.size) return [];
-  let plantIds = namedPlants(message, plants);
+  let plantIds = namedPlants(message, retrievalPlants);
   const previous =
     [...history].reverse().find((turn) => turn.role === "user")?.content || "";
   // Chỉ kế thừa chủ thể ở câu ngắn nối tiếp; câu hỏi có tên cây mới ưu tiên tên mới.
@@ -294,13 +297,26 @@ const rank = (documents, message, history = [], plants = []) => {
     /\b(vay|con|no|do|nay|bao nhieu|bao lau|the nao)\b/.test(
       normalize(message),
     );
-  if (followup) plantIds = namedPlants(previous, plants);
+  if (followup) plantIds = namedPlants(previous, retrievalPlants);
   const context = followup ? new Set(tokens(previous)) : new Set();
   const terms = new Set([...current, ...context]);
+  const docxRows = documents.filter((doc) => doc.type === "docx" &&
+    (!plantIds.length || doc.plantIds.some((id) => plantIds.includes(id))));
+  const matchDisease = (text) => {
+    const query = ` ${normalize(text)} `;
+    const matches = docxRows.flatMap((doc) => (doc.diseaseName || "").split("/"))
+      .map(normalize).filter((name) => name.length >= 3 && query.includes(` ${name} `));
+    const longest = Math.max(0, ...matches.map((name) => name.length));
+    return new Set(matches.filter((name) => name.length === longest));
+  };
+  let docxDiseases = matchDisease(message);
+  if (!docxDiseases.size && followup) docxDiseases = matchDisease(previous);
   const rows = documents
     .filter(
       (doc) =>
-        !plantIds.length || doc.plantIds.some((id) => plantIds.includes(id)),
+        (!plantIds.length || doc.plantIds.some((id) => plantIds.includes(id))) &&
+        (doc.type !== "docx" || !docxDiseases.size ||
+          (doc.diseaseName || "").split("/").some((name) => docxDiseases.has(normalize(name)))),
     )
     .map((doc) => ({
       doc,
@@ -331,7 +347,8 @@ const rank = (documents, message, history = [], plants = []) => {
           ((current.has(term) ? 1 : 0.25) * idf * count * 2.2) /
           (count + 1.2 * (0.25 + (0.75 * words.length) / (average || 1)));
       }
-      return { ...doc, score: hits ? score : 0 };
+      const inheritedDisease = followup && doc.type === "docx" && docxDiseases.size;
+      return { ...doc, score: hits || inheritedDisease ? score : 0 };
     })
     .filter((doc) => doc.score > 0)
     .sort(
@@ -349,6 +366,7 @@ const createRetriever =
     plantModel = Plant,
     diseaseModel = Disease,
     protocolModel = TreatmentProtocol,
+    documentReader = docx.readDocuments,
   } = {}) =>
   async (message, history = []) => {
     try {
@@ -365,12 +383,12 @@ const createRetriever =
         read(
           plantModel,
           { is_published: true },
-          "common_name scientific_name diagnosis_aliases botanical_family description care_requirements common_disease_ids is_published updated_at",
+          "common_name scientific_name botanical_family description care_requirements common_disease_ids is_published updated_at",
         ),
         read(
           diseaseModel,
           { status: "active" },
-          "disease_name scientific_name diagnosis_aliases pathogen_type typical_symptoms environmental_cause status content_status created_at",
+          "disease_name scientific_name pathogen_type typical_symptoms environmental_cause status created_at",
         ),
         read(
           protocolModel,
@@ -399,6 +417,7 @@ const createRetriever =
         },
       );
       if (isProtocolListing(message)) return protocolListing(corpus, message);
+      corpus.documents.push(...await documentReader({ normalize, split }));
       if (corpus.documents.length > 20000)
         throw new Error("Chunk capacity exceeded");
       const selected = [];
@@ -434,7 +453,7 @@ const createRetriever =
               excerpt: doc.content,
             })),
           )
-        : "Không tìm thấy tài liệu phù hợp trong danh mục Plantify.";
+        : "Không tìm thấy nguồn phù hợp trong danh mục và tài liệu DOCX Plantify.";
       return {
         sources,
         content,
