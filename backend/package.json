@@ -5,7 +5,19 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "test:auth": "node ../scripts/run-auth-tests.cjs",
+    "test:google": "node ../scripts/run-auth-tests.cjs --test-directory=google-tests",
+    "test:user": "node ../scripts/run-auth-tests.cjs --test-directory=user-tests",
+    "test:finance": "node ../scripts/run-auth-tests.cjs --test-directory=finance-tests",
+    "test:catalog": "node ../scripts/run-auth-tests.cjs --test-directory=catalog-tests",
+    "test:garden": "node ../scripts/run-auth-tests.cjs --test-directory=garden-tests",
+    "test:diagnosis": "node ../scripts/run-auth-tests.cjs --test-directory=diagnosis-tests",
+    "test:chatai": "node ../scripts/run-auth-tests.cjs --test-directory=chatai-tests",
+    "test:treatment-schedule": "node ../scripts/run-auth-tests.cjs --test-directory=treatment-schedule-tests",
+    "test:feedback": "node ../scripts/run-auth-tests.cjs --test-directory=feedback-tests",
+    "test:notification": "node ../scripts/run-auth-tests.cjs --test-directory=notification-tests",
+    "test:care": "node ../scripts/run-auth-tests.cjs --test-directory=care-tests"
   },
   "dependencies": {
     "archiver": "^8.0.0",

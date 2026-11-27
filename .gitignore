@@ -8,6 +8,7 @@ coverage/
 tests/
 test/
 .npm-cache/
+/scripts/
 
 # ===== Production & Build =====
 build/
