@@ -15,12 +15,17 @@ const text = (value) => typeof value === "string" && value.trim().length > 0;
 const optionalText = (value) => value === null || typeof value === "string";
 const optionalId = (value) =>
   value === null || (typeof value === "string" && /^[a-f\d]{24}$/i.test(value));
+const snapshotValid = (item) =>
+  !!item && text(item.title) && Number.isInteger(item.rank) && item.rank >= 1 &&
+  item.rank <= 3 && Number.isFinite(item.confidence) &&
+  item.confidence >= 0 && item.confidence <= 1;
 const plantCandidateValid = (item) =>
   item &&
   optionalId(item.plant_id) &&
   !!item.plant_id &&
   text(item.plant_name) &&
   text(item.display_name) &&
+  (item.is_healthy === undefined || typeof item.is_healthy === "boolean") &&
   optionalText(item.scientific_name) &&
   plantDetailsValid(item.plant_details, item.plant_id) &&
   Number.isFinite(item.confidence) &&
@@ -34,10 +39,18 @@ const historyValid = (item) =>
   (item.result_kind === undefined ||
     ["plant", "disease"].includes(item.result_kind)) &&
   (item.result_kind !== "plant" || item.disease_id === null) &&
+  (item.is_healthy === undefined || typeof item.is_healthy === "boolean") &&
   optionalId(item.plant_id) &&
   optionalId(item.disease_id) &&
   optionalText(item.plant_name) &&
   optionalText(item.disease_name) &&
+  (item.top_prediction == null || (snapshotValid(item.top_prediction) && item.top_prediction.rank === 1)) &&
+  (item.predictions == null || (Array.isArray(item.predictions) &&
+    item.predictions.length <= 3 && item.predictions.every((prediction, index) =>
+      snapshotValid(prediction) && prediction.rank === index + 1))) &&
+  (item.selections === undefined || (Array.isArray(item.selections) &&
+    item.selections.length <= 2 && item.selections.every((selection) =>
+      snapshotValid(selection) && ["care", "treatment"].includes(selection.kind)))) &&
   item.status === "identified" &&
   (item.has_image === undefined || typeof item.has_image === "boolean") &&
   (item.created_at === null ||
@@ -102,6 +115,8 @@ export function validateResponse(envelope) {
     invalid();
   if (state === "accepted") {
     const prediction = data.prediction;
+    const validateCandidate = data.result_kind === "plant" ? plantCandidateValid : candidateValid;
+    if (!data.alternatives.slice(1, 3).every(validateCandidate)) invalid();
     if (data.result_kind === "plant") {
       if (!plantCandidateValid(prediction) || data.diagnosis_id != null)
         invalid();

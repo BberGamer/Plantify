@@ -89,4 +89,5 @@ export default {
     return adaptList((await api.get("/garden/plants", { params })).data);
   },
   getPlant: async (id) => (await api.get(`/garden/plants/${id}`)).data,
+  removePlant: async (id) => (await api.delete(`/garden/plants/${id}`)).data,
 };

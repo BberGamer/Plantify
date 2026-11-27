@@ -1,5 +1,11 @@
 const v = require("../validators/common");
 const DAY = 86400000;
+const isTime = (value) =>
+  typeof value === "string" && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+const localDateTime = (now = Date.now()) =>
+  new Date(now + 7 * 3600000).toISOString();
+const shiftDate = (day, days) =>
+  new Date(Date.parse(day) + days * DAY).toISOString().slice(0, 10);
 function date(value, field = "date") {
   if (
     typeof value !== "string" ||
@@ -30,7 +36,7 @@ function dates(from, to) {
   if (count < 0 || count > 61)
     v.invalid("to", "Chỉ xem tối đa 62 ngày mỗi lần.");
   return Array.from({ length: count + 1 }, (_, i) =>
-    new Date(Date.parse(from) + i * DAY).toISOString().slice(0, 10),
+    shiftDate(from, i),
   );
 }
-module.exports = { date, occurs, dates };
+module.exports = { date, occurs, dates, isTime, localDateTime, shiftDate };

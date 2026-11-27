@@ -17,7 +17,6 @@ import { colors, radius, spacing, typography } from "../../theme";
 import DiagnosisCapture from "./DiagnosisCapture";
 import DiagnosisPreview from "./DiagnosisPreview";
 import DiagnosisResult from "./DiagnosisResult";
-import IdentificationResult from "./IdentificationResult";
 import useDiagnosisCapture from "../../hooks/useDiagnosisCapture";
 import useFormBack from "../../hooks/useFormBack";
 import useDiagnosis from "../../hooks/useDiagnosis";
@@ -124,7 +123,12 @@ export default function AnalysisScreen({ identification = false }) {
 
   const handleBack = () => {
     if (operationLock.current) return;
-    if (showResult && diagnosis.result.result_status === "invalid_image")
+    if (
+      showResult &&
+      ["invalid_image", "unsupported_image"].includes(
+        diagnosis.result.result_status,
+      )
+    )
       capture.retake();
     else if (showResult) diagnosis.clearResult();
     else if (capture.photo) capture.retake();
@@ -133,12 +137,44 @@ export default function AnalysisScreen({ identification = false }) {
   };
   useFormBack(handleBack, busy);
 
+  const openPlan = (candidate, rank) => {
+    if (candidate.disease_id) {
+      router.push({
+        pathname: "/customer/treatments/preview",
+        params: {
+          diagnosisId: diagnosis.result.diagnosis_id,
+          rank: String(rank),
+          plantId: candidate.plant_id,
+          diseaseId: candidate.disease_id,
+        },
+      });
+      return;
+    }
+    router.push({
+      pathname: "/customer/care-generate",
+      params: {
+        plantId: candidate.plant_id,
+        generateOnOpen: "1",
+        ...(diagnosis.result.history_id && { diagnosisId: diagnosis.result.history_id, rank: String(rank) }),
+      },
+    });
+  };
+
   return (
     <SafeAreaView style={styles.screen}>
-      <ScreenHeader title={showResult ? "Kết quả phân tích" : "Quét cây"}
-        subtitle="Vuốt ngang để đổi chế độ" onBack={handleBack} disabled={busy}>
-        <IconButton size={20} icon="history" accessibilityLabel="Xem lịch sử nhận diện và chẩn đoán"
-          disabled={busy} onPress={() => router.push("/customer/diagnosis-history")} />
+      <ScreenHeader
+        title={showResult ? "Kết quả phân tích" : "Quét lá cây"}
+        subtitle="Vuốt ngang để đổi chế độ"
+        onBack={handleBack}
+        disabled={busy}
+      >
+        <IconButton
+          size={20}
+          icon="history"
+          accessibilityLabel="Xem lịch sử nhận diện và chẩn đoán"
+          disabled={busy}
+          onPress={() => router.push("/customer/diagnosis-history")}
+        />
       </ScreenHeader>
       <ActionNoticeDialog {...diagnosis.noticeDialog} />
 
@@ -165,32 +201,38 @@ export default function AnalysisScreen({ identification = false }) {
               />
               <Text style={styles.guideText}>
                 {identificationMode
-                  ? "Đặt toàn bộ cây hoặc lá rõ nét vào trong khung."
+                  ? "Đặt lá cây rõ nét vào trong khung."
                   : "Đặt vùng lá có dấu hiệu bệnh rõ nét vào trong khung."}
               </Text>
             </View>
           )}
-          {showResult && identificationMode ? (
-            <IdentificationResult
-              photo={capture.photo}
-              result={diagnosis.result}
-              onRetake={capture.retake}
-              onImageError={onImageError}
-            />
-          ) : showResult ? (
+          {showResult ? (
             <DiagnosisResult
+              key={
+                diagnosis.result.diagnosis_id ??
+                diagnosis.result.history_id ??
+                mode
+              }
               photo={capture.photo}
               result={diagnosis.result}
               onRetake={capture.retake}
               onImageError={onImageError}
-              onCreateTreatment={() =>
+              onCreatePlan={openPlan}
+              onOpenCatalog={(candidate) =>
                 router.push({
-                  pathname: "/customer/treatments/preview",
+                  pathname: "/plants/PlantList",
                   params: {
-                    diagnosisId: diagnosis.result.diagnosis_id,
-                    plantId: diagnosis.result.prediction.plant_id,
-                    diseaseId: diagnosis.result.prediction.disease_id,
+                    id: candidate.plant_id,
+                    ...(candidate.disease_id
+                      ? { diseaseId: candidate.disease_id }
+                      : {}),
                   },
+                })
+              }
+              onOpenHistory={() =>
+                router.push({
+                  pathname: "/customer/diagnosis-detail",
+                  params: { diagnosisId: diagnosis.result.history_id },
                 })
               }
             />
@@ -226,7 +268,9 @@ export default function AnalysisScreen({ identification = false }) {
             />
           )}
           {!!feedbackHistoryId && (
-            <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
+            <Button
+              style={componentStyles.buttonShape}
+              contentStyle={componentStyles.button}
               mode="outlined"
               icon="message-text-outline"
               disabled={busy}
@@ -258,13 +302,13 @@ export default function AnalysisScreen({ identification = false }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   modeBarOuter: {
     width: "100%",
     maxWidth: 600,
     alignSelf: "center",
-    paddingHorizontal: spacing.lg
+    paddingHorizontal: spacing.lg,
   },
   modeBar: {
     width: "100%",
@@ -275,7 +319,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.borderLight
+    borderColor: colors.borderLight,
   },
   modeBarDark: {
     maxWidth: 560,
@@ -284,7 +328,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#34433D",
     backgroundColor: "#17221E",
-    paddingHorizontal: spacing.sm
+    paddingHorizontal: spacing.sm,
   },
   modeTab: {
     flex: 1,
@@ -294,24 +338,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 7,
     borderRadius: radius.md,
-    position: "relative"
+    position: "relative",
   },
   modeTabActive: {
-    backgroundColor: colors.softMintBg
+    backgroundColor: colors.softMintBg,
   },
   modeLabel: {
     ...typography.label,
     color: colors.textMuted,
-    fontSize: 13
+    fontSize: 13,
   },
   modeLabelDark: {
-    color: "#94A19B"
+    color: "#94A19B",
   },
   modeLabelActive: {
-    color: colors.primary
+    color: colors.primary,
   },
   modeLabelActiveDark: {
-    color: colors.white
+    color: colors.white,
   },
   activeLine: {
     position: "absolute",
@@ -320,16 +364,16 @@ const styles = StyleSheet.create({
     bottom: 3,
     height: 3,
     borderRadius: 2,
-    backgroundColor: colors.primary
+    backgroundColor: colors.primary,
   },
   activeLineDark: {
-    backgroundColor: colors.white
+    backgroundColor: colors.white,
   },
   swipeArea: {
-    flex: 1
+    flex: 1,
   },
   body: {
-    flex: 1
+    flex: 1,
   },
   content: {
     flexGrow: 1,
@@ -338,7 +382,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    gap: spacing.md
+    gap: spacing.md,
   },
   guide: {
     flexDirection: "row",
@@ -347,16 +391,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
-    backgroundColor: colors.lightMint
+    backgroundColor: colors.lightMint,
   },
   guideText: {
     ...typography.caption,
     flex: 1,
-    color: colors.textSecondary
+    color: colors.textSecondary,
   },
   error: {
     ...typography.caption,
     color: colors.statusError,
-    textAlign: "center"
-  }
+    textAlign: "center",
+  },
 });

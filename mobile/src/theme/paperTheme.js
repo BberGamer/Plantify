@@ -1,6 +1,11 @@
-import { MD3LightTheme } from "react-native-paper";
+import { Platform } from "react-native";
+import { configureFonts, MD3LightTheme } from "react-native-paper";
 import { colors } from "./colors";
 import { radius, typography } from "./tokens";
+
+const fonts = Platform.OS === "web"
+  ? configureFonts({ config: { fontFamily: 'system-ui, "Segoe UI", Roboto, Arial, sans-serif' } })
+  : MD3LightTheme.fonts;
 
 export const paperTheme = {
   ...MD3LightTheme,
@@ -40,13 +45,13 @@ export const paperTheme = {
     },
   },
   fonts: {
-    ...MD3LightTheme.fonts,
-    bodyLarge: { ...MD3LightTheme.fonts.bodyLarge, ...typography.body },
-    labelLarge: { ...MD3LightTheme.fonts.labelLarge, ...typography.label },
-    titleLarge: { ...MD3LightTheme.fonts.titleLarge, ...typography.title },
-    bodyMedium: { ...MD3LightTheme.fonts.bodyMedium, ...typography.body },
-    bodySmall: { ...MD3LightTheme.fonts.bodySmall, ...typography.caption },
-    titleMedium: { ...MD3LightTheme.fonts.titleMedium, ...typography.section },
-    labelSmall: { ...MD3LightTheme.fonts.labelSmall, ...typography.caption },
+    ...fonts,
+    bodyLarge: { ...fonts.bodyLarge, ...typography.body },
+    labelLarge: { ...fonts.labelLarge, ...typography.label },
+    titleLarge: { ...fonts.titleLarge, ...typography.title },
+    bodyMedium: { ...fonts.bodyMedium, ...typography.body },
+    bodySmall: { ...fonts.bodySmall, ...typography.caption },
+    titleMedium: { ...fonts.titleMedium, ...typography.section },
+    labelSmall: { ...fonts.labelSmall, ...typography.caption },
   },
 };

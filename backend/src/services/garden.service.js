@@ -1,7 +1,9 @@
 const UserPlant = require("../models/userPlant.model");
 const Plant = require("../models/plant.model");
 const PlantCategory = require("../models/plantCategory.model");
+const CareSchedule = require("../models/careSchedule.model");
 const AppError = require("../utils/app-error");
+const withTransactionResult = require("../utils/transaction-result");
 const v = require("../validators/common");
 const validate = require("../validators/garden.validator");
 const TreatmentSchedule = require("../models/treatmentSchedule.model");
@@ -237,23 +239,37 @@ const update = async (userId, id, input) => {
 };
 const archive = async (userId, id) => {
   v.id(id);
-  const activeTreatment = await TreatmentSchedule.exists({
-    user_id: userId,
-    user_plant_id: id,
-    status: "in_progress",
-  });
-  if (activeTreatment)
-    throw new AppError(
-      "ACTIVE_TREATMENT_EXISTS",
-      409,
-      "Hãy kết thúc đợt điều trị trước khi lưu trữ cây.",
+  return withTransactionResult(async (session) => {
+    const plant = await UserPlant.findOne({ _id: id, user_id: userId })
+      .session(session)
+      .lean();
+    if (!plant) throw notFound();
+    if (plant.archived_at) return present(plant, null);
+
+    const activeTreatment = await TreatmentSchedule.exists({
+      user_id: userId,
+      user_plant_id: id,
+      status: "in_progress",
+    }).session(session);
+    if (plant.is_under_treatment || activeTreatment)
+      throw new AppError(
+        "ACTIVE_TREATMENT_EXISTS",
+        409,
+        "Hãy kết thúc đợt điều trị trước khi xóa cây khỏi vườn.",
+      );
+
+    const archived = await UserPlant.findOneAndUpdate(
+      { _id: id, user_id: userId },
+      { $set: { archived_at: new Date() } },
+      { new: true, runValidators: true, session },
+    ).lean();
+    await CareSchedule.updateMany(
+      { user_id: userId, user_plant_id: id, is_active: true },
+      { $set: { is_active: false } },
+      { session },
     );
-  const plant = await UserPlant.findOneAndUpdate(
-    { _id: id, user_id: userId, archived_at: null },
-    { $set: { archived_at: new Date() } },
-    { new: true, runValidators: true },
-  ).lean();
-  return plant ? present(plant, null) : detail(userId, id);
+    return present(archived, null);
+  });
 };
 
 module.exports = { list, create, detail, update, archive };

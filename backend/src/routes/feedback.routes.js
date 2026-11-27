@@ -20,9 +20,11 @@ router.use(authenticate);
 router.use("/manager", authorizeActiveManager);
 router.get("/manager", controller.list(true));
 router.get("/manager/export-images", controller.exportImages);
+router.get("/manager/export-excel", controller.downloadExcel);
 router.get("/manager/:id/images/:index", controller.image(true));
 router.get("/manager/:id/history-image", controller.managerHistoryImage);
 router.get("/manager/:id", controller.detail(true));
+router.post("/manager/:id/ai-assessment", controller.assess);
 router.patch("/manager/:id/review", controller.review);
 
 router.get("/", authorizeActiveCustomer, controller.list());

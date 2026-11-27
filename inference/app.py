@@ -125,7 +125,8 @@ def create_app(settings=None, predictor_factory=PlantClassifier):
         if classifier is None:
             raise InferenceError(503, "MODEL_NOT_READY", "Model chưa sẵn sàng.")
         return {"success": True, "message": "Model đã sẵn sàng.",
-                "data": {"status": "ready", "model": classifier.info}}
+                "data": {"status": "ready", "model": classifier.info,
+                         "input_guard": classifier.input_guard.info}}
 
     # Mục đích: Nhận ảnh và trả dự đoán model.
     # Cách chạy: Kiểm tra một file photo, gọi classifier trong thread và luôn đóng dữ liệu upload.

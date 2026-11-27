@@ -4,6 +4,7 @@ const AppError = require("../utils/app-error");
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 const parse = multer({
   storage: multer.memoryStorage(),
+  defParamCharset: "utf8",
   limits: { fileSize: MAX_DOCUMENT_BYTES, files: 1, fields: 3, parts: 4 },
 }).single("document");
 

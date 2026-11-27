@@ -54,4 +54,8 @@ module.exports = {
     (req) => garden.archive(req.user.id, req.params.id),
     "Lưu trữ cây thành công.",
   ),
+  remove: handle(
+    (req) => garden.archive(req.user.id, req.params.id),
+    "Đã xóa cây khỏi vườn.",
+  ),
 };

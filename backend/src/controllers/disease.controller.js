@@ -4,7 +4,7 @@ const { success } = require("../utils/api-response");
 const {
   createDiseasePhotos,
 } = require("../integrations/cloudinary-photo.service");
-const { saveWithPhoto } = require("../services/catalog-photo.service");
+const { saveWithPhotos } = require("../services/catalog-photo.service");
 
 const photos = createDiseasePhotos();
 
@@ -46,9 +46,9 @@ const getManagerDiseaseById = async (req, res, next) => {
 
 const createDisease = async (req, res, next) => {
   try {
-    const disease = await saveWithPhoto(
+    const disease = await saveWithPhotos(
       req.body,
-      req.file,
+      req.files,
       photos,
       "disease_image_url",
       (data) => diseaseService.createDisease(data),
@@ -61,9 +61,9 @@ const createDisease = async (req, res, next) => {
 
 const updateDisease = async (req, res, next) => {
   try {
-    const disease = await saveWithPhoto(
+    const disease = await saveWithPhotos(
       req.body,
-      req.file,
+      req.files,
       photos,
       "disease_image_url",
       (data) => diseaseService.updateDisease(req.params.id, data),

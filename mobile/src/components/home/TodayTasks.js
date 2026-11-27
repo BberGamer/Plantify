@@ -1,5 +1,5 @@
 import { componentStyles } from "../../theme/componentStyles";
-﻿import { View, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { ActivityIndicator, Button, Card, Text } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { colors, radius, spacing, typography } from "../../theme";

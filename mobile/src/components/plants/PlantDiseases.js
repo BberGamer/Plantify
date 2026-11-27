@@ -26,9 +26,13 @@ function DiseaseImage({ uri, style, onPress }) {
   );
 }
 
-export default function PlantDiseases({ diseases, loading, error, onRetry }) {
-  const [expanded, setExpanded] = useState(null);
+export default function PlantDiseases({ diseases, loading, error, onRetry, initialDiseaseId }) {
+  const [expanded, setExpanded] = useState(initialDiseaseId ?? null);
   const [zoomedImage, setZoomedImage] = useState(null);
+  const focused = initialDiseaseId && diseases.find((disease) => disease._id === initialDiseaseId);
+  const orderedDiseases = focused
+    ? [focused, ...diseases.filter((disease) => disease._id !== initialDiseaseId)]
+    : diseases;
 
   return (
     <View style={styles.section}>
@@ -64,7 +68,7 @@ export default function PlantDiseases({ diseases, loading, error, onRetry }) {
         </Text>
       ) : (
         <View style={styles.list}>
-          {diseases.map((disease) => {
+          {orderedDiseases.map((disease) => {
             const open = expanded === disease._id;
             return (
               <View
@@ -190,6 +194,7 @@ const styles = StyleSheet.create({
   heading: {
     flex: 1,
     fontSize: 17,
+    lineHeight: 24,
     fontWeight: "800",
     color: colors.textPrimary,
   },
@@ -257,6 +262,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 15,
+    lineHeight: 22,
     fontWeight: "800",
     color: colors.textPrimary,
   },

@@ -20,7 +20,7 @@ const emptyDraft = () => ({
 export default function useAddGardenPlant(
   plantId,
   gardenPlantId,
-  treatmentReturn,
+  followUp,
 ) {
   const router = useRouter();
   const notice = useActionNotice();
@@ -186,20 +186,10 @@ export default function useAddGardenPlant(
         throw new Error("Phản hồi lưu cây không hợp lệ.");
       if (current()) {
         if (editing) router.back();
-        else if (treatmentReturn?.diseaseId && treatmentReturn?.plantId) {
+        else if (followUp) {
           router.replace({
-            pathname: "/customer/treatments/preview",
-            params: {
-              diseaseId: treatmentReturn.diseaseId,
-              plantId: treatmentReturn.plantId,
-              userPlantId: response.data._id,
-              ...(treatmentReturn.diagnosisId
-                ? { diagnosisId: treatmentReturn.diagnosisId }
-                : {}),
-              ...(treatmentReturn.startDate
-                ? { startDate: treatmentReturn.startDate }
-                : {}),
-            },
+            pathname: followUp.pathname,
+            params: { ...followUp.params, userPlantId: response.data._id },
           });
         } else
           router.replace({

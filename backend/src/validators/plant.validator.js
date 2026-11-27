@@ -1,4 +1,5 @@
 const v = require("./common");
+const { normalizeImageUrls } = require("./catalog-images");
 const fields = [
   "category_id",
   "common_name",
@@ -18,6 +19,8 @@ const payload = (input, creating = false) => {
   const result = {};
   for (const field of fields)
     if (input[field] !== undefined) result[field] = input[field];
+  if (input.image_urls !== undefined)
+    result.image_urls = normalizeImageUrls(input.image_urls);
   for (const field of ["common_name", "scientific_name"]) {
     if (creating || result[field] !== undefined)
       result[field] = v.text(result[field], field);

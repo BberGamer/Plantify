@@ -1,4 +1,4 @@
-// index.js - C?c component c?a m?n h?nh qu?n l? c?y.
+// Các component của màn hình quản lý cây.
 export { default as PlantHeader } from "./PlantHeader";
 export { default as PlantSearchBar } from "./PlantSearchBar";
 export { default as PlantCard } from "./PlantCard";

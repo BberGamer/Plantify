@@ -5,6 +5,7 @@ import { View, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
+import { typography } from "../../theme/tokens";
 
 export default function PlantInformation({ plant }) {
   return (
@@ -64,10 +65,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   commonName: {
-    fontSize: 22,
+    ...typography.title,
     fontWeight: "800",
     color: colors.textPrimary,
-    letterSpacing: -0.4,
     marginBottom: 10,
   },
   identityRow: {
@@ -95,8 +95,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    ...typography.section,
     color: colors.textPrimary,
     marginTop: 16,
     marginBottom: 8,

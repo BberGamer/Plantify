@@ -1,6 +1,7 @@
 import SectionCard from "../../../src/components/common/SectionCard";
 import DetailField from "../../../src/components/common/DetailField";
 import LoadingState from "../../../src/components/common/LoadingState";
+import ConfirmDeleteDialog from "../../../src/components/common/ConfirmDeleteDialog";
 import { componentStyles } from "../../../src/theme/componentStyles";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
@@ -28,6 +29,21 @@ export default function PlantListScreen() {
         <DetailField label="Loài cây" value={plant.species_name || "Chưa xác định loài"} />
         <DetailField label="Vị trí đặt cây" value={plant.placement_location || "Chưa có vị trí đặt cây"} />
         {!plant.archived_at && <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" icon="pencil-outline" onPress={() => router.push({ pathname: "/customer/garden/edit", params: { plantId } })}>Sửa thông tin cây</Button>}
+        {!plant.archived_at && (
+          <Button
+            style={componentStyles.buttonShape}
+            contentStyle={componentStyles.button}
+            icon="trash-can-outline"
+            textColor={colors.statusError}
+            disabled={detail.deletePending || Boolean(plant.active_treatment)}
+            onPress={detail.openDelete}
+          >
+            Xóa khỏi vườn
+          </Button>
+        )}
+        {!!plant.active_treatment && (
+          <Text style={styles.body}>Hãy kết thúc đợt điều trị trước khi xóa cây này.</Text>
+        )}
       </SectionCard>
       {plant.active_treatment ? <SectionCard title="Đang điều trị" icon="medkit-outline">
         <Text style={styles.body}>Ngày {plant.active_treatment.current_day}/{plant.active_treatment.duration_days}</Text>
@@ -35,6 +51,19 @@ export default function PlantListScreen() {
         <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="contained" onPress={() => router.push({ pathname: "/customer/treatments/TreatmentList", params: { treatmentId: plant.active_treatment._id } })}>Xem tiến độ điều trị</Button>
       </SectionCard> : <SectionCard title="Không có đợt điều trị hoạt động" icon="leaf-outline"><Text style={styles.body}>Cây hiện không áp dụng phác đồ điều trị.</Text></SectionCard>}
     </ScrollView>}
+    <ConfirmDeleteDialog
+      title="Xóa cây khỏi vườn?"
+      visible={detail.deleting}
+      pending={detail.deletePending}
+      error={detail.deleteError}
+      onClose={detail.closeDelete}
+      onConfirm={() => detail.remove(() => {
+        if (router.canGoBack()) router.back();
+        else router.replace("/customer/garden");
+      })}
+    >
+      {`Cây ${plant?.plant_nickname || "này"} và lịch chăm sóc sẽ được gỡ khỏi vườn đang sử dụng.`}
+    </ConfirmDeleteDialog>
   </SafeAreaView>;
 }
 

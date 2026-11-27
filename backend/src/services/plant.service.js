@@ -3,6 +3,7 @@ const catalogAi = require("./catalog-ai.service");
 const AppError = require("../utils/app-error");
 const v = require("../validators/common");
 const validate = require("../validators/plant.validator");
+const { imageFields, catalogImageUrls } = require("./catalog-photo.service");
 // services/plant.service.js - Business logic cho Plants & PlantCategories
 const Plant = require("../models/plant.model");
 const PlantCategory = require("../models/plantCategory.model");
@@ -23,9 +24,10 @@ const assertCategory = async (categoryId, session) => {
 const plantService = {
   getManagerPlantById: async (id) => {
     v.id(id);
-    const plant = await Plant.findById(id).populate("category_id", "category_name");
+    const plant = await Plant.findById(id).populate("category_id", "category_name").lean();
     if (!plant) throw new AppError("PLANT_NOT_FOUND", 404, "Không tìm thấy cây này.");
-    return plant;
+    const { example_images, ...detail } = plant;
+    return { ...detail, image_urls: catalogImageUrls(plant, "plant_image") };
   },
   /**
    * Lay danh sach tat ca danh muc cay (is_published = true)
@@ -121,7 +123,9 @@ const plantService = {
     const data = validate.payload(input, true);
     return withTransactionResult(async session => {
       await assertCategory(data.category_id, session);
-      const [plant] = await Plant.create([data], { session });
+      const [plant] = await Plant.create([
+        { ...data, ...imageFields(data, null, "plant_image") },
+      ], { session });
       await catalogAi.synchronize("plant", plant, ids, session);
       return Plant.findById(plant._id).session(session).populate("category_id", "category_name");
     });
@@ -134,7 +138,7 @@ const plantService = {
       const plant = await Plant.findById(id).session(session);
       if (!plant) throw new AppError("PLANT_NOT_FOUND", 404, "Không tìm thấy cây này.");
       if (data.category_id !== undefined) await assertCategory(data.category_id, session);
-      Object.assign(plant, data);
+      Object.assign(plant, data, imageFields(data, plant, "plant_image"));
       await plant.save({ session });
       await catalogAi.synchronize("plant", plant, ids, session);
       return Plant.findById(id).session(session).populate("category_id", "category_name");

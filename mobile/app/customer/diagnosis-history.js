@@ -18,6 +18,9 @@ import ListError from "../../src/components/common/ListError";
 import ListPagination from "../../src/components/common/ListPagination";
 import Navbar from "../../src/components/navigation/Navbar";
 import DiagnosisHistoryPhoto from "../../src/components/diagnosis/DiagnosisHistoryPhoto";
+import {
+  formatPrediction, historyTopPrediction, selectionLabel,
+} from "../../src/components/diagnosis/diagnosisPresentation";
 import { colors, spacing } from "../../src/theme";
 
 const formatTime = (value) =>
@@ -121,15 +124,16 @@ export default function DiagnosisHistoryScreen() {
                       : "Chẩn đoán bệnh"}
                   </Chip>
                   <Text variant="titleMedium">
-                    {item.result_kind === "plant"
-                      ? item.plant_name || "Thông tin cây không còn khả dụng"
-                      : item.disease_name ||
-                        "Thông tin bệnh không còn khả dụng"}
+                    AI gợi ý cao nhất
                   </Text>
-                  {item.result_kind !== "plant" && (
-                    <Text>
-                      {item.plant_name || "Thông tin cây không còn khả dụng"}
+                  <Text>{formatPrediction(historyTopPrediction(item))}</Text>
+                  {(item.selections ?? []).map((selection) => (
+                    <Text key={selection.kind} style={styles.selection}>
+                      {selectionLabel(selection.kind)} · {formatPrediction(selection)}
                     </Text>
+                  ))}
+                  {!!item.top_prediction && !item.selections?.length && (
+                    <Text style={styles.time}>Chưa chọn</Text>
                   )}
                   <Text style={styles.time}>{formatTime(item.created_at)}</Text>
                 </View>
@@ -185,6 +189,7 @@ export default function DiagnosisHistoryScreen() {
 }
 
 const styles = StyleSheet.create({
+  selection: { color: colors.primary, fontWeight: "600" },
   screen: {
     flex: 1,
     backgroundColor: colors.background,

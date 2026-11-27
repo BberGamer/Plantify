@@ -1,5 +1,6 @@
 // models/plant.model.js - Mongoose Schema cho Plant
 const mongoose = require('mongoose');
+const exampleImages = require('./catalog-example-image');
 
 const plantSchema = new mongoose.Schema(
   {
@@ -21,6 +22,8 @@ const plantSchema = new mongoose.Schema(
     botanical_family: { type: String, default: '' },
     description: { type: String, default: '' },
     plant_image: { type: String, default: '' },
+    image_urls: { type: [String], default: undefined },
+    example_images: exampleImages,
     care_requirements: { type: mongoose.Schema.Types.Mixed, default: {} },
     common_disease_ids: [{ type: mongoose.Schema.Types.ObjectId }],
     is_published: { type: Boolean, default: true },

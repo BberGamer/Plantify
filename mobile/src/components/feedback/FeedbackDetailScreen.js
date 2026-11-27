@@ -21,6 +21,7 @@ import { FilterOptions } from "../common/FilterControls";
 import { FeedbackField, FeedbackSection, FeedbackStatusBadge, feedbackStatusTone, presentation } from "./FeedbackPresentation";
 import ListError from "../common/ListError";
 import LinkedFeedbackHistory from "./LinkedFeedbackHistory";
+import { assessmentLabels } from "./feedbackLabels";
 import FeedbackFrame, {
   FeedbackMessage,
   feedbackStyles as styles,
@@ -85,11 +86,12 @@ function FeedbackPhoto({ id, index, manager }) {
   );
 }
 
-function ReviewPanel({ item, busy, onReview }) {
+function ReviewPanel({ item, busy, checking, onReview }) {
   const [status, setStatus] = useState(
     item.status === "pending" ? "accepted" : item.status,
   );
   const [response, setResponse] = useState(item.response || "");
+  const disabled = busy || checking;
   return (
     <FeedbackSection title={item.status === "pending" ? "Xử lý đóng góp" : "Cập nhật kết quả xử lý"} icon="create-outline">
       <View style={presentation.field}>
@@ -98,18 +100,50 @@ function ReviewPanel({ item, busy, onReview }) {
       </View>
       <View style={presentation.field}>
         <Text style={presentation.label}>Kết quả xử lý mới</Text>
-        <FilterOptions value={status} onChange={setStatus} disabled={busy} options={[
+        <FilterOptions value={status} onChange={setStatus} disabled={disabled} options={[
           { value: "accepted", label: "Tiếp nhận", icon: "checkmark-circle-outline" },
           { value: "rejected", label: "Từ chối", icon: "close-circle-outline" },
         ]} />
       </View>
       <TextInput mode="outlined" label="Nội dung phản hồi" multiline maxLength={1000}
-        value={response} onChangeText={setResponse} disabled={busy} style={local.responseInput} />
+        value={response} onChangeText={setResponse} disabled={disabled} style={local.responseInput} />
       <Text style={presentation.hint}>{response.length}/1.000 ký tự · Kết quả chỉ được cập nhật sau khi lưu.</Text>
       <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
-        mode="contained" onPress={() => onReview(status, response)} loading={busy} disabled={busy}>
+        mode="contained" onPress={() => onReview(status, response)} loading={busy} disabled={disabled}>
         Lưu kết quả
       </Button>
+    </FeedbackSection>
+  );
+}
+
+function AssessmentPanel({ assessment, busy, checking, error, onAssess }) {
+  return (
+    <FeedbackSection title="Đối chiếu bằng chatbot" icon="sparkles-outline">
+      <Text style={presentation.hint}>Chatbot đối chiếu văn bản. Hãy xem ảnh khi quyết định xử lý.</Text>
+      {assessment ? (
+        <>
+          <FeedbackField label="Gợi ý của AI" value={assessmentLabels[assessment.verdict]} />
+          <FeedbackField label="Lý do" value={assessment.reason} />
+          {!!assessment.feedback_quote && (
+            <FeedbackField label="Trích đóng góp" value={assessment.feedback_quote} />
+          )}
+          {!!assessment.reference_quote && (
+            <FeedbackField label="Trích danh mục" value={assessment.reference_quote} />
+          )}
+        </>
+      ) : (
+        <Button
+          style={componentStyles.buttonShape}
+          contentStyle={componentStyles.button}
+          mode="outlined"
+          onPress={onAssess}
+          loading={checking}
+          disabled={busy || checking}
+        >
+          Kiểm tra bằng AI
+        </Button>
+      )}
+      {!!error && <Text accessibilityRole="alert" style={{ color: colors.statusError }}>{error}</Text>}
     </FeedbackSection>
   );
 }
@@ -123,16 +157,17 @@ export default function FeedbackDetailScreen({
   const result = useFeedbackDetail(id, manager);
   const [showSent, setShowSent] = useState(sent);
   const fallback = manager ? "/manager/feedback" : "/customer/feedback";
+  const pending = result.busy || result.checking;
   useFormBack(
     () => (router.canGoBack() ? router.back() : router.replace(fallback)),
-    result.busy,
+    pending,
   );
   const { item } = result;
   return (
     <FeedbackFrame
       title="Chi tiết đóng góp"
       fallback={fallback}
-      busy={result.busy}
+      busy={pending}
     >
       <ScrollView
         contentContainerStyle={styles.content}
@@ -189,10 +224,17 @@ export default function FeedbackDetailScreen({
               )}
               {manager && (
                 <>
+                  <AssessmentPanel
+                    assessment={item.ai_assessment}
+                    busy={result.busy}
+                    checking={result.checking}
+                    error={result.assessmentError}
+                    onAssess={result.assess}
+                  />
                   <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
                     icon="refresh"
                     onPress={result.load}
-                    disabled={result.busy}
+                    disabled={pending}
                   >
                     Tải lại kết quả xử lý
                   </Button>
@@ -200,6 +242,7 @@ export default function FeedbackDetailScreen({
                     key={`${item._id}:${item.review_count}`}
                     item={item}
                     busy={result.busy}
+                    checking={result.checking}
                     onReview={result.review}
                   />
                   {!!item.review_history?.length && (

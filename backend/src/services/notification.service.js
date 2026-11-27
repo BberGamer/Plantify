@@ -25,9 +25,9 @@ function notifyChanged(userId) {
 
 const fields =
   "title message scheduled_for is_read type treatment_schedule_id care_schedule_id user_plant_id occurrence_date feedback_id";
-const visible = (userId) => ({
+const visible = (userId, now = new Date()) => ({
   user_id: userId,
-  scheduled_for: { $lte: new Date() },
+  scheduled_for: { $lte: now },
   // A previously read legacy reminder is already part of the user's history.
   $or: [
     { status: { $in: ["published", "sent"] } },
@@ -35,10 +35,26 @@ const visible = (userId) => ({
     {
       status: "scheduled",
       dispatch_managed: { $exists: false },
-      scheduled_for: { $lt: new Date(Date.now() - 86400000) },
+      scheduled_for: { $lt: new Date(+now - 86400000) },
     },
   ],
 });
+
+async function summarize(userId, { from, until, unreadOnly, now, limit, offset }) {
+  const filter = visible(userId, now);
+  if (from) filter.scheduled_for.$gte = from;
+  if (until) filter.scheduled_for.$lt = until;
+  if (unreadOnly) filter.is_read = { $ne: true };
+  const [items, total, unread] = await Promise.all([
+    Notification.find(filter)
+      .select("title message scheduled_for is_read type")
+      .sort({ scheduled_for: -1, _id: -1 })
+      .skip(offset).limit(limit).maxTimeMS(4000).lean(),
+    Notification.countDocuments(filter).maxTimeMS(4000),
+    Notification.countDocuments({ ...filter, is_read: { $ne: true } }).maxTimeMS(4000),
+  ]);
+  return { items, total, unread };
+}
 
 const list = async (userId, query = {}) => {
   const page = v.positiveInteger(query.page, 1, "page", 100000);
@@ -173,6 +189,7 @@ async function updatePreferences(userId, input) {
 
 module.exports = {
   list,
+  summarize,
   unreadCount,
   detail,
   markRead,

@@ -209,6 +209,7 @@ class PlantClassifier:
         import ultralytics
         from ultralytics import YOLO
         from ultralytics.data.augment import classify_transforms
+        from .input_guard import InputGuard
 
         if ultralytics.__version__ != ULTRALYTICS_VERSION:
             raise ValueError(f"Cần ultralytics=={ULTRALYTICS_VERSION}, đang có {ultralytics.__version__}.")
@@ -225,6 +226,8 @@ class PlantClassifier:
         sample = Image.new("RGB", (IMAGE_SIZE, IMAGE_SIZE), (17, 83, 151))
         sample.paste((233, 41, 7), (0, 0, IMAGE_SIZE // 3, IMAGE_SIZE // 2))
         self._predict(sample)
+        self.input_guard = InputGuard(settings)
+        self.input_guard.check(sample)
         actual = self.model.predictor.transforms(sample)
         expected = classify_transforms(IMAGE_SIZE)(sample)
         if not torch.equal(actual, expected):
@@ -252,8 +255,16 @@ class PlantClassifier:
             raise InferenceError(503, "INFERENCE_BUSY", "Model đang xử lý ảnh khác. Vui lòng thử lại.")
         started = time.perf_counter()
         try:
-            image, dimensions = decode_image(content, content_type, self.settings)
-            probabilities = self._predict(image)
+            image, dimensions = decode_image(content, content_type, self.settings, prepare=False)
+            if dimensions["quality"]["usable"]:
+                scope = self.input_guard.check(image)
+            else:
+                scope = {"status": "uncertain", "reason": "poor_image_quality"}
+            data = {"image": dimensions, "model": dict(self.info), "input_check": scope}
+            if scope["status"] != "passed":
+                return {**data, "prediction": None, "top5": [], "class_scores": [],
+                        "processing_ms": round((time.perf_counter() - started) * 1000, 2)}
+            probabilities = self._predict(prepare_image(image))
             candidates = []
             for index in probabilities.argsort(descending=True, stable=True)[:5]:
                 index = int(index)
@@ -272,7 +283,7 @@ class PlantClassifier:
                 "scores": {"top1": candidates[0]["confidence"],
                            "top2": candidates[1]["confidence"],
                            "margin": candidates[0]["confidence"] - candidates[1]["confidence"]},
-                "image": dimensions, "model": dict(self.info),
+                **data,
                 "processing_ms": round((time.perf_counter() - started) * 1000, 2),
             }
         finally:

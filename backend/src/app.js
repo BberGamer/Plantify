@@ -39,7 +39,7 @@ if (process.env.NODE_ENV !== "production") {
 app.get("/health", (req, res) => {
   res.json({
     success: true,
-    message: "Plantify API dang hoat dong binh thuong",
+    message: "Plantify API đang hoạt động bình thường",
   });
 });
 
@@ -51,7 +51,7 @@ app.use(["/api/v1", "/api"], require("./routes/index.route"));
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: "Endpoint khong ton tai tren he thong",
+    message: "Endpoint không tồn tại trên hệ thống",
     data: null,
   });
 });

@@ -32,7 +32,7 @@ const error = (res, message, statusCode = 500, options = {}) => {
   });
 };
 
-const notFound = (res, message = "Khong tim thay tai nguyen", options = {}) => {
+const notFound = (res, message = "Không tìm thấy tài nguyên", options = {}) => {
   return error(res, message, 404, options);
 };
 
