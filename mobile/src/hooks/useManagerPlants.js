@@ -9,7 +9,7 @@ import useDebouncedValue from "./useDebouncedValue";
 import useScreenScope from "./useScreenScope";
 import useAuthStore from "../../store/authStore";
 import { usePlantCategories } from "./usePlants";
-import * as ImagePicker from "expo-image-picker";
+import { catalogImageDraft, pickCatalogPhotos } from "../services/catalogImages";
 
 const CARE_FIELDS = ["light", "water", "temperature", "humidity", "soil", "fertilizer"];
 
@@ -19,7 +19,8 @@ const createPlantForm = (plant = {}) => ({
   scientific_name: plant.scientific_name || "",
   botanical_family: plant.botanical_family || "",
   description: plant.description || "",
-  plant_image: plant.plant_image || "",
+  images: catalogImageDraft(plant, plant.plant_image),
+  imagesChanged: false,
   care_requirements: Object.fromEntries(
     CARE_FIELDS.map((key) => [
       key,
@@ -47,7 +48,7 @@ const createPlantPayload = (form, plant) => {
     scientific_name: form.scientific_name.trim(),
     botanical_family: form.botanical_family.trim(),
     description: form.description.trim(),
-    plant_image: form.plant_image.trim(),
+    ...(form.imagesChanged ? { image_urls: form.images } : {}),
     care_requirements: careRequirements,
     is_published: form.is_published,
   };
@@ -71,7 +72,6 @@ export default function useManagerPlants() {
   const [formReady, setFormReady] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const detailRequest = useRef(0);
-  const [photo, setPhoto] = useState(null);
   const [choosingPhoto, setChoosingPhoto] = useState(false);
   const photoPending = useRef(false);
   const [saving, setSaving] = useState(false);
@@ -121,7 +121,6 @@ export default function useManagerPlants() {
     setFormReady(false);
     setFormLoading(false);
     setVisible(false);
-    setPhoto(null);
     setEditing(null);
     setForm(createPlantForm());
     setFormError("");
@@ -145,7 +144,6 @@ export default function useManagerPlants() {
       !isActive()
     )
       return;
-    setPhoto(null);
     setEditing(null);
     ++detailRequest.current;
     setFormReady(true);
@@ -166,7 +164,6 @@ export default function useManagerPlants() {
     const requestId = ++detailRequest.current;
     const inScope = capture();
     const current = () => requestId === detailRequest.current && inScope();
-    setPhoto(null);
     setEditing(plant);
     setForm(createPlantForm(plant));
     setFormError("");
@@ -192,7 +189,6 @@ export default function useManagerPlants() {
     ++detailRequest.current;
     setFormReady(false);
     setFormLoading(false);
-    setPhoto(null);
     setVisible(false);
     setEditing(null);
     setForm(createPlantForm());
@@ -207,7 +203,11 @@ export default function useManagerPlants() {
       key === "care_requirements"
     )
       return;
-    setForm((previous) => ({ ...previous, [key]: value }));
+    setForm((previous) => ({
+      ...previous,
+      [key]: value,
+      imagesChanged: previous.imagesChanged || key === "images",
+    }));
     setFormError("");
   };
 
@@ -233,28 +233,13 @@ export default function useManagerPlants() {
     setChoosingPhoto(true);
     const current = capture();
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        quality: 1,
-      });
-      if (!current() || result.canceled) return;
-      const asset = result.assets?.[0];
-      if (!asset?.uri) {
-        setFormError("Không đọc được ảnh đã chọn.");
-        return;
-      }
-      if ((asset.fileSize || 0) > 10 * 1024 * 1024) {
-        setFormError("Ảnh tối đa 10 MB.");
-        return;
-      }
-      if (
-        asset.mimeType &&
-        !["image/jpeg", "image/png"].includes(asset.mimeType)
-      ) {
-        setFormError("Vui lòng chọn ảnh JPG hoặc PNG.");
-        return;
-      }
-      setPhoto(asset);
+      const images = await pickCatalogPhotos(form.images);
+      if (!current() || !images.length) return;
+      setForm((previous) => ({
+        ...previous,
+        images: [...previous.images, ...images],
+        imagesChanged: true,
+      }));
       setFormError("");
     } catch (error) {
       if (current())
@@ -265,13 +250,6 @@ export default function useManagerPlants() {
       photoPending.current = false;
       if (mounted.current) setChoosingPhoto(false);
     }
-  };
-
-  const removePhoto = () => {
-    if (mutationPending.current || photoPending.current || !visible) return;
-    if (photo) setPhoto(null);
-    else setForm((previous) => ({ ...previous, plant_image: "" }));
-    setFormError("");
   };
 
   const save = async () => {
@@ -300,13 +278,12 @@ export default function useManagerPlants() {
     try {
       const payload = { ...createPlantPayload(form, editing), ai_class_ids: ai.selected };
       const response = editing
-        ? await plantService.updatePlant(editing._id, payload, photo)
-        : await plantService.createPlant(payload, photo);
+        ? await plantService.updatePlant(editing._id, payload)
+        : await plantService.createPlant(payload);
       if (!response?.success)
         throw new Error(response?.message || "Không lưu được cây.");
       if (!isCurrent()) return;
       setVisible(false);
-      setPhoto(null);
       setEditing(null);
       setForm(createPlantForm());
       await loadPlants(true);
@@ -379,10 +356,8 @@ export default function useManagerPlants() {
     formReady,
     formLoading,
     retryEdit: () => editing && openEdit(editing),
-    photo,
     choosingPhoto,
     choosePhoto,
-    removePhoto,
     saving,
     deleteTarget,
     deleting,

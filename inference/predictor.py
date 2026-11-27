@@ -22,7 +22,7 @@ LOGGER = logging.getLogger(__name__)
 ULTRALYTICS_VERSION = "8.4.198"
 CHECKPOINT = "best_macro_f1.pt"
 IMAGE_SIZE = 384
-CLASS_COUNT = 78
+CLASS_COUNT = 60
 IMAGE_FORMATS = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 
 
@@ -69,7 +69,7 @@ def class_probabilities(values, *, logits=False):
 
 
 # Mục đích: Xác minh bộ model trước khi nạp.
-# Cách chạy: Đối chiếu run, epoch, hash weights và thứ tự 78 nhãn; sai thì báo lỗi.
+# Cách chạy: Đối chiếu run, epoch, hash weights và thứ tự 60 nhãn; sai thì báo lỗi.
 def verify_bundle(settings):
     root = settings.model_dir
     summary = read_json(root / "run_summary.json")
@@ -80,7 +80,7 @@ def verify_bundle(settings):
         or summary.get("image_size") != IMAGE_SIZE
         or summary.get("classes") != CLASS_COUNT
     ):
-        raise ValueError("Bundle phải là run YOLO26m classification COMPLETED, 384×384, 78 class.")
+        raise ValueError("Bundle phải là run YOLO26m classification COMPLETED, 384×384, 60 class.")
     run_id = summary.get("run_id")
     completed = summary.get("epochs_completed")
     if not isinstance(run_id, str) or not run_id or type(completed) is not int or completed <= 0:
@@ -100,7 +100,7 @@ def verify_bundle(settings):
         raise ValueError("SHA-256/kích thước weights không khớp bundle; không nạp model.")
     mapping = read_json(root / "metadata" / "class_mapping.json")
     if not isinstance(mapping, list) or len(mapping) != CLASS_COUNT:
-        raise ValueError("Mapping phải có đủ 78 class.")
+        raise ValueError("Mapping phải có đủ 60 class.")
     folders = []
     for class_id, entry in enumerate(mapping):
         if (
@@ -209,6 +209,7 @@ class PlantClassifier:
         import ultralytics
         from ultralytics import YOLO
         from ultralytics.data.augment import classify_transforms
+        from .input_guard import InputGuard
 
         if ultralytics.__version__ != ULTRALYTICS_VERSION:
             raise ValueError(f"Cần ultralytics=={ULTRALYTICS_VERSION}, đang có {ultralytics.__version__}.")
@@ -225,6 +226,8 @@ class PlantClassifier:
         sample = Image.new("RGB", (IMAGE_SIZE, IMAGE_SIZE), (17, 83, 151))
         sample.paste((233, 41, 7), (0, 0, IMAGE_SIZE // 3, IMAGE_SIZE // 2))
         self._predict(sample)
+        self.input_guard = InputGuard(settings)
+        self.input_guard.check(sample)
         actual = self.model.predictor.transforms(sample)
         expected = classify_transforms(IMAGE_SIZE)(sample)
         if not torch.equal(actual, expected):
@@ -233,7 +236,7 @@ class PlantClassifier:
                     self.info["run_id"], CHECKPOINT, self.info["checkpoint_epoch"], settings.device)
 
     # Mục đích: Chạy phân loại trên ảnh đã chuẩn bị.
-    # Cách chạy: Gọi YOLO với cấu hình cố định, kiểm tra rồi trả điểm của 78 class.
+    # Cách chạy: Gọi YOLO với cấu hình cố định, kiểm tra rồi trả điểm của 60 class.
     def _predict(self, image):
         results = self.model.predict(
             image, imgsz=IMAGE_SIZE, device=self.settings.device,
@@ -245,6 +248,23 @@ class PlantClassifier:
         # ClassificationPredictor.postprocess đưa nguyên vector đó vào Results.probs.
         return class_probabilities(results[0].probs.data)
 
+    def _inspect_input(self, content, content_type):
+        image, dimensions = decode_image(content, content_type, self.settings, prepare=False)
+        if dimensions["quality"]["usable"]:
+            scope = self.input_guard.check(image)
+        else:
+            scope = {"status": "uncertain", "reason": "poor_image_quality"}
+        return image, dimensions, scope
+
+    def check_input(self, content, content_type):
+        if not self._lock.acquire(blocking=False):
+            raise InferenceError(503, "INFERENCE_BUSY", "Model đang xử lý ảnh khác. Vui lòng thử lại.")
+        try:
+            _, _, scope = self._inspect_input(content, content_type)
+            return {"input_check": scope}
+        finally:
+            self._lock.release()
+
     # Mục đích: Phân tích ảnh và trả 5 nhóm có điểm cao nhất.
     # Cách chạy: Khóa lượt chạy, xử lý ảnh, gọi model, ghép nhãn và luôn mở khóa khi xong.
     def predict(self, content, content_type):
@@ -252,8 +272,12 @@ class PlantClassifier:
             raise InferenceError(503, "INFERENCE_BUSY", "Model đang xử lý ảnh khác. Vui lòng thử lại.")
         started = time.perf_counter()
         try:
-            image, dimensions = decode_image(content, content_type, self.settings)
-            probabilities = self._predict(image)
+            image, dimensions, scope = self._inspect_input(content, content_type)
+            data = {"image": dimensions, "model": dict(self.info), "input_check": scope}
+            if scope["status"] != "passed":
+                return {**data, "prediction": None, "top5": [], "class_scores": [],
+                        "processing_ms": round((time.perf_counter() - started) * 1000, 2)}
+            probabilities = self._predict(prepare_image(image))
             candidates = []
             for index in probabilities.argsort(descending=True, stable=True)[:5]:
                 index = int(index)
@@ -272,7 +296,7 @@ class PlantClassifier:
                 "scores": {"top1": candidates[0]["confidence"],
                            "top2": candidates[1]["confidence"],
                            "margin": candidates[0]["confidence"] - candidates[1]["confidence"]},
-                "image": dimensions, "model": dict(self.info),
+                **data,
                 "processing_ms": round((time.perf_counter() - started) * 1000, 2),
             }
         finally:

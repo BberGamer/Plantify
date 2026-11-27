@@ -35,7 +35,7 @@ class UploadBodyLimit:
     # Mục đích: Chặn request ảnh vượt dung lượng trước khi đọc multipart.
     # Cách chạy: Kiểm tra Content-Length và đếm bytes thực nhận rồi chuyển body hợp lệ vào app.
     async def __call__(self, scope, receive, send):
-        if scope["type"] != "http" or scope["method"] != "POST" or scope["path"] != "/predict":
+        if scope["type"] != "http" or scope["method"] != "POST" or scope["path"] not in {"/predict", "/check-input"}:
             return await self.app(scope, receive, send)
         headers = dict(scope.get("headers", []))
         try:
@@ -125,7 +125,8 @@ def create_app(settings=None, predictor_factory=PlantClassifier):
         if classifier is None:
             raise InferenceError(503, "MODEL_NOT_READY", "Model chưa sẵn sàng.")
         return {"success": True, "message": "Model đã sẵn sàng.",
-                "data": {"status": "ready", "model": classifier.info}}
+                "data": {"status": "ready", "model": classifier.info,
+                         "input_guard": classifier.input_guard.info}}
 
     # Mục đích: Nhận ảnh và trả dự đoán model.
     # Cách chạy: Kiểm tra một file photo, gọi classifier trong thread và luôn đóng dữ liệu upload.
@@ -146,6 +147,10 @@ def create_app(settings=None, predictor_factory=PlantClassifier):
     @app.post("/predict")
     async def predict(request: Request, photo: UploadFile = File(description="Ảnh JPEG/PNG/WebP, tối đa 10 MiB")):
         return await process_upload(request, photo, app.state.classifier, "predict")
+
+    @app.post("/check-input")
+    async def check_input(request: Request, photo: UploadFile = File(description="Ảnh JPEG/PNG/WebP, tối đa 10 MiB")):
+        return await process_upload(request, photo, app.state.classifier, "check_input")
 
     return app
 

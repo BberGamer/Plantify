@@ -9,9 +9,9 @@ import treatmentLogic from "../utils/treatmentLogic.cjs";
 import { invalidTreatmentResponse, isTreatmentSchedule } from "../utils/treatmentResponse";
 import useScreenScope from "./useScreenScope";
 
-export default function useTreatmentPreview({ diseaseId, plantId, userPlantId, diagnosisId, startDate }) {
+export default function useTreatmentPreview({ diseaseId, plantId, userPlantId, diagnosisId, candidateRank, startDate, fixedGardenPlant }) {
   const version = useAuthStore((state) => state.sessionVersion);
-  const key = JSON.stringify([version, diseaseId, plantId, userPlantId, diagnosisId, startDate]);
+  const key = JSON.stringify([version, diseaseId, plantId, userPlantId, diagnosisId, candidateRank, startDate, fixedGardenPlant]);
   const latestKey = useRef(key);
   latestKey.current = key;
   const [state, setState] = useState({});
@@ -43,7 +43,8 @@ export default function useTreatmentPreview({ diseaseId, plantId, userPlantId, d
       const plants = await collectGardenPlants(100, valid);
       if (!valid()) return;
       const compatible = [...new Map(plants.map((plant) => [plant._id, plant])).values()]
-        .filter((plant) => String(plant.plant_id || "") === String(plantId));
+        .filter((plant) => String(plant.plant_id || "") === String(plantId) &&
+          (!fixedGardenPlant || plant._id === userPlantId));
       setState((previous) => {
         if (!valid()) return previous;
         const old = previous.key === key ? previous : {};
@@ -128,7 +129,7 @@ export default function useTreatmentPreview({ diseaseId, plantId, userPlantId, d
     }
     update({ previewToken: "" });
     try {
-      const response = await treatmentService.createPreview({ diseaseId, plantId, diagnosisId });
+      const response = await treatmentService.createPreview({ diseaseId, plantId, diagnosisId, candidateRank });
       if (!current() || id !== request.current) return;
       const protocol = response?.data?.protocol;
       const token = response?.data?.preview_token;

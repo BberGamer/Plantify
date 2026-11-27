@@ -18,10 +18,21 @@ import PlantDiseases from "../../src/components/plants/PlantDiseases";
 import PlantDetailActions from "../../src/components/plants/PlantDetailActions";
 import ListError from "../../src/components/common/ListError";
 export default function PlantDetailScreen() {
-  const { id } = useLocalSearchParams();
+  const { id, diseaseId } = useLocalSearchParams();
   const router = useRouter();
   const detail = usePlantDetailScreen(id);
   const diseaseState = usePlantDiseases(typeof id === "string" ? id : null);
+  const focusedDisease = typeof diseaseId === "string" ? diseaseId : null;
+  const diseaseSection = (
+    <PlantDiseases
+      key={`${id}:${focusedDisease ?? ""}`}
+      diseases={diseaseState.diseases}
+      loading={diseaseState.loading}
+      error={diseaseState.error}
+      onRetry={diseaseState.retry}
+      initialDiseaseId={focusedDisease}
+    />
+  );
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <ActionNoticeDialog {...detail.noticeDialog} />
@@ -49,17 +60,13 @@ export default function PlantDetailScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scroll}
           >
+            {focusedDisease && diseaseSection}
             <PlantHero plant={detail.plant} />
             <PlantInformation plant={detail.plant} />
             <PlantCareRequirements
               requirements={detail.plant.care_requirements}
             />
-            <PlantDiseases
-              diseases={diseaseState.diseases}
-              loading={diseaseState.loading}
-              error={diseaseState.error}
-              onRetry={diseaseState.retry}
-            />
+            {!focusedDisease && diseaseSection}
           </ScrollView>
           <PlantDetailActions onAdd={detail.addToGarden} />
         </>

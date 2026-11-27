@@ -8,9 +8,10 @@ const treatmentService = {
     return response.data;
   },
 
-  createPreview: async ({ diseaseId, plantId, diagnosisId }) => {
+  createPreview: async ({ diseaseId, plantId, diagnosisId, candidateRank }) => {
     const payload = { disease_id: diseaseId, plant_id: plantId };
     if (diagnosisId) payload.diagnosis_id = diagnosisId;
+    if (candidateRank !== undefined) payload.candidate_rank = candidateRank;
     return (await api.post("/treatments/preview", payload, { timeout: 70000 })).data;
   },
 

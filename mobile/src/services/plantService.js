@@ -41,10 +41,10 @@ const plantService = {
     return adaptPlantsList(response.data);
   },
 
-  createPlant: (plant, photo) =>
-    saveCatalogEntry("post", "/plants/manager", plant, photo),
-  updatePlant: (id, plant, photo) =>
-    saveCatalogEntry("put", `/plants/manager/${id}`, plant, photo),
+  createPlant: (plant) =>
+    saveCatalogEntry("post", "/plants/manager", plant),
+  updatePlant: (id, plant) =>
+    saveCatalogEntry("put", `/plants/manager/${id}`, plant),
   deletePlant: async (id) => (await api.delete(`/plants/manager/${id}`)).data,
 };
 

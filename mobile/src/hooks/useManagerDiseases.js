@@ -2,7 +2,7 @@ import useRefreshOnResume from "./useRefreshOnResume";
 import useCatalogAiLabels from "./useCatalogAiLabels";
 // useManagerDiseases.js - Quản lý danh sách và thao tác CRUD bệnh cây.
 import { useCallback, useEffect, useRef, useState } from "react";
-import * as ImagePicker from "expo-image-picker";
+import { catalogImageDraft, pickCatalogPhotos } from "../services/catalogImages";
 import diseaseService from "../services/diseaseService";
 import plantService from "../services/plantService";
 import getErrorMessage from "../utils/getErrorMessage";
@@ -17,7 +17,8 @@ const createDiseaseForm = (disease = {}) => ({
   pathogen_type: disease.pathogen_type || "other",
   typical_symptoms: disease.typical_symptoms || "",
   environmental_cause: disease.environmental_cause || "",
-  disease_image_url: disease.disease_image_url || "",
+  images: catalogImageDraft(disease, disease.disease_image_url),
+  imagesChanged: false,
   status: disease.status || "active",
   treatment_protocol:
     disease.treatment_protocol && typeof disease.treatment_protocol === "object"
@@ -34,7 +35,7 @@ const createDiseasePayload = (form) => ({
   pathogen_type: form.pathogen_type,
   typical_symptoms: form.typical_symptoms.trim(),
   environmental_cause: form.environmental_cause.trim(),
-  disease_image_url: form.disease_image_url.trim(),
+  ...(form.imagesChanged ? { image_urls: form.images } : {}),
   status: form.status,
   treatment_protocol: { ...form.treatment_protocol },
   plant_ids: [...form.plant_ids],
@@ -51,7 +52,6 @@ export default function useManagerDiseases() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(createDiseaseForm);
   const ai = useCatalogAiLabels("disease", visible, editing?._id);
-  const [photo, setPhoto] = useState(null);
   const [choosingPhoto, setChoosingPhoto] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [formReady, setFormReady] = useState(false);
@@ -151,7 +151,6 @@ export default function useManagerDiseases() {
     setVisible(false);
     setEditing(null);
     setForm(createDiseaseForm());
-    setPhoto(null);
     setFormReady(false);
     setFormError("");
     setDeleteTarget(null);
@@ -183,7 +182,6 @@ export default function useManagerDiseases() {
     ++detailRequest.current;
     setEditing(null);
     setForm(createDiseaseForm());
-    setPhoto(null);
     setFormLoading(false);
     setFormReady(true);
     setFormError("");
@@ -197,7 +195,6 @@ export default function useManagerDiseases() {
     const isCurrent = () => inScope() && requestId === detailRequest.current;
     setEditing(disease);
     setForm(createDiseaseForm(disease));
-    setPhoto(null);
     setFormLoading(true);
     setFormReady(false);
     setFormError("");
@@ -247,7 +244,6 @@ export default function useManagerDiseases() {
     setVisible(false);
     setEditing(null);
     setForm(createDiseaseForm());
-    setPhoto(null);
     setFormLoading(false);
     setFormReady(false);
     setFormError("");
@@ -260,10 +256,14 @@ export default function useManagerDiseases() {
       formLoading ||
       !formReady ||
       !Object.prototype.hasOwnProperty.call(form, key) ||
-      ["plant_ids", "treatment_protocol", "disease_image_url"].includes(key)
+      ["plant_ids", "treatment_protocol"].includes(key)
     )
       return;
-    setForm((previous) => ({ ...previous, [key]: value }));
+    setForm((previous) => ({
+      ...previous,
+      [key]: value,
+      imagesChanged: previous.imagesChanged || key === "images",
+    }));
     setFormError("");
   };
 
@@ -281,28 +281,13 @@ export default function useManagerDiseases() {
     photoPending.current = true;
     setChoosingPhoto(true);
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        quality: 1,
-      });
-      if (!current() || result.canceled) return;
-      const asset = result.assets?.[0];
-      if (!asset?.uri) {
-        setFormError("Không đọc được ảnh đã chọn.");
-        return;
-      }
-      if (asset.fileSize > 10 * 1024 * 1024) {
-        setFormError("Ảnh tối đa 10 MB.");
-        return;
-      }
-      if (
-        asset.mimeType &&
-        !["image/jpeg", "image/png"].includes(asset.mimeType)
-      ) {
-        setFormError("Vui lòng chọn ảnh JPG hoặc PNG.");
-        return;
-      }
-      setPhoto(asset);
+      const images = await pickCatalogPhotos(form.images);
+      if (!current() || !images.length) return;
+      setForm((previous) => ({
+        ...previous,
+        images: [...previous.images, ...images],
+        imagesChanged: true,
+      }));
       setFormError("");
     } catch (error) {
       if (current())
@@ -313,19 +298,6 @@ export default function useManagerDiseases() {
       photoPending.current = false;
       if (mounted.current) setChoosingPhoto(false);
     }
-  };
-
-  const removePhoto = () => {
-    if (
-      mutationPending.current ||
-      photoPending.current ||
-      !visible ||
-      !formReady
-    )
-      return;
-    if (photo) setPhoto(null);
-    else setForm((previous) => ({ ...previous, disease_image_url: "" }));
-    setFormError("");
   };
 
   const togglePlant = (plantId) => {
@@ -381,8 +353,8 @@ export default function useManagerDiseases() {
     try {
       const payload = { ...createDiseasePayload(form), ai_class_ids: ai.selected };
       const response = editing
-        ? await diseaseService.updateDisease(editing._id, payload, photo)
-        : await diseaseService.createDisease(payload, photo);
+        ? await diseaseService.updateDisease(editing._id, payload)
+        : await diseaseService.createDisease(payload);
       if (!response?.success) {
         throw new Error(response?.message || "Không lưu được bệnh cây.");
       }
@@ -390,7 +362,6 @@ export default function useManagerDiseases() {
       setVisible(false);
       setEditing(null);
       setForm(createDiseaseForm());
-      setPhoto(null);
       setFormReady(false);
       await loadDiseases(true);
     } catch (error) {
@@ -460,7 +431,6 @@ export default function useManagerDiseases() {
     visible,
     editing,
     form,
-    photo,
     choosingPhoto,
     formLoading,
     formReady,
@@ -480,7 +450,6 @@ export default function useManagerDiseases() {
     closeForm,
     changeField,
     choosePhoto,
-    removePhoto,
     togglePlant,
     save,
     requestDelete,

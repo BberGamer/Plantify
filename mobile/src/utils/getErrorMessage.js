@@ -64,6 +64,11 @@ const ERROR_MESSAGES = {
   CARE_UNAVAILABLE:
     "Lịch đã dừng, cây đã lưu trữ hoặc đang điều trị. Vui lòng tải lại lịch.",
   CARE_NOT_FOUND: "Không tìm thấy lịch chăm sóc. Vui lòng tải lại lịch.",
+  CARE_REFERENCE_UNAVAILABLE: "Chưa có tài liệu tham khảo từ hệ thống phù hợp với cây này.",
+  CARE_PLANT_NOT_FOUND: "Không tìm thấy cây đang công khai trong danh mục.",
+  CARE_PLANT_MISMATCH: "Hãy chọn cây cùng loài với bản xem trước lịch chăm sóc.",
+  CARE_PREVIEW_EXPIRED: "Bản xem trước đã hết hạn. Hãy tạo lại để áp dụng.",
+  CARE_PREVIEW_INVALID: "Bản xem trước không hợp lệ. Hãy tạo lại để áp dụng.",
   AI_INCOMPLETE_RESPONSE:
     "AI chưa hoàn tất câu trả lời. Vui lòng thử lại với câu hỏi cụ thể hơn.",
   FAVORITE_LIMIT_REACHED:
@@ -83,7 +88,7 @@ const ERROR_MESSAGES = {
     "Không tải được đăng nhập Google. Kiểm tra kết nối hoặc thử lại.",
   EVALUATION_DISABLED: "Chế độ đánh giá AI đang tắt.",
   INVALID_PHOTO:
-    "Vui lòng chọn một ảnh JPG hoặc PNG hợp lệ, tối đa 10 MB (tối đa 40 triệu điểm ảnh).",
+    "Vui lòng chọn ảnh JPG hoặc PNG hợp lệ, tối đa 10 MB và 40 triệu điểm ảnh mỗi ảnh.",
   GARDEN_PHOTO_NOT_CONFIGURED:
     "Máy chủ chưa cấu hình lưu ảnh. Bạn có thể bỏ ảnh để lưu cây trước.",
   PLANT_PHOTO_NOT_CONFIGURED:
@@ -254,6 +259,7 @@ export default function getErrorMessage(
   }
   const data = error?.response?.data;
   const code = data?.code || error?.code;
+  if (error?.code === "CATALOG_INVALID_IMAGES") return error.message;
   if (code === "FEEDBACK_INVALID_IMAGES") {
     return (
       data?.errors?.images ||

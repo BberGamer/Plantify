@@ -1,4 +1,4 @@
-import { colors, radius } from "../../../theme";
+import { colors, radius, typography } from "../../../theme";
 import { StyleSheet } from "react-native";
 
 const money = (value) => `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   shortcuts: { gap: 12, marginTop: 4 },
   shortcut: { borderWidth: 1, borderColor: "#BDDCC9", borderRadius: radius.card, paddingVertical: 8 },
-  shortcutTitle: { fontSize: 16, fontWeight: "700", color: colors.primary },
+  shortcutTitle: { ...typography.body, fontWeight: "700", color: colors.primary },
   orderGroup: { padding: 16, gap: 12, borderRadius: radius.card, backgroundColor: colors.background,
     borderWidth: 1, borderColor: colors.border },
   orderGroupTitle: { fontSize: 16, fontWeight: "700", color: colors.primary },
@@ -208,8 +208,8 @@ const styles = StyleSheet.create({
     fontWeight: "700"
   },
   secondaryText: {
+    ...typography.caption,
     color: colors.textSecondary,
-    fontSize: 13
   },
   balanceRow: {
     flexDirection: "row",

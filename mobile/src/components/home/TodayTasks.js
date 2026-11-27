@@ -1,5 +1,5 @@
 import { componentStyles } from "../../theme/componentStyles";
-﻿import { View, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { ActivityIndicator, Button, Card, Text } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { colors, radius, spacing, typography } from "../../theme";
@@ -19,7 +19,7 @@ export default function TodayTasks({ care }) {
       ) : (
         <>
           {!care.tasks.length && (
-            <Text>Chưa có lịch tưới nước hoặc bón phân hôm nay.</Text>
+            <Text>Hôm nay chưa có công việc chăm sóc.</Text>
           )}
           {care.tasks.slice(0, 5).map((task) => (
             <Card

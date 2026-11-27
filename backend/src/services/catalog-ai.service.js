@@ -65,7 +65,7 @@ async function synchronize(kind, document, ids, session) {
     await Mapping.updateOne({ ...base, class_id: classId }, { $set: {
       class_name: label.class_name, is_healthy: label.is_healthy, plant_id: plantId,
       disease_id: diseaseId, status: ready ? 'ready' : 'pending',
-      reason: ready ? '' : 'catalog_unavailable', import_source: 'manager_assignment',
+      reason: ready ? '' : 'catalog_unavailable',
     } }, { upsert: true, session, runValidators: true });
   }
 }

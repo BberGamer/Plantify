@@ -96,9 +96,7 @@ export default function ManagerPlantsScreen() {
         categoriesLoading={manager.categoriesLoading}
         categoriesError={manager.categoriesError}
         saving={manager.saving || manager.choosingPhoto}
-        photo={manager.photo}
         onChoosePhoto={manager.choosePhoto}
-        onRemovePhoto={manager.removePhoto}
         error={manager.formError}
         onClose={manager.closeForm}
         onSave={manager.save}

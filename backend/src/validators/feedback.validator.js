@@ -1,5 +1,5 @@
 const validate = require("./common");
-const { types, decisions } = require("../models/feedback.model");
+const { types, decisions, reasons } = require("../models/feedback.model");
 
 function boundedText(value, field, max, label) {
   if (typeof value !== "string" || !value.trim() || value.trim().length > max)
@@ -28,8 +28,11 @@ function create(body, requestKey) {
     !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(requestKey)
   )
     validate.invalid("request_key", "Mã yêu cầu gửi không hợp lệ.");
+  if (typeof body.reason !== "string" || !Object.hasOwn(reasons, body.reason))
+    validate.invalid("reason", "Vui lòng chọn lý do đóng góp.");
   return {
-    description: boundedText(body.description, "description", 250, "Mô tả"),
+    reason: body.reason,
+    description: reasons[body.reason],
     diagnosis_id:
       body.diagnosis_id === undefined || body.diagnosis_id === ""
         ? null

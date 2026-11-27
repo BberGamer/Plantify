@@ -10,7 +10,7 @@ const careScheduleSchema = new mongoose.Schema(
     },
     action_type: {
       type: String,
-      enum: ["watering", "fertilizing", "inspection", "other"],
+      enum: ["watering", "fertilizing", "sunlight", "inspection", "other"],
       required: true,
     },
     title: { type: String, required: true, trim: true, maxlength: 200 },
@@ -19,6 +19,8 @@ const careScheduleSchema = new mongoose.Schema(
     time: { type: String, default: "08:00" },
     repeat_every_days: { type: Number, min: 1, max: 365, default: 1 },
     notes: { type: String, maxlength: 1000, default: "" },
+    steps: { type: [{ type: String, maxlength: 240 }], default: undefined },
+    dose_note: { type: String, maxlength: 180, default: "" },
     is_paused: { type: Boolean, default: false },
     pause_reason: {
       type: String,

@@ -1,9 +1,12 @@
 ﻿import { useEffect } from "react";
 import { colors } from "./colors";
 
-// Chỉ bổ sung focus bàn phím bên trong app và portal Paper, không đổi layout/global reset.
+// Thiết lập ngôn ngữ và viền focus bên trong app web.
 export default function WebFocusRing() {
   useEffect(() => {
+    const html = document.documentElement;
+    const previousLanguage = html.lang;
+    html.lang = "vi";
     const sheet = document.createElement("style");
     sheet.dataset.plantifyFocus = "true";
     sheet.textContent = `
@@ -14,7 +17,10 @@ export default function WebFocusRing() {
       }
     `;
     document.head.appendChild(sheet);
-    return () => sheet.remove();
+    return () => {
+      sheet.remove();
+      html.lang = previousLanguage;
+    };
   }, []);
   return null;
 }

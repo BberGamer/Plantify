@@ -2,7 +2,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { isDeepStrictEqual } = require("node:util");
 const AppError = require("../utils/app-error");
-const getDiagnosisConfig = (env = process.env, { identification = false } = {}) => {
+const getDiagnosisConfig = (env = process.env, { identification = false, inputCheck = false } = {}) => {
   try {
     const url = new URL(env.DIAGNOSIS_INFERENCE_URL || "http://127.0.0.1:8001");
     const timeoutMs = Number(env.DIAGNOSIS_TIMEOUT_MS || 20000);
@@ -17,6 +17,8 @@ const getDiagnosisConfig = (env = process.env, { identification = false } = {}) 
       timeoutMs > 60000
     )
       throw new Error();
+    const baseUrl = url.toString().replace(/\/$/, "");
+    if (inputCheck) return { inferenceUrl: `${baseUrl}/check-input`, timeoutMs };
     const score = (key) => {
       const value = env[key];
       const number =
@@ -38,7 +40,7 @@ const getDiagnosisConfig = (env = process.env, { identification = false } = {}) 
       throw new Error();
     return {
       thresholds,
-      inferenceUrl: `${url.toString().replace(/\/$/, "")}/predict`,
+      inferenceUrl: `${baseUrl}/predict`,
       timeoutMs,
     };
   } catch {

@@ -1,5 +1,3 @@
-const fs = require("node:fs/promises");
-const path = require("node:path");
 const crypto = require("node:crypto");
 const jwt = require("jsonwebtoken");
 const Plant = require("../models/plant.model");
@@ -7,24 +5,26 @@ const Disease = require("../models/disease.model");
 const TreatmentProtocol = require("../models/treatmentProtocol.model");
 const ai = require("../integrations/ai/ai.service");
 const v = require("../validators/common");
+const { isTime } = require("./careRecurrence");
+const { assertTreatmentCandidate, validateCandidateRank } = require("./diagnosis.service");
 
-const TEMPLATE_DIRECTORY = path.resolve(
-  __dirname,
-  "../../data/treatment-templates",
-);
 const pendingBundledGenerations = new Map();
+const bundledTimes = new Map();
+const TIMING_TIMEOUT_MS = 8000;
 
 const PROMPT = `Bạn tạo phác đồ điều trị cây bằng tiếng Việt. Ưu tiên tuyệt đối dữ liệu trong các đoạn DOCX được cung cấp và thông tin cây, bệnh đi kèm. Khi tài liệu thiếu chi tiết, chỉ được bổ sung kiến thức chăm sóc cây phổ biến, an toàn; không bịa tên thuốc thương mại, hoạt chất, nồng độ, liều hóa chất, lượng nước hoặc khẳng định chắc chắn hiệu quả.
 
-Trả duy nhất JSON hợp lệ, không Markdown, theo đúng cấu trúc: {"protocol_name":"...","description":"...","duration_days":7,"tasks":[{"day":1,"time":"05:45","title":"...","instruction":"Chuẩn bị: ...\\nBước 1: ...\\nBước 2: ...\\nLượng nước: ...\\nDụng cụ: ...\\n=> Kết quả cần đạt: ...","safety_note":"..."},{"day":2,"time":"09:30","title":"...","instruction":"...","safety_note":"..."}],"safety_guidelines":["..."]}.
+Trả duy nhất JSON hợp lệ, không Markdown, theo đúng cấu trúc: {"protocol_name":"...","description":"...","duration_days":1,"tasks":[{"day":1,"time":"HH:mm","title":"...","instruction":"Bước 1: ...\\nBước 2: ...\\nTưới nước: 0ml\\nPhân bón: 0g\\nKết quả cần đạt: ...","dosage_note":"","safety_note":"..."}],"safety_guidelines":["..."]}.
 
-duration_days từ 1 đến 60. tasks phải có đúng một công việc cho từng ngày từ 1 đến duration_days và sắp xếp theo ngày. Mỗi instruction phải là hướng dẫn có thể thực hiện ngay trong ngày đó. Mỗi mục phải nằm trên một dòng riêng bằng ký tự xuống dòng \\n trong chuỗi JSON, không nối các bước bằng dấu chấm phẩy. Trình bày đúng thứ tự: "Chuẩn bị:", từng dòng "Bước 1:", "Bước 2:"..., "Lượng nước:", "Dụng cụ:", rồi kết thúc bằng "=> Kết quả cần đạt:". Nếu một mục không áp dụng, ghi ngắn gọn "Không cần" thay vì bỏ mục. Mỗi bước chỉ viết một hành động ngắn, trực tiếp, dễ thực hiện; ưu tiên động từ như kiểm tra, cắt, lau, tưới, cách ly hoặc thu gom. Dùng số cụ thể về ml, cm, phút, số lá hoặc số lần khi DOCX hay dữ liệu cây cung cấp đủ căn cứ. Không dùng câu chung chung như "chăm sóc cây", "tưới vừa đủ" hoặc "theo dõi thêm" nếu có thể mô tả thao tác cụ thể. Dòng "=> Kết quả cần đạt:" phải mô tả dấu hiệu người dùng có thể quan sát hoặc đo được ngay sau khi hoàn thành công việc.
+duration_days từ 1 đến 60. tasks có đúng một công việc cho từng ngày từ 1 đến duration_days, sắp theo ngày. Mỗi công việc có ít nhất hai bước khác nhau, đánh số liên tiếp. Viết mỗi mục trên một dòng riêng bằng ký tự xuống dòng \\n trong JSON. Trình bày theo thứ tự: "Chuẩn bị:" nếu cần, "Bước 1:", "Bước 2:" và các bước tiếp theo nếu cần, "Tưới nước:", "Phân bón:", "Dụng cụ:" nếu cần, "Kết quả cần đạt:". Mỗi bước là một hành động ngắn. Kết quả cần đạt là một câu ngắn mô tả dấu hiệu quan sát hoặc đo được. safety_note là lưu ý riêng cho ngày đó, tối đa một câu ngắn. Đặt hướng dẫn an toàn đầy đủ trong safety_guidelines.
 
-Nếu công việc có tưới nước và dữ liệu cung cấp đủ căn cứ, phải ghi rõ lượng nước bằng ml cho mỗi cây hoặc mỗi chậu, cách tưới, vị trí tưới và dấu hiệu cần kiểm tra trước khi tưới. Nếu dữ liệu không đủ để xác định lượng nước an toàn, không tự đoán số ml; phải hướng dẫn kiểm tra độ ẩm đất và ghi rõ tiêu chí dừng tưới. Không mặc định ngày nào cũng tưới. Nếu ngày đó không cần tưới, ghi rõ "Không tưới nước" và lý do trong instruction.
+Tưới nước: Ghi đúng "0ml" nếu công việc không cần tưới. Nếu DOCX có liều, chỉ ghi lượng và đơn vị sát số, kèm phạm vi áp dụng nếu cần. Giữ mẫu số như /chậu/lần hoặc /m²/tuần. Nếu cần kiểm tra trước khi tưới và tài liệu không có số, ghi "Theo độ ẩm đất" và đưa cách kiểm tra vào các bước. Khi lượng phụ thuộc điều kiện, có thể ghi điều kiện ngắn trong ngoặc, ví dụ "0ml (đất đủ ẩm)".
 
-Nếu cần cắt tỉa, vệ sinh, cách ly, thay đất hoặc xử lý bề mặt lá, phải ghi rõ bộ phận cần xử lý, dụng cụ, cách khử khuẩn và cách thu gom phần bệnh. Chỉ nêu liều pha, nồng độ hoặc hoạt chất khi có trong DOCX; nếu tài liệu không cung cấp thì yêu cầu tuân theo nhãn sản phẩm và không tự tạo con số. Dụng cụ phải được liệt kê ngay trong instruction theo dạng "Dụng cụ: ...".
+Phân bón: Ghi "0g" nếu không bón. Nếu có chỉ định trong DOCX, ghi ngắn loại phân và liều kèm đơn vị sát số. Nếu chỉ có loại phân, ghi "theo nhãn" kèm loại. Đưa điều kiện bón hoặc tránh bón vào bước thực hiện khi cần. Không thêm phân để thay thế biện pháp xử lý bệnh.
 
-Các giờ trong ví dụ chỉ minh họa. Nếu DOCX cung cấp lịch thì phải giữ nguyên ngày và giờ của từng ngày, không được quy tất cả về một giờ. time phải có dạng HH:mm theo giờ Việt Nam. Nội dung cần cụ thể, ngắn gọn, an toàn và không mâu thuẫn giữa các ngày.`;
+Khi cắt tỉa, vệ sinh, cách ly, thay đất hoặc xử lý lá, ghi bộ phận, dụng cụ và cách khử khuẩn, thu gom phù hợp. Với công việc có dùng thuốc, chép nguyên liều pha và nồng độ từ DOCX vào dosage_note. Nếu tài liệu chưa cung cấp, dùng theo nhãn và không tự tạo con số. Để trống dosage_note ở các ngày không dùng thuốc.
+
+Giữ nguyên tần suất, khoảng cách giữa các lần xử lý, liều lượng và thời lượng được nêu trong DOCX. Nếu ngày đó chưa đến kỳ xử lý, chỉ đặt công việc kiểm tra hoặc ghi nhận. Tự chọn giờ thực hiện phù hợp cho từng công việc theo giờ Việt Nam, dạng HH:mm. Chỉ dùng giờ đồng hồ trong trường time và bỏ qua giờ cụ thể trong tài liệu cũ. Nội dung cần cụ thể, ngắn gọn, an toàn và không mâu thuẫn giữa các ngày.`;
 
 const {
   fail,
@@ -35,8 +35,60 @@ const {
   parsePlantIds,
   extractDocument,
   relevantDiseaseSection,
-  documentSchedule,
+  withoutScheduleTimes,
+  documentDuration,
+  findBundledDiseaseSection,
+  readBundledPlan,
+  slugifyVietnamese,
+  readPlantDocument,
 } = require("./treatment-ai-content.service");
+
+function timeBundledPlan(plan) {
+  const input = JSON.stringify({
+    name: plan.protocol_name,
+    guidance: plan.timing_guidance,
+    tasks: plan.tasks.map(({ day, title, method }) => ({ day, title, method })),
+  });
+  const cached = bundledTimes.get(input);
+  if (cached && cached.expiresAt > Date.now()) return cached.request;
+  if (cached) bundledTimes.delete(input);
+  if (bundledTimes.size >= 64) bundledTimes.delete(bundledTimes.keys().next().value);
+
+  const entry = { expiresAt: Infinity };
+  entry.request = (async () => {
+    try {
+      const reply = await ai.complete([
+        {
+          role: "system",
+          content: 'Chọn giờ Việt Nam phù hợp cho mỗi công việc theo thứ tự. Tuân thủ buổi được nêu trong hướng dẫn. Chỉ trả JSON {"times":["HH:mm"]}, đúng một giờ mỗi ngày.',
+        },
+        { role: "user", content: input },
+      ], { maxTokens: 60 + plan.duration_days * 12, timeoutMs: TIMING_TIMEOUT_MS });
+      const { times } = parseJson(reply, "khung giờ điều trị");
+      if (Array.isArray(times) && times.length === plan.duration_days && times.every(isTime)) {
+        entry.expiresAt = Date.now() + 5 * 60 * 1000;
+        return { times, usedAi: true };
+      }
+    } catch (error) {
+      if (![
+        "AI_TIMEOUT", "AI_NOT_CONFIGURED", "AI_BUSY", "AI_UNAVAILABLE",
+        "AI_INVALID_RESPONSE", "AI_INCOMPLETE_RESPONSE",
+      ].includes(error.code)) throw error;
+    }
+    const times = plan.tasks.map(({ method }) => {
+      if (/chiều mát|buổi chiều/iu.test(method)) return "16:30";
+      if (/sáng sớm|buổi sáng/iu.test(method)) return "07:00";
+      return "08:00";
+    });
+    entry.expiresAt = Date.now() + 60 * 1000;
+    return { times, usedAi: false };
+  })().catch((error) => {
+    if (bundledTimes.get(input) === entry) bundledTimes.delete(input);
+    throw error;
+  });
+  bundledTimes.set(input, entry);
+  return entry.request;
+}
 
 const generate = async ({
   userId = null,
@@ -87,53 +139,67 @@ const generate = async ({
     disease.disease_name,
     disease.scientific_name,
     ...plants.flatMap((plant) => [plant.common_name, plant.scientific_name]),
-    "điều trị lịch thời gian liều lượng an toàn",
+    "điều trị tần suất liều lượng an toàn",
   ]
     .filter(Boolean)
     .join(" ");
-  const selectedDocument = documentText
-    ? relevantDiseaseSection(documentText, query)
-    : "";
-  const expectedSchedule = selectedDocument
-    ? documentSchedule(selectedDocument)
-    : null;
-  const context = selectedDocument
-    ? retrieve(selectedDocument, query)
-    : "Không có tài liệu DOCX tham chiếu.";
-  const maxTokens = Number(process.env.AI_TREATMENT_MAX_TOKENS || 5000);
-  if (!Number.isInteger(maxTokens) || maxTokens < 2000 || maxTokens > 6000)
-    fail("AI_NOT_CONFIGURED", 503, "Cấu hình AI phác đồ không hợp lệ.");
-  const reply = await ai.complete(
-    [
-      { role: "system", content: PROMPT },
-      {
-        role: "user",
-        content: `CÂY VÀ BỆNH:\n${JSON.stringify({ disease, plants })}\n\n${documentText ? "CÁC ĐOẠN DOCX ƯU TIÊN" : "TÀI LIỆU THAM CHIẾU"}:\n${context}${expectedSchedule ? `\n\nLỊCH NGÀY/GIỜ BẮT BUỘC, KHÔNG ĐƯỢC THAY ĐỔI:\n${JSON.stringify(expectedSchedule)}` : ""}`,
-      },
-    ],
-    { maxTokens, timeoutMs: 60000 },
-  );
-  const rawGenerated = parseJson(reply);
-  if (
-    expectedSchedule &&
-    Array.isArray(rawGenerated.tasks) &&
-    rawGenerated.tasks.length === expectedSchedule.length
-  ) {
-    rawGenerated.duration_days = expectedSchedule.length;
-    rawGenerated.tasks.forEach((task, index) => {
-      task.day = expectedSchedule[index].day;
-      task.time = expectedSchedule[index].time;
-    });
+  const bundledPreview = !persist && generationSource === "bundled_document";
+  const selectedDocument = bundledPreview
+    ? findBundledDiseaseSection(
+      documentText,
+      [disease.disease_name, disease.scientific_name],
+      plants[0].common_name,
+    )
+    : relevantDiseaseSection(documentText, query);
+  const plan = bundledPreview && readBundledPlan(selectedDocument, disease.disease_name);
+  const expectedDuration = documentDuration(selectedDocument);
+  let generated;
+  let usedAi = true;
+  let referenceNotice;
+  if (plan) {
+    const timing = await timeBundledPlan(plan);
+    usedAi = timing.usedAi;
+    generated = validateResult({
+      ...plan,
+      tasks: plan.tasks.map((task, index) => ({ ...task, time: timing.times[index] })),
+    }, expectedDuration);
+    referenceNotice = usedAi
+      ? "Phác đồ dựa trên tài liệu tham khảo từ hệ thống. AI đề xuất giờ thực hiện theo giờ Việt Nam."
+      : "Phác đồ dựa trên tài liệu tham khảo từ hệ thống. Giờ thực hiện dùng khung giờ Việt Nam.";
+  } else {
+    const context = selectedDocument
+      ? retrieve(withoutScheduleTimes(selectedDocument), query)
+      : "Không có tài liệu DOCX tham chiếu.";
+    const tokenLimit = Number(process.env.AI_TREATMENT_MAX_TOKENS || 5000);
+    if (!Number.isInteger(tokenLimit) || tokenLimit < 2000 || tokenLimit > 6000)
+      fail("AI_NOT_CONFIGURED", 503, "Cấu hình AI phác đồ không hợp lệ.");
+    const shortPreview = !persist && !selectedDocument;
+    const reply = await ai.complete(
+      [
+        {
+          role: "system",
+          content: shortPreview
+            ? PROMPT + "\nVới bản xem trước thiếu tài liệu phù hợp, đề xuất 3 đến 7 ngày theo dõi ban đầu, đúng hai bước ngắn mỗi ngày."
+            : PROMPT,
+        },
+        {
+          role: "user",
+          content: `CÂY VÀ BỆNH:\n${JSON.stringify({ disease, plants })}\n\n${selectedDocument ? "CÁC ĐOẠN DOCX ƯU TIÊN" : "TÀI LIỆU THAM CHIẾU"}:\n${context}${expectedDuration ? `\n\nTHỜI LƯỢNG TỪ DOCX: ${expectedDuration} ngày.` : ""}`,
+        },
+      ],
+      { maxTokens: shortPreview ? Math.min(tokenLimit, 2400) : tokenLimit, timeoutMs: 60000 },
+    );
+    generated = validateResult(parseJson(reply), expectedDuration);
+    referenceNotice = selectedDocument
+      ? bundledPreview
+        ? "AI tạo phác đồ dựa trên tài liệu tham khảo từ hệ thống."
+        : "AI tạo phác đồ dựa trên tài liệu tham khảo đã tải lên."
+      : "Phác đồ chưa được kiểm chứng; thông tin chỉ mang tính tham khảo.";
   }
-  const generated = validateResult(rawGenerated);
-  const referenceStatus = documentText ? "document_assisted" : "ai_unverified";
-  const referenceNotice = documentText
-    ? "Phác đồ được AI tạo với dữ liệu ưu tiên từ tài liệu DOCX; thông tin chỉ mang tính tham khảo."
-    : "Phác đồ chưa được kiểm chứng; thông tin chỉ mang tính tham khảo.";
+  const referenceStatus = selectedDocument ? "document_assisted" : "ai_unverified";
   const sourceDocument = {
-    name: file?.originalname || "",
-    extracted_characters: documentText.length,
-    sha256: file
+    name: selectedDocument ? file.originalname : "",
+    sha256: selectedDocument
       ? crypto.createHash("sha256").update(file.buffer).digest("hex")
       : "",
   };
@@ -144,15 +210,11 @@ const generate = async ({
       plant_ids: plantIds,
       approved_instructions: [],
       status: "approved",
-      instruction_source: documentText ? "imported" : "ai_unverified",
+      instruction_source: selectedDocument ? "imported" : "ai_unverified",
       reference_status: referenceStatus,
       reference_notice: referenceNotice,
       source_document: sourceDocument,
-      generation_source: generationSource,
-      ai_generation: {
-        model: process.env.AI_MODEL || "",
-        generated_at: new Date(),
-      },
+      generation_source: selectedDocument ? generationSource : "ai_only",
       version: 1,
     };
   const latest = await TreatmentProtocol.findOne({
@@ -172,10 +234,6 @@ const generate = async ({
     reference_status: referenceStatus,
     reference_notice: referenceNotice,
     source_document: sourceDocument,
-    ai_generation: {
-      model: process.env.AI_MODEL || "",
-      generated_at: new Date(),
-    },
     generation_source: generationSource,
     version: (latest?.version || 0) + 1,
     created_by: userId || null,
@@ -193,21 +251,15 @@ const createCustomerPreview = async (userId, input) => {
   const diagnosisId = input.diagnosis_id
     ? v.id(input.diagnosis_id, "diagnosis_id")
     : null;
+  const rank = validateCandidateRank(input.candidate_rank);
+  if (rank !== undefined && !diagnosisId) v.invalid("diagnosis_id");
+  await assertTreatmentCandidate(diagnosisId, userId, plantId, diseaseId, null, rank);
   const plant = await Plant.findById(plantId)
     .select("common_name is_published")
     .lean();
   if (!plant?.is_published || !plant.common_name)
     fail("RESOURCE_NOT_FOUND", 404, "Không tìm thấy cây đang công khai.");
-  const filename = `${slugifyVietnamese(plant.common_name)}.docx`;
-  let file = null;
-  try {
-    file = {
-      buffer: await fs.readFile(path.join(TEMPLATE_DIRECTORY, filename)),
-      originalname: filename,
-    };
-  } catch (error) {
-    if (error.code !== "ENOENT") throw error;
-  }
+  const file = await readPlantDocument(plant.common_name);
   const protocol = await generate({
     input: { disease_id: diseaseId, plant_ids: [plantId] },
     file,
@@ -221,6 +273,7 @@ const createCustomerPreview = async (userId, input) => {
       disease_id: diseaseId,
       plant_id: plantId,
       diagnosis_id: diagnosisId,
+      candidate_rank: rank,
       protocol,
     },
     previewSecret(),
@@ -262,16 +315,6 @@ const verifyCustomerPreview = (token, userId) => {
   return payload;
 };
 
-const slugifyVietnamese = (value) =>
-  String(value)
-    .trim()
-    .toLowerCase()
-    .replace(/đ/g, "d")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
 const generateFromDocument = async (userId, input, file) => {
   const plantIds = parsePlantIds(input.plant_ids);
   const created = await generate({
@@ -301,32 +344,26 @@ const generateFromBundledDocument = async (diseaseId, plantId) => {
       .select("common_name is_published")
       .lean();
     if (!plant?.is_published || !plant.common_name) return null;
-    const filename = `${slugifyVietnamese(plant.common_name)}.docx`;
-    let buffer;
-    try {
-      buffer = await fs.readFile(path.join(TEMPLATE_DIRECTORY, filename));
-    } catch (error) {
-      if (error.code === "ENOENT") {
-        const existing = await TreatmentProtocol.findOne({
-          disease_id: diseaseId,
-          plant_ids: plantId,
-          status: "approved",
+    const file = await readPlantDocument(plant.common_name);
+    if (!file) {
+      const existing = await TreatmentProtocol.findOne({
+        disease_id: diseaseId,
+        plant_ids: plantId,
+        status: "approved",
+      })
+        .select("_id")
+        .lean();
+      return (
+        existing ||
+        generate({
+          input: { disease_id: diseaseId, plant_ids: [plantId] },
+          generationSource: "ai_only",
         })
-          .select("_id")
-          .lean();
-        return (
-          existing ||
-          generate({
-            input: { disease_id: diseaseId, plant_ids: [plantId] },
-            generationSource: "ai_only",
-          })
-        );
-      }
-      throw error;
+      );
     }
     const fingerprint = crypto
       .createHash("sha256")
-      .update(buffer)
+      .update(file.buffer)
       .digest("hex");
     const existing = await TreatmentProtocol.findOne({
       disease_id: diseaseId,
@@ -339,7 +376,7 @@ const generateFromBundledDocument = async (diseaseId, plantId) => {
     if (existing?.source_document?.sha256 === fingerprint) return existing;
     const created = await generate({
       input: { disease_id: diseaseId, plant_ids: [plantId] },
-      file: { buffer, originalname: filename },
+      file,
       generationSource: "bundled_document",
     });
     await TreatmentProtocol.updateMany(
@@ -371,6 +408,5 @@ module.exports = {
     slugifyVietnamese,
     extractDocument,
     relevantDiseaseSection,
-    documentSchedule,
   },
 };

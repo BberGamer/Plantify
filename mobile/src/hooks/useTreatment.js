@@ -53,6 +53,7 @@ function useTreatmentResource(loader, contextKey) {
     [capture, isActive],
   );
   loadRef.current = load;
+  const refresh = useCallback(() => load(true), [load]);
   return {
     data,
     setData,
@@ -60,7 +61,7 @@ function useTreatmentResource(loader, contextKey) {
     refreshing,
     error,
     retry: load,
-    refresh: () => load(true),
+    refresh,
     capture,
     isActive,
   };

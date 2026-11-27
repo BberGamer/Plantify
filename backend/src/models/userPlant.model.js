@@ -20,7 +20,6 @@ const userPlantSchema = new mongoose.Schema(
     },
     health_status: { type: String, enum: ["healthy", "treatment"], default: "healthy" },
     is_under_treatment: { type: Boolean, default: false },
-    acquisition_date: { type: Date, default: null },
     archived_at: { type: Date, default: null },
     free_slot: { type: Number, min: 0, max: 2, validate: Number.isInteger },
   },

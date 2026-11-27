@@ -37,6 +37,23 @@ function imageExtension(buffer) {
   return null;
 }
 
+async function sanitizePhoto(file) {
+  const extension = imageExtension(file.buffer);
+  if (!extension)
+    throw new AppError("INVALID_PHOTO", 400, "Nội dung ảnh phải là JPG hoặc PNG hợp lệ.");
+  try {
+    // Giải mã và mã hóa lại để loại metadata và nội dung thừa.
+    const image = sharp(file.buffer, {
+      failOn: "warning",
+      limitInputPixels: 40000000,
+    }).rotate();
+    file.buffer = await (extension === "png" ? image.png() : image.jpeg()).toBuffer();
+    file.extension = extension;
+  } catch {
+    throw new AppError("INVALID_PHOTO", 400, "Ảnh bị lỗi hoặc kích thước ảnh quá lớn.");
+  }
+}
+
 const upload = (req, res, next) =>
   parse(req, res, async (error) => {
     if (error)
@@ -47,35 +64,12 @@ const upload = (req, res, next) =>
           "Chỉ chọn một ảnh JPG hoặc PNG, tối đa 10 MB.",
         ),
       );
-    if (req.file && !imageExtension(req.file.buffer))
-      return next(
-        new AppError(
-          "INVALID_PHOTO",
-          400,
-          "Nội dung ảnh phải là JPG hoặc PNG hợp lệ.",
-        ),
-      );
-    if (req.file) {
-      try {
-        // Decode and re-encode: reject malformed images and discard metadata/trailing content.
-        const image = sharp(req.file.buffer, {
-          failOn: "warning",
-          limitInputPixels: 40000000,
-        }).rotate();
-        req.file.buffer = await (
-          imageExtension(req.file.buffer) === "png" ? image.png() : image.jpeg()
-        ).toBuffer();
-      } catch {
-        return next(
-          new AppError(
-            "INVALID_PHOTO",
-            400,
-            "Ảnh bị lỗi hoặc kích thước ảnh quá lớn.",
-          ),
-        );
-      }
+    try {
+      if (req.file) await sanitizePhoto(req.file);
+      return next();
+    } catch (failure) {
+      return next(failure);
     }
-    next();
   });
 
-module.exports = { upload, uploadDirectory, imageExtension };
+module.exports = { upload, uploadDirectory, imageExtension, sanitizePhoto };

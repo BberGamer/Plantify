@@ -50,8 +50,16 @@ module.exports = {
     "Lấy thông tin cây thành công.",
   ),
   update: handle(update, "Cập nhật cây thành công."),
+  linkDiagnosis: handle(
+    (req) => garden.linkDiagnosis(req.user.id, req.params.id, req.body),
+    "Đã liên kết cây với danh mục.",
+  ),
   archive: handle(
     (req) => garden.archive(req.user.id, req.params.id),
     "Lưu trữ cây thành công.",
+  ),
+  remove: handle(
+    (req) => garden.archive(req.user.id, req.params.id),
+    "Đã xóa cây khỏi vườn.",
   ),
 };

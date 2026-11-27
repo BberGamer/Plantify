@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, itemsOf, params } from "../services/api";
 import useResource from "../hooks/useResource";
 import {
@@ -57,10 +57,37 @@ export default function Feedback() {
     [detail, setDetail] = useState(null),
     [error, setError] = useState(""),
     [exporting, setExporting] = useState(false);
+  const exportLock = useRef(false);
   const state = useResource(
     "/feedback/manager" + params({ ...query, page, limit: 20 }),
     version,
   );
+  async function downloadImages() {
+    if (exportLock.current) return;
+    exportLock.current = true;
+    setExporting(true);
+    setError("");
+    try {
+      const filename = "feedback-plantify.zip";
+      const blob = await api(
+        "/feedback/manager/export-images" + params(query),
+        { blob: true },
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      exportLock.current = false;
+      setExporting(false);
+    }
+  }
   return (
     <>
       <p className="eyebrow">MANAGER / PHẢN HỒI</p>
@@ -122,22 +149,9 @@ export default function Feedback() {
           onChange={(e) => setFilters({ ...filters, to: e.target.value })}
         />
         <button className="primary">Lọc / Tải lại</button>
-      <button type="button" disabled={exporting} onClick={async () => {
-        setExporting(true);
-        setError("");
-        try {
-          const blob = await api("/feedback/manager/export-images" + params(query), { blob: true });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = "feedback-plantify.zip";
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-        } catch (e) { setError(e.message); }
-        finally { setExporting(false); }
-      }}>{exporting ? "Đang tạo file ZIP…" : "Tải ảnh đã tiếp nhận (.zip)"}</button>
+        <button type="button" disabled={Boolean(exporting)} onClick={downloadImages}>
+          {exporting ? "Đang tạo file ZIP…" : "Tải ảnh đã tiếp nhận (.zip)"}
+        </button>
       </form>
       <Notice>{error}</Notice>
       <div className="panel">
@@ -161,7 +175,7 @@ export default function Feedback() {
                 </>
               ),
             },
-            { title: "Mô tả", render: (r) => r.description },
+            { title: "Lý do / nội dung", render: (r) => r.description },
             { title: "Trạng thái", render: (r) => <Badge value={r.status} /> },
             { title: "Ngày gửi", render: (r) => date(r.created_at) },
             {

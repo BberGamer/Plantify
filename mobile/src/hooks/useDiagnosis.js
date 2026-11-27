@@ -23,6 +23,7 @@ export default function useDiagnosis(
   photo,
   operationLock,
   identification = false,
+  userPlantId,
 ) {
   const notice = useActionNotice();
   const version = useAuthStore((state) => state.sessionVersion);
@@ -50,7 +51,14 @@ export default function useDiagnosis(
 
   const { capture, isActive } = useScreenScope(
     undefined,
-    () => invalidate(),
+    () => {
+      if (!userPlantId) invalidate();
+      else {
+        cancelRequest();
+        setBusy(false);
+        notice.dismiss();
+      }
+    },
     photo,
   );
   useEffect(() => {
@@ -91,6 +99,7 @@ export default function useDiagnosis(
         identification,
         sessionContext: context,
         signal: controller.signal,
+        userPlantId,
       });
       if (!isCurrent()) return;
       setResult({ photo: selected, data: response.data });
@@ -103,6 +112,11 @@ export default function useDiagnosis(
             photo: selected,
             data: failure.diagnosisResult,
           });
+          return;
+        }
+        if (selected.source === "garden-avatar" && failure?.code === "DIAGNOSIS_INVALID_PHOTO") {
+          setImageInvalid(true);
+          setResult({ photo: selected, data: invalidResult(failure.code) });
           return;
         }
         setError(

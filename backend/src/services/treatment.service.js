@@ -12,12 +12,13 @@ const TreatmentSchedule = require("../models/treatmentSchedule.model");
 const UserPlant = require("../models/userPlant.model");
 const Plant = require("../models/plant.model");
 const Disease = require("../models/disease.model");
-const DiseaseDiagnosis = require("../models/diseaseDiagnosis.model");
+const { assertTreatmentCandidate, savePlanSelection } = require("./diagnosis.service");
 const CareSchedule = require("../models/careSchedule.model");
 const Notification = require("../models/notification.model");
 const validate = require("../validators/treatment.validator");
 const v = require("../validators/common");
 const treatmentAI = require("./treatment-ai.service");
+const { presentTreatmentInstruction, compactTreatmentNote } = require("./treatment-instructions");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const terminalStatuses = ["recovered", "failed", "cancelled"];
@@ -52,7 +53,6 @@ const createCarePauseSnapshot = (careSchedules) =>
   careSchedules.map((care) => ({
     care_schedule_id: care._id,
     was_paused: care.is_paused,
-    previous_pause_reason: care.pause_reason || null,
   }));
 
 const careScheduleIdsToPause = (careSchedules) =>
@@ -92,8 +92,7 @@ const withVietnamTime = (date, time) => {
     date.getTime() + (hours - 7) * 60 * 60 * 1000 + minutes * 60 * 1000,
   );
 };
-const utcToday = () => {
-  const now = new Date();
+const utcToday = (now = new Date()) => {
   const vietnam = new Date(now.getTime() + 7 * 60 * 60 * 1000);
   return new Date(
     Date.UTC(
@@ -189,8 +188,10 @@ const presentSchedule = async (schedule, session) => {
       "Dữ liệu cây hoặc bệnh của lịch điều trị không còn đầy đủ.",
     );
   const duration = value.protocol_snapshot.duration_days;
+  const safetyGuidelines = value.protocol_snapshot.safety_guidelines;
+  const now = new Date();
   const start = value.start_date ? new Date(value.start_date) : null;
-  const elapsed = start ? Math.floor((utcToday() - start) / DAY_MS) + 1 : 0;
+  const elapsed = start ? Math.floor((utcToday(now) - start) / DAY_MS) + 1 : 0;
   const historyLabels = {
     task_edited: "Đã chỉnh sửa công việc điều trị",
     generated: "Đã tạo lịch điều trị",
@@ -216,23 +217,28 @@ const presentSchedule = async (schedule, session) => {
       description: value.protocol_snapshot.description,
       standard_duration_days: duration,
       version: value.protocol_snapshot.version,
-      safety_note: value.protocol_snapshot.safety_guidelines.join(" "),
-      safety_guidelines: value.protocol_snapshot.safety_guidelines,
+      safety_note: safetyGuidelines.join(" "),
+      safety_guidelines: safetyGuidelines,
       approved_instructions: value.protocol_snapshot.approved_instructions,
       reference_status: value.protocol_snapshot.reference_status,
-      reference_notice: value.protocol_snapshot.reference_notice,
+      reference_notice: value.protocol_snapshot.reference_notice?.replace(
+        "tài liệu DOCX", "tài liệu tham khảo từ hệ thống",
+      ),
     },
     stages: value.protocol_snapshot.stages.map((stage) => ({
       ...stage,
       _id: String(stage.source_stage_id || `stage-${stage.order}`),
+      instructions: stage.instructions.map(presentTreatmentInstruction),
+      important_note: compactTreatmentNote(stage.important_note, safetyGuidelines),
     })),
     task_progress: value.tasks.map((task) => ({
       ...task,
       status:
-        task.status === "pending" && new Date(task.scheduled_date) > utcToday()
+        task.status === "pending" && new Date(task.scheduled_date) > now
           ? "upcoming"
           : task.status,
-      instructions: task.instructions.join(" "),
+      instructions: presentTreatmentInstruction(task.instructions.join("\n")),
+      important_note: compactTreatmentNote(task.important_note, safetyGuidelines),
     })),
     history: (value.history || []).map((item) => ({
       ...item,
@@ -325,33 +331,6 @@ const getApprovedProtocols = async (diseaseId, plantId) => {
   return { disease, protocols: protocols.filter((_, index) => usable[index]) };
 };
 
-const assertDiagnosis = async (diagnosisId, userId, diseaseId, session) => {
-  if (!diagnosisId) return;
-  const diagnosis = await DiseaseDiagnosis.findOne({
-    _id: diagnosisId,
-    user_id: userId,
-  }).session(session || null);
-  if (!diagnosis)
-    throw new AppError(
-      "RESOURCE_NOT_FOUND",
-      404,
-      "Không tìm thấy kết quả chẩn đoán.",
-    );
-  if (diagnosis.result_kind === "plant")
-    throw new AppError(
-      "DIAGNOSIS_DISEASE_MISMATCH",
-      400,
-      "Kết quả nhận diện cây không dùng để tạo điều trị bệnh.",
-    );
-  if (String(diagnosis.disease_id) !== String(diseaseId))
-    throw new AppError(
-      "DIAGNOSIS_DISEASE_MISMATCH",
-      400,
-      "Bệnh được chọn không khớp kết quả chẩn đoán.",
-    );
-  return diagnosis;
-};
-
 const generateSchedule = async (userId, input) => {
   v.id(userId, "user_id");
   const data = validate.generate(input);
@@ -374,22 +353,14 @@ const generateSchedule = async (userId, input) => {
           400,
           "Cây trong vườn không khớp bản xem trước phác đồ.",
         );
-      const diagnosis = await assertDiagnosis(
+      const diagnosis = await assertTreatmentCandidate(
         data.diagnosis_id,
         userId,
+        plant.plant_id,
         data.disease_id,
         session,
+        preview.candidate_rank,
       );
-      if (
-        diagnosis &&
-        (!plant.plant_id ||
-          String(diagnosis.plant_id) !== String(plant.plant_id))
-      )
-        throw new AppError(
-          "DIAGNOSIS_PLANT_MISMATCH",
-          400,
-          "Cây trong vườn không khớp loài cây từ kết quả chẩn đoán.",
-        );
       if (
         diagnosis?.user_plant_id &&
         String(diagnosis.user_plant_id) !== String(plant._id)
@@ -405,12 +376,15 @@ const generateSchedule = async (userId, input) => {
           user_id: userId,
         }).session(session);
         if (previous) {
-          if (["generated", "in_progress"].includes(previous.status))
+          if (
+            ["generated", "in_progress"].includes(previous.status) &&
+            String(previous.disease_id) === String(data.disease_id)
+          )
             return presentSchedule(previous, session);
           throw new AppError(
             "DIAGNOSIS_ALREADY_USED",
             409,
-            "Kết quả chẩn đoán đã được dùng cho một đợt điều trị đã kết thúc.",
+            "Kết quả chẩn đoán đã được dùng cho một đợt điều trị.",
           );
         }
         diagnosis.user_plant_id = plant._id;
@@ -470,6 +444,7 @@ const generateSchedule = async (userId, input) => {
         ],
         { session },
       );
+      await savePlanSelection(diagnosis, "treatment", plant, data.disease_id, preview.candidate_rank, session);
       return presentSchedule(schedule, session);
     });
   } catch (error) {
@@ -478,7 +453,12 @@ const generateSchedule = async (userId, input) => {
         diagnosis_id: data.diagnosis_id,
         user_id: userId,
       }).lean();
-      if (previous && ["generated", "in_progress"].includes(previous.status))
+      if (
+        previous &&
+        ["generated", "in_progress"].includes(previous.status) &&
+        String(previous.disease_id) === String(data.disease_id) &&
+        String(previous.user_plant_id) === String(data.user_plant_id)
+      )
         return presentSchedule(previous);
       throw new AppError(
         "DIAGNOSIS_ALREADY_USED",
@@ -601,7 +581,6 @@ const completeTask = async (userId, scheduleId, taskId) => {
   v.id(taskId, "task_id");
   return withTransactionResult(async (session) => {
     const now = new Date();
-    const availableThrough = new Date();
     const schedule = await TreatmentSchedule.findOneAndUpdate(
       {
         _id: scheduleId,
@@ -611,7 +590,7 @@ const completeTask = async (userId, scheduleId, taskId) => {
           $elemMatch: {
             _id: taskId,
             status: "pending",
-            scheduled_date: { $lte: availableThrough },
+            scheduled_date: { $lte: now },
           },
         },
       },

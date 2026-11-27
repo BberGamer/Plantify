@@ -1,10 +1,13 @@
 const UserPlant = require("../models/userPlant.model");
 const Plant = require("../models/plant.model");
 const PlantCategory = require("../models/plantCategory.model");
+const CareSchedule = require("../models/careSchedule.model");
 const AppError = require("../utils/app-error");
+const withTransactionResult = require("../utils/transaction-result");
 const v = require("../validators/common");
 const validate = require("../validators/garden.validator");
 const TreatmentSchedule = require("../models/treatmentSchedule.model");
+const DiseaseDiagnosis = require("../models/diseaseDiagnosis.model");
 
 const notFound = () =>
   new AppError("GARDEN_PLANT_NOT_FOUND", 404, "Không tìm thấy cây trong vườn.");
@@ -61,9 +64,7 @@ const treatmentSummary = (schedule) => {
 };
 const present = (plant, activeTreatment) => ({
   ...plant,
-  acquisition_date: plant.acquisition_date
-    ? plant.acquisition_date.toISOString().slice(0, 10)
-    : null,
+  acquisition_date: undefined,
   species_name: plant.custom_species_name || plant.species_snapshot.common_name,
   category: {
     _id: plant.category_id,
@@ -186,6 +187,46 @@ const detail = async (userId, id) => {
   }).lean();
   return present(plant, active);
 };
+
+async function linkDiagnosis(userId, id, input) {
+  v.id(id, "user_plant_id");
+  v.object(input);
+  const diagnosisId = v.id(input.diagnosis_id, "diagnosis_id");
+  const expectedPlantId = v.id(input.plant_id, "plant_id");
+  const rank = input.candidate_rank;
+  if (!Number.isInteger(rank) || rank < 1 || rank > 3)
+    v.invalid("candidate_rank", "Chọn một trong ba gợi ý của lần quét.");
+  const scan = await DiseaseDiagnosis.findOne({
+    _id: diagnosisId, user_id: userId, user_plant_id: id, status: "identified", result_kind: "disease",
+  }).select("predictions.plant_id").lean();
+  const plantId = scan?.predictions?.[rank - 1]?.plant_id;
+  if (!plantId || String(plantId) !== expectedPlantId)
+    throw new AppError("DIAGNOSIS_PLANT_MISMATCH", 400, "Kết quả đã chọn không thuộc lần chẩn đoán cây này.");
+  const plant = await Plant.findOne({ _id: plantId, is_published: true }).lean();
+  if (!plant) throw new AppError("PLANT_NOT_FOUND", 404, "Không tìm thấy cây công khai trong thư viện.");
+  const group = await category(plant.category_id);
+  const owned = { _id: id, user_id: userId, archived_at: null };
+  const linked = await UserPlant.findOneAndUpdate({ ...owned, plant_id: null }, {
+    $set: {
+      plant_id: plant._id,
+      category_id: plant.category_id,
+      custom_species_name: "",
+      species_snapshot: {
+        common_name: plant.common_name,
+        category_name: group.category_name,
+        plant_image_url: plant.plant_image,
+      },
+    },
+    $inc: { __v: 1 },
+  });
+  if (!linked) {
+    const existing = await UserPlant.findOne(owned).select("plant_id").lean();
+    if (!existing) throw notFound();
+    if (String(existing.plant_id) !== String(plantId))
+      throw new AppError("DIAGNOSIS_PLANT_MISMATCH", 409, "Gợi ý đã chọn khác loài của cây trong vườn.");
+  }
+  return { plant_id: String(plantId) };
+}
 const update = async (userId, id, input) => {
   v.id(id);
   const data = validate.payload(input);
@@ -237,23 +278,37 @@ const update = async (userId, id, input) => {
 };
 const archive = async (userId, id) => {
   v.id(id);
-  const activeTreatment = await TreatmentSchedule.exists({
-    user_id: userId,
-    user_plant_id: id,
-    status: "in_progress",
-  });
-  if (activeTreatment)
-    throw new AppError(
-      "ACTIVE_TREATMENT_EXISTS",
-      409,
-      "Hãy kết thúc đợt điều trị trước khi lưu trữ cây.",
+  return withTransactionResult(async (session) => {
+    const plant = await UserPlant.findOne({ _id: id, user_id: userId })
+      .session(session)
+      .lean();
+    if (!plant) throw notFound();
+    if (plant.archived_at) return present(plant, null);
+
+    const activeTreatment = await TreatmentSchedule.exists({
+      user_id: userId,
+      user_plant_id: id,
+      status: "in_progress",
+    }).session(session);
+    if (plant.is_under_treatment || activeTreatment)
+      throw new AppError(
+        "ACTIVE_TREATMENT_EXISTS",
+        409,
+        "Hãy kết thúc đợt điều trị trước khi xóa cây khỏi vườn.",
+      );
+
+    const archived = await UserPlant.findOneAndUpdate(
+      { _id: id, user_id: userId },
+      { $set: { archived_at: new Date() } },
+      { new: true, runValidators: true, session },
+    ).lean();
+    await CareSchedule.updateMany(
+      { user_id: userId, user_plant_id: id, is_active: true },
+      { $set: { is_active: false } },
+      { session },
     );
-  const plant = await UserPlant.findOneAndUpdate(
-    { _id: id, user_id: userId, archived_at: null },
-    { $set: { archived_at: new Date() } },
-    { new: true, runValidators: true },
-  ).lean();
-  return plant ? present(plant, null) : detail(userId, id);
+    return present(archived, null);
+  });
 };
 
-module.exports = { list, create, detail, update, archive };
+module.exports = { list, create, detail, update, archive, linkDiagnosis };

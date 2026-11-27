@@ -8,6 +8,9 @@ const handle = (action, status = 200) => async (req, res, next) => {
 };
 router.get("/", handle(req => service.list(req.user.id, req.query)));
 router.post("/", handle(req => service.create(req.user.id, req.body), 201));
+router.post("/preview", handle(req => service.preview(req.user.id, req.body)));
+router.post("/apply", handle(req => service.applyPreview(req.user.id, req.body)));
+router.post("/generate", handle(req => service.createFromReference(req.user.id, req.body)));
 router.patch("/:id/complete", handle(req => service.complete(req.user.id, req.params.id, req.body)));
 router.delete("/:id", handle(req => service.remove(req.user.id, req.params.id)));
 module.exports = router;

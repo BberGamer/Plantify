@@ -51,6 +51,7 @@ module.exports = (req, res, next) => {
           .resize(1, 1)
           .raw()
           .toBuffer();
+        file.mimetype = `image/${info.format}`;
       }
       next();
     } catch (failure) {

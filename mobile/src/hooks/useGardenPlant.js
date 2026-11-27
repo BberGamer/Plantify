@@ -7,10 +7,19 @@ export default function useGardenPlant(id) {
   const [plant, setPlant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [deletePending, setDeletePending] = useState(false);
+  const deleteLock = useRef(false);
   const request = useRef(0);
   const loadRef = useRef(null);
   const { capture, isActive } = useScreenScope(
-    () => loadRef.current?.(),
+    () => {
+      setDeleting(false);
+      setDeletePending(deleteLock.current);
+      setDeleteError("");
+      loadRef.current?.();
+    },
     () => ++request.current,
     id,
   );
@@ -36,5 +45,37 @@ export default function useGardenPlant(id) {
     }
   }, [capture, id, isActive]);
   loadRef.current = load;
-  return { plant, loading, error, retry: load };
+  async function remove(onRemoved) {
+    if (deleteLock.current || !isActive() || plant?._id !== id) return;
+    deleteLock.current = true;
+    setDeletePending(true);
+    setDeleteError("");
+    const current = capture();
+    try {
+      const response = await gardenService.removePlant(id);
+      if (!response?.success || !response.data?.archived_at)
+        throw new Error("Phản hồi xóa cây không hợp lệ.");
+      if (current()) {
+        setPlant(response.data);
+        setDeleting(false);
+        onRemoved();
+      }
+    } catch (failure) {
+      if (current())
+        setDeleteError(getErrorMessage(failure, "Không thể xóa cây khỏi vườn."));
+    } finally {
+      deleteLock.current = false;
+      if (isActive()) setDeletePending(false);
+    }
+  }
+
+  return {
+    plant, loading, error, retry: load,
+    deleting, deleteError, deletePending, remove,
+    openDelete: () => {
+      setDeleteError("");
+      setDeleting(true);
+    },
+    closeDelete: () => setDeleting(false),
+  };
 }

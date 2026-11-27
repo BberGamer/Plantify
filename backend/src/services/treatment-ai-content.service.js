@@ -1,6 +1,14 @@
 const mammoth = require("mammoth");
+const fs = require("node:fs/promises");
+const path = require("node:path");
 const AppError = require("../utils/app-error");
 const v = require("../validators/common");
+const {
+  dailySteps,
+  formatTreatmentInstruction,
+  presentTreatmentInstruction,
+  compactTreatmentNote,
+} = require("./treatment-instructions");
 
 const fail = (code, status, message) => {
   throw new AppError(code, status, message);
@@ -10,18 +18,18 @@ const text = (value, field, max) => {
     fail("AI_INVALID_RESPONSE", 502, `${field} do AI trả về không hợp lệ.`);
   return value.trim();
 };
-const parseJson = (reply) => {
+const parseJson = (reply, label = "phác đồ") => {
   const first = reply.indexOf("{");
   const last = reply.lastIndexOf("}");
   if (first < 0 || last <= first)
-    fail("AI_INVALID_RESPONSE", 502, "AI không trả về phác đồ JSON hợp lệ.");
+    fail("AI_INVALID_RESPONSE", 502, `AI không trả về ${label} JSON hợp lệ.`);
   try {
     return JSON.parse(reply.slice(first, last + 1));
   } catch {
     return fail(
       "AI_INVALID_RESPONSE",
       502,
-      "AI không trả về phác đồ JSON hợp lệ.",
+      `AI không trả về ${label} JSON hợp lệ.`,
     );
   }
 };
@@ -86,21 +94,110 @@ const relevantDiseaseSection = (content, query) => {
       (left, right) => right.score - left.score || left.index - right.index,
     )[0].section;
 };
-const documentSchedule = (content) => {
-  const entries = [
-    ...content.matchAll(
-      /Ngày\s+(\d{1,2})\s*[–—-]\s*((?:[01]\d|2[0-3]):[0-5]\d)/gi,
-    ),
-  ].map((match) => ({ day: Number(match[1]), time: match[2] }));
-  if (!entries.length) return null;
-  const unique = new Map(entries.map((entry) => [entry.day, entry.time]));
-  const result = [...unique]
-    .sort((left, right) => left[0] - right[0])
-    .map(([day, time]) => ({ day, time }));
-  return result.every((entry, index) => entry.day === index + 1)
-    ? result
-    : null;
+const withoutScheduleTimes = (content) =>
+  content.replace(
+    /^([ \t]*Ngày[ \t]+\d{1,2})[ \t]*[–—-][ \t]*(?:[01]?\d|2[0-3]):[0-5]\d[ \t]*([–—-][ \t]*|$)/gim,
+    (_, day, separator) => day + (separator ? " – " : ""),
+  );
+const documentDuration = (content) => {
+  const duration = Number(content.match(/^Thời lượng mẫu:\s*(\d{1,2})\s*ngày/im)?.[1]);
+  return duration >= 1 && duration <= 60 ? duration : null;
 };
+
+const nameKey = (name) => tokens(name.replace(/đ/giu, "d")).join(" ");
+
+const diseaseNames = (value, plants) => String(value || "")
+  .split("/")
+  .flatMap((name) => {
+    const alias = name.match(/^(.+?)\s*\(([^()]+)\)\s*$/);
+    return alias ? [name, alias[1], alias[2]] : [name];
+  })
+  .map((name) => {
+    const byPlant = name.match(/^(.+?)\s+ở\s+(.+)$/iu);
+    const withoutPlant = byPlant && plants.has(nameKey(byPlant[2])) ? byPlant[1] : name;
+    return nameKey(withoutPlant
+      .replace(/^\s*bệnh\s+/iu, "")
+      .replace(/\s+do\s+virus\s*$/iu, ""));
+  })
+  .filter(Boolean);
+
+function findBundledDiseaseSection(content, names, plantName = "") {
+  const sections = content.split(/(?=^Bệnh:[ \t]*)/im);
+  const matches = sections.filter((section) => {
+    const name = section.match(/^Bệnh:[ \t]*(.+)$/im)?.[1];
+    if (!name) return false;
+    const plants = new Set([plantName, documentField(section, "Cây áp dụng")].map(nameKey));
+    const target = new Set(names.flatMap((value) => diseaseNames(value, plants)));
+    return diseaseNames(name, plants).some((label) => target.has(label));
+  });
+  return matches.length === 1 ? matches[0] : "";
+}
+
+function documentField(section, name) {
+  const prefix = name + ":";
+  const line = section.split("\n").find((value) => value.startsWith(prefix));
+  return line?.slice(prefix.length).trim() || "";
+}
+
+function readBundledPlan(section, diseaseName) {
+  const duration = documentDuration(section);
+  const content = withoutScheduleTimes(section);
+  const headings = [...content.matchAll(/^Ngày[ \t]+(\d{1,2})(?:[ \t]*[–—-][ \t]*(.+?))?[ \t]*$/gim)];
+  if (!duration || headings.length !== duration ||
+      headings.some((heading, index) => Number(heading[1]) !== index + 1)) return null;
+
+  const tasks = headings.map((heading, index) => {
+    const day = Number(heading[1]);
+    const block = content.slice(heading.index + heading[0].length, headings[index + 1]?.index);
+    const method = documentField(block, "Cách thực hiện") || documentField(block, "Công việc");
+    const outcome = documentField(block, "Kết quả cần đạt") || documentField(block, "Kết quả cần ghi nhận");
+    const safety = documentField(block, "Lưu ý") || documentField(block, "An toàn");
+    const preparation = documentField(block, "Chuẩn bị");
+    const tools = documentField(block, "Dụng cụ");
+    if (!method || !safety) return null;
+    const watering = /(?:^|[.;]\s*)tưới\b/iu.test(method);
+    const water = documentField(block, "Tưới nước") || documentField(block, "Lượng nước") ||
+      (watering ? "Theo độ ẩm đất" : "0ml");
+    const fertilizer = documentField(block, "Phân bón") || (/(?:^|[.;]\s*)bón\b/iu.test(method)
+      ? "Theo nhãn (khi có chỉ định)"
+      : "0g");
+    const action = watering && water === "Theo độ ẩm đất"
+      ? "Kiểm tra độ ẩm đất trước khi tưới; " + method
+      : method;
+    return {
+      day,
+      title: (heading[2]?.trim() || method).slice(0, 150),
+      method,
+      instruction: presentTreatmentInstruction([
+        preparation && "Chuẩn bị: " + preparation,
+        "Bước 1: " + action,
+        "Tưới nước: " + water,
+        "Phân bón: " + fertilizer,
+        tools && "Dụng cụ: " + tools,
+        outcome && "Kết quả cần đạt: " + outcome,
+      ].filter(Boolean).join("\n")),
+      dosage_note: documentField(block, "Liều lượng"),
+      safety_note: safety,
+    };
+  });
+  if (tasks.some((task) => !task)) return null;
+
+  const overview = content.slice(0, headings[0].index);
+  return {
+    protocol_name: ("Phác đồ " + diseaseName).slice(0, 200),
+    description: [
+      documentField(overview, "Mục tiêu"),
+      documentField(overview, "Tần suất"),
+    ].filter(Boolean).join("\n") || "Thực hiện công việc theo từng ngày trong tài liệu tham khảo.",
+    duration_days: duration,
+    tasks,
+    timing_guidance: documentField(overview, "Nguyên tắc thời gian"),
+    safety_guidelines: [
+      documentField(overview, "Liều lượng"),
+      ...new Set(tasks.map((task) => task.safety_note)),
+    ].filter(Boolean),
+  };
+}
 const parsePlantIds = (value) => {
   let values = value;
   if (typeof value === "string") {
@@ -114,7 +211,7 @@ const parsePlantIds = (value) => {
     v.invalid("plant_ids", "Vui lòng chọn ít nhất một cây áp dụng.");
   return [...new Set(values.map((id) => v.id(String(id).trim(), "plant_ids")))];
 };
-const validateResult = (result) => {
+const validateResult = (result, expectedDuration) => {
   const duration = Number(result?.duration_days);
   if (!Number.isInteger(duration) || duration < 1 || duration > 60)
     fail(
@@ -122,12 +219,19 @@ const validateResult = (result) => {
       502,
       "Thời lượng phác đồ do AI trả về không hợp lệ.",
     );
+  if (expectedDuration && duration !== expectedDuration)
+    fail("AI_INVALID_RESPONSE", 502, "Thời lượng phác đồ không khớp tài liệu tham chiếu.");
   if (!Array.isArray(result.tasks) || result.tasks.length !== duration)
     fail(
       "AI_INVALID_RESPONSE",
       502,
       "AI phải trả đúng một công việc cho mỗi ngày điều trị.",
     );
+  const safetyGuidelines = Array.isArray(result.safety_guidelines)
+    ? [...new Set(result.safety_guidelines.map((item) => text(item, "Hướng dẫn an toàn", 2000)))]
+    : [];
+  if (!safetyGuidelines.length)
+    fail("AI_INVALID_RESPONSE", 502, "AI chưa trả hướng dẫn an toàn.");
   const stages = result.tasks.map((task, index) => {
     if (
       task?.day !== index + 1 ||
@@ -139,9 +243,26 @@ const validateResult = (result) => {
         502,
         "Ngày hoặc giờ thực hiện do AI trả về không hợp lệ.",
       );
-    const instruction = text(task.instruction, "Hướng dẫn", 2000);
+    const instruction = formatTreatmentInstruction(text(task.instruction, "Hướng dẫn", 2000));
+    const steps = dailySteps(instruction);
+    if (steps.length < 2 || steps.some(([, number], index) => Number(number) !== index + 1))
+      fail("AI_INVALID_RESPONSE", 502, "Mỗi ngày điều trị cần ít nhất hai bước theo thứ tự.");
+    if (
+      !/^Tưới nước:[ \t]*\S/im.test(instruction) ||
+      !/^Phân bón:[ \t]*\S/im.test(instruction) ||
+      !/^Kết quả cần đạt:[ \t]*\S/im.test(instruction)
+    )
+      fail(
+        "AI_INVALID_RESPONSE",
+        502,
+        "Công việc điều trị thiếu thông tin tưới nước, phân bón hoặc kết quả cần đạt.",
+      );
     const safety =
       typeof task.safety_note === "string" ? task.safety_note.trim() : "";
+    const dosage =
+      task.dosage_note == null || task.dosage_note === ""
+        ? ""
+        : text(task.dosage_note, "Liều lượng", 2000);
     return {
       order: index + 1,
       title: text(task.title, "Tên công việc", 150),
@@ -149,21 +270,10 @@ const validateResult = (result) => {
       start_day: index + 1,
       end_day: index + 1,
       instructions: [instruction],
-      dosage_note: "",
-      important_note: safety,
+      dosage_note: dosage,
+      important_note: compactTreatmentNote(safety, safetyGuidelines),
     };
   });
-  const safetyGuidelines = Array.isArray(result.safety_guidelines)
-    ? [
-        ...new Set(
-          result.safety_guidelines.map((item) =>
-            text(item, "Hướng dẫn an toàn", 2000),
-          ),
-        ),
-      ]
-    : [];
-  if (!safetyGuidelines.length)
-    fail("AI_INVALID_RESPONSE", 502, "AI chưa trả hướng dẫn an toàn.");
   return {
     protocol_name: text(result.protocol_name, "Tên phác đồ", 200),
     description: text(result.description, "Mô tả", 5000),
@@ -197,6 +307,30 @@ const extractDocument = async (buffer) => {
   return value;
 };
 
+const slugifyVietnamese = (value) =>
+  String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/đ/g, "d")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const readPlantDocument = async (plantName) => {
+  const slug = slugifyVietnamese(plantName);
+  const filename = (slug === "cherry" ? "anh-dao" : slug) + ".docx";
+  try {
+    const buffer = await fs.readFile(
+      path.resolve(__dirname, "../../data/treatment-templates", filename),
+    );
+    return { buffer, originalname: filename };
+  } catch (error) {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  }
+};
+
 module.exports = {
   fail,
   chunkDocument,
@@ -206,5 +340,10 @@ module.exports = {
   parsePlantIds,
   extractDocument,
   relevantDiseaseSection,
-  documentSchedule,
+  withoutScheduleTimes,
+  documentDuration,
+  findBundledDiseaseSection,
+  readBundledPlan,
+  slugifyVietnamese,
+  readPlantDocument,
 };

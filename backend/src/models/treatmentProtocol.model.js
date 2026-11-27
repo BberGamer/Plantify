@@ -95,7 +95,6 @@ const treatmentProtocolSchema = new mongoose.Schema(
     },
     source_document: {
       name: { type: String, trim: true, maxlength: 255, default: "" },
-      extracted_characters: { type: Number, min: 0, default: 0 },
       sha256: { type: String, trim: true, maxlength: 64, default: "" },
     },
     reference_status: {
@@ -108,10 +107,6 @@ const treatmentProtocolSchema = new mongoose.Schema(
       trim: true,
       maxlength: 500,
       default: "",
-    },
-    ai_generation: {
-      model: { type: String, trim: true, maxlength: 200, default: "" },
-      generated_at: { type: Date, default: null },
     },
     generation_source: {
       type: String,

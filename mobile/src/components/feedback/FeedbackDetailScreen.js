@@ -90,6 +90,7 @@ function ReviewPanel({ item, busy, onReview }) {
     item.status === "pending" ? "accepted" : item.status,
   );
   const [response, setResponse] = useState(item.response || "");
+  const disabled = busy;
   return (
     <FeedbackSection title={item.status === "pending" ? "Xử lý đóng góp" : "Cập nhật kết quả xử lý"} icon="create-outline">
       <View style={presentation.field}>
@@ -98,16 +99,16 @@ function ReviewPanel({ item, busy, onReview }) {
       </View>
       <View style={presentation.field}>
         <Text style={presentation.label}>Kết quả xử lý mới</Text>
-        <FilterOptions value={status} onChange={setStatus} disabled={busy} options={[
+        <FilterOptions value={status} onChange={setStatus} disabled={disabled} options={[
           { value: "accepted", label: "Tiếp nhận", icon: "checkmark-circle-outline" },
           { value: "rejected", label: "Từ chối", icon: "close-circle-outline" },
         ]} />
       </View>
       <TextInput mode="outlined" label="Nội dung phản hồi" multiline maxLength={1000}
-        value={response} onChangeText={setResponse} disabled={busy} style={local.responseInput} />
+        value={response} onChangeText={setResponse} disabled={disabled} style={local.responseInput} />
       <Text style={presentation.hint}>{response.length}/1.000 ký tự · Kết quả chỉ được cập nhật sau khi lưu.</Text>
       <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
-        mode="contained" onPress={() => onReview(status, response)} loading={busy} disabled={busy}>
+        mode="contained" onPress={() => onReview(status, response)} loading={busy} disabled={disabled}>
         Lưu kết quả
       </Button>
     </FeedbackSection>
@@ -123,16 +124,17 @@ export default function FeedbackDetailScreen({
   const result = useFeedbackDetail(id, manager);
   const [showSent, setShowSent] = useState(sent);
   const fallback = manager ? "/manager/feedback" : "/customer/feedback";
+  const pending = result.busy;
   useFormBack(
     () => (router.canGoBack() ? router.back() : router.replace(fallback)),
-    result.busy,
+    pending,
   );
   const { item } = result;
   return (
     <FeedbackFrame
       title="Chi tiết đóng góp"
       fallback={fallback}
-      busy={result.busy}
+      busy={pending}
     >
       <ScrollView
         contentContainerStyle={styles.content}
@@ -157,7 +159,7 @@ export default function FeedbackDetailScreen({
                   <View style={presentation.fieldColumn}><FeedbackField label="Email người gửi" value={item.sender?.email} /></View>
                 </View>}
                 <View style={presentation.description}>
-                  <FeedbackField label="Nội dung đóng góp" value={item.description} />
+                  <FeedbackField label={item.reason ? "Lý do đóng góp" : "Nội dung đóng góp"} value={item.description} />
                 </View>
               </FeedbackSection>
               {!!item.diagnosis_id && (
@@ -192,7 +194,7 @@ export default function FeedbackDetailScreen({
                   <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
                     icon="refresh"
                     onPress={result.load}
-                    disabled={result.busy}
+                    disabled={pending}
                   >
                     Tải lại kết quả xử lý
                   </Button>

@@ -98,7 +98,6 @@ export default function ManagerDiseasesScreen() {
         visible={manager.visible}
         editing={manager.editing}
         form={manager.form}
-        photo={manager.photo}
         choosingPhoto={manager.choosingPhoto}
         loading={manager.formLoading}
         ready={manager.formReady}
@@ -111,7 +110,6 @@ export default function ManagerDiseasesScreen() {
         onSave={manager.save}
         onChange={manager.changeField}
         onChoosePhoto={manager.choosePhoto}
-        onRemovePhoto={manager.removePhoto}
         onTogglePlant={manager.togglePlant}
         onRetryPlants={manager.retryPlants}
         onRetryDetail={manager.retryEdit}

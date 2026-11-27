@@ -35,7 +35,8 @@ const responseText = async (response) => {
 };
 
 const createInferenceClient = ({ fetchImpl = globalThis.fetch } = {}) => {
-  const request = async (photo, { signal, config = getDiagnosisConfig() } = {}) => {
+  const request = async (photo, { signal, config } = {}, inputCheck = false) => {
+    config ??= getDiagnosisConfig(process.env, { inputCheck });
     if (signal?.aborted) throw new AppError("REQUEST_ABORTED", 499, "Yêu cầu đã được hủy.");
     const controller = new AbortController();
     let timedOut = false;
@@ -52,13 +53,22 @@ const createInferenceClient = ({ fetchImpl = globalThis.fetch } = {}) => {
       const extension = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }[photo.mimetype];
       form.append("photo", new Blob([photo.buffer], { type: photo.mimetype }), `plant.${extension}`);
       const url = new URL(config.inferenceUrl);
-      const response = await fetchImpl(url.toString(), {
-        method: "POST", body: form, signal: controller.signal, redirect: "error",
-        headers: { Accept: "application/json" },
-      });
-      const text = await responseText(response);
-      let body;
-      try { body = JSON.parse(text); } catch { throw invalidResponse(); }
+      const send = async () => {
+        const response = await fetchImpl(url.toString(), {
+          method: "POST", body: form, signal: controller.signal, redirect: "error",
+          headers: { Accept: "application/json" },
+        });
+        const text = await responseText(response);
+        try { return { response, body: JSON.parse(text) }; }
+        catch { throw invalidResponse(); }
+      };
+      let { response, body } = await send();
+      if (inputCheck && url.pathname.endsWith("/check-input") &&
+          response.status === 404 && body?.code === "NOT_FOUND") {
+        // Bản inference cũ trả quyết định MobileCLIP trong /predict.
+        url.pathname = url.pathname.replace(/\/check-input$/, "/predict");
+        ({ response, body } = await send());
+      }
       if (!response.ok) {
         if (response.status === 503 && body.code === "INFERENCE_BUSY")
           throw new AppError("DIAGNOSIS_BUSY", 503, "Model đang xử lý ảnh khác. Vui lòng thử lại sau ít giây.");
@@ -90,6 +100,7 @@ const createInferenceClient = ({ fetchImpl = globalThis.fetch } = {}) => {
   };
   return {
     predict: (photo, options) => request(photo, options),
+    checkInput: (photo, options) => request(photo, options, true),
   };
 };
 
