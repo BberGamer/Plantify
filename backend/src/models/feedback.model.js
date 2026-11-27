@@ -2,6 +2,10 @@ const { Schema, model } = require("mongoose");
 
 const types = ["diagnosis_feedback", "proactive_feedback"];
 const decisions = ["accepted", "rejected"];
+const reasons = Object.freeze({
+  incorrect_plant: "Chẩn đoán cây chưa đúng",
+  incorrect_disease: "Chẩn đoán bệnh chưa đúng",
+});
 
 const imageSchema = new Schema({
   storage: { type: String, enum: ["local", "cloudinary"], required: true },
@@ -23,6 +27,7 @@ const feedbackSchema = new Schema({
   diagnosis_id: { type: Schema.Types.ObjectId, ref: "DiseaseDiagnosis", default: null },
   type: { type: String, enum: types, required: true },
   description: { type: String, required: true, maxlength: 250 },
+  reason: { type: String, enum: Object.keys(reasons) },
   images: {
     type: [imageSchema],
     validate: (images) => images.length >= 1 && images.length <= 5,
@@ -37,4 +42,4 @@ feedbackSchema.index({ user_id: 1, request_key: 1 }, { unique: true });
 feedbackSchema.index({ user_id: 1, created_at: -1, _id: -1 });
 feedbackSchema.index({ created_at: -1, _id: -1 });
 
-module.exports = { Feedback: model("Feedback", feedbackSchema), types, decisions };
+module.exports = { Feedback: model("Feedback", feedbackSchema), types, decisions, reasons };

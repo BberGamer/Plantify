@@ -50,10 +50,10 @@ export default {
     const { data } = await api.get(path(manager, id), { signal });
     return data.data;
   },
-  async create({ description, diagnosisId, images, key }) {
+  async create({ reason, diagnosisId, images, key }) {
     const sessionContext = getSessionContext();
     const body = new FormData();
-    body.append("description", description);
+    body.append("reason", reason);
     if (diagnosisId) body.append("diagnosis_id", diagnosisId);
     for (const image of images) {
       const extension = (image.fileName || image.uri)

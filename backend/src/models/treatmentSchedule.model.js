@@ -93,11 +93,6 @@ const carePauseSnapshotSchema = new mongoose.Schema(
       required: true,
     },
     was_paused: { type: Boolean, required: true },
-    previous_pause_reason: {
-      type: String,
-      enum: ["manual", "treatment", null],
-      default: null,
-    },
   },
   { _id: false, id: false },
 );

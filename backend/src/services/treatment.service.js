@@ -53,7 +53,6 @@ const createCarePauseSnapshot = (careSchedules) =>
   careSchedules.map((care) => ({
     care_schedule_id: care._id,
     was_paused: care.is_paused,
-    previous_pause_reason: care.pause_reason || null,
   }));
 
 const careScheduleIdsToPause = (careSchedules) =>

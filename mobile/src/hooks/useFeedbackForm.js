@@ -12,7 +12,7 @@ import getErrorMessage from "../utils/getErrorMessage";
 
 export default function useFeedbackForm(initialId) {
   const router = useRouter();
-  const [description, setDescription] = useState("");
+  const [reason, setReason] = useState("");
   const [images, setImages] = useState([]);
   const [diagnosis, setDiagnosis] = useState(null);
   const [loadingDiagnosis, setLoadingDiagnosis] = useState(!!initialId);
@@ -40,9 +40,9 @@ export default function useFeedbackForm(initialId) {
     return () => controller.abort();
   }, [initialId]);
 
-  function changeDescription(value) {
+  function selectReason(value) {
     requestKey.current = null;
-    setDescription(value);
+    setReason(value);
   }
 
   function selectDiagnosis(value) {
@@ -88,9 +88,7 @@ export default function useFeedbackForm(initialId) {
 
   async function submit() {
     if (pending.current || !isActive() || loadingDiagnosis) return;
-    const text = description.trim();
-    if (!text || text.length > 250)
-      return setMessage("Vui lòng nhập mô tả từ 1 đến 250 ký tự.");
+    if (!reason) return setMessage("Vui lòng chọn lý do đóng góp.");
     if (!images.length || images.length > MAX_FEEDBACK_IMAGES)
       return setMessage("Vui lòng đính kèm từ 1 đến 5 ảnh.");
     const current = capture();
@@ -99,7 +97,7 @@ export default function useFeedbackForm(initialId) {
     try {
       requestKey.current ??= randomUUID();
       const result = await feedbackService.create({
-        description: text,
+        reason,
         diagnosisId: diagnosis?._id,
         images,
         key: requestKey.current,
@@ -121,8 +119,8 @@ export default function useFeedbackForm(initialId) {
   }
 
   return {
-    description,
-    changeDescription,
+    reason,
+    selectReason,
     images,
     pickImages,
     removeImage,

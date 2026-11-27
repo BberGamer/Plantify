@@ -35,7 +35,7 @@ class UploadBodyLimit:
     # Mục đích: Chặn request ảnh vượt dung lượng trước khi đọc multipart.
     # Cách chạy: Kiểm tra Content-Length và đếm bytes thực nhận rồi chuyển body hợp lệ vào app.
     async def __call__(self, scope, receive, send):
-        if scope["type"] != "http" or scope["method"] != "POST" or scope["path"] != "/predict":
+        if scope["type"] != "http" or scope["method"] != "POST" or scope["path"] not in {"/predict", "/check-input"}:
             return await self.app(scope, receive, send)
         headers = dict(scope.get("headers", []))
         try:
@@ -147,6 +147,10 @@ def create_app(settings=None, predictor_factory=PlantClassifier):
     @app.post("/predict")
     async def predict(request: Request, photo: UploadFile = File(description="Ảnh JPEG/PNG/WebP, tối đa 10 MiB")):
         return await process_upload(request, photo, app.state.classifier, "predict")
+
+    @app.post("/check-input")
+    async def check_input(request: Request, photo: UploadFile = File(description="Ảnh JPEG/PNG/WebP, tối đa 10 MiB")):
+        return await process_upload(request, photo, app.state.classifier, "check_input")
 
     return app
 

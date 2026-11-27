@@ -207,6 +207,8 @@ async function saveReference(userId, id, plantId, { diagnosisId, rank }, plan) {
     if (String(ownedPlant.plant_id) !== String(plantId))
       throw new AppError("CARE_PLANT_MISMATCH", 409, "Chọn cây cùng loài với bản xem trước lịch chăm sóc.");
     const diagnosis = await assertCareCandidate(diagnosisId, userId, ownedPlant.plant_id, rank, session);
+    if (diagnosis?.user_plant_id && String(diagnosis.user_plant_id) !== id)
+      throw new AppError("DIAGNOSIS_ALREADY_USED", 409, "Kết quả chẩn đoán thuộc về một cây khác trong vườn.");
     const now = recurrence.localDateTime();
     const day = now.slice(0, 10);
     const tomorrow = recurrence.shiftDate(day, 1);

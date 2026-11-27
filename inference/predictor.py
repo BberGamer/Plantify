@@ -248,6 +248,23 @@ class PlantClassifier:
         # ClassificationPredictor.postprocess đưa nguyên vector đó vào Results.probs.
         return class_probabilities(results[0].probs.data)
 
+    def _inspect_input(self, content, content_type):
+        image, dimensions = decode_image(content, content_type, self.settings, prepare=False)
+        if dimensions["quality"]["usable"]:
+            scope = self.input_guard.check(image)
+        else:
+            scope = {"status": "uncertain", "reason": "poor_image_quality"}
+        return image, dimensions, scope
+
+    def check_input(self, content, content_type):
+        if not self._lock.acquire(blocking=False):
+            raise InferenceError(503, "INFERENCE_BUSY", "Model đang xử lý ảnh khác. Vui lòng thử lại.")
+        try:
+            _, _, scope = self._inspect_input(content, content_type)
+            return {"input_check": scope}
+        finally:
+            self._lock.release()
+
     # Mục đích: Phân tích ảnh và trả 5 nhóm có điểm cao nhất.
     # Cách chạy: Khóa lượt chạy, xử lý ảnh, gọi model, ghép nhãn và luôn mở khóa khi xong.
     def predict(self, content, content_type):
@@ -255,11 +272,7 @@ class PlantClassifier:
             raise InferenceError(503, "INFERENCE_BUSY", "Model đang xử lý ảnh khác. Vui lòng thử lại.")
         started = time.perf_counter()
         try:
-            image, dimensions = decode_image(content, content_type, self.settings, prepare=False)
-            if dimensions["quality"]["usable"]:
-                scope = self.input_guard.check(image)
-            else:
-                scope = {"status": "uncertain", "reason": "poor_image_quality"}
+            image, dimensions, scope = self._inspect_input(content, content_type)
             data = {"image": dimensions, "model": dict(self.info), "input_check": scope}
             if scope["status"] != "passed":
                 return {**data, "prediction": None, "top5": [], "class_scores": [],

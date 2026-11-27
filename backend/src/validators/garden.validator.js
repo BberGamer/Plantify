@@ -4,7 +4,7 @@ const stringLimits = {
   plant_nickname: 150, custom_species_name: 200, placement_location: 200,
   pot_type_size: 200, plant_image_url: 2048,
 };
-const fields = [...Object.keys(stringLimits), "plant_id", "category_id", "health_status", "acquisition_date"];
+const fields = [...Object.keys(stringLimits), "plant_id", "category_id", "health_status"];
 
 const payload = (input, creating = false) => {
   v.object(input);
@@ -29,18 +29,6 @@ const payload = (input, creating = false) => {
   if (input.health_status !== undefined) {
     if (!["healthy", "treatment"].includes(input.health_status)) v.invalid("health_status");
     result.health_status = input.health_status;
-  }
-  if (input.acquisition_date !== undefined) {
-    const value = input.acquisition_date;
-    if (value === null || (!creating && value === "")) result.acquisition_date = null;
-    else {
-      if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) v.invalid("acquisition_date");
-      const date = new Date(`${value}T00:00:00.000Z`);
-      if (value.startsWith("0000-") || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) v.invalid("acquisition_date", "Ngày nhận cây không hợp lệ.");
-      const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-      if (value > today) v.invalid("acquisition_date", "Ngày nhận cây không được ở tương lai.");
-      result.acquisition_date = date;
-    }
   }
   if (creating && !result.plant_id) {
     result.custom_species_name = v.text(result.custom_species_name, "custom_species_name");

@@ -17,7 +17,6 @@ import {
   TextInput,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AcquisitionDatePicker from "./AcquisitionDatePicker";
 import { colors, spacing, radius } from "../../theme";
 
 export default function GardenPlantForm({ form }) {
@@ -85,12 +84,6 @@ export default function GardenPlantForm({ form }) {
               )}
               {field("placement_location", "Vị trí đặt cây", 200)}
               {field("pot_type_size", "Loại / kích thước chậu", 200)}
-              <AcquisitionDatePicker
-                value={form.draft.acquisition_date}
-                onChange={(value) => form.change("acquisition_date", value)}
-                disabled={form.busy}
-                error={form.errors.acquisition_date}
-              />
               <Button
                 style={componentStyles.buttonShape}
                 contentStyle={componentStyles.button}

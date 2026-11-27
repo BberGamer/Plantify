@@ -3,6 +3,7 @@ const { Feedback } = require("../models/feedback.model");
 const Notification = require("../models/notification.model");
 const User = require("../models/user.model");
 const diagnosis = require("./diagnosis.service");
+const inference = require("../integrations/ai/diagnosis.service");
 const photos = require("../integrations/diagnosis-photo.service");
 const validate = require("../validators/common");
 const AppError = require("../utils/app-error");
@@ -13,7 +14,7 @@ const fs = require("node:fs/promises");
 const missing = () =>
   new AppError("FEEDBACK_NOT_FOUND", 404, "Không tìm thấy đóng góp.");
 const latestFields =
-  "_id user_id diagnosis_id type description images status review review_count created_at";
+  "_id user_id diagnosis_id type description reason images status review review_count created_at";
 
 function serialize(row, manager = false) {
   const result = {
@@ -21,6 +22,7 @@ function serialize(row, manager = false) {
     diagnosis_id: row.diagnosis_id ? String(row.diagnosis_id) : null,
     type: row.type,
     description: row.description,
+    reason: row.reason ?? null,
     image_count: row.images.length,
     status: row.status,
     response: row.review?.response ?? null,
@@ -60,6 +62,21 @@ async function assertVip(userId) {
     );
 }
 
+async function checkPhotos(files) {
+  for (const [index, file] of files.entries()) {
+    const { input_check: check } = await inference.checkInput(file);
+    if (check?.status === "passed" && check.reason === "plant_photo") continue;
+    let message;
+    if (check?.status === "unsupported" && check.reason === "non_plant_photo")
+      message = `Ảnh ${index + 1} được nhận diện là ảnh không phải cây. Vui lòng thay bằng ảnh lá cây.`;
+    else if (check?.status === "uncertain" && ["input_scope_uncertain", "poor_image_quality"].includes(check.reason))
+      message = `Ảnh ${index + 1} chưa đủ rõ để xác nhận là ảnh cây. Vui lòng chọn ảnh lá rõ hơn.`;
+    else
+      throw new AppError("DIAGNOSIS_INVALID_RESPONSE", 502, "Dịch vụ kiểm tra ảnh trả kết quả không hợp lệ.");
+    throw new AppError("FEEDBACK_INVALID_IMAGES", 422, message, { images: message });
+  }
+}
+
 async function create(userId, input, files) {
   await Feedback.init();
   const key = { user_id: userId, request_key: input.request_key };
@@ -67,6 +84,7 @@ async function create(userId, input, files) {
   if (existing) return serialize(existing);
   if (input.diagnosis_id)
     await diagnosis.historyDetail(userId, input.diagnosis_id);
+  await checkPhotos(files);
 
   const images = [];
   let writeStarted = false;
@@ -79,6 +97,7 @@ async function create(userId, input, files) {
       diagnosis_id: input.diagnosis_id,
       type: input.diagnosis_id ? "diagnosis_feedback" : "proactive_feedback",
       description: input.description,
+      reason: input.reason,
       images,
     });
     return serialize(created);

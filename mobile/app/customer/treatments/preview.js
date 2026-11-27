@@ -19,6 +19,7 @@ export default function TreatmentPreviewScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const value = (input) => (typeof input === "string" ? input : "");
+  const fixedGardenPlant = params.fixedGardenPlant === "1";
   const treatment = useTreatmentPreview({
     diseaseId: value(params.diseaseId),
     plantId: value(params.plantId),
@@ -26,6 +27,7 @@ export default function TreatmentPreviewScreen() {
     diagnosisId: value(params.diagnosisId) || undefined,
     candidateRank: value(params.rank) ? Number(params.rank) : undefined,
     startDate: value(params.startDate) || undefined,
+    fixedGardenPlant,
   });
   const contextKey = JSON.stringify([params.diseaseId, params.plantId, params.userPlantId, params.diagnosisId, params.rank, params.startDate]);
   const [confirming, setConfirming] = useState(null);
@@ -120,13 +122,12 @@ export default function TreatmentPreviewScreen() {
           })}
           {!treatment.gardenLoading && !treatment.gardenError && !treatment.gardenPlants.length && (
             <View style={styles.missingPlant}>
-              <Text style={styles.error}>
-                Vườn của bạn chưa có cây cùng loài với kết quả AI. Cần thêm cây này
-                vào vườn để tạo và áp dụng lịch điều trị.
-              </Text>
-              <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" icon="plus" onPress={addDetectedPlant}>
+              <Text style={styles.error}>{fixedGardenPlant
+                ? "Cây này chưa thể áp dụng lịch điều trị."
+                : "Vườn của bạn chưa có cây cùng loài với kết quả AI. Hãy thêm cây để áp dụng lịch."}</Text>
+              {!fixedGardenPlant && <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" icon="plus" onPress={addDetectedPlant}>
                 Thêm cây đã nhận diện vào vườn
-              </Button>
+              </Button>}
             </View>
           )}
         </View>
@@ -190,9 +191,9 @@ export default function TreatmentPreviewScreen() {
           <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={treatment.retryGarden} disabled={treatment.gardenLoading}>{treatment.gardenLoading ? "Đang tải cây..." : "Thử tải lại cây"}</Button>
         ) : treatment.gardenPlants.length ? (
           <Button style={componentStyles.buttonShape} mode="contained" onPress={treatment.generate} loading={treatment.generating} disabled={!treatment.canGenerate || treatment.generating} contentStyle={styles.buttonContent}>Tạo lịch điều trị</Button>
-        ) : (
+        ) : !fixedGardenPlant ? (
           <Button style={componentStyles.buttonShape} mode="contained" icon="plus" onPress={addDetectedPlant} contentStyle={styles.buttonContent}>Thêm cây để áp dụng</Button>
-        )}
+        ) : null}
       </BottomActionBar>
     </> : <>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

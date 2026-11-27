@@ -91,22 +91,16 @@ export default function CareScreen() {
       : undefined;
   const today = gardenToday();
   const [day, setDay] = useState(requestedDate ?? today);
-  const [week, setWeek] = useState(false);
   const [filter, setFilter] = useState("all");
   useEffect(() => {
     if (requestedDate) {
       setDay(requestedDate);
-      setWeek(false);
       setFilter("all");
     }
   }, [requestedDate, plantId]);
   const firstDay = startOfWeek(day);
   const days = Array.from({ length: 7 }, (_, i) => shiftDay(firstDay, i));
-  const care = useCareTasks(
-    week ? firstDay : day,
-    week ? shiftDay(firstDay, 6) : day,
-    plantId,
-  );
+  const care = useCareTasks(day, day, plantId);
   const { plants, plantLoading, plantError, loadPlants } = useCarePlants();
   const [formOpen, setFormOpen] = useState(params.create === "1");
   const [deleting, setDeleting] = useState(null);
@@ -124,7 +118,6 @@ export default function CareScreen() {
   const visibleTasks = care.tasks.filter(
     (t) => filter === "all" || t.action_type === filter,
   );
-  const taskDates = [...new Set(visibleTasks.map((t) => t.date))];
   const plantName = plants.find((p) => p._id === plantId)?.plant_nickname;
   const hasData = !care.loading && !care.error;
   return (
@@ -227,58 +220,15 @@ export default function CareScreen() {
               );
             })}
           </View>
-          <View style={s.segment}>
-            {[
-              {
-                active: !week,
-                label: "Theo ngày",
-                icon: "today-outline",
-                value: false,
-              },
-              {
-                active: week,
-                label: "Cả tuần",
-                icon: "calendar-outline",
-                value: true,
-              },
-            ].map((item) => (
-              <Pressable
-                key={item.label}
-                disabled={care.busy}
-                accessibilityRole="button"
-                accessibilityState={{
-                  selected: item.active,
-                  disabled: care.busy,
-                }}
-                onPress={() => setWeek(item.value)}
-                style={[s.segmentItem, item.active && s.segmentActive]}
-              >
-                <Ionicons
-                  name={item.icon}
-                  size={15}
-                  color={item.active ? colors.primary : colors.textMuted}
-                />
-                <Text
-                  style={[s.segmentText, item.active && s.segmentActiveText]}
-                >
-                  {item.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
         </View>
 
         <View style={s.sectionHeading}>
           <View style={s.sectionCopy}>
             <Text style={s.sectionTitle}>
-              {week
-                ? "Chăm sóc trong tuần"
-                : day === today
-                  ? "Việc hôm nay"
-                  : "Việc trong ngày"}
+              {day === today ? "Việc hôm nay" : "Việc trong ngày"}
             </Text>
             <Text style={s.sectionSubtitle}>
-              {week ? "Một nhịp đều đặn cho vườn luôn xanh" : dateLabel(day)}
+              {dateLabel(day)}
             </Text>
           </View>
           {hasData && (
@@ -325,33 +275,20 @@ export default function CareScreen() {
             <Text style={s.loadingText}>Đang mở lịch khu vườn…</Text>
           </View>
         )}
-        {!care.loading &&
-          taskDates.map((value) => (
-            <View key={value} style={s.taskGroup}>
-              {week && (
-                <View style={s.groupHeading}>
-                  <View style={s.groupLine} />
-                  <Text style={s.groupTitle}>
-                    {value === today ? "Hôm nay · " : ""}
-                    {dateLabel(value)}
-                  </Text>
-                  <View style={s.groupLine} />
-                </View>
-              )}
-              {visibleTasks
-                .filter((task) => task.date === value)
-                .map((task) => (
-                  <CareTaskCard
-                    key={`${task.schedule_id}:${task.date}`}
-                    task={task}
-                    today={today}
-                    busy={care.busy}
-                    onComplete={() => care.complete(task)}
-                    onStop={() => setDeleting(task)}
-                  />
-                ))}
-            </View>
-          ))}
+        {!care.loading && !!visibleTasks.length && (
+          <View style={s.taskGroup}>
+            {visibleTasks.map((task) => (
+              <CareTaskCard
+                key={task.schedule_id}
+                task={task}
+                today={today}
+                busy={care.busy}
+                onComplete={() => care.complete(task)}
+                onStop={() => setDeleting(task)}
+              />
+            ))}
+          </View>
+        )}
         {hasData && !visibleTasks.length && (
           <View style={s.empty}>
             <View style={s.emptyOrbit}>
@@ -374,7 +311,7 @@ export default function CareScreen() {
                 : "Một khoảng thảnh thơi"}
             </Text>
             <Text style={s.emptyText}>
-              Chưa có công việc {week ? "trong tuần này" : "trong ngày này"}.
+              Chưa có công việc trong ngày này.
               {"\n"}Tạo một lịch nhỏ để luôn nhớ chăm cây nhé.
             </Text>
             <Button
@@ -595,43 +532,6 @@ const s = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: "transparent",
   },
-  segment: {
-    flexDirection: "row",
-    padding: 4,
-    borderRadius: 12,
-    backgroundColor: colors.softMintBg,
-    marginTop: 2,
-  },
-  segmentItem: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
-    gap: 7,
-    borderRadius: 9,
-  },
-  segmentActive: {
-    backgroundColor: "white",
-    shadowColor: "#25482D",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  segmentText: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 20,
-    fontWeight: "500",
-  },
-  segmentActiveText: {
-    color: colors.primary,
-    fontWeight: "700",
-  },
   sectionHeading: {
     flexDirection: "row",
     alignItems: "center",
@@ -670,23 +570,6 @@ const s = StyleSheet.create({
   },
   taskGroup: {
     gap: 12,
-  },
-  groupHeading: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginVertical: 2,
-  },
-  groupLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  groupTitle: {
-    fontSize: 13,
-    lineHeight: 20,
-    fontWeight: "600",
-    color: colors.textMuted,
   },
   loading: {
     padding: 35,

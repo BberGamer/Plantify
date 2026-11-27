@@ -9,7 +9,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Button, IconButton, Text } from "react-native-paper";
+import { Button, Dialog, IconButton, Portal, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,6 +20,9 @@ import DiagnosisResult from "./DiagnosisResult";
 import useDiagnosisCapture from "../../hooks/useDiagnosisCapture";
 import useFormBack from "../../hooks/useFormBack";
 import useDiagnosis from "../../hooks/useDiagnosis";
+import useScreenScope from "../../hooks/useScreenScope";
+import gardenService from "../../services/gardenService";
+import getErrorMessage from "../../utils/getErrorMessage";
 
 const MODES = [
   { value: "plant", label: "Nhận diện cây", icon: "leaf-outline" },
@@ -75,23 +78,50 @@ function ModeTabs({ mode, busy, dark = false, onChange }) {
   );
 }
 
-export default function AnalysisScreen({ identification = false }) {
+export default function AnalysisScreen({ identification = false, gardenPlant }) {
   const router = useRouter();
   const operationLock = useRef(null);
   const [mode, setMode] = useState(identification ? "plant" : "disease");
   const identificationMode = mode === "plant";
   const capture = useDiagnosisCapture(operationLock);
+  const [avatarUri, setAvatarUri] = useState(() => gardenPlant?.display_image_url || "");
+  const avatar = useMemo(() => avatarUri ? { uri: avatarUri, source: "garden-avatar" } : null, [avatarUri]);
+  const photo = capture.photo || avatar;
+  const usingAvatar = photo?.source === "garden-avatar";
   const diagnosis = useDiagnosis(
-    capture.photo,
+    photo,
     operationLock,
     identificationMode,
+    gardenPlant?._id,
   );
+  const autoAttempted = useRef(false);
+  const [linkedPlantId, setLinkedPlantId] = useState("");
+  const [candidateToLink, setCandidateToLink] = useState(null);
+  const [linking, setLinking] = useState(false);
+  const [linkError, setLinkError] = useState("");
+  const scope = useScreenScope();
+  const allowedPlantId = linkedPlantId || gardenPlant?.plant_id;
   const scroll = useRef(null);
-  const showResult = Boolean(diagnosis.result);
+  const failedAvatar = usingAvatar && diagnosis.result && diagnosis.result.result_status !== "accepted";
+  const showResult = Boolean(diagnosis.result && !failedAvatar);
+  const showCapture = !photo || failedAvatar;
   const feedbackHistoryId =
     diagnosis.result?.history_id ?? diagnosis.result?.diagnosis_id;
-  const busy = capture.busy || diagnosis.busy;
-  const onImageError = diagnosis.onImageError;
+  const busy = capture.busy || diagnosis.busy || linking;
+  const onImageError = usingAvatar ? undefined : diagnosis.onImageError;
+
+  useEffect(() => {
+    if (usingAvatar && !autoAttempted.current) {
+      autoAttempted.current = true;
+      void diagnosis.analyze();
+    }
+  }, [usingAvatar, diagnosis.analyze]);
+
+  const retake = () => {
+    if (operationLock.current) return;
+    setAvatarUri("");
+    capture.retake();
+  };
 
   useEffect(() => {
     if (diagnosis.result) scroll.current?.scrollTo({ y: 0, animated: false });
@@ -123,21 +153,28 @@ export default function AnalysisScreen({ identification = false }) {
 
   const handleBack = () => {
     if (operationLock.current) return;
+    if (candidateToLink) { setCandidateToLink(null); return; }
+    if (gardenPlant && (usingAvatar || !photo)) {
+      if (router.canGoBack()) router.back();
+      else router.replace("/customer/garden");
+      return;
+    }
     if (
       showResult &&
       ["invalid_image", "unsupported_image"].includes(
         diagnosis.result.result_status,
       )
     )
-      capture.retake();
+      retake();
     else if (showResult) diagnosis.clearResult();
-    else if (capture.photo) capture.retake();
+    else if (photo) retake();
     else if (router.canGoBack()) router.back();
     else router.replace("/customer/home");
   };
   useFormBack(handleBack, busy);
 
   const openPlan = (candidate, rank) => {
+    const target = gardenPlant ? { userPlantId: gardenPlant._id, fixedGardenPlant: "1" } : {};
     if (candidate.disease_id) {
       router.push({
         pathname: "/customer/treatments/preview",
@@ -146,6 +183,7 @@ export default function AnalysisScreen({ identification = false }) {
           rank: String(rank),
           plantId: candidate.plant_id,
           diseaseId: candidate.disease_id,
+          ...target,
         },
       });
       return;
@@ -155,15 +193,51 @@ export default function AnalysisScreen({ identification = false }) {
       params: {
         plantId: candidate.plant_id,
         ...(diagnosis.result.history_id && { diagnosisId: diagnosis.result.history_id, rank: String(rank) }),
+        ...target,
       },
     });
   };
 
+  const choosePlan = (candidate, rank) => {
+    if (gardenPlant && !allowedPlantId) {
+      setLinkError("");
+      setCandidateToLink({ candidate, rank });
+    } else openPlan(candidate, rank);
+  };
+
+  async function confirmLink() {
+    const choice = candidateToLink;
+    const diagnosisId = diagnosis.result?.history_id;
+    if (!choice || !diagnosisId || operationLock.current || !scope.isActive()) return;
+    const attempt = {};
+    operationLock.current = attempt;
+    const current = scope.capture();
+    setLinking(true);
+    setLinkError("");
+    try {
+      const response = await gardenService.linkDiagnosis(
+        gardenPlant._id, diagnosisId, choice.rank, choice.candidate.plant_id,
+      );
+      if (!response?.success || response.data?.plant_id !== choice.candidate.plant_id)
+        throw new Error("Dữ liệu liên kết cây không hợp lệ.");
+      if (current()) {
+        setLinkedPlantId(response.data.plant_id);
+        setCandidateToLink(null);
+        openPlan(choice.candidate, choice.rank);
+      }
+    } catch (error) {
+      if (current()) setLinkError(getErrorMessage(error, "Không thể liên kết cây với danh mục."));
+    } finally {
+      if (operationLock.current === attempt) operationLock.current = null;
+      setLinking(false);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.screen}>
       <ScreenHeader
-        title={showResult ? "Kết quả phân tích" : "Quét lá cây"}
-        subtitle="Vuốt ngang để đổi chế độ"
+        title={showResult ? "Kết quả phân tích" : gardenPlant ? "Chẩn đoán cây" : "Quét lá cây"}
+        subtitle={gardenPlant?.plant_nickname || "Vuốt ngang để đổi chế độ"}
         onBack={handleBack}
         disabled={busy}
       >
@@ -177,13 +251,13 @@ export default function AnalysisScreen({ identification = false }) {
       </ScreenHeader>
       <ActionNoticeDialog {...diagnosis.noticeDialog} />
 
-      {(capture.photo || showResult) && (
+      {!gardenPlant && (photo || showResult) && (
         <View style={styles.modeBarOuter}>
           <ModeTabs mode={mode} busy={busy} onChange={changeMode} />
         </View>
       )}
 
-      <View style={styles.swipeArea} {...swipe.panHandlers}>
+      <View style={styles.swipeArea} {...(!gardenPlant ? swipe.panHandlers : {})}>
         <ScrollView
           ref={scroll}
           style={styles.body}
@@ -191,7 +265,7 @@ export default function AnalysisScreen({ identification = false }) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {!showResult && !capture.photo && (
+          {showCapture && (
             <View style={styles.guide}>
               <Ionicons
                 name={identificationMode ? "leaf-outline" : "scan-outline"}
@@ -199,7 +273,9 @@ export default function AnalysisScreen({ identification = false }) {
                 color={colors.primary}
               />
               <Text style={styles.guideText}>
-                {identificationMode
+                {gardenPlant
+                  ? "Vui lòng cung cấp ảnh lá rõ nét của cây này."
+                  : identificationMode
                   ? "Đặt lá cây rõ nét vào trong khung."
                   : "Đặt vùng lá có dấu hiệu bệnh rõ nét vào trong khung."}
               </Text>
@@ -212,11 +288,12 @@ export default function AnalysisScreen({ identification = false }) {
                 diagnosis.result.history_id ??
                 mode
               }
-              photo={capture.photo}
+              photo={photo}
               result={diagnosis.result}
-              onRetake={capture.retake}
+              onRetake={retake}
               onImageError={onImageError}
-              onCreatePlan={openPlan}
+              onCreatePlan={choosePlan}
+              allowedPlantId={allowedPlantId}
               onOpenCatalog={(candidate) =>
                 router.push({
                   pathname: "/plants/PlantList",
@@ -235,13 +312,13 @@ export default function AnalysisScreen({ identification = false }) {
                 })
               }
             />
-          ) : capture.photo ? (
+          ) : !showCapture ? (
             <DiagnosisPreview
-              photo={capture.photo}
+              photo={photo}
               busy={busy}
               analyzing={diagnosis.busy}
               imageInvalid={diagnosis.imageInvalid}
-              onRetake={capture.retake}
+              onRetake={retake}
               onPickPhoto={capture.pickPhoto}
               onImageError={onImageError}
               onAnalyze={diagnosis.analyze}
@@ -262,7 +339,7 @@ export default function AnalysisScreen({ identification = false }) {
               onCapture={capture.takePhoto}
               onPickPhoto={capture.pickPhoto}
               modeSelector={
-                <ModeTabs mode={mode} busy={busy} dark onChange={changeMode} />
+                gardenPlant ? null : <ModeTabs mode={mode} busy={busy} dark onChange={changeMode} />
               }
             />
           )}
@@ -294,6 +371,22 @@ export default function AnalysisScreen({ identification = false }) {
           )}
         </ScrollView>
       </View>
+      {!!gardenPlant && (
+        <Portal>
+          <Dialog visible={!!candidateToLink} dismissable={!linking} style={componentStyles.dialog}
+            onDismiss={() => { if (!linking) setCandidateToLink(null); }}>
+            <Dialog.Title>Xác nhận loài cây</Dialog.Title>
+            <Dialog.Content>
+              <Text>Liên kết cây {gardenPlant.plant_nickname} với loài {candidateToLink?.candidate.plant_name} trong danh mục để tạo lịch cho cây này.</Text>
+              {!!linkError && <Text style={styles.error} accessibilityRole="alert">{linkError}</Text>}
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button disabled={linking} onPress={() => setCandidateToLink(null)}>Hủy</Button>
+              <Button loading={linking} disabled={linking} onPress={confirmLink}>Xác nhận</Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
+      )}
     </SafeAreaView>
   );
 }
