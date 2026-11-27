@@ -31,7 +31,7 @@ const FILTERS = [
   { id: "treatment", label: "Đang điều trị" },
 ];
 
-function GardenCard({ plant, onOpenPlant, onOpenTreatment }) {
+function GardenCard({ plant, onOpenPlant, onOpenTreatment, onOpenCare }) {
   const treatment = plant.active_treatment;
   return (
     <View style={styles.card}>
@@ -64,12 +64,12 @@ function GardenCard({ plant, onOpenPlant, onOpenTreatment }) {
                 : "Khỏe mạnh"}
             </Text>
           </View>
-          <Text style={styles.task}>
-            <Text style={styles.taskPrefix}>
-              {treatment ? "Tiếp theo: " : "Lịch chăm sóc: "}
+          {treatment && (
+            <Text style={styles.task}>
+              <Text style={styles.taskPrefix}>Tiếp theo · </Text>
+              {treatment.next_task?.title || "Chưa có công việc sắp tới"}
             </Text>
-            {treatment?.next_task?.title || "Chưa có công việc sắp tới"}
-          </Text>
+          )}
         </View>
       </View>
       <View style={styles.actions}>
@@ -81,7 +81,7 @@ function GardenCard({ plant, onOpenPlant, onOpenTreatment }) {
         >
           Xem chi tiết
         </Button>
-        {treatment && (
+        {treatment ? (
           <Button
             style={componentStyles.buttonShape}
             contentStyle={componentStyles.button}
@@ -90,6 +90,16 @@ function GardenCard({ plant, onOpenPlant, onOpenTreatment }) {
             onPress={() => onOpenTreatment(treatment._id)}
           >
             Xem điều trị
+          </Button>
+        ) : (
+          <Button
+            style={componentStyles.buttonShape}
+            contentStyle={componentStyles.button}
+            mode="outlined"
+            icon="calendar"
+            onPress={() => onOpenCare(plant._id)}
+          >
+            Lịch chăm sóc
           </Button>
         )}
       </View>
@@ -242,6 +252,9 @@ export default function GardenScreen() {
                   pathname: "/customer/treatments/TreatmentList",
                   params: { treatmentId },
                 })
+              }
+              onOpenCare={(plantId) =>
+                router.push({ pathname: "/customer/care", params: { plantId } })
               }
             />
           ))}

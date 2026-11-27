@@ -135,7 +135,7 @@ async function detail(id, userId) {
   const manager = !userId;
   const query = Feedback.findOne(filterFor(id, userId)).select(latestFields);
   const row = await (
-    manager ? populateSender(query.select("review_history ai_assessment")) : query
+    manager ? populateSender(query.select("review_history")) : query
   ).lean();
   if (!row) throw missing();
   if (manager)
@@ -145,7 +145,6 @@ async function detail(id, userId) {
       options: { lean: true },
     });
   const result = serialize(row, manager);
-  if (manager) result.ai_assessment = row.ai_assessment ?? null;
   if (row.diagnosis_id) {
     try {
       result.diagnosis = await diagnosis.historyDetail(

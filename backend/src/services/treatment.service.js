@@ -18,6 +18,7 @@ const Notification = require("../models/notification.model");
 const validate = require("../validators/treatment.validator");
 const v = require("../validators/common");
 const treatmentAI = require("./treatment-ai.service");
+const { presentTreatmentInstruction, compactTreatmentNote } = require("./treatment-instructions");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const terminalStatuses = ["recovered", "failed", "cancelled"];
@@ -92,8 +93,7 @@ const withVietnamTime = (date, time) => {
     date.getTime() + (hours - 7) * 60 * 60 * 1000 + minutes * 60 * 1000,
   );
 };
-const utcToday = () => {
-  const now = new Date();
+const utcToday = (now = new Date()) => {
   const vietnam = new Date(now.getTime() + 7 * 60 * 60 * 1000);
   return new Date(
     Date.UTC(
@@ -189,8 +189,10 @@ const presentSchedule = async (schedule, session) => {
       "Dữ liệu cây hoặc bệnh của lịch điều trị không còn đầy đủ.",
     );
   const duration = value.protocol_snapshot.duration_days;
+  const safetyGuidelines = value.protocol_snapshot.safety_guidelines;
+  const now = new Date();
   const start = value.start_date ? new Date(value.start_date) : null;
-  const elapsed = start ? Math.floor((utcToday() - start) / DAY_MS) + 1 : 0;
+  const elapsed = start ? Math.floor((utcToday(now) - start) / DAY_MS) + 1 : 0;
   const historyLabels = {
     task_edited: "Đã chỉnh sửa công việc điều trị",
     generated: "Đã tạo lịch điều trị",
@@ -216,23 +218,28 @@ const presentSchedule = async (schedule, session) => {
       description: value.protocol_snapshot.description,
       standard_duration_days: duration,
       version: value.protocol_snapshot.version,
-      safety_note: value.protocol_snapshot.safety_guidelines.join(" "),
-      safety_guidelines: value.protocol_snapshot.safety_guidelines,
+      safety_note: safetyGuidelines.join(" "),
+      safety_guidelines: safetyGuidelines,
       approved_instructions: value.protocol_snapshot.approved_instructions,
       reference_status: value.protocol_snapshot.reference_status,
-      reference_notice: value.protocol_snapshot.reference_notice,
+      reference_notice: value.protocol_snapshot.reference_notice?.replace(
+        "tài liệu DOCX", "tài liệu tham khảo từ hệ thống",
+      ),
     },
     stages: value.protocol_snapshot.stages.map((stage) => ({
       ...stage,
       _id: String(stage.source_stage_id || `stage-${stage.order}`),
+      instructions: stage.instructions.map(presentTreatmentInstruction),
+      important_note: compactTreatmentNote(stage.important_note, safetyGuidelines),
     })),
     task_progress: value.tasks.map((task) => ({
       ...task,
       status:
-        task.status === "pending" && new Date(task.scheduled_date) > utcToday()
+        task.status === "pending" && new Date(task.scheduled_date) > now
           ? "upcoming"
           : task.status,
-      instructions: task.instructions.join(" "),
+      instructions: presentTreatmentInstruction(task.instructions.join("\n")),
+      important_note: compactTreatmentNote(task.important_note, safetyGuidelines),
     })),
     history: (value.history || []).map((item) => ({
       ...item,
@@ -575,7 +582,6 @@ const completeTask = async (userId, scheduleId, taskId) => {
   v.id(taskId, "task_id");
   return withTransactionResult(async (session) => {
     const now = new Date();
-    const availableThrough = new Date();
     const schedule = await TreatmentSchedule.findOneAndUpdate(
       {
         _id: scheduleId,
@@ -585,7 +591,7 @@ const completeTask = async (userId, scheduleId, taskId) => {
           $elemMatch: {
             _id: taskId,
             status: "pending",
-            scheduled_date: { $lte: availableThrough },
+            scheduled_date: { $lte: now },
           },
         },
       },

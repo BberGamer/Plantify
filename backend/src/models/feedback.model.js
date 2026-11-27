@@ -2,7 +2,6 @@ const { Schema, model } = require("mongoose");
 
 const types = ["diagnosis_feedback", "proactive_feedback"];
 const decisions = ["accepted", "rejected"];
-const assessmentVerdicts = ["supported", "conflicting", "insufficient"];
 
 const imageSchema = new Schema({
   storage: { type: String, enum: ["local", "cloudinary"], required: true },
@@ -16,14 +15,6 @@ const reviewSchema = new Schema({
   response: { type: String, required: true, maxlength: 1000 },
   manager_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
   reviewed_at: { type: Date, required: true },
-}, { _id: false });
-
-const assessmentSchema = new Schema({
-  verdict: { type: String, enum: assessmentVerdicts, required: true },
-  reason: { type: String, required: true, maxlength: 400 },
-  feedback_quote: { type: String, maxlength: 200 },
-  reference_quote: { type: String, maxlength: 200 },
-  assessed_at: { type: Date, required: true },
 }, { _id: false });
 
 const feedbackSchema = new Schema({
@@ -40,11 +31,10 @@ const feedbackSchema = new Schema({
   review: { type: reviewSchema, default: null },
   review_count: { type: Number, default: 0, min: 0 },
   review_history: { type: [reviewSchema], select: false },
-  ai_assessment: { type: assessmentSchema, default: null, select: false },
 }, { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } });
 
 feedbackSchema.index({ user_id: 1, request_key: 1 }, { unique: true });
 feedbackSchema.index({ user_id: 1, created_at: -1, _id: -1 });
 feedbackSchema.index({ created_at: -1, _id: -1 });
 
-module.exports = { Feedback: model("Feedback", feedbackSchema), types, decisions, assessmentVerdicts };
+module.exports = { Feedback: model("Feedback", feedbackSchema), types, decisions };

@@ -19,7 +19,7 @@ export default function Home() {
           [
             "protocols",
             "Phác đồ điều trị",
-            "Biên soạn và quản lý hướng dẫn điều trị.",
+            "Tải DOCX để tạo phác đồ điều trị.",
           ],
           ["feedback", "Đóng góp ý kiến", "Tiếp nhận phản hồi từ người dùng."],
         ];

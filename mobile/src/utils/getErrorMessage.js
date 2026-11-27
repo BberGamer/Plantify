@@ -64,7 +64,11 @@ const ERROR_MESSAGES = {
   CARE_UNAVAILABLE:
     "Lịch đã dừng, cây đã lưu trữ hoặc đang điều trị. Vui lòng tải lại lịch.",
   CARE_NOT_FOUND: "Không tìm thấy lịch chăm sóc. Vui lòng tải lại lịch.",
-  CARE_REFERENCE_UNAVAILABLE: "Chưa có tài liệu DOCX chăm sóc phù hợp.",
+  CARE_REFERENCE_UNAVAILABLE: "Chưa có tài liệu tham khảo từ hệ thống phù hợp với cây này.",
+  CARE_PLANT_NOT_FOUND: "Không tìm thấy cây đang công khai trong danh mục.",
+  CARE_PLANT_MISMATCH: "Hãy chọn cây cùng loài với bản xem trước lịch chăm sóc.",
+  CARE_PREVIEW_EXPIRED: "Bản xem trước đã hết hạn. Hãy tạo lại để áp dụng.",
+  CARE_PREVIEW_INVALID: "Bản xem trước không hợp lệ. Hãy tạo lại để áp dụng.",
   AI_INCOMPLETE_RESPONSE:
     "AI chưa hoàn tất câu trả lời. Vui lòng thử lại với câu hỏi cụ thể hơn.",
   FAVORITE_LIMIT_REACHED:

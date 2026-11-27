@@ -14,15 +14,15 @@ const TIMING_TIMEOUT_MS = 8000;
 
 const PROMPT = `Bạn tạo phác đồ điều trị cây bằng tiếng Việt. Ưu tiên tuyệt đối dữ liệu trong các đoạn DOCX được cung cấp và thông tin cây, bệnh đi kèm. Khi tài liệu thiếu chi tiết, chỉ được bổ sung kiến thức chăm sóc cây phổ biến, an toàn; không bịa tên thuốc thương mại, hoạt chất, nồng độ, liều hóa chất, lượng nước hoặc khẳng định chắc chắn hiệu quả.
 
-Trả duy nhất JSON hợp lệ, không Markdown, theo đúng cấu trúc: {"protocol_name":"...","description":"...","duration_days":1,"tasks":[{"day":1,"time":"HH:mm","title":"...","instruction":"Chuẩn bị: ...\\nBước 1: ...\\nBước 2: ...\\nLượng nước: ...\\nPhân bón: ...\\nDụng cụ: ...\\n=> Kết quả cần đạt: ...","dosage_note":"","safety_note":"..."}],"safety_guidelines":["..."]}.
+Trả duy nhất JSON hợp lệ, không Markdown, theo đúng cấu trúc: {"protocol_name":"...","description":"...","duration_days":1,"tasks":[{"day":1,"time":"HH:mm","title":"...","instruction":"Bước 1: ...\\nBước 2: ...\\nTưới nước: 0ml\\nPhân bón: 0g\\nKết quả cần đạt: ...","dosage_note":"","safety_note":"..."}],"safety_guidelines":["..."]}.
 
-duration_days từ 1 đến 60. tasks phải có đúng một công việc cho từng ngày từ 1 đến duration_days và sắp xếp theo ngày. Mỗi instruction phải là hướng dẫn có thể thực hiện ngay trong ngày đó. Mỗi mục phải nằm trên một dòng riêng bằng ký tự xuống dòng \\n trong chuỗi JSON. Trình bày đúng thứ tự: "Chuẩn bị:", từng dòng "Bước 1:", "Bước 2:"..., "Lượng nước:", "Phân bón:", "Dụng cụ:", rồi kết thúc bằng "=> Kết quả cần đạt:". Mỗi bước chỉ viết một hành động ngắn, trực tiếp, dễ thực hiện. Dùng số cụ thể về ml, cm, phút, số lá hoặc số lần khi DOCX hay dữ liệu cây cung cấp đủ căn cứ. Dòng "=> Kết quả cần đạt:" phải mô tả dấu hiệu người dùng có thể quan sát hoặc đo được ngay sau khi hoàn thành công việc.
+duration_days từ 1 đến 60. tasks có đúng một công việc cho từng ngày từ 1 đến duration_days, sắp theo ngày. Mỗi công việc có ít nhất hai bước khác nhau, đánh số liên tiếp. Viết mỗi mục trên một dòng riêng bằng ký tự xuống dòng \\n trong JSON. Trình bày theo thứ tự: "Chuẩn bị:" nếu cần, "Bước 1:", "Bước 2:" và các bước tiếp theo nếu cần, "Tưới nước:", "Phân bón:", "Dụng cụ:" nếu cần, "Kết quả cần đạt:". Mỗi bước là một hành động ngắn. Kết quả cần đạt là một câu ngắn mô tả dấu hiệu quan sát hoặc đo được. safety_note là lưu ý riêng cho ngày đó, tối đa một câu ngắn. Đặt hướng dẫn an toàn đầy đủ trong safety_guidelines.
 
-Lượng nước: Khi tài liệu cung cấp mức phù hợp, ghi lượng nước và đơn vị gốc kèm phạm vi áp dụng, chẳng hạn ml/chậu/lần hoặc lít/m²/tuần. Không biến mức theo tuần thành liều mỗi lần. Nếu chưa có lượng phù hợp, ghi cách kiểm tra độ ẩm, cách đo lượng thực tế và tiêu chí dừng theo kiểu trồng. Ghi 0 ml nếu đất đủ ẩm hoặc công việc không cần tưới.
+Tưới nước: Ghi đúng "0ml" nếu công việc không cần tưới. Nếu DOCX có liều, chỉ ghi lượng và đơn vị sát số, kèm phạm vi áp dụng nếu cần. Giữ mẫu số như /chậu/lần hoặc /m²/tuần. Nếu cần kiểm tra trước khi tưới và tài liệu không có số, ghi "Theo độ ẩm đất" và đưa cách kiểm tra vào các bước. Khi lượng phụ thuộc điều kiện, có thể ghi điều kiện ngắn trong ngoặc, ví dụ "0ml (đất đủ ẩm)".
 
-Phân bón: Nếu tài liệu khuyến nghị bón cho đúng cây và tình trạng bệnh, ghi đúng loại phân hoặc tỷ lệ NPK, liều kèm đơn vị và điều kiện áp dụng. Khi tài liệu chỉ nêu loại phân, nêu cách tra liều trên nhãn. Giữ nguyên khuyến nghị tránh bón hoặc giảm bón nếu có. Ghi "0 g hoặc 0 ml — không bón trong công việc này" khi tài liệu không chỉ định bón. Không thêm phân để thay thế biện pháp xử lý bệnh.
+Phân bón: Ghi "0g" nếu không bón. Nếu có chỉ định trong DOCX, ghi ngắn loại phân và liều kèm đơn vị sát số. Nếu chỉ có loại phân, ghi "theo nhãn" kèm loại. Đưa điều kiện bón hoặc tránh bón vào bước thực hiện khi cần. Không thêm phân để thay thế biện pháp xử lý bệnh.
 
-Nếu cần cắt tỉa, vệ sinh, cách ly, thay đất hoặc xử lý bề mặt lá, phải ghi rõ bộ phận cần xử lý, dụng cụ, cách khử khuẩn và cách thu gom phần bệnh. Với công việc có dùng thuốc, chép nguyên liều pha và nồng độ tương ứng từ DOCX vào dosage_note. Nếu tài liệu không cung cấp, yêu cầu tuân theo nhãn sản phẩm và không tự tạo con số. Để trống dosage_note ở các ngày không dùng thuốc. Dụng cụ phải được liệt kê ngay trong instruction theo dạng "Dụng cụ: ...".
+Khi cắt tỉa, vệ sinh, cách ly, thay đất hoặc xử lý lá, ghi bộ phận, dụng cụ và cách khử khuẩn, thu gom phù hợp. Với công việc có dùng thuốc, chép nguyên liều pha và nồng độ từ DOCX vào dosage_note. Nếu tài liệu chưa cung cấp, dùng theo nhãn và không tự tạo con số. Để trống dosage_note ở các ngày không dùng thuốc.
 
 Giữ nguyên tần suất, khoảng cách giữa các lần xử lý, liều lượng và thời lượng được nêu trong DOCX. Nếu ngày đó chưa đến kỳ xử lý, chỉ đặt công việc kiểm tra hoặc ghi nhận. Tự chọn giờ thực hiện phù hợp cho từng công việc theo giờ Việt Nam, dạng HH:mm. Chỉ dùng giờ đồng hồ trong trường time và bỏ qua giờ cụ thể trong tài liệu cũ. Nội dung cần cụ thể, ngắn gọn, an toàn và không mâu thuẫn giữa các ngày.`;
 
@@ -164,8 +164,8 @@ const generate = async ({
       tasks: plan.tasks.map((task, index) => ({ ...task, time: timing.times[index] })),
     }, expectedDuration);
     referenceNotice = usedAi
-      ? "Nội dung lấy từ tài liệu DOCX. Giờ thực hiện do AI đề xuất theo giờ Việt Nam."
-      : "Nội dung lấy từ tài liệu DOCX. Hệ thống đã chọn giờ tham khảo theo giờ Việt Nam.";
+      ? "Phác đồ dựa trên tài liệu tham khảo từ hệ thống. AI đề xuất giờ thực hiện theo giờ Việt Nam."
+      : "Phác đồ dựa trên tài liệu tham khảo từ hệ thống. Giờ thực hiện dùng khung giờ Việt Nam.";
   } else {
     const context = selectedDocument
       ? retrieve(withoutScheduleTimes(selectedDocument), query)
@@ -179,7 +179,7 @@ const generate = async ({
         {
           role: "system",
           content: shortPreview
-            ? PROMPT + "\nVới bản xem trước thiếu tài liệu phù hợp, đề xuất 3 đến 7 ngày theo dõi ban đầu. Mỗi ngày viết tối đa hai bước ngắn."
+            ? PROMPT + "\nVới bản xem trước thiếu tài liệu phù hợp, đề xuất 3 đến 7 ngày theo dõi ban đầu, đúng hai bước ngắn mỗi ngày."
             : PROMPT,
         },
         {
@@ -191,7 +191,9 @@ const generate = async ({
     );
     generated = validateResult(parseJson(reply), expectedDuration);
     referenceNotice = selectedDocument
-      ? "Phác đồ được AI tạo với dữ liệu ưu tiên từ tài liệu DOCX; thông tin chỉ mang tính tham khảo."
+      ? bundledPreview
+        ? "AI tạo phác đồ dựa trên tài liệu tham khảo từ hệ thống."
+        : "AI tạo phác đồ dựa trên tài liệu tham khảo đã tải lên."
       : "Phác đồ chưa được kiểm chứng; thông tin chỉ mang tính tham khảo.";
   }
   const referenceStatus = selectedDocument ? "document_assisted" : "ai_unverified";
