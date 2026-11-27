@@ -17,6 +17,7 @@ const analyze =
         signal: controller.signal,
         identification,
         userId: req.user.id,
+        userPlantId: req.query.user_plant_id,
       });
       if (!controller.signal.aborted && !res.destroyed)
         return success(res, data.message, data);

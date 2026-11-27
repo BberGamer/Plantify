@@ -159,7 +159,7 @@ export default function FeedbackDetailScreen({
                   <View style={presentation.fieldColumn}><FeedbackField label="Email người gửi" value={item.sender?.email} /></View>
                 </View>}
                 <View style={presentation.description}>
-                  <FeedbackField label="Nội dung đóng góp" value={item.description} />
+                  <FeedbackField label={item.reason ? "Lý do đóng góp" : "Nội dung đóng góp"} value={item.description} />
                 </View>
               </FeedbackSection>
               {!!item.diagnosis_id && (

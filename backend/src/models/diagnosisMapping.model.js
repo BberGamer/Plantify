@@ -18,7 +18,6 @@ const schema = new mongoose.Schema(
     },
     status: { type: String, enum: ["ready", "pending"], required: true },
     reason: { type: String, default: "" },
-    import_source: String,
   },
   { timestamps: true },
 );

@@ -2,8 +2,8 @@ import EmptyState from "../common/EmptyState";
 import LoadingState from "../common/LoadingState";
 import { FilterOptions } from "../common/FilterControls";
 import { componentStyles } from "../../theme/componentStyles";
-import { FlatList, Image, ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Button, Card, IconButton, Text, TextInput } from "react-native-paper";
+import { FlatList, Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Button, Card, IconButton, RadioButton, Text } from "react-native-paper";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import useFeedbackForm from "../../hooks/useFeedbackForm";
@@ -78,11 +78,13 @@ export default function FeedbackFormScreen({ diagnosisId }) {
             <Text>Bạn cần gói VIP còn hạn để gửi đóng góp.</Text>
             <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="contained" onPress={() => router.push("/customer/vip")}>Xem gói VIP</Button>
           </> : <>
-            <TextInput mode="outlined" label="Mô tả" value={form.description} multiline maxLength={250}
-              onChangeText={form.changeDescription} disabled={form.busy} style={local.description} />
-            <Text style={styles.muted}>{form.description.length} / 250 ký tự</Text>
-            <Text variant="titleMedium">Ảnh đính kèm ({form.images.length}/5)</Text>
-            <Text style={styles.muted}>Chọn 1–5 ảnh JPG, PNG hoặc WebP. Tối đa 10 MB mỗi ảnh.</Text>
+            <Text variant="titleMedium" accessibilityRole="header">Lý do đóng góp</Text>
+            <RadioButton.Group value={form.reason} onValueChange={form.selectReason}>
+              <RadioButton.Item label="Chẩn đoán cây chưa đúng" value="incorrect_plant" disabled={form.busy} />
+              <RadioButton.Item label="Chẩn đoán bệnh chưa đúng" value="incorrect_disease" disabled={form.busy} />
+            </RadioButton.Group>
+            <Text variant="titleMedium" accessibilityRole="header">Vui lòng cung cấp thêm ảnh lá cây chính xác</Text>
+            <Text style={styles.muted}>Đã chọn {form.images.length}/5 ảnh · JPG, PNG hoặc WebP, tối đa 10 MB mỗi ảnh.</Text>
             <View style={styles.row}>
               {form.images.map((image, index) => (
                 <View key={`${image.uri}:${index}`} style={local.preview}>
@@ -96,7 +98,21 @@ export default function FeedbackFormScreen({ diagnosisId }) {
               disabled={form.busy || form.images.length >= 5}>Thêm ảnh</Button>
             <Text variant="titleMedium">Kết quả đã lưu (không bắt buộc)</Text>
             {form.loadingDiagnosis && <ActivityIndicator />}
-            {!!form.diagnosis && <DiagnosisSummary diagnosis={form.diagnosis} />}
+            {!!form.diagnosis && (
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel={`Xem chi tiết chẩn đoán ${form.diagnosis.disease_name || form.diagnosis.plant_name || "đã lưu"}`}
+                accessibilityState={{ disabled: form.busy }}
+                disabled={form.busy}
+                style={({ pressed }) => pressed && local.pressed}
+                onPress={() => router.push({
+                  pathname: "/customer/diagnosis-detail",
+                  params: { diagnosisId: form.diagnosis._id },
+                })}
+              >
+                <DiagnosisSummary diagnosis={form.diagnosis} />
+              </Pressable>
+            )}
             <View style={styles.row}>
               <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} onPress={() => setChoosing(true)} disabled={form.busy || form.loadingDiagnosis}>
                 {form.diagnosis ? "Đổi lịch sử" : "Chọn lịch sử"}
@@ -113,9 +129,7 @@ export default function FeedbackFormScreen({ diagnosisId }) {
 }
 
 const local = StyleSheet.create({
-  description: {
-    minHeight: 110
-  },
+  pressed: { opacity: 0.7 },
   preview: {
     width: 84,
     height: 84

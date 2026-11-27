@@ -26,6 +26,12 @@ export default function PlantListScreen() {
     {detail.loading ? <LoadingState style={{ flex: 1 }} message="Đang tải thông tin cây..." /> : detail.error || !plant ? <View style={styles.center}><ListError message={detail.error || "Không tìm thấy cây."} onRetry={detail.retry} /></View> : <ScrollView contentContainerStyle={styles.content}>
       {plant.display_image_url ? <Image source={{ uri: plant.display_image_url }} style={styles.image} /> : <View style={[styles.image, styles.placeholder]}><Ionicons name="leaf-outline" size={48} color={colors.primaryLight} /></View>}
       <SectionCard title="Thông tin cây" icon="leaf-outline">
+        {!plant.archived_at && (
+          <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="contained" icon="camera-outline"
+            onPress={() => router.push({ pathname: "/customer/diagnosis", params: { userPlantId: plantId } })}>
+            Chẩn đoán cây
+          </Button>
+        )}
         {!!plant.plant_id && !plant.archived_at && !plant.active_treatment && (
           <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button} mode="outlined" icon="calendar-plus"
             onPress={() => router.push({ pathname: "/customer/care-generate", params: { plantId: plant.plant_id, userPlantId: plantId } })}>

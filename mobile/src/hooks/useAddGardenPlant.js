@@ -7,14 +7,12 @@ import useActionNotice from "./useActionNotice";
 import useScreenScope from "./useScreenScope";
 import getErrorMessage from "../utils/getErrorMessage";
 import useAuthStore from "../../store/authStore";
-import { validateGardenDate } from "../utils/gardenDate";
 
 const emptyDraft = () => ({
   plant_nickname: "",
   custom_species_name: "",
   placement_location: "",
   pot_type_size: "",
-  acquisition_date: "",
 });
 
 export default function useAddGardenPlant(
@@ -83,7 +81,6 @@ export default function useAddGardenPlant(
               "",
             placement_location: response.data.placement_location || "",
             pot_type_size: response.data.pot_type_size || "",
-            acquisition_date: response.data.acquisition_date || "",
           });
       } else if (plantId) {
         setPlant(response.data);
@@ -161,11 +158,6 @@ export default function useAddGardenPlant(
     const libraryPlant = editing ? !!plant?.plant_id : !!plantId;
     if (!libraryPlant && !fields.custom_species_name)
       invalid.custom_species_name = "Vui lòng nhập loài cây.";
-    if (fields.acquisition_date) {
-      const dateError = validateGardenDate(fields.acquisition_date);
-      if (dateError) invalid.acquisition_date = dateError;
-    } else if (editing) fields.acquisition_date = null;
-    else delete fields.acquisition_date;
     setErrors(invalid);
     if (Object.keys(invalid).length) return;
     if (libraryPlant) {

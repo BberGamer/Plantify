@@ -199,7 +199,6 @@ const generate = async ({
   const referenceStatus = selectedDocument ? "document_assisted" : "ai_unverified";
   const sourceDocument = {
     name: selectedDocument ? file.originalname : "",
-    extracted_characters: selectedDocument ? documentText.length : 0,
     sha256: selectedDocument
       ? crypto.createHash("sha256").update(file.buffer).digest("hex")
       : "",
@@ -216,10 +215,6 @@ const generate = async ({
       reference_notice: referenceNotice,
       source_document: sourceDocument,
       generation_source: selectedDocument ? generationSource : "ai_only",
-      ai_generation: {
-        model: usedAi ? process.env.AI_MODEL || "" : "",
-        generated_at: usedAi ? new Date() : null,
-      },
       version: 1,
     };
   const latest = await TreatmentProtocol.findOne({
@@ -239,10 +234,6 @@ const generate = async ({
     reference_status: referenceStatus,
     reference_notice: referenceNotice,
     source_document: sourceDocument,
-    ai_generation: {
-      model: process.env.AI_MODEL || "",
-      generated_at: new Date(),
-    },
     generation_source: generationSource,
     version: (latest?.version || 0) + 1,
     created_by: userId || null,

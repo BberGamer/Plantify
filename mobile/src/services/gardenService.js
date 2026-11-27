@@ -89,5 +89,8 @@ export default {
     return adaptList((await api.get("/garden/plants", { params })).data);
   },
   getPlant: async (id) => (await api.get(`/garden/plants/${id}`)).data,
+  linkDiagnosis: async (id, diagnosisId, rank, plantId) => (await api.patch(`/garden/plants/${id}/diagnosis-plant`, {
+    diagnosis_id: diagnosisId, candidate_rank: rank, plant_id: plantId,
+  })).data,
   removePlant: async (id) => (await api.delete(`/garden/plants/${id}`)).data,
 };

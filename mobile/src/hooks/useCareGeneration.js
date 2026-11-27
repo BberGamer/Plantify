@@ -15,10 +15,10 @@ const isPreview = (data) => Boolean(
     typeof source?.title === "string" && /^https:\/\/[^\s]+$/.test(source.url)),
 );
 
-export default function useCareGeneration({ plantId, preferredId, diagnosisId, candidateRank }) {
+export default function useCareGeneration({ plantId, preferredId, diagnosisId, candidateRank, fixedGardenPlant }) {
   const garden = useCarePlants();
   const session = useAuthStore((store) => store.sessionVersion);
-  const key = JSON.stringify([session, plantId, diagnosisId, candidateRank]);
+  const key = JSON.stringify([session, plantId, diagnosisId, candidateRank, fixedGardenPlant ? preferredId : null]);
   const latestKey = useRef(key);
   latestKey.current = key;
   const [state, setState] = useState({});
@@ -31,7 +31,8 @@ export default function useCareGeneration({ plantId, preferredId, diagnosisId, c
     if (!view.preview) void loadPreview();
   }, undefined, key);
 
-  const plants = garden.plants.filter((plant) => plant.plant_id === plantId);
+  const plants = garden.plants.filter((plant) => plant.plant_id === plantId &&
+    (!fixedGardenPlant || plant._id === preferredId));
   const eligible = plants.filter((plant) => !plant.active_treatment);
   const selected = eligible.find((plant) => plant._id === view.chosenId) ||
     eligible.find((plant) => plant._id === preferredId) ||

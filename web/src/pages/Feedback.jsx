@@ -175,7 +175,7 @@ export default function Feedback() {
                 </>
               ),
             },
-            { title: "Mô tả", render: (r) => r.description },
+            { title: "Lý do / nội dung", render: (r) => r.description },
             { title: "Trạng thái", render: (r) => <Badge value={r.status} /> },
             { title: "Ngày gửi", render: (r) => date(r.created_at) },
             {

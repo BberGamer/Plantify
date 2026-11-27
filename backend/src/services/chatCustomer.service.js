@@ -166,7 +166,6 @@ const sources = {
       `${short(p.plant_nickname, 100)} · ${short(p.species_name, 90)}`,
       p.placement_location && `Vị trí ${short(p.placement_location, 100)}`,
       p.pot_type_size && `Chậu ${short(p.pot_type_size, 80)}`,
-      p.acquisition_date && `Ngày thêm cây ${asDate(p.acquisition_date)}`,
       p.active_treatment && "Đang điều trị",
     ].filter(Boolean).join(" · "), result.total);
   },

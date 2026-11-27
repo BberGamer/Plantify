@@ -58,6 +58,8 @@ Cài dependency trong môi trường Python của dự án. Nếu máy chưa có
 
 `GET /health` trên cổng 8001 trả phiên bản và ngưỡng của bộ lọc. `POST /predict` trả `input_check` cùng dự đoán nếu ảnh được chấp nhận. Khi ảnh bị từ chối hoặc cần chụp lại, phản hồi có `prediction: null` và danh sách kết quả rỗng. Backend cần phiên bản Python có `input_check` để cả hai chế độ quét luôn qua bước kiểm tra ảnh.
 
+Khi gửi đóng góp, backend gọi `POST /check-input` cho từng ảnh để lấy kết quả MobileCLIP. Đóng góp được lưu và đưa vào hàng chờ Manager sau khi tất cả ảnh vượt qua bước kiểm tra.
+
 ### Kết quả đánh giá bộ lọc
 
 Bộ ảnh đánh giá gồm 231 ảnh từ thư mục `test/` của [PlantDoc](https://github.com/pratikkayal/PlantDoc-Dataset/tree/5467f6012d78d1c446145d5f582da6096f852ae8/test) và 128 ảnh [COCO128](https://docs.ultralytics.com/datasets/detect/coco128/). Năm tên tệp PlantDoc chứa ký tự Windows không hỗ trợ được bỏ qua. Chia riêng ba nhóm ảnh cây trong danh mục, ảnh không có cây làm chủ thể và ảnh cây ngoài danh mục. Sắp mỗi nhóm theo SHA-256 nội dung ảnh và giữ mẫu ở các vị trí 1, 4, 7… để kiểm thử sau khi chọn ngưỡng trên phần còn lại.

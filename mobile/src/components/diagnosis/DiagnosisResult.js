@@ -14,6 +14,7 @@ export default function DiagnosisResult({
   onCreatePlan,
   onOpenCatalog,
   onOpenHistory,
+  allowedPlantId,
 }) {
   const status = result.result_status;
   const unsupported = status === "unsupported_image";
@@ -27,6 +28,7 @@ export default function DiagnosisResult({
   const canCreatePlan = (candidate) =>
     Boolean(
       candidate?.plant_id &&
+      (!allowedPlantId || candidate.plant_id === allowedPlantId) &&
       (isPlantMode ||
         candidate.is_healthy ||
         (candidate.disease_id &&
@@ -121,6 +123,9 @@ export default function DiagnosisResult({
             </View>
           );
         })}
+        {accepted && allowedPlantId && !candidates.some((candidate) => candidate.plant_id === allowedPlantId) && (
+          <Text style={styles.body}>Các gợi ý chưa khớp loài của cây này. Vui lòng thử ảnh lá khác.</Text>
+        )}
         {candidates.some(canCreatePlan) && (
           <Button
             style={componentStyles.buttonShape}
@@ -129,7 +134,7 @@ export default function DiagnosisResult({
             icon={
               selected?.disease_id ? "clipboard-pulse-outline" : "calendar-plus"
             }
-            disabled={!selected}
+            disabled={!canCreatePlan(selected)}
             onPress={() => onCreatePlan(selected, selectedIndex + 1)}
           >
             {selected?.disease_id

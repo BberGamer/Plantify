@@ -4,6 +4,7 @@ const Plant = require("../models/plant.model");
 const Disease = require("../models/disease.model");
 const DiagnosisMapping = require("../models/diagnosisMapping.model");
 const DiseaseDiagnosis = require("../models/diseaseDiagnosis.model");
+const UserPlant = require("../models/userPlant.model");
 const inference = require("../integrations/ai/diagnosis.service");
 const {
   getDiagnosisConfig,
@@ -706,6 +707,11 @@ const createDiagnosisService = ({
   },
   async diagnose(photo, options = {}) {
     checkCancellation(options.signal);
+    if (options.userPlantId !== undefined) {
+      validate.id(options.userPlantId, "user_plant_id");
+      if (!await UserPlant.exists({ _id: options.userPlantId, user_id: options.userId, archived_at: null }))
+        throw new AppError("GARDEN_PLANT_NOT_FOUND", 404, "Không tìm thấy cây trong vườn.");
+    }
     const config = configProvider(process.env, {
       identification: options.identification === true,
     });
@@ -837,6 +843,7 @@ const createDiagnosisService = ({
         const saved = await diagnosisModel.create({
           result_kind: result.result_kind,
           user_id: options.userId,
+          user_plant_id: options.userPlantId,
           plant_id: prediction.plant_id,
           disease_id: isPlant ? null : prediction.disease_id,
           predictions,

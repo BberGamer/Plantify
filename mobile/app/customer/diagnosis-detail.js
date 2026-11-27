@@ -23,7 +23,6 @@ export default function DiagnosisDetailScreen() {
     <SafeAreaView style={styles.screen}>
       <ScreenHeader
         title={isPlant ? "Chi tiết nhận diện cây" : "Chi tiết chẩn đoán bệnh"}
-        backLabel="Quay lại lịch sử nhận diện và chẩn đoán"
         onBack={() =>
           router.canGoBack()
             ? router.back()

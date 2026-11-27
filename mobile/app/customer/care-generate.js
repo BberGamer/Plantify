@@ -22,11 +22,13 @@ export default function CareGenerateScreen() {
   const plantId = stringParam(params.plantId);
   const diagnosisId = stringParam(params.diagnosisId);
   const rank = stringParam(params.rank);
+  const fixedGardenPlant = params.fixedGardenPlant === "1";
   const care = useCareGeneration({
     plantId,
     preferredId: stringParam(params.userPlantId),
     diagnosisId: diagnosisId || undefined,
     candidateRank: rank ? Number(rank) : undefined,
+    fixedGardenPlant,
   });
   const [confirming, setConfirming] = useState("");
   const preview = care.preview;
@@ -94,10 +96,12 @@ export default function CareGenerateScreen() {
                   )}
                   {!care.eligibleCount && (
                     <>
-                      <Text>{care.plants.length
+                      <Text>{fixedGardenPlant
+                        ? "Cây này chưa thể áp dụng lịch chăm sóc."
+                        : care.plants.length
                         ? "Cây cùng loài trong vườn đang điều trị."
                         : "Vườn của bạn chưa có cây cùng loài."}</Text>
-                      <Button
+                      {!fixedGardenPlant && <Button
                         style={componentStyles.buttonShape}
                         contentStyle={componentStyles.button}
                         mode="outlined"
@@ -105,7 +109,7 @@ export default function CareGenerateScreen() {
                         onPress={addPlant}
                       >
                         Thêm cây vào vườn
-                      </Button>
+                      </Button>}
                     </>
                   )}
                 </>
