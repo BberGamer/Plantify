@@ -10,7 +10,7 @@ const careScheduleSchema = new mongoose.Schema(
     },
     action_type: {
       type: String,
-      enum: ["watering", "fertilizing", "inspection", "other"],
+      enum: ["watering", "fertilizing", "sunlight", "inspection", "other"],
       required: true,
     },
     title: { type: String, required: true, trim: true, maxlength: 200 },

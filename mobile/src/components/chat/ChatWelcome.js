@@ -5,13 +5,13 @@ import { colors, radius, spacing, typography } from "../../theme";
 
 const SUGGESTIONS = [
   {
-    icon: "leaf-outline",
-    text: "Vì sao lá cây bị vàng?",
+    icon: "calendar-outline",
+    text: "Hôm nay tôi có lịch chăm sóc nào?",
     background: colors.lightMint,
   },
   {
-    icon: "water-outline",
-    text: "Bao lâu nên tưới cây?",
+    icon: "notifications-outline",
+    text: "Tổng hợp thông báo hôm nay",
     background: colors.lightMint,
   },
   {
@@ -20,8 +20,8 @@ const SUGGESTIONS = [
     background: colors.warmPeachBg,
   },
   {
-    icon: "flower-outline",
-    text: "Cách chăm cây mới mua",
+    icon: "leaf-outline",
+    text: "Vì sao lá cây bị vàng?",
     background: colors.softPurpleBg,
   },
 ];
@@ -41,8 +41,7 @@ export default function ChatWelcome({ onSelect }) {
         <Text style={styles.eyebrow}>TRỢ LÝ CHĂM CÂY CỦA BẠN</Text>
         <Text style={styles.heading}>Cùng bạn chăm cây mỗi ngày</Text>
         <Text style={styles.description}>
-          Từ chiếc lá nhỏ đến góc vườn xanh, cùng khám phá cách để cây luôn khỏe
-          mạnh.
+          Xem lịch chăm sóc, thông báo và hỏi cách chăm cây trong vườn của bạn.
         </Text>
       </View>
       <Text style={styles.sectionTitle}>Bạn đang quan tâm điều gì?</Text>

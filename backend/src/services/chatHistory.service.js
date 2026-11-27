@@ -57,6 +57,12 @@ const getTurn = async (userId, id) => {
     throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy lượt chat.");
   return turn;
 };
+const recent = (userId, conversationId, limit) =>
+  ChatTurn.find({ user_id: userId, conversation_id: conversationId })
+    .select("question answer retrieval.method symptom_context")
+    .sort({ _id: -1 })
+    .limit(limit)
+    .lean();
 const list = async (userId, query) => {
   await assertActive(userId);
   const limit = v.positiveInteger(query.limit, 20, "limit", 50);
@@ -100,7 +106,7 @@ const listManager = async (userId, query = {}) => {
     );
   const page = v.positiveInteger(query.page, 1, "page", 100000);
   const limit = v.positiveInteger(query.limit, 20, "limit", 50);
-  const filter = {};
+  const filter = { "retrieval.method": { $ne: "customer" } };
   if (query.search !== undefined) {
     const search = v.text(query.search, "search", false);
     if (search.length > 200) v.invalid("search");
@@ -142,6 +148,7 @@ module.exports = {
   assertConversation,
   saveTurn,
   getTurn,
+  recent,
   publicTurn,
   list,
   listManager,

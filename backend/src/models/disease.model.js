@@ -1,5 +1,6 @@
 // models/disease.model.js - Mongoose Schema cho danh mục bệnh cây
 const mongoose = require("mongoose");
+const exampleImages = require("./catalog-example-image");
 
 const PATHOGEN_TYPES = [
   "fungus",
@@ -62,6 +63,8 @@ const diseaseSchema = new mongoose.Schema(
       },
       default: "",
     },
+    image_urls: { type: [String], default: undefined },
+    example_images: exampleImages,
     status: {
       type: String,
       enum: {

@@ -20,6 +20,8 @@ const PATHOGEN_TYPES = [
 ];
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
+const { normalizeImageUrls } = require("../validators/catalog-images");
+const { imageFields, catalogImageUrls } = require("./catalog-photo.service");
 const DISEASE_FIELDS = [
   "disease_name",
   "scientific_name",
@@ -178,7 +180,8 @@ const getDiseaseById = async (id, managerView = false, session = null) => {
     .session(session)
     .lean();
 
-  return { ...disease, plants };
+  const { example_images, ...detail } = disease;
+  return { ...detail, plants, image_urls: catalogImageUrls(disease, "disease_image_url") };
 };
 
 const normalizeDiseaseInput = (input = {}) => {
@@ -243,6 +246,8 @@ const normalizeDiseaseInput = (input = {}) => {
   for (const field of DISEASE_FIELDS) {
     if (input[field] !== undefined) diseaseData[field] = input[field];
   }
+  if (input.image_urls !== undefined)
+    diseaseData.image_urls = normalizeImageUrls(input.image_urls);
   diseaseData.disease_name = input.disease_name.trim();
   diseaseData.typical_symptoms = input.typical_symptoms.trim();
   for (const field of optionalStringFields) {
@@ -308,7 +313,9 @@ const createDisease = async (input) => {
     await assertDiseaseNameAvailable(diseaseData.disease_name, null, session);
     await assertPlantsExist(plantIds, session);
 
-    const [disease] = await Disease.create([diseaseData], { session });
+    const [disease] = await Disease.create([
+      { ...diseaseData, ...imageFields(diseaseData, null, "disease_image_url") },
+    ], { session });
     await synchronizeDiseasePlants(disease._id, plantIds, session);
     await catalogAi.synchronize("disease", disease, ids, session);
     return getDiseaseById(disease._id, true, session);
@@ -329,7 +336,7 @@ const updateDisease = async (id, input) => {
     await assertDiseaseNameAvailable(diseaseData.disease_name, id, session);
     await assertPlantsExist(plantIds, session);
 
-    Object.assign(disease, diseaseData);
+    Object.assign(disease, diseaseData, imageFields(diseaseData, disease, "disease_image_url"));
     await disease.save({ session });
     await synchronizeDiseasePlants(disease._id, plantIds, session);
     await catalogAi.synchronize("disease", disease, ids, session);

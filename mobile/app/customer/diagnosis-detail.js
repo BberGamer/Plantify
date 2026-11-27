@@ -6,7 +6,10 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import useDiagnosisHistoryDetail from "../../src/hooks/useDiagnosisHistoryDetail";
 import DiagnosisHistoryPhoto from "../../src/components/diagnosis/DiagnosisHistoryPhoto";
 import ListError from "../../src/components/common/ListError";
-import { colors, spacing } from "../../src/theme";
+import { colors, radius, spacing } from "../../src/theme";
+import {
+  formatPrediction, historyTopPrediction, selectionLabel,
+} from "../../src/components/diagnosis/diagnosisPresentation";
 
 export default function DiagnosisDetailScreen() {
   const params = useLocalSearchParams(),
@@ -50,26 +53,37 @@ export default function DiagnosisDetailScreen() {
               hasImage={record.has_image}
               large
             />
-            <Text variant="headlineSmall">
-              {isPlant
-                ? record.plant_name || "Thông tin cây không còn khả dụng"
-                : record.disease_name || "Thông tin bệnh không còn khả dụng"}
-            </Text>
-            {!isPlant && (
-              <Text variant="titleMedium">
-                Cây: {record.plant_name || "Thông tin cây không còn khả dụng"}
-              </Text>
-            )}
             <Text style={styles.secondary}>
               {record.created_at
                 ? new Date(record.created_at).toLocaleString("vi-VN")
                 : "Chưa có thời gian"}
             </Text>
-            <Text style={styles.secondary}>
-              {isPlant
-                ? "Kết quả nhận diện tên cây đã được lưu. Lần nhận diện này không kết luận tình trạng bệnh."
-                : "Kết quả chẩn đoán bệnh đã được lưu."}
+            <Text variant="titleLarge" accessibilityRole="header">
+              Gợi ý AI tại thời điểm quét
             </Text>
+            {record.predictions?.length ? (
+              <>
+                {record.predictions.map((prediction) => (
+                  <View key={prediction.rank} style={styles.prediction}>
+                    <Text variant="titleMedium">
+                      Hạng {prediction.rank} · {formatPrediction(prediction)}
+                    </Text>
+                    {(record.selections ?? []).filter(({ rank }) => rank === prediction.rank)
+                      .map((selection) => (
+                        <Text key={selection.kind} style={styles.selection}>
+                          {selectionLabel(selection.kind)}
+                        </Text>
+                      ))}
+                  </View>
+                ))}
+                {!record.selections?.length && <Text style={styles.secondary}>Chưa chọn</Text>}
+              </>
+            ) : (
+              <View style={styles.prediction}>
+                <Text variant="titleMedium">{formatPrediction(historyTopPrediction(record))}</Text>
+                <Text style={styles.secondary}>Lần quét này lưu gợi ý AI cao nhất.</Text>
+              </View>
+            )}
           </ScrollView>
         )
       )}
@@ -96,6 +110,13 @@ const styles = StyleSheet.create({
   secondary: {
     color: colors.textSecondary,
   },
+  prediction: {
+    backgroundColor: colors.white,
+    borderRadius: radius.card,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  selection: { color: colors.primary, fontWeight: "600" },
   center: {
     flex: 1,
     padding: spacing.xl,

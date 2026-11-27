@@ -4,6 +4,7 @@ const Disease = require("../models/disease.model");
 const TreatmentProtocol = require("../models/treatmentProtocol.model");
 const AppError = require("../utils/app-error");
 const docx = require("./chatDocx.service");
+const symptoms = require("./chatSymptoms.service");
 
 const normalize = (value) =>
   String(value || "")
@@ -273,7 +274,7 @@ const namedPlants = (message, plants) => {
     .map((plant) => String(plant._id));
 };
 
-const rank = (documents, message, history = [], plants = []) => {
+const rank = (documents, message, history = [], plants = [], consultation) => {
   // Chủ thể DOCX lấy từ nội dung file, không cần ObjectId hoặc bản ghi danh mục.
   const subjects = new Map(plants.map((plant) => [String(plant._id), plant]));
   for (const doc of documents) {
@@ -287,17 +288,21 @@ const rank = (documents, message, history = [], plants = []) => {
     );
   const current = new Set(tokens(message));
   if (!current.size) return [];
-  let plantIds = namedPlants(message, retrievalPlants);
-  const previous =
+  let plantIds = consultation
+    ? retrievalPlants.filter((plant) => normalize(plant.common_name) === consultation.plant)
+      .map((plant) => String(plant._id))
+    : namedPlants(message, retrievalPlants);
+  const previous = consultation?.state.topic ||
     [...history].reverse().find((turn) => turn.role === "user")?.content || "";
   // Chỉ kế thừa chủ thể ở câu ngắn nối tiếp; câu hỏi có tên cây mới ưu tiên tên mới.
   const followup =
-    !plantIds.length &&
+    Boolean(consultation) || (!plantIds.length &&
     current.size <= 5 &&
     /\b(vay|con|no|do|nay|bao nhieu|bao lau|the nao)\b/.test(
       normalize(message),
-    );
-  if (followup) plantIds = namedPlants(previous, retrievalPlants);
+    ));
+  if (followup && !consultation && !plantIds.length)
+    plantIds = namedPlants(previous, retrievalPlants);
   const context = followup ? new Set(tokens(previous)) : new Set();
   const terms = new Set([...current, ...context]);
   const docxRows = documents.filter((doc) => doc.type === "docx" &&
@@ -309,8 +314,15 @@ const rank = (documents, message, history = [], plants = []) => {
     const longest = Math.max(0, ...matches.map((name) => name.length));
     return new Set(matches.filter((name) => name.length === longest));
   };
-  let docxDiseases = matchDisease(message);
+  let docxDiseases = matchDisease(consultation?.disease ? consultation.state.topic : message);
   if (!docxDiseases.size && followup) docxDiseases = matchDisease(previous);
+  const matchesConsultation = (doc) => consultation?.disease &&
+    doc.type !== "plant" &&
+    doc.names?.some((name) => name.split("/").some((alias) =>
+      normalize(alias) === consultation.disease,
+    ));
+  const isSymptomEvidence = (doc) => matchesConsultation(doc) &&
+    doc.type === "disease" && doc.section.startsWith("Nhận biết bệnh");
   const rows = documents
     .filter(
       (doc) =>
@@ -347,12 +359,15 @@ const rank = (documents, message, history = [], plants = []) => {
           ((current.has(term) ? 1 : 0.25) * idf * count * 2.2) /
           (count + 1.2 * (0.25 + (0.75 * words.length) / (average || 1)));
       }
-      const inheritedDisease = followup && doc.type === "docx" && docxDiseases.size;
+      const inheritedDisease = matchesConsultation(doc) ||
+        (followup && doc.type === "docx" && docxDiseases.size);
       return { ...doc, score: hits || inheritedDisease ? score : 0 };
     })
     .filter((doc) => doc.score > 0)
     .sort(
       (a, b) =>
+        Number(Boolean(isSymptomEvidence(b))) - Number(Boolean(isSymptomEvidence(a))) ||
+        Number(Boolean(matchesConsultation(b))) - Number(Boolean(matchesConsultation(a))) ||
         (treatmentIntent
           ? Number(b.type === "protocol") - Number(a.type === "protocol")
           : 0) ||
@@ -368,7 +383,7 @@ const createRetriever =
     protocolModel = TreatmentProtocol,
     documentReader = docx.readDocuments,
   } = {}) =>
-  async (message, history = []) => {
+  async (message, history = [], previous = []) => {
     try {
       // Giới hạn rõ ràng: không âm thầm bỏ phần cuối danh mục khi dữ liệu vượt quy mô này.
       const read = (model, filter, fields) =>
@@ -392,7 +407,11 @@ const createRetriever =
         ),
         read(
           protocolModel,
-          { status: "approved", instruction_source: { $ne: "ai_unverified" } },
+          {
+            status: "approved",
+            approved_by: { $ne: null },
+            instruction_source: { $ne: "ai_unverified" },
+          },
           "-reference_material -ai_generation",
         ),
       ]);
@@ -420,6 +439,18 @@ const createRetriever =
       corpus.documents.push(...await documentReader({ normalize, split }));
       if (corpus.documents.length > 20000)
         throw new Error("Chunk capacity exceeded");
+      const references = corpus.documents.filter((doc) => doc.type === "docx");
+      const consultation = symptoms.consultation(message, previous, {
+        normalize,
+        diseaseNames: [
+          ...diseases.map((disease) => disease.disease_name),
+          ...references.flatMap((doc) => doc.diseaseName?.split("/") || []),
+        ],
+        plantNames: [
+          ...corpus.plants.map((plant) => plant.common_name),
+          ...references.map((doc) => doc.plantName),
+        ],
+      });
       const selected = [];
       let length = 0;
       for (const doc of rank(
@@ -427,6 +458,7 @@ const createRetriever =
         message,
         history,
         corpus.plants,
+        consultation,
       )) {
         if (selected.length >= 6) break;
         if (length + doc.content.length > 12000) continue;
@@ -454,11 +486,22 @@ const createRetriever =
             })),
           )
         : "Không tìm thấy nguồn phù hợp trong danh mục và tài liệu DOCX Plantify.";
+      let symptomReference;
+      if (consultation?.disease) {
+        const index = selected.findIndex((doc) => doc.type === "disease" &&
+          doc.names.some((name) => normalize(name) === consultation.disease));
+        const disease = index >= 0 && diseases.find((row) => String(row._id) === selected[index].id);
+        if (disease?.typical_symptoms?.trim()) symptomReference = {
+          number: index + 1, name: disease.disease_name, symptoms: disease.typical_symptoms.trim().slice(0, 600),
+        };
+      }
       return {
         sources,
         content,
         method: "bm25",
         status: selected.length ? "matched" : "no_match",
+        consultation,
+        symptomReference,
       };
     } catch {
       throw new AppError(

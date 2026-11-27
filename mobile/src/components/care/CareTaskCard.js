@@ -5,6 +5,12 @@ import { Button, Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
 
+const actionIcons = {
+  watering: { name: "water-outline", color: "#5C94C2", backgroundColor: "#EDF5FC" },
+  fertilizing: { name: "leaf-outline", color: "#9476B5", backgroundColor: "#F4F0FB" },
+  sunlight: { name: "sunny-outline", color: "#9B782E", backgroundColor: "#FFF4D9" },
+};
+
 export default function CareTaskCard({
   task,
   today,
@@ -12,7 +18,7 @@ export default function CareTaskCard({
   onComplete,
   onStop,
 }) {
-  const watering = task.action_type === "watering";
+  const icon = actionIcons[task.action_type] ?? actionIcons.fertilizing;
   const completed = task.status === "completed";
   const paused = task.status === "paused";
   const overdue = !completed && !paused && task.date < today;
@@ -36,13 +42,13 @@ export default function CareTaskCard({
         <View
           style={[
             s.icon,
-            { backgroundColor: watering ? "#EDF5FC" : "#F4F0FB" },
+            { backgroundColor: icon.backgroundColor },
           ]}
         >
           <Ionicons
-            name={watering ? "water-outline" : "leaf-outline"}
+            name={icon.name}
             size={25}
-            color={watering ? "#5C94C2" : "#9476B5"}
+            color={icon.color}
           />
         </View>
         <View style={s.heading}>

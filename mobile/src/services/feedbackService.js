@@ -94,6 +94,12 @@ export default {
     const { data } = await api.patch(`${path(true, id)}/review`, input);
     return data.data;
   },
+  async assess(id) {
+    const { data } = await api.post(`${path(true, id)}/ai-assessment`, undefined, {
+      timeout: 50000,
+    });
+    return data.data;
+  },
   managerHistoryImageUrl(id) {
     return api.getUri({ url: `${path(true, id)}/history-image` });
   },

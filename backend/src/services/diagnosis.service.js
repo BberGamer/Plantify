@@ -11,6 +11,7 @@ const {
 } = require("../config/diagnosis");
 const validate = require("../validators/common");
 const diagnosisPhotos = require("../integrations/diagnosis-photo.service");
+const { sampleCatalogImages } = require("./catalog-photo.service");
 
 // Mục đích: Tạo lỗi kết quả model không hợp lệ.
 // Cách chạy: Trả AppError 502 khi dữ liệu không khớp hợp đồng hoặc taxonomy.
@@ -33,9 +34,6 @@ const validateResult = (data, metadata) => {
   const taxonomy = metadata.labels;
   if (
     !data ||
-    !Array.isArray(data.top5) ||
-    data.top5.length !== 5 ||
-    !data.prediction ||
     !data.image ||
     !Number.isInteger(data.image.width) ||
     !Number.isInteger(data.image.height) ||
@@ -46,6 +44,60 @@ const validateResult = (data, metadata) => {
     data.processing_ms < 0
   )
     throw invalidResponse();
+  const model = data.model;
+  if (
+    !model ||
+    model.name !== metadata.name ||
+    model.checkpoint !== metadata.checkpoint ||
+    model.run_id !== metadata.run_id ||
+    model.checkpoint_epoch !== metadata.checkpoint_epoch ||
+    model.epochs_completed !== metadata.epochs_completed ||
+    model.sha256 !== metadata.sha256 ||
+    model.classes !== metadata.classes ||
+    model.image_size !== metadata.image_size ||
+    typeof model.run_id !== "string" ||
+    !/^[a-zA-Z0-9_.-]{1,160}$/.test(model.run_id) ||
+    !Number.isInteger(model.checkpoint_epoch) ||
+    !Number.isInteger(model.epochs_completed) ||
+    model.checkpoint_epoch < 1 ||
+    model.checkpoint_epoch > model.epochs_completed ||
+    !["cpu", "0"].includes(model.device)
+  )
+    throw invalidResponse();
+  const quality = data.image.quality;
+  if (
+    !quality ||
+    typeof quality.usable !== "boolean" ||
+    !Array.isArray(quality.reasons) ||
+    quality.reasons.some((reason) => !qualityReasons.has(reason)) ||
+    (quality.usable && quality.reasons.length > 0) ||
+    (!quality.usable && quality.reasons.length === 0)
+  )
+    throw invalidResponse();
+  const input = data.input_check;
+  if (input == null)
+    throw new AppError(
+      "DIAGNOSIS_INPUT_GUARD_UNAVAILABLE",
+      503,
+      "Dịch vụ kiểm tra ảnh chưa sẵn sàng. Vui lòng thử lại sau.",
+    );
+  const allowedInput = quality.usable
+    ? { passed: "plant_photo", unsupported: "non_plant_photo", uncertain: "input_scope_uncertain" }
+    : { uncertain: "poor_image_quality" };
+  if (
+    typeof input.status !== "string" ||
+    !Object.hasOwn(allowedInput, input.status) ||
+    input.reason !== allowedInput[input.status] ||
+    !Array.isArray(data.top5) ||
+    !Array.isArray(data.class_scores)
+  )
+    throw invalidResponse();
+  if (input.status !== "passed") {
+    if (data.prediction !== null || data.top5.length || data.class_scores.length)
+      throw invalidResponse();
+    return data;
+  }
+  if (!data.prediction || data.top5.length !== 5) throw invalidResponse();
   const ids = new Set();
   let previous = Infinity;
   let sum = 0;
@@ -82,39 +134,8 @@ const validateResult = (data, metadata) => {
     data.prediction.confidence !== data.top5[0].confidence
   )
     throw invalidResponse();
-  const model = data.model;
-  if (
-    !model ||
-    model.name !== metadata.name ||
-    model.checkpoint !== metadata.checkpoint ||
-    model.run_id !== metadata.run_id ||
-    model.checkpoint_epoch !== metadata.checkpoint_epoch ||
-    model.epochs_completed !== metadata.epochs_completed ||
-    model.sha256 !== metadata.sha256 ||
-    model.classes !== metadata.classes ||
-    model.image_size !== metadata.image_size ||
-    typeof model.run_id !== "string" ||
-    !/^[a-zA-Z0-9_.-]{1,160}$/.test(model.run_id) ||
-    !Number.isInteger(model.checkpoint_epoch) ||
-    !Number.isInteger(model.epochs_completed) ||
-    model.checkpoint_epoch < 1 ||
-    model.checkpoint_epoch > model.epochs_completed ||
-    !["cpu", "0"].includes(model.device)
-  )
-    throw invalidResponse();
-  const quality = data.image.quality;
-  if (
-    !quality ||
-    typeof quality.usable !== "boolean" ||
-    !Array.isArray(quality.reasons) ||
-    quality.reasons.some((reason) => !qualityReasons.has(reason)) ||
-    (quality.usable && quality.reasons.length > 0) ||
-    (!quality.usable && quality.reasons.length === 0)
-  )
-    throw invalidResponse();
   const scores = data.class_scores;
   if (
-    !Array.isArray(scores) ||
     scores.length !== metadata.classes ||
     scores.some(
       (score) => !Number.isFinite(score) || score < 0 || score > 1,
@@ -176,11 +197,21 @@ const toPlantDetails = (plant) => ({
   scientific_name: hasText(plant.scientific_name) ? plant.scientific_name : null,
   botanical_family: hasText(plant.botanical_family) ? plant.botanical_family : null,
   description: hasText(plant.description) ? plant.description : null,
+  reference_images: sampleCatalogImages(plant, "plant_image"),
   care_requirements: Object.fromEntries(
     Object.keys(careLabels).map(key => [key,
       hasText(plant.care_requirements?.[key]) ? plant.care_requirements[key] : null]),
   ),
 });
+
+function toDiseaseDetails(disease) {
+  const { image_urls, example_images, ...detail } = disease;
+  return {
+    ...detail,
+    _id: String(disease._id),
+    reference_images: sampleCatalogImages(disease, "disease_image_url"),
+  };
+}
 
 const createCatalogEnricher =
   ({
@@ -235,14 +266,14 @@ const createCatalogEnricher =
       const [plant, disease] = await Promise.all([
         plantModel
           .findOne({ _id: mapping.plant_id, is_published: true })
-          .select("_id common_name scientific_name botanical_family description common_disease_ids care_requirements")
+          .select("_id common_name scientific_name botanical_family description common_disease_ids care_requirements plant_image image_urls example_images")
           .lean(),
         entry.is_healthy
           ? null
           : diseaseModel
               .findOne({ _id: mapping.disease_id, status: "active" })
               .select(
-                "_id catalog_key disease_name scientific_name pathogen_type typical_symptoms environmental_cause disease_image_url status treatment_protocol created_at __v",
+                "_id catalog_key disease_name scientific_name pathogen_type typical_symptoms environmental_cause disease_image_url status treatment_protocol created_at __v image_urls example_images",
               )
               .lean(),
       ]);
@@ -273,12 +304,7 @@ const createCatalogEnricher =
           ? `${plant.common_name} - ${disease.disease_name}`
           : plant.common_name,
         symptoms: disease?.typical_symptoms || null,
-        disease_details: disease
-          ? {
-              ...disease,
-              _id: String(disease._id),
-            }
-          : null,
+        disease_details: disease ? toDiseaseDetails(disease) : null,
         treatment_available: treatmentAvailable,
         care_advice: careText(plant.care_requirements),
       };
@@ -301,6 +327,10 @@ const messages = {
     "Chưa xác định được cây/bệnh. Vui lòng chụp rõ lá, đủ ánh sáng và thử lại.",
   poor_image_quality:
     "Chưa xác định được cây/bệnh. Vui lòng chụp rõ lá, đủ ánh sáng và thử lại.",
+  non_plant_photo:
+    "Không tìm thấy cây hoặc lá làm chủ thể trong ảnh. Vui lòng chọn ảnh khác.",
+  input_scope_uncertain:
+    "Chưa thấy rõ cây hoặc lá cần phân tích. Hãy chụp gần hơn và lấy nét vào chủ thể.",
 };
 
 const decideResult = (data, thresholds) => {
@@ -381,7 +411,7 @@ const createPlantIdentifier =
       ];
       plants = await plantModel
         .find({ _id: { $in: plantIds }, is_published: true })
-        .select("_id common_name scientific_name botanical_family description care_requirements")
+        .select("_id common_name scientific_name botanical_family description care_requirements plant_image image_urls example_images")
         .lean();
       if (
         plants.length !== plantIds.length ||
@@ -432,16 +462,24 @@ const createPlantIdentifier =
       { image: data.image, top5: [{ confidence: top1 }, { confidence: top2 }] },
       thresholds,
     );
+    const topClass = mappings.find((mapping) => mapping.class_id === data.top5[0].class_id);
+    const accepted = decision.status === "identified";
+    const plantById = new Map(plants.map((plant) => [String(plant._id), plant]));
+    const alternatives = ranked.slice(0, 5).map((candidate, rank) =>
+      accepted && rank < 3
+        ? { ...candidate, plant_details: toPlantDetails(plantById.get(candidate.plant_id)) }
+        : candidate,
+    );
     return {
       ...decision,
       result_kind: "plant",
       result_status:
         decision.status === "identified" ? "accepted" : "uncertain",
-      prediction: decision.status === "identified" ? {
-        ...ranked[0],
-        plant_details: toPlantDetails(plants.find(plant => String(plant._id) === ranked[0].plant_id)),
+      prediction: accepted ? {
+        ...alternatives[0],
+        is_healthy: topClass?.is_healthy === true && String(topClass.plant_id) === ranked[0].plant_id,
       } : null,
-      alternatives: ranked.slice(0, 5),
+      alternatives,
       scores: {
         top1: data.top5[0].confidence,
         top2: data.top5[1].confidence,
@@ -459,24 +497,109 @@ const checkCancellation = (signal) => {
     throw new AppError("REQUEST_ABORTED", 499, "Yêu cầu đã được hủy.");
 };
 
-const historyItem = (row) => ({
-  _id: String(row._id),
-  created_at: row.created_at || null,
-  status: row.status,
-  result_kind: row.result_kind || "disease",
-  plant_id: row.plant_id ? String(row.plant_id._id) : null,
-  plant_name: row.plant_id?.common_name || null,
-  disease_id: row.disease_id ? String(row.disease_id._id) : null,
-  disease_name: row.disease_id?.disease_name || null,
-  has_image:
-    row.image?.storage === "cloudinary"
-      ? !!(row.image.public_id && row.image.asset_id)
-      : !!row.image?.filename,
+const historyFields =
+  "result_kind plant_id disease_id is_healthy status created_at image confidence predictions plan_selections";
+const historyPredictions = (row) => row.predictions?.map((candidate, index) => ({
+  rank: index + 1,
+  title: candidate.title,
+  confidence: candidate.confidence,
+}));
+const historySelections = (row, predictions) => ["care", "treatment"].flatMap((kind) => {
+  const selection = row.plan_selections?.[kind];
+  const candidate = predictions?.[selection?.rank - 1];
+  return candidate ? [{ kind, ...candidate, saved_at: selection.saved_at }] : [];
 });
+const historyItem = (row, detail = false) => {
+  const predictions = historyPredictions(row);
+  return {
+    _id: String(row._id),
+    created_at: row.created_at || null,
+    status: row.status,
+    result_kind: row.result_kind || "disease",
+    is_healthy: row.is_healthy === true,
+    confidence: row.confidence ?? null,
+    top_prediction: predictions?.[0] ?? null,
+    selections: historySelections(row, predictions),
+    ...(detail ? { predictions: predictions ?? null } : {}),
+    plant_id: row.plant_id ? String(row.plant_id._id) : null,
+    plant_name: row.plant_id?.common_name || null,
+    disease_id: row.disease_id ? String(row.disease_id._id) : null,
+    disease_name: row.disease_id?.disease_name || null,
+    has_image:
+      row.image?.storage === "cloudinary"
+        ? !!(row.image.public_id && row.image.asset_id)
+        : !!row.image?.filename,
+  };
+};
 const historyCatalog = [
   { path: "plant_id", select: "common_name", match: { is_published: true } },
   { path: "disease_id", select: "disease_name", match: { status: "active" } },
 ];
+
+const validateCandidateRank = (rank) => {
+  if (rank === undefined) return;
+  if (!Number.isInteger(rank) || rank < 1 || rank > 3)
+    validate.invalid("candidate_rank", "Chọn một trong ba gợi ý của lần quét.");
+  return rank;
+};
+
+const getOwnedDiagnosis = async (diagnosisId, userId, session) => {
+  const diagnosis = await DiseaseDiagnosis.findOne({
+    _id: diagnosisId,
+    user_id: userId,
+    status: "identified",
+  }).session(session || null);
+  if (!diagnosis)
+    throw new AppError("RESOURCE_NOT_FOUND", 404, "Không tìm thấy kết quả chẩn đoán.");
+  return diagnosis;
+};
+
+function predictionRank(diagnosis, plantId, diseaseId, rank) {
+  const matches = (candidate) => candidate?.plant_id &&
+    String(candidate.plant_id) === String(plantId) &&
+    String(candidate.disease_id ?? "") === String(diseaseId ?? "");
+  if (rank !== undefined)
+    return matches(diagnosis.predictions?.[rank - 1]) ? rank : 0;
+  return (diagnosis.predictions?.findIndex(matches) ?? -1) + 1;
+}
+
+const assertTreatmentCandidate = async (diagnosisId, userId, plantId, diseaseId, session, rank) => {
+  if (!diagnosisId) return;
+  const diagnosis = await getOwnedDiagnosis(diagnosisId, userId, session);
+  const candidates = diagnosis.treatment_candidates ?? [diagnosis];
+  const matchingDisease = candidates.filter((candidate) =>
+    String(candidate.disease_id) === String(diseaseId),
+  );
+  if (diagnosis.result_kind === "plant" || !matchingDisease.length)
+    throw new AppError("DIAGNOSIS_DISEASE_MISMATCH", 400, "Bệnh được chọn không có trong kết quả chẩn đoán.");
+  if (!matchingDisease.some((candidate) => String(candidate.plant_id) === String(plantId)))
+    throw new AppError("DIAGNOSIS_PLANT_MISMATCH", 400, "Cây được chọn không khớp với dự đoán bệnh.");
+  if (rank !== undefined && diagnosis.predictions?.length &&
+      !predictionRank(diagnosis, plantId, diseaseId, rank))
+    validate.invalid("candidate_rank", "Thứ hạng không khớp gợi ý cây và bệnh đã chọn.");
+  return diagnosis;
+};
+
+const assertCareCandidate = async (diagnosisId, userId, plantId, rank, session) => {
+  if (!diagnosisId) return;
+  const diagnosis = await getOwnedDiagnosis(diagnosisId, userId, session);
+  const matchesLegacy = !diagnosis.predictions?.length && (rank === undefined || rank === 1) &&
+    (diagnosis.result_kind === "plant" || diagnosis.is_healthy) &&
+    String(plantId) === String(diagnosis.plant_id);
+  if (!matchesLegacy && !predictionRank(diagnosis, plantId, null, rank))
+    throw new AppError("DIAGNOSIS_PLANT_MISMATCH", 400, "Cây không khớp gợi ý đã chọn để chăm sóc.");
+  return diagnosis;
+};
+
+const savePlanSelection = async (diagnosis, kind, plant, diseaseId, rank, session) => {
+  if (!diagnosis) return;
+  const matchingRank = predictionRank(diagnosis, plant.plant_id, diseaseId, rank);
+  if (!matchingRank) return; // Bản ghi cũ chưa có ảnh chụp dữ liệu các gợi ý.
+  diagnosis.set(`plan_selections.${kind}`, {
+    rank: matchingRank, user_plant_id: plant._id, saved_at: new Date(),
+  });
+  await diagnosis.save({ session });
+};
 
 const createDiagnosisService = ({
   predictor = inference,
@@ -487,13 +610,14 @@ const createDiagnosisService = ({
   diagnosisModel = DiseaseDiagnosis,
   photoStorage = diagnosisPhotos,
 } = {}) => ({
-  async history(userId, input = {}) {
+  async history(userId, input = {}, dateWindow) {
     validate.id(userId, "user_id");
     validate.object(input, "query");
     const page = validate.positiveInteger(input.page, 1, "page");
     const limit = validate.positiveInteger(input.limit, 20, "limit", 100);
     if (!Number.isSafeInteger((page - 1) * limit)) validate.invalid("page");
     const filter = { user_id: userId, status: "identified" };
+    if (dateWindow) filter.created_at = dateWindow;
     if (input.result_kind !== undefined) {
       if (!["plant", "disease"].includes(input.result_kind))
         validate.invalid("result_kind");
@@ -511,13 +635,13 @@ const createDiagnosisService = ({
           .sort({ created_at: -1, _id: -1 })
           .skip((page - 1) * limit)
           .limit(limit)
-          .select("result_kind plant_id disease_id status created_at image")
+          .select(historyFields)
           .populate(historyCatalog)
           .lean(),
         diagnosisModel.countDocuments(filter),
       ]);
       return {
-        diagnoses: rows.map(historyItem),
+        diagnoses: rows.map((row) => historyItem(row)),
         page,
         limit,
         total,
@@ -537,9 +661,7 @@ const createDiagnosisService = ({
     try {
       const row = await diagnosisModel
         .findOne({ _id: diagnosisId, user_id: userId, status: "identified" })
-        .select(
-          "result_kind plant_id disease_id status created_at image confidence",
-        )
+        .select(historyFields)
         .populate(historyCatalog)
         .lean();
       if (!row)
@@ -548,7 +670,7 @@ const createDiagnosisService = ({
           404,
           "Không tìm thấy chẩn đoán này trong lịch sử của bạn.",
         );
-      return { ...historyItem(row), confidence: row.confidence };
+      return historyItem(row, true);
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(
@@ -589,8 +711,6 @@ const createDiagnosisService = ({
     });
     const metadata = await metadataProvider();
     checkCancellation(options.signal);
-    // Giữ field cũ cho consumer; không còn nạp/gọi guard độc lập.
-    const inputCheck = { status: "disabled", active: false, reason: "classifier_thresholds" };
     const data = validateResult(
       await predictor.predict(photo, { ...options, config }),
       metadata,
@@ -598,7 +718,7 @@ const createDiagnosisService = ({
     checkCancellation(options.signal);
     const details = {
       result_kind: options.identification === true ? "plant" : "disease",
-      input_check: inputCheck,
+      input_check: { ...data.input_check, active: true },
       thresholds: { ...config.thresholds },
       image: {
         width: data.image.width,
@@ -622,6 +742,19 @@ const createDiagnosisService = ({
       processing_ms: data.processing_ms,
       diagnosis_id: null,
     };
+    if (data.input_check.status !== "passed") {
+      const { status, reason } = data.input_check;
+      return {
+        ...details,
+        status: reason === "input_scope_uncertain" ? "uncertain" : "unrecognized",
+        result_status: status === "unsupported" ? "unsupported_image" : "uncertain",
+        reason,
+        message: messages[reason],
+        prediction: null,
+        alternatives: [],
+        scores: null,
+      };
+    }
     let result;
     if (options.identification === true) {
       result = {
@@ -647,6 +780,24 @@ const createDiagnosisService = ({
           "Mapping chưa trả được thông tin cây/bệnh hợp lệ.",
         );
       if (prediction) alternatives[0] = prediction;
+      if (accepted) {
+        const related = await Promise.all(
+          alternatives.slice(1, 3).map(async (candidate) => {
+            try {
+              return await enrich(candidate, metadata.labels[candidate.class_id], metadata) || candidate;
+            } catch (error) {
+              if ([
+                "DIAGNOSIS_MAPPING_MISSING",
+                "DIAGNOSIS_MAPPING_PENDING",
+                "DIAGNOSIS_MAPPING_INVALID",
+                "DIAGNOSIS_CATALOG_INCOMPLETE",
+              ].includes(error.code)) return candidate;
+              throw error;
+            }
+          }),
+        );
+        alternatives.splice(1, related.length, ...related);
+      }
       result = {
         ...decision,
         result_status: accepted ? "accepted" : "uncertain",
@@ -664,12 +815,21 @@ const createDiagnosisService = ({
     checkCancellation(options.signal);
     const prediction = result.prediction;
     const isPlant = result.result_kind === "plant";
-    // Nhận diện cây có lịch sử riêng về loại; chỉ bệnh mới trả diagnosis_id cho điều trị.
-    if (
-      options.userId &&
-      result.result_status === "accepted" &&
-      (isPlant || !prediction.is_healthy)
-    ) {
+    const treatmentCandidates = !isPlant && prediction
+      ? result.alternatives.slice(0, 3)
+        .filter((candidate) => candidate.plant_id && candidate.disease_id && candidate.treatment_available)
+        .map((candidate) => ({ plant_id: candidate.plant_id, disease_id: candidate.disease_id }))
+      : [];
+    // Lưu ứng viên cùng ảnh để xác thực lựa chọn tạo phác đồ mà vẫn giữ dự đoán gốc.
+    if (options.userId && result.result_status === "accepted") {
+      const predictions = [prediction, ...result.alternatives.slice(1, 3)].map((candidate) => ({
+        title: !isPlant && candidate.is_healthy && candidate.plant_name
+          ? `${candidate.plant_name} · Chưa phát hiện bệnh`
+          : candidate.display_name || candidate.class_name,
+        confidence: candidate.confidence,
+        plant_id: candidate.plant_id ?? null,
+        disease_id: candidate.disease_id ?? null,
+      }));
       let savedPhoto;
       try {
         savedPhoto = await photoStorage.save(photo);
@@ -679,11 +839,14 @@ const createDiagnosisService = ({
           user_id: options.userId,
           plant_id: prediction.plant_id,
           disease_id: isPlant ? null : prediction.disease_id,
+          predictions,
           ...(isPlant
             ? {}
             : {
                 class_id: prediction.class_id,
                 class_name: prediction.class_name,
+                is_healthy: prediction.is_healthy,
+                treatment_candidates: treatmentCandidates,
               }),
           confidence: prediction.confidence,
           status: "identified",
@@ -702,7 +865,8 @@ const createDiagnosisService = ({
           processing_ms: data.processing_ms,
         });
         result.history_id = String(saved._id);
-        if (!isPlant) result.diagnosis_id = String(saved._id);
+        if (!isPlant && (!prediction.is_healthy || treatmentCandidates.length))
+          result.diagnosis_id = String(saved._id);
       } catch (error) {
         if (savedPhoto)
           await photoStorage
@@ -736,4 +900,8 @@ module.exports = {
   validateResult,
   decideResult,
   createPlantIdentifier,
+  assertTreatmentCandidate,
+  assertCareCandidate,
+  validateCandidateRank,
+  savePlanSelection,
 };

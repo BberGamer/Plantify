@@ -9,5 +9,6 @@ router.post("/", require("../middlewares/garden-upload.middleware").upload, gard
 router.get("/:id", garden.detail);
 router.patch("/:id", require("../middlewares/garden-upload.middleware").upload, garden.update);
 router.patch("/:id/archive", garden.archive);
+router.delete("/:id", garden.remove);
 
 module.exports = router;

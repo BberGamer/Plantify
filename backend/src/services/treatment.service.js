@@ -12,7 +12,7 @@ const TreatmentSchedule = require("../models/treatmentSchedule.model");
 const UserPlant = require("../models/userPlant.model");
 const Plant = require("../models/plant.model");
 const Disease = require("../models/disease.model");
-const DiseaseDiagnosis = require("../models/diseaseDiagnosis.model");
+const { assertTreatmentCandidate, savePlanSelection } = require("./diagnosis.service");
 const CareSchedule = require("../models/careSchedule.model");
 const Notification = require("../models/notification.model");
 const validate = require("../validators/treatment.validator");
@@ -325,33 +325,6 @@ const getApprovedProtocols = async (diseaseId, plantId) => {
   return { disease, protocols: protocols.filter((_, index) => usable[index]) };
 };
 
-const assertDiagnosis = async (diagnosisId, userId, diseaseId, session) => {
-  if (!diagnosisId) return;
-  const diagnosis = await DiseaseDiagnosis.findOne({
-    _id: diagnosisId,
-    user_id: userId,
-  }).session(session || null);
-  if (!diagnosis)
-    throw new AppError(
-      "RESOURCE_NOT_FOUND",
-      404,
-      "Không tìm thấy kết quả chẩn đoán.",
-    );
-  if (diagnosis.result_kind === "plant")
-    throw new AppError(
-      "DIAGNOSIS_DISEASE_MISMATCH",
-      400,
-      "Kết quả nhận diện cây không dùng để tạo điều trị bệnh.",
-    );
-  if (String(diagnosis.disease_id) !== String(diseaseId))
-    throw new AppError(
-      "DIAGNOSIS_DISEASE_MISMATCH",
-      400,
-      "Bệnh được chọn không khớp kết quả chẩn đoán.",
-    );
-  return diagnosis;
-};
-
 const generateSchedule = async (userId, input) => {
   v.id(userId, "user_id");
   const data = validate.generate(input);
@@ -374,22 +347,14 @@ const generateSchedule = async (userId, input) => {
           400,
           "Cây trong vườn không khớp bản xem trước phác đồ.",
         );
-      const diagnosis = await assertDiagnosis(
+      const diagnosis = await assertTreatmentCandidate(
         data.diagnosis_id,
         userId,
+        plant.plant_id,
         data.disease_id,
         session,
+        preview.candidate_rank,
       );
-      if (
-        diagnosis &&
-        (!plant.plant_id ||
-          String(diagnosis.plant_id) !== String(plant.plant_id))
-      )
-        throw new AppError(
-          "DIAGNOSIS_PLANT_MISMATCH",
-          400,
-          "Cây trong vườn không khớp loài cây từ kết quả chẩn đoán.",
-        );
       if (
         diagnosis?.user_plant_id &&
         String(diagnosis.user_plant_id) !== String(plant._id)
@@ -405,12 +370,15 @@ const generateSchedule = async (userId, input) => {
           user_id: userId,
         }).session(session);
         if (previous) {
-          if (["generated", "in_progress"].includes(previous.status))
+          if (
+            ["generated", "in_progress"].includes(previous.status) &&
+            String(previous.disease_id) === String(data.disease_id)
+          )
             return presentSchedule(previous, session);
           throw new AppError(
             "DIAGNOSIS_ALREADY_USED",
             409,
-            "Kết quả chẩn đoán đã được dùng cho một đợt điều trị đã kết thúc.",
+            "Kết quả chẩn đoán đã được dùng cho một đợt điều trị.",
           );
         }
         diagnosis.user_plant_id = plant._id;
@@ -470,6 +438,7 @@ const generateSchedule = async (userId, input) => {
         ],
         { session },
       );
+      await savePlanSelection(diagnosis, "treatment", plant, data.disease_id, preview.candidate_rank, session);
       return presentSchedule(schedule, session);
     });
   } catch (error) {
@@ -478,7 +447,12 @@ const generateSchedule = async (userId, input) => {
         diagnosis_id: data.diagnosis_id,
         user_id: userId,
       }).lean();
-      if (previous && ["generated", "in_progress"].includes(previous.status))
+      if (
+        previous &&
+        ["generated", "in_progress"].includes(previous.status) &&
+        String(previous.disease_id) === String(data.disease_id) &&
+        String(previous.user_plant_id) === String(data.user_plant_id)
+      )
         return presentSchedule(previous);
       throw new AppError(
         "DIAGNOSIS_ALREADY_USED",

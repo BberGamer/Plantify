@@ -1,6 +1,6 @@
 import CatalogAiPicker from "../CatalogAiPicker";
 import { FormModalFrame } from "../../common/ModalFrames";
-import PhotoUploadField from "../../common/PhotoUploadField";
+import CatalogImageFields from "../CatalogImageFields";
 import { componentStyles } from "../../../theme/componentStyles";
 
 import {
@@ -42,7 +42,6 @@ export default function DiseaseFormModal({
   visible,
   editing,
   form,
-  photo,
   choosingPhoto,
   loading,
   ready,
@@ -55,13 +54,11 @@ export default function DiseaseFormModal({
   onSave,
   onChange,
   onChoosePhoto,
-  onRemovePhoto,
   onTogglePlant,
   onRetryPlants,
   onRetryDetail,
 }) {
   const locked = saving || choosingPhoto || loading || !ready;
-  const imageUri = photo?.uri || form.disease_image_url;
   const close = () => {
     if (!saving && !choosingPhoto) onClose();
   };
@@ -106,11 +103,12 @@ export default function DiseaseFormModal({
                 multiline={Boolean(multiline)}
               />
             ))}
-            <PhotoUploadField label="Ảnh bệnh" uri={imageUri} disabled={locked} loading={choosingPhoto}
-              onChoose={onChoosePhoto} onRemove={imageUri ? onRemovePhoto : undefined}
-              chooseLabel={imageUri ? "Chọn ảnh khác từ máy" : "Tải ảnh từ máy"}
-              removeLabel={photo ? "Bỏ ảnh đã chọn" : "Xóa ảnh hiện tại"}
-              hint="JPG hoặc PNG, tối đa 10 MB. Ảnh được tải lên khi lưu." />
+            <CatalogImageFields
+              images={form.images}
+              disabled={locked}
+              onChange={(images) => onChange("images", images)}
+              onChoosePhoto={onChoosePhoto}
+            />
             <Text variant="titleMedium">Tác nhân gây bệnh</Text>
             <RadioButton.Group
               value={form.pathogen_type}

@@ -1,0 +1,38 @@
+{
+  "model_id": "timm/MobileCLIP2-S0-OpenCLIP",
+  "revision": "095906d28bf54d7584dc411e8ffe448f34289e05",
+  "weights_sha256": "ab91a1a0c4330d6b1913e24d5035dfdea15423316aaec649610c6b1c6ddd0e95",
+  "config_sha256": "43e7162c531e845155dbf47e8fef8fe5718b0eab3d6beefb8d615a2c55b4c1e5",
+  "min_similarity": 0.20,
+  "min_margin": 0.02,
+  "positive_prompts": [
+    "a close-up photograph of a real plant leaf",
+    "a photograph of a healthy whole living plant",
+    "a photograph of healthy leaves on a living plant",
+    "a photograph of a diseased plant leaf with spots",
+    "a photograph of damaged leaves on a crop plant",
+    "a photograph of a leaf held in a person's hand",
+    "a photograph of real crop plant foliage in a garden",
+    "a photograph of a single real leaf on a plain background",
+    "a close-up photograph of real fruit growing on a living plant",
+    "a photo showing the leaves and stems of a potted plant as the main subject"
+  ],
+  "negative_prompts": [
+    "an anime illustration of a character's face and eyes",
+    "a cartoon or digital artwork",
+    "a drawing or painting of plants and leaves",
+    "a photograph of a person or a group of people as the main subject",
+    "a photograph of people standing at a train station or subway platform",
+    "a photograph of an indoor room with furniture",
+    "a photograph of a car, motorcycle, bus or train",
+    "a photograph of cooked food or a meal",
+    "a photograph of harvested fruits or vegetables on a plate or at a market",
+    "a photograph of a dog, cat or other animal",
+    "a photograph of a phone, computer or electronic device",
+    "a screenshot with text, icons or a user interface",
+    "a photograph of furniture, household objects or tools",
+    "a photograph of artificial plastic plants",
+    "a photograph of a building or street with plants in the background",
+    "a wide photograph of a landscape with mountains, trees and sky"
+  ]
+}

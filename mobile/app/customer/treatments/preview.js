@@ -24,9 +24,10 @@ export default function TreatmentPreviewScreen() {
     plantId: value(params.plantId),
     userPlantId: value(params.userPlantId),
     diagnosisId: value(params.diagnosisId) || undefined,
+    candidateRank: value(params.rank) ? Number(params.rank) : undefined,
     startDate: value(params.startDate) || undefined,
   });
-  const contextKey = JSON.stringify([params.diseaseId, params.plantId, params.userPlantId, params.diagnosisId, params.startDate]);
+  const contextKey = JSON.stringify([params.diseaseId, params.plantId, params.userPlantId, params.diagnosisId, params.rank, params.startDate]);
   const [confirming, setConfirming] = useState(null);
   const data = treatment.data;
   const selectedProtocol = treatment.protocols.find(
@@ -40,6 +41,7 @@ export default function TreatmentPreviewScreen() {
         plantId: value(params.plantId),
         diseaseId: value(params.diseaseId),
         diagnosisId: value(params.diagnosisId),
+        rank: value(params.rank),
         startDate: value(params.startDate),
         returnTo: "treatmentPreview",
       },
@@ -67,7 +69,12 @@ export default function TreatmentPreviewScreen() {
       pathname: "/customer/treatments/TreatmentList", params: { treatmentId: data._id },
     })}>Mở lịch điều trị đang áp dụng</Button>}
     {treatment.loading || treatment.error ? (
-      <TreatmentStateView loading={treatment.loading} error={treatment.error} onRetry={treatment.retry} />
+      <TreatmentStateView
+        loading={treatment.loading}
+        loadingMessage="Đang chuẩn bị phác đồ điều trị..."
+        error={treatment.error}
+        onRetry={treatment.retry}
+      />
     ) : !data ? <>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <View style={styles.card}>
@@ -124,7 +131,7 @@ export default function TreatmentPreviewScreen() {
           )}
         </View>
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Phác đồ AI vừa tạo</Text>
+          <Text style={styles.sectionTitle}>Phác đồ điều trị đề xuất</Text>
           <Text style={styles.body}>Phác đồ này chưa được lưu. Hệ thống chỉ lưu khi bạn chọn cây trong vườn và tạo lịch điều trị.</Text>
         </View>
         {treatment.protocols.length ? treatment.protocols.map((protocol) => {

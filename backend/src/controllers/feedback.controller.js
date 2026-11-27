@@ -1,4 +1,6 @@
 const service = require("../services/feedback.service");
+const assessment = require("../services/feedback-assessment.service");
+const { exportExcel } = require("../services/feedback-excel.service");
 const validate = require("../validators/feedback.validator");
 const { success } = require("../utils/api-response");
 const AppError = require("../utils/app-error");
@@ -54,6 +56,10 @@ const review = action(async (req, res) =>
     "Đã lưu kết quả xử lý.",
     await service.review(req.params.id, req.user.id, validate.review(req.body)),
   ),
+);
+
+const assess = action(async (req, res) =>
+  success(res, "Đã kiểm tra đóng góp.", await assessment.assess(req.params.id)),
 );
 
 function sendPrivateImage(res, next, data, missingImage) {
@@ -116,13 +122,32 @@ const exportImages = action(async (req, res) => {
   await archive.finalize();
 });
 
+const downloadExcel = action(async (req, res) => {
+  const options = validate.excelExport(req.query);
+  const { archive, abort } = await exportExcel(options);
+  const filename = options.mode === "review"
+    ? "feedback-co-can-cu-ra-soat.xlsx"
+    : "feedback-co-can-cu-da-tiep-nhan.xlsx";
+  res.set({
+    "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "Content-Disposition": `attachment; filename="${filename}"`,
+    "Cache-Control": "private, no-store",
+  });
+  archive.on("error", () => res.destroy());
+  res.on("close", () => { if (!res.writableFinished) abort(); });
+  archive.pipe(res);
+  await archive.finalize();
+});
+
 module.exports = {
   requireVip,
   create,
   list,
   detail,
   review,
+  assess,
   image,
   managerHistoryImage,
   exportImages,
+  downloadExcel,
 };

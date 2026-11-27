@@ -6,6 +6,9 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "plantify",
+    "web": {
+      "lang": "vi"
+    },
     "ios": {
       "supportsTablet": true
     },

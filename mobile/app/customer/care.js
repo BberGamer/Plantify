@@ -54,6 +54,7 @@ const FILTERS = [
   { id: "all", label: "Tất cả", icon: "grid-outline" },
   { id: "watering", label: "Tưới nước", icon: "water-outline" },
   { id: "fertilizing", label: "Bón phân", icon: "leaf-outline" },
+  { id: "sunlight", label: "Ánh sáng", icon: "sunny-outline" },
 ];
 
 function IconControl({ icon, label, onPress, disabled, style }) {
@@ -356,7 +357,7 @@ export default function CareScreen() {
               <View style={s.emptyIcon}>
                 <Ionicons
                   name={
-                    filter === "watering" ? "water-outline" : "leaf-outline"
+                    FILTERS.find(({ id }) => id === filter)?.icon || "leaf-outline"
                   }
                   size={36}
                   color={colors.primaryLight}
@@ -368,7 +369,7 @@ export default function CareScreen() {
             </View>
             <Text style={s.emptyTitle}>
               {filter !== "all"
-                ? `Chưa có lịch ${filter === "watering" ? "tưới nước" : "bón phân"}`
+                ? `Chưa có lịch ${FILTERS.find(({ id }) => id === filter)?.label.toLowerCase()}`
                 : "Một khoảng thảnh thơi"}
             </Text>
             <Text style={s.emptyText}>

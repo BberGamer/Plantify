@@ -47,7 +47,7 @@ export default function ChatScreen() {
                     : message.content}
                 </Text>
                 {message.role === "assistant" && message.sources?.length > 0 && <View>
-                  <Text style={styles.speaker}>Tài liệu Plantify đã tra cứu</Text>
+                  <Text style={styles.speaker}>Nguồn đã tra cứu</Text>
                   {message.sources.map((source) => <Text selectable style={styles.timing}
                     key={`${source.type}-${source.id}-${source.number}`}>
                     [{source.number}] {source.title} · {source.section}

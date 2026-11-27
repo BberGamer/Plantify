@@ -4,7 +4,7 @@ const { success } = require("../utils/api-response");
 const {
   createPlantPhotos,
 } = require("../integrations/cloudinary-photo.service");
-const { saveWithPhoto } = require("../services/catalog-photo.service");
+const { saveWithPhotos } = require("../services/catalog-photo.service");
 
 const photos = createPlantPhotos();
 
@@ -65,9 +65,9 @@ const getManagerPlants = async (req, res, next) => {
 
 const createPlant = async (req, res, next) => {
   try {
-    const plant = await saveWithPhoto(
+    const plant = await saveWithPhotos(
       req.body,
-      req.file,
+      req.files,
       photos,
       "plant_image",
       (data) => plantService.createPlant({ ...data }),
@@ -80,9 +80,9 @@ const createPlant = async (req, res, next) => {
 
 const updatePlant = async (req, res, next) => {
   try {
-    const plant = await saveWithPhoto(
+    const plant = await saveWithPhotos(
       req.body,
-      req.file,
+      req.files,
       photos,
       "plant_image",
       (data) => plantService.updatePlant(req.params.id, { ...data }),

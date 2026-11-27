@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, allItems, itemsOf, params } from "../services/api";
 import useResource from "../hooks/useResource";
 import {
@@ -79,7 +79,6 @@ export default function Catalog({ kind }) {
             (l) => row && l[plant ? "plant_id" : "disease_id"] === row._id,
           )
           .map((l) => l.class_id),
-        photo: null,
       });
     } catch (e) {
       setError(e.message);
@@ -120,7 +119,12 @@ export default function Catalog({ kind }) {
           columns={[
             {
               title: "Ảnh",
-              render: (r) => <CatalogImage src={plant ? r.plant_image : r.disease_image_url} name={r.common_name || r.disease_name} />,
+              render: (r) => (
+                <CatalogImage
+                  src={plant ? r.plant_image : r.disease_image_url}
+                  name={r.common_name || r.disease_name}
+                />
+              ),
             },
             {
               title: plant ? "Tên cây" : "Tên bệnh",
@@ -173,17 +177,67 @@ function CatalogForm({ kind, initial, onClose, onSaved }) {
   const plant = kind === "plants";
   const [values, setValues] = useState(initial.values),
     [selected, setSelected] = useState(initial.selected),
-    [photo, setPhoto] = useState(null),
     [deleting, setDeleting] = useState(false),
     [error, setError] = useState("");
-  const [preview, setPreview] = useState("");
-  useEffect(() => {
-    if (!photo) { setPreview(""); return; }
-    const url = URL.createObjectURL(photo);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [photo]);
   const imageKey = plant ? "plant_image" : "disease_image_url";
+  const savedImages =
+    initial.values.image_urls ?? [initial.values[imageKey]].filter(Boolean);
+  const [images, setImages] = useState(() =>
+    savedImages.map((image_url, key) => ({ image_url, key })),
+  );
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageError, setImageError] = useState("");
+  const nextImageKey = useRef(images.length);
+
+  function addFiles(event) {
+    const files = Array.from(event.target.files);
+    event.target.value = "";
+    setImageError("");
+    if (images.filter((row) => row.photo).length + files.length > 6) {
+      setImageError("Mỗi lần lưu tải lên tối đa 6 ảnh mới.");
+      return;
+    }
+    if (
+      files.some(
+        (file) =>
+          file.size > 10 * 1024 * 1024 ||
+          (file.type && !["image/jpeg", "image/png"].includes(file.type)),
+      )
+    ) {
+      setImageError("Vui lòng chọn ảnh JPG hoặc PNG, tối đa 10 MB mỗi tệp.");
+      return;
+    }
+    const added = files.map((photo) => ({
+      photo,
+      key: nextImageKey.current++,
+    }));
+    setImages((current) => [...current, ...added]);
+  }
+
+  function addUrl() {
+    const value = imageUrl.trim();
+    let url;
+    try {
+      url = new URL(value);
+    } catch {}
+    if (
+      !url ||
+      !["http:", "https:"].includes(url.protocol) ||
+      url.username ||
+      url.password
+    ) {
+      setImageError("Ảnh phải có đường dẫn HTTP hoặc HTTPS hợp lệ.");
+      return;
+    }
+    const key = nextImageKey.current++;
+    setImages((current) =>
+      current.some((row) => row.image_url === value)
+        ? current
+        : [...current, { image_url: value, key }],
+    );
+    setImageUrl("");
+    setImageError("");
+  }
   const change = (key, value) => setValues((v) => ({ ...v, [key]: value }));
   const fields = plant
     ? {
@@ -227,15 +281,21 @@ function CatalogForm({ kind, initial, onClose, onSaved }) {
               "plant_ids",
             ];
         const body = Object.fromEntries(keys.map((k) => [k, values[k]]));
-        body[imageKey] = values[imageKey] || "";
         body.ai_class_ids = selected;
+        const files = images.flatMap((row) => (row.photo ? [row.photo] : []));
+        const imageUrls = images.map((row) =>
+          row.photo ? null : row.image_url,
+        );
+        if (
+          imageUrls.length !== savedImages.length ||
+          imageUrls.some((url, index) => url !== savedImages[index])
+        )
+          body.image_urls = imageUrls;
         let payload = body;
-        if (photo) {
-          if (photo.size > 10 * 1024 * 1024)
-            throw new Error("Ảnh tối đa 10 MB.");
+        if (files.length) {
           payload = new FormData();
           payload.append("payload", JSON.stringify(body));
-          payload.append("photo", photo);
+          files.forEach((file) => payload.append("photos", file));
         }
         await api(
           "/" + kind + "/manager" + (initial.id ? "/" + initial.id : ""),
@@ -364,17 +424,47 @@ function CatalogForm({ kind, initial, onClose, onSaved }) {
           </Field>
         </>
       )}
-      <CatalogImage src={preview || values[imageKey]} name={values.common_name || values.disease_name} large />
-      <Field label="Đường dẫn ảnh hiện tại">
-        <input type="url" value={values[imageKey] || ""} onChange={(e) => change(imageKey, e.target.value)} />
-      </Field>
-      <Field label="Ảnh JPG / PNG / WebP (tối đa 10 MB)">
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={(e) => setPhoto(e.target.files[0] || null)}
-        />
-      </Field>
+      <section className="inset">
+        <h3>{plant ? "Ảnh cây trồng" : "Ảnh bệnh cây"}</h3>
+        <div className="image-grid">
+          {images.map((row, index) => (
+            <CatalogImageRow
+              key={row.key}
+              index={index}
+              row={row}
+              onCover={() =>
+                setImages((items) => [
+                  row,
+                  ...items.filter((item) => item.key !== row.key),
+                ])
+              }
+              onRemove={() =>
+                setImages((items) =>
+                  items.filter((item) => item.key !== row.key),
+                )
+              }
+            />
+          ))}
+        </div>
+        <Field label="Thêm ảnh JPG hoặc PNG (6 ảnh mới mỗi lần lưu, 10 MB mỗi ảnh)">
+          <input
+            type="file"
+            multiple
+            accept="image/jpeg,image/png"
+            onChange={addFiles}
+          />
+        </Field>
+        <Field label="Đường dẫn ảnh">
+          <input
+            value={imageUrl}
+            onChange={(event) => setImageUrl(event.target.value)}
+          />
+        </Field>
+        <button type="button" disabled={!imageUrl.trim()} onClick={addUrl}>
+          Thêm đường dẫn
+        </button>
+        <Notice>{imageError}</Notice>
+      </section>
       <h3>Nhãn AI nhận diện</h3>
       <p className="muted">
         Chọn nhãn đã có chủ sẽ chuyển liên kết sang bản ghi này. Nhãn bệnh cần
@@ -439,8 +529,44 @@ function CatalogForm({ kind, initial, onClose, onSaved }) {
     </ActionForm>
   );
 }
-function CatalogImage({ src, name, large = false }) {
+function CatalogImageRow({ row, index, onCover, onRemove }) {
+  const [preview, setPreview] = useState("");
+  useEffect(() => {
+    if (!row.photo) {
+      setPreview("");
+      return;
+    }
+    const url = URL.createObjectURL(row.photo);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [row.photo]);
+  const label = index === 0 ? "Ảnh bìa" : `Ảnh ${index + 1}`;
+  return (
+    <div className="inset">
+      <CatalogImage src={preview || row.image_url} name={label} />
+      <p>{label}</p>
+      {index > 0 && (
+        <button type="button" onClick={onCover}>
+          Đặt làm ảnh bìa
+        </button>
+      )}
+      <button type="button" className="danger" onClick={onRemove}>
+        Xóa ảnh
+      </button>
+    </div>
+  );
+}
+function CatalogImage({ src, name }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [src]);
-  return src && !failed ? <img src={src} alt={name || "Ảnh danh mục"} onError={() => setFailed(true)} style={{ width: large ? 180 : 64, height: large ? 180 : 64, objectFit: "cover", borderRadius: 12 }} /> : <span className="muted">{src ? "Không tải được ảnh" : "Chưa có ảnh"}</span>;
+  return src && !failed ? (
+    <img
+      src={src}
+      alt={name || "Ảnh danh mục"}
+      onError={() => setFailed(true)}
+      style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 12 }}
+    />
+  ) : (
+    <span className="muted">{src ? "Không tải được ảnh" : "Chưa có ảnh"}</span>
+  );
 }

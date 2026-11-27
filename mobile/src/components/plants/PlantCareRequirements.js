@@ -87,6 +87,7 @@ const styles = StyleSheet.create({
   sectionHeading: {
     flex: 1,
     fontSize: 17,
+    lineHeight: 24,
     fontWeight: "800",
     color: colors.textPrimary,
   },
@@ -129,6 +130,7 @@ const styles = StyleSheet.create({
   label: {
     flex: 1,
     fontSize: 16,
+    lineHeight: 24,
     fontWeight: "800",
     color: colors.textPrimary,
   },

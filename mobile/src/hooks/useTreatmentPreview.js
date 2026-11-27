@@ -9,9 +9,9 @@ import treatmentLogic from "../utils/treatmentLogic.cjs";
 import { invalidTreatmentResponse, isTreatmentSchedule } from "../utils/treatmentResponse";
 import useScreenScope from "./useScreenScope";
 
-export default function useTreatmentPreview({ diseaseId, plantId, userPlantId, diagnosisId, startDate }) {
+export default function useTreatmentPreview({ diseaseId, plantId, userPlantId, diagnosisId, candidateRank, startDate }) {
   const version = useAuthStore((state) => state.sessionVersion);
-  const key = JSON.stringify([version, diseaseId, plantId, userPlantId, diagnosisId, startDate]);
+  const key = JSON.stringify([version, diseaseId, plantId, userPlantId, diagnosisId, candidateRank, startDate]);
   const latestKey = useRef(key);
   latestKey.current = key;
   const [state, setState] = useState({});
@@ -128,7 +128,7 @@ export default function useTreatmentPreview({ diseaseId, plantId, userPlantId, d
     }
     update({ previewToken: "" });
     try {
-      const response = await treatmentService.createPreview({ diseaseId, plantId, diagnosisId });
+      const response = await treatmentService.createPreview({ diseaseId, plantId, diagnosisId, candidateRank });
       if (!current() || id !== request.current) return;
       const protocol = response?.data?.protocol;
       const token = response?.data?.preview_token;

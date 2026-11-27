@@ -1,5 +1,5 @@
 import { componentStyles } from "../../../theme/componentStyles";
-﻿import { Button, Card } from "react-native-paper";
+import { Button, Card } from "react-native-paper";
 
 import { styles } from "./presentation";
 import TopupOrderSummary from "./TopupOrderSummary";

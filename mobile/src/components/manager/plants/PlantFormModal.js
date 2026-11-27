@@ -1,6 +1,6 @@
 import CatalogAiPicker from "../CatalogAiPicker";
 import { FormModalFrame } from "../../common/ModalFrames";
-import PhotoUploadField from "../../common/PhotoUploadField";
+import CatalogImageFields from "../CatalogImageFields";
 import { componentStyles } from "../../../theme/componentStyles";
 import { radius } from "../../../theme";
 import { spacing } from "../../../theme/tokens";
@@ -37,16 +37,12 @@ export default function PlantFormModal({
   onFieldChange,
   onCareChange,
   onRetryCategories,
-  photo,
   onChoosePhoto,
-  onRemovePhoto,
 }) {
   const locked = saving || loading || !ready;
   const close = () => {
     if (!saving) onClose();
   };
-  const imageUri = photo?.uri || form.plant_image || null;
-  const hasImage = typeof imageUri === "string" && imageUri.trim().length > 0;
   return (
     <FormModalFrame visible={visible} onRequestClose={close}>
           <View style={styles.modalHeader}>
@@ -148,11 +144,12 @@ export default function PlantFormModal({
               );
             })}
             <CatalogAiPicker ai={ai} disabled={locked} />
-            <PhotoUploadField label="Hình ảnh cây" uri={hasImage ? imageUri : null} disabled={locked}
-              onChoose={onChoosePhoto} onRemove={hasImage ? onRemovePhoto : undefined}
-              chooseLabel={hasImage ? "Chọn ảnh khác từ máy" : "Tải ảnh từ máy"}
-              removeLabel={photo ? "Bỏ ảnh đã chọn" : "Xóa ảnh hiện tại"}
-              hint="JPG / PNG · Tối đa 10 MB · Ảnh được tải lên khi lưu cây" />
+            <CatalogImageFields
+              images={form.images}
+              disabled={locked}
+              onChange={(images) => onFieldChange("images", images)}
+              onChoosePhoto={onChoosePhoto}
+            />
             <PlantCareFields
               value={form.care_requirements}
               disabled={locked}
