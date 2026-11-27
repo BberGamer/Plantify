@@ -4,11 +4,13 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
+import CareTaskInstructions from "./CareTaskInstructions";
 
 const actionIcons = {
   watering: { name: "water-outline", color: "#5C94C2", backgroundColor: "#EDF5FC" },
   fertilizing: { name: "leaf-outline", color: "#9476B5", backgroundColor: "#F4F0FB" },
   sunlight: { name: "sunny-outline", color: "#9B782E", backgroundColor: "#FFF4D9" },
+  inspection: { name: "eye-outline", color: "#497466", backgroundColor: "#ECF6EF" },
 };
 
 export default function CareTaskCard({
@@ -17,6 +19,7 @@ export default function CareTaskCard({
   busy,
   onComplete,
   onStop,
+  showPlantName = true,
 }) {
   const icon = actionIcons[task.action_type] ?? actionIcons.fertilizing;
   const completed = task.status === "completed";
@@ -52,23 +55,21 @@ export default function CareTaskCard({
           />
         </View>
         <View style={s.heading}>
-          <Text style={s.plant}>{task.plant_name}</Text>
+          {showPlantName && <Text style={s.plant}>{task.plant_name}</Text>}
           <Text style={[s.title, completed && s.doneTitle]}>{task.title}</Text>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Dừng lịch ${task.title} cho ${task.plant_name}`}
-          disabled={busy}
-          onPress={onStop}
-          hitSlop={8}
-          style={s.menu}
-        >
-          <Ionicons
-            name="ellipsis-horizontal"
-            size={20}
-            color={colors.textSecondary}
-          />
-        </Pressable>
+        {onStop && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Dừng lịch ${task.title} cho ${task.plant_name}`}
+            disabled={busy}
+            onPress={onStop}
+            hitSlop={8}
+            style={s.menu}
+          >
+            <Ionicons name="ellipsis-horizontal" size={20} color={colors.textSecondary} />
+          </Pressable>
+        )}
       </View>
       <View style={s.meta}>
         <Ionicons name="time-outline" size={14} color="#85968E" />
@@ -81,7 +82,7 @@ export default function CareTaskCard({
             : `Mỗi ${task.repeat_every_days} ngày`}
         </Text>
       </View>
-      {!!task.notes && <Text style={s.notes}>{task.notes}</Text>}
+      <CareTaskInstructions task={task} />
       <View style={s.footer}>
         <View
           style={[
@@ -204,14 +205,6 @@ const s = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: "#CAD7CE",
     marginHorizontal: 3
-  },
-  notes: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: "#718078",
-    backgroundColor: "#F7FAF7",
-    padding: 11,
-    borderRadius: 10
   },
   footer: {
     borderTopWidth: 1,

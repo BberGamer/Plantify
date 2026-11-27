@@ -1,7 +1,9 @@
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import { ScrollView, StyleSheet } from "react-native";
-import { Button, RadioButton, Text } from "react-native-paper";
+import { Button, Dialog, Portal, RadioButton, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import CareTaskInstructions from "../../src/components/care/CareTaskInstructions";
 import BottomActionBar from "../../src/components/common/BottomActionBar";
 import ListError from "../../src/components/common/ListError";
 import LoadingState from "../../src/components/common/LoadingState";
@@ -12,21 +14,29 @@ import useFormBack from "../../src/hooks/useFormBack";
 import { colors, layout, spacing } from "../../src/theme";
 import { componentStyles } from "../../src/theme/componentStyles";
 
+const stringParam = (value) => (typeof value === "string" ? value : "");
+
 export default function CareGenerateScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const plantId = typeof params.plantId === "string" ? params.plantId : "";
-  const preferredId = typeof params.userPlantId === "string" ? params.userPlantId : "";
-  const diagnosisId = typeof params.diagnosisId === "string" ? params.diagnosisId : undefined;
-  const rank = typeof params.rank === "string" && params.rank ? params.rank : undefined;
-  const care = useCareGeneration(plantId, preferredId, params.generateOnOpen === "1", {
-    diagnosisId, candidateRank: rank === undefined ? undefined : Number(rank),
+  const plantId = stringParam(params.plantId);
+  const diagnosisId = stringParam(params.diagnosisId);
+  const rank = stringParam(params.rank);
+  const care = useCareGeneration({
+    plantId,
+    preferredId: stringParam(params.userPlantId),
+    diagnosisId: diagnosisId || undefined,
+    candidateRank: rank ? Number(rank) : undefined,
   });
+  const [confirming, setConfirming] = useState("");
+  const preview = care.preview;
+  const showConfirmation = Boolean(preview && confirming && confirming === care.selected?._id);
   const back = () => {
-    if (router.canGoBack()) router.back();
+    if (showConfirmation) setConfirming("");
+    else if (router.canGoBack()) router.back();
     else router.replace("/customer/garden");
   };
-  useFormBack(back, care.busy);
+  useFormBack(back, care.applying);
 
   function addPlant() {
     router.push({
@@ -35,106 +45,129 @@ export default function CareGenerateScreen() {
     });
   }
 
-  function openSchedule() {
-    router.replace({
-      pathname: "/customer/care",
-      params: { plantId: care.result.plantId, date: care.result.date },
-    });
+  async function apply() {
+    const result = await care.apply();
+    if (!result) return;
+    setConfirming("");
+    router.replace({ pathname: "/customer/care", params: result });
   }
 
   return (
     <SafeAreaView style={styles.screen} edges={["top", "left", "right"]}>
-      <ScreenHeader title="Tạo lịch chăm sóc" onBack={back} disabled={care.busy} />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        {!plantId ? (
-          <Text accessibilityRole="alert">Kết quả nhận diện chưa có thông tin loài cây.</Text>
-        ) : care.plantLoading ? (
-          <LoadingState message="Đang tải cây trong vườn..." />
-        ) : care.plantError ? (
-          <ListError message={care.plantError} onRetry={care.loadPlants} />
-        ) : (
-          <SectionCard title="Chọn cây trong vườn" icon="leaf-outline">
-            <Text>Ứng dụng tự lập lịch tưới nước, kiểm tra nhu cầu bón phân và ánh sáng từ tài liệu chăm sóc.</Text>
-            {care.plants.length ? (
-              <RadioButton.Group value={care.selectedId} onValueChange={care.select}>
-                {care.plants.map((plant) => (
-                  <RadioButton.Item
-                    key={plant._id}
-                    value={plant._id}
-                    label={plant.active_treatment
-                      ? `${plant.plant_nickname} · Đang điều trị`
-                      : plant.plant_nickname}
-                    disabled={care.busy || Boolean(plant.active_treatment)}
-                  />
-                ))}
-              </RadioButton.Group>
-            ) : (
-              <>
-                <Text>Vườn của bạn chưa có cây cùng loài với kết quả nhận diện.</Text>
-                <Button
-                  style={componentStyles.buttonShape}
-                  contentStyle={componentStyles.button}
-                  mode="outlined"
-                  icon="plus"
-                  onPress={addPlant}
-                >
-                  Thêm cây vào vườn
-                </Button>
-              </>
-            )}
-            {!!care.error && <Text style={styles.error} accessibilityRole="alert">{care.error}</Text>}
-            {care.busy && (
-              <Text accessibilityLiveRegion="polite">Đang tạo lịch từ tài liệu chăm sóc…</Text>
-            )}
-            {care.result && (
-              <Text accessibilityLiveRegion="polite">
-                {care.result.count
-                  ? `Đã tạo thêm ${care.result.count} lịch chăm sóc.`
-                  : "Cây đã có đủ các loại lịch chăm sóc."}
-              </Text>
-            )}
-          </SectionCard>
-        )}
-        {care.result?.schedules.map((schedule) => (
-          <SectionCard key={schedule._id} title={schedule.title}>
-            <Text variant="titleSmall">
-              {schedule.time} giờ Việt Nam · {schedule.repeat_every_days === 1
-                ? "Hằng ngày"
-                : `Mỗi ${schedule.repeat_every_days} ngày`}
-            </Text>
-            {!!schedule.notes && <Text style={styles.notes}>{schedule.notes}</Text>}
-          </SectionCard>
-        ))}
-        {!!care.result?.sources.length && (
-          <SectionCard title="Nguồn tham khảo cho lịch tự động" icon="book-outline">
-            {care.result.referenceKind === "general" && (
-              <Text>Loài này đang dùng hướng dẫn chung. Hãy đối chiếu với điều kiện trồng thực tế.</Text>
-            )}
-            {care.result.timingSource === "default" && (
-              <Text>Lịch mới dùng giờ nhắc buổi sáng mặc định.</Text>
-            )}
-            {care.result.sources.map((source) => (
-              <Link key={source.url} href={source.url} style={styles.source}>
-                {source.title}
-              </Link>
+      <ScreenHeader title="Xem trước lịch chăm sóc" onBack={back} disabled={care.applying} />
+      {!plantId ? (
+        <ListError message="Chưa có thông tin loài cây." />
+      ) : care.loading ? (
+        <LoadingState style={styles.scroll} message="Đang chuẩn bị lịch chăm sóc…" />
+      ) : care.previewError ? (
+        <ListError message={care.previewError} onRetry={() => {
+          setConfirming("");
+          void care.loadPreview();
+        }} />
+      ) : preview && (
+        <>
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+            <SectionCard title="Lịch chăm sóc đề xuất" icon="leaf-outline">
+              <Text variant="titleMedium">{preview.plant_name}</Text>
+              <Text>Chọn cây trong vườn để áp dụng lịch chăm sóc này.</Text>
+            </SectionCard>
+            <SectionCard title="Chọn cây trong vườn" icon="flower-outline">
+              {care.plantLoading ? (
+                <Text accessibilityLiveRegion="polite">Đang tải cây trong vườn…</Text>
+              ) : care.plantError ? (
+                <ListError message={care.plantError} onRetry={care.loadPlants} />
+              ) : (
+                <>
+                  {!!care.plants.length && (
+                    <RadioButton.Group value={care.selected?._id || ""} onValueChange={care.select}>
+                      {care.plants.map((plant) => (
+                        <RadioButton.Item
+                          key={plant._id}
+                          value={plant._id}
+                          label={plant.active_treatment
+                            ? plant.plant_nickname + " · Đang điều trị"
+                            : plant.plant_nickname}
+                          disabled={care.applying || Boolean(plant.active_treatment)}
+                        />
+                      ))}
+                    </RadioButton.Group>
+                  )}
+                  {!care.eligibleCount && (
+                    <>
+                      <Text>{care.plants.length
+                        ? "Cây cùng loài trong vườn đang điều trị."
+                        : "Vườn của bạn chưa có cây cùng loài."}</Text>
+                      <Button
+                        style={componentStyles.buttonShape}
+                        contentStyle={componentStyles.button}
+                        mode="outlined"
+                        icon="plus"
+                        onPress={addPlant}
+                      >
+                        Thêm cây vào vườn
+                      </Button>
+                    </>
+                  )}
+                </>
+              )}
+            </SectionCard>
+            {preview.tasks.map((task) => (
+              <SectionCard key={task.action_type} title={task.title}>
+                <Text variant="titleSmall">
+                  {task.time} giờ Việt Nam · {task.repeat_every_days === 1
+                    ? "Hằng ngày"
+                    : "Mỗi " + task.repeat_every_days + " ngày"}
+                </Text>
+                <CareTaskInstructions task={task} />
+              </SectionCard>
             ))}
-          </SectionCard>
-        )}
-      </ScrollView>
-      {!!care.selectedId && !care.plantLoading && !care.plantError && (
-        <BottomActionBar>
-          <Button
-            mode="contained"
-            style={componentStyles.buttonShape}
-            contentStyle={componentStyles.button}
-            loading={care.busy}
-            disabled={care.busy}
-            onPress={care.result ? openSchedule : care.generate}
-          >
-            {care.result ? "Xem lịch chăm sóc" : "Tự động tạo lịch chăm sóc"}
-          </Button>
-        </BottomActionBar>
+            <SectionCard title="Tài liệu tham khảo từ hệ thống" icon="book-outline">
+              {preview.reference_kind === "general" && (
+                <Text>Lịch này dùng hướng dẫn chăm sóc chung. Hãy đối chiếu với điều kiện trồng thực tế.</Text>
+              )}
+              {preview.timing_source === "default" && (
+                <Text>Giờ nhắc được chọn theo khung giờ buổi sáng của hệ thống.</Text>
+              )}
+              {preview.sources.map((source) => (
+                <Link key={source.url} href={source.url} style={styles.source}>
+                  {source.title}
+                </Link>
+              ))}
+            </SectionCard>
+          </ScrollView>
+          {!!care.eligibleCount && !care.plantLoading && !care.plantError && (
+            <BottomActionBar>
+              <Button
+                mode="contained"
+                style={componentStyles.buttonShape}
+                contentStyle={componentStyles.button}
+                disabled={!care.canApply}
+                onPress={() => setConfirming(care.selected._id)}
+              >
+                Áp dụng lịch chăm sóc
+              </Button>
+            </BottomActionBar>
+          )}
+        </>
       )}
+      <Portal>
+        <Dialog
+          style={componentStyles.dialog}
+          visible={showConfirmation}
+          onDismiss={() => !care.applying && setConfirming("")}
+          dismissable={!care.applying}
+        >
+          <Dialog.Title>Áp dụng lịch chăm sóc?</Dialog.Title>
+          <Dialog.Content>
+            <Text>Thêm các công việc còn thiếu vào lịch chăm sóc hằng ngày của cây {care.selected?.plant_nickname}.</Text>
+            {!!care.applyError && <Text style={styles.error} accessibilityRole="alert">{care.applyError}</Text>}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setConfirming("")} disabled={care.applying}>Hủy</Button>
+            <Button onPress={apply} loading={care.applying} disabled={!care.canApply}>Áp dụng</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </SafeAreaView>
   );
 }
@@ -149,7 +182,6 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.md,
   },
-  notes: { lineHeight: 22, color: colors.textSecondary },
   source: { color: colors.primary, textDecorationLine: "underline" },
-  error: { color: colors.statusError },
+  error: { color: colors.statusError, marginTop: spacing.sm },
 });

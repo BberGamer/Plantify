@@ -3,6 +3,12 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const AppError = require("../utils/app-error");
 const v = require("../validators/common");
+const {
+  dailySteps,
+  formatTreatmentInstruction,
+  presentTreatmentInstruction,
+  compactTreatmentNote,
+} = require("./treatment-instructions");
 
 const fail = (code, status, message) => {
   throw new AppError(code, status, message);
@@ -144,29 +150,32 @@ function readBundledPlan(section, diseaseName) {
     const day = Number(heading[1]);
     const block = content.slice(heading.index + heading[0].length, headings[index + 1]?.index);
     const method = documentField(block, "Cách thực hiện") || documentField(block, "Công việc");
-    const outcome = documentField(block, "Kết quả cần ghi nhận");
-    const safety = documentField(block, "An toàn");
+    const outcome = documentField(block, "Kết quả cần đạt") || documentField(block, "Kết quả cần ghi nhận");
+    const safety = documentField(block, "Lưu ý") || documentField(block, "An toàn");
     const preparation = documentField(block, "Chuẩn bị");
     const tools = documentField(block, "Dụng cụ");
     if (!method || !safety) return null;
-    const water = documentField(block, "Lượng nước") || (/\btưới\b/iu.test(method)
-      ? "Chỉ tưới khi công việc yêu cầu. Dùng 0 ml nếu đất còn đủ ẩm. Nếu cần tưới, đong lượng thực tế và dừng khi vùng rễ đủ ẩm."
-      : "0 ml cho công việc này.");
-    const fertilizer = documentField(block, "Phân bón") || (/\bbón\b/iu.test(method)
-      ? "Đối chiếu hướng dẫn của ngày này và nhãn sản phẩm để xác định liều. Nếu chưa có chỉ định phù hợp, chưa bón."
-      : "0 g hoặc 0 ml cho công việc này.");
+    const watering = /(?:^|[.;]\s*)tưới\b/iu.test(method);
+    const water = documentField(block, "Tưới nước") || documentField(block, "Lượng nước") ||
+      (watering ? "Theo độ ẩm đất" : "0ml");
+    const fertilizer = documentField(block, "Phân bón") || (/(?:^|[.;]\s*)bón\b/iu.test(method)
+      ? "Theo nhãn (khi có chỉ định)"
+      : "0g");
+    const action = watering && water === "Theo độ ẩm đất"
+      ? "Kiểm tra độ ẩm đất trước khi tưới; " + method
+      : method;
     return {
       day,
       title: (heading[2]?.trim() || method).slice(0, 150),
       method,
-      instruction: [
+      instruction: presentTreatmentInstruction([
         preparation && "Chuẩn bị: " + preparation,
-        "Bước 1: " + method,
-        "Lượng nước: " + water,
+        "Bước 1: " + action,
+        "Tưới nước: " + water,
         "Phân bón: " + fertilizer,
         tools && "Dụng cụ: " + tools,
-        outcome && "=> Kết quả cần đạt: " + outcome,
-      ].filter(Boolean).join("\n"),
+        outcome && "Kết quả cần đạt: " + outcome,
+      ].filter(Boolean).join("\n")),
       dosage_note: documentField(block, "Liều lượng"),
       safety_note: safety,
     };
@@ -218,6 +227,11 @@ const validateResult = (result, expectedDuration) => {
       502,
       "AI phải trả đúng một công việc cho mỗi ngày điều trị.",
     );
+  const safetyGuidelines = Array.isArray(result.safety_guidelines)
+    ? [...new Set(result.safety_guidelines.map((item) => text(item, "Hướng dẫn an toàn", 2000)))]
+    : [];
+  if (!safetyGuidelines.length)
+    fail("AI_INVALID_RESPONSE", 502, "AI chưa trả hướng dẫn an toàn.");
   const stages = result.tasks.map((task, index) => {
     if (
       task?.day !== index + 1 ||
@@ -229,15 +243,19 @@ const validateResult = (result, expectedDuration) => {
         502,
         "Ngày hoặc giờ thực hiện do AI trả về không hợp lệ.",
       );
-    const instruction = text(task.instruction, "Hướng dẫn", 2000);
+    const instruction = formatTreatmentInstruction(text(task.instruction, "Hướng dẫn", 2000));
+    const steps = dailySteps(instruction);
+    if (steps.length < 2 || steps.some(([, number], index) => Number(number) !== index + 1))
+      fail("AI_INVALID_RESPONSE", 502, "Mỗi ngày điều trị cần ít nhất hai bước theo thứ tự.");
     if (
-      !/^[ \t]*Lượng nước:[ \t]*\S/im.test(instruction) ||
-      !/^[ \t]*Phân bón:[ \t]*\S/im.test(instruction)
+      !/^Tưới nước:[ \t]*\S/im.test(instruction) ||
+      !/^Phân bón:[ \t]*\S/im.test(instruction) ||
+      !/^Kết quả cần đạt:[ \t]*\S/im.test(instruction)
     )
       fail(
         "AI_INVALID_RESPONSE",
         502,
-        "Công việc điều trị thiếu hướng dẫn về lượng nước hoặc phân bón.",
+        "Công việc điều trị thiếu thông tin tưới nước, phân bón hoặc kết quả cần đạt.",
       );
     const safety =
       typeof task.safety_note === "string" ? task.safety_note.trim() : "";
@@ -253,20 +271,9 @@ const validateResult = (result, expectedDuration) => {
       end_day: index + 1,
       instructions: [instruction],
       dosage_note: dosage,
-      important_note: safety,
+      important_note: compactTreatmentNote(safety, safetyGuidelines),
     };
   });
-  const safetyGuidelines = Array.isArray(result.safety_guidelines)
-    ? [
-        ...new Set(
-          result.safety_guidelines.map((item) =>
-            text(item, "Hướng dẫn an toàn", 2000),
-          ),
-        ),
-      ]
-    : [];
-  if (!safetyGuidelines.length)
-    fail("AI_INVALID_RESPONSE", 502, "AI chưa trả hướng dẫn an toàn.");
   return {
     protocol_name: text(result.protocol_name, "Tên phác đồ", 200),
     description: text(result.description, "Mô tả", 5000),

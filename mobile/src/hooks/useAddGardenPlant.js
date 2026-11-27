@@ -187,10 +187,12 @@ export default function useAddGardenPlant(
       if (current()) {
         if (editing) router.back();
         else if (followUp) {
-          router.replace({
+          const destination = {
             pathname: followUp.pathname,
             params: { ...followUp.params, userPlantId: response.data._id },
-          });
+          };
+          if (followUp.dismissToPreview) router.dismissTo(destination);
+          else router.replace(destination);
         } else
           router.replace({
             pathname: "/customer/garden",

@@ -21,7 +21,6 @@ import { FilterOptions } from "../common/FilterControls";
 import { FeedbackField, FeedbackSection, FeedbackStatusBadge, feedbackStatusTone, presentation } from "./FeedbackPresentation";
 import ListError from "../common/ListError";
 import LinkedFeedbackHistory from "./LinkedFeedbackHistory";
-import { assessmentLabels } from "./feedbackLabels";
 import FeedbackFrame, {
   FeedbackMessage,
   feedbackStyles as styles,
@@ -86,12 +85,12 @@ function FeedbackPhoto({ id, index, manager }) {
   );
 }
 
-function ReviewPanel({ item, busy, checking, onReview }) {
+function ReviewPanel({ item, busy, onReview }) {
   const [status, setStatus] = useState(
     item.status === "pending" ? "accepted" : item.status,
   );
   const [response, setResponse] = useState(item.response || "");
-  const disabled = busy || checking;
+  const disabled = busy;
   return (
     <FeedbackSection title={item.status === "pending" ? "Xử lý đóng góp" : "Cập nhật kết quả xử lý"} icon="create-outline">
       <View style={presentation.field}>
@@ -116,38 +115,6 @@ function ReviewPanel({ item, busy, checking, onReview }) {
   );
 }
 
-function AssessmentPanel({ assessment, busy, checking, error, onAssess }) {
-  return (
-    <FeedbackSection title="Đối chiếu bằng chatbot" icon="sparkles-outline">
-      <Text style={presentation.hint}>Chatbot đối chiếu văn bản. Hãy xem ảnh khi quyết định xử lý.</Text>
-      {assessment ? (
-        <>
-          <FeedbackField label="Gợi ý của AI" value={assessmentLabels[assessment.verdict]} />
-          <FeedbackField label="Lý do" value={assessment.reason} />
-          {!!assessment.feedback_quote && (
-            <FeedbackField label="Trích đóng góp" value={assessment.feedback_quote} />
-          )}
-          {!!assessment.reference_quote && (
-            <FeedbackField label="Trích danh mục" value={assessment.reference_quote} />
-          )}
-        </>
-      ) : (
-        <Button
-          style={componentStyles.buttonShape}
-          contentStyle={componentStyles.button}
-          mode="outlined"
-          onPress={onAssess}
-          loading={checking}
-          disabled={busy || checking}
-        >
-          Kiểm tra bằng AI
-        </Button>
-      )}
-      {!!error && <Text accessibilityRole="alert" style={{ color: colors.statusError }}>{error}</Text>}
-    </FeedbackSection>
-  );
-}
-
 export default function FeedbackDetailScreen({
   id,
   manager = false,
@@ -157,7 +124,7 @@ export default function FeedbackDetailScreen({
   const result = useFeedbackDetail(id, manager);
   const [showSent, setShowSent] = useState(sent);
   const fallback = manager ? "/manager/feedback" : "/customer/feedback";
-  const pending = result.busy || result.checking;
+  const pending = result.busy;
   useFormBack(
     () => (router.canGoBack() ? router.back() : router.replace(fallback)),
     pending,
@@ -224,13 +191,6 @@ export default function FeedbackDetailScreen({
               )}
               {manager && (
                 <>
-                  <AssessmentPanel
-                    assessment={item.ai_assessment}
-                    busy={result.busy}
-                    checking={result.checking}
-                    error={result.assessmentError}
-                    onAssess={result.assess}
-                  />
                   <Button style={componentStyles.buttonShape} contentStyle={componentStyles.button}
                     icon="refresh"
                     onPress={result.load}
@@ -242,7 +202,6 @@ export default function FeedbackDetailScreen({
                     key={`${item._id}:${item.review_count}`}
                     item={item}
                     busy={result.busy}
-                    checking={result.checking}
                     onReview={result.review}
                   />
                   {!!item.review_history?.length && (

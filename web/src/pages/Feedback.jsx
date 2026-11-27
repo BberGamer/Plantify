@@ -56,26 +56,21 @@ export default function Feedback() {
     [version, setVersion] = useState(0),
     [detail, setDetail] = useState(null),
     [error, setError] = useState(""),
-    [exporting, setExporting] = useState(""),
-    [excelMode, setExcelMode] = useState("official");
+    [exporting, setExporting] = useState(false);
   const exportLock = useRef(false);
   const state = useResource(
     "/feedback/manager" + params({ ...query, page, limit: 20 }),
     version,
   );
-  async function download(format) {
+  async function downloadImages() {
     if (exportLock.current) return;
     exportLock.current = true;
-    setExporting(format);
+    setExporting(true);
     setError("");
     try {
-      const excel = format === "excel";
-      const endpoint = excel ? "export-excel" : "export-images";
-      const filename = excel
-        ? (excelMode === "review" ? "feedback-co-can-cu-ra-soat.xlsx" : "feedback-co-can-cu-da-tiep-nhan.xlsx")
-        : "feedback-plantify.zip";
+      const filename = "feedback-plantify.zip";
       const blob = await api(
-        "/feedback/manager/" + endpoint + params(excel ? { ...query, mode: excelMode } : query),
+        "/feedback/manager/export-images" + params(query),
         { blob: true },
       );
       const url = URL.createObjectURL(blob);
@@ -90,7 +85,7 @@ export default function Feedback() {
       setError(failure.message);
     } finally {
       exportLock.current = false;
-      setExporting("");
+      setExporting(false);
     }
   }
   return (
@@ -154,25 +149,8 @@ export default function Feedback() {
           onChange={(e) => setFilters({ ...filters, to: e.target.value })}
         />
         <button className="primary">Lọc / Tải lại</button>
-        <button type="button" disabled={Boolean(exporting)} onClick={() => download("images")}>
-          {exporting === "images" ? "Đang tạo file ZIP…" : "Tải ảnh đã tiếp nhận (.zip)"}
-        </button>
-        <select
-          aria-label="Chế độ xuất Excel"
-          value={excelMode}
-          disabled={Boolean(exporting)}
-          onChange={(event) => setExcelMode(event.target.value)}
-        >
-          <option value="official">Báo cáo chính thức · Đã tiếp nhận</option>
-          <option value="review">Bản rà soát · Gồm cả chờ xử lý</option>
-        </select>
-        <button
-          type="button"
-          title="Xuất các feedback Có căn cứ theo bộ lọc đã áp dụng"
-          disabled={Boolean(exporting)}
-          onClick={() => download("excel")}
-        >
-          {exporting === "excel" ? "Đang tạo Excel…" : "Xuất Excel"}
+        <button type="button" disabled={Boolean(exporting)} onClick={downloadImages}>
+          {exporting ? "Đang tạo file ZIP…" : "Tải ảnh đã tiếp nhận (.zip)"}
         </button>
       </form>
       <Notice>{error}</Notice>
@@ -237,31 +215,10 @@ function Review({ detail, onClose, onSaved }) {
       detail.status === "pending" ? "accepted" : detail.status,
     ),
     [response, setResponse] = useState(detail.response || "");
-  const [assessment, setAssessment] = useState(detail.ai_assessment);
-  const [assessmentError, setAssessmentError] = useState("");
-  const [checking, setChecking] = useState(false);
-  const checkingRef = useRef(false);
-  async function assess() {
-    if (assessment || checkingRef.current) return;
-    checkingRef.current = true;
-    setChecking(true);
-    setAssessmentError("");
-    try {
-      setAssessment(await api("/feedback/manager/" + detail._id + "/ai-assessment", {
-        method: "POST",
-      }));
-    } catch (error) {
-      setAssessmentError(error.message);
-    } finally {
-      checkingRef.current = false;
-      setChecking(false);
-    }
-  }
   return (
     <ActionForm
       title="Chi tiết đóng góp"
       onClose={onClose}
-      externalBusy={checking}
       submit="Gửi phản hồi"
       onSubmit={async () => {
         await api("/feedback/manager/" + detail._id + "/review", {
@@ -309,27 +266,6 @@ function Review({ detail, onClose, onSaved }) {
           )}
         </section>
       ) : null}
-      <section className="inset">
-        <h3>Đối chiếu bằng chatbot</h3>
-        <p className="muted">Chatbot đối chiếu văn bản. Hãy xem ảnh khi quyết định xử lý.</p>
-        {assessment ? (
-          <>
-            <p><strong>{{
-              supported: "Có căn cứ",
-              conflicting: "Có dấu hiệu mâu thuẫn",
-              insufficient: "Chưa đủ bằng chứng",
-            }[assessment.verdict]}</strong></p>
-            <p>{assessment.reason}</p>
-            {assessment.feedback_quote && <p><strong>Trích đóng góp</strong> · {assessment.feedback_quote}</p>}
-            {assessment.reference_quote && <p><strong>Trích danh mục</strong> · {assessment.reference_quote}</p>}
-          </>
-        ) : (
-          <button type="button" onClick={assess} disabled={checking}>
-            {checking ? "Đang kiểm tra…" : "Kiểm tra bằng AI"}
-          </button>
-        )}
-        <Notice>{assessmentError}</Notice>
-      </section>
       <Field label="Kết quả xử lý">
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="accepted">Đã tiếp nhận</option>

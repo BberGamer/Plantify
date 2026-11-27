@@ -73,10 +73,4 @@ function review(body) {
   };
 }
 
-function excelExport(query) {
-  const { filter, email } = list(query, true);
-  const mode = query.mode === undefined ? "official" : choice(query.mode, "mode", ["official", "review"]);
-  return { filter, email, mode };
-}
-
-module.exports = { create, list, review, excelExport };
+module.exports = { create, list, review };

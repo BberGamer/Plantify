@@ -140,17 +140,6 @@ export default function DiagnosisResult({
           </Button>
         )}
         <View style={styles.actions}>
-          {isPlantMode && !!result.history_id && (
-            <Button
-              style={componentStyles.buttonShape}
-              contentStyle={componentStyles.button}
-              mode="outlined"
-              icon="history"
-              onPress={onOpenHistory}
-            >
-              Xem lần nhận diện đã lưu
-            </Button>
-          )}
           <Button
             style={componentStyles.buttonShape}
             contentStyle={componentStyles.button}

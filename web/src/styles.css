@@ -424,6 +424,23 @@ tbody tr:hover {
   font-size: 13px;
   font-weight: 500;
 }
+.protocol-upload {
+  max-width: 760px;
+  padding: 24px;
+}
+.protocol-plants {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+.protocol-plants legend {
+  margin-bottom: 8px;
+}
+.protocol-plants label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

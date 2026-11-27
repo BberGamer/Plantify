@@ -154,7 +154,6 @@ export default function AnalysisScreen({ identification = false }) {
       pathname: "/customer/care-generate",
       params: {
         plantId: candidate.plant_id,
-        generateOnOpen: "1",
         ...(diagnosis.result.history_id && { diagnosisId: diagnosis.result.history_id, rank: String(rank) }),
       },
     });

@@ -22,11 +22,11 @@ export default function AddGardenPlantScreen() {
     : plantId && returnTo === "careGenerate"
       ? {
           pathname: "/customer/care-generate",
+          dismissToPreview: true,
           params: {
             plantId,
             diagnosisId: value(params.diagnosisId),
             rank: value(params.rank),
-            generateOnOpen: "1",
           },
         }
       : undefined;

@@ -9,15 +9,11 @@ export default function useFeedbackDetail(id, manager) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-  const [checking, setChecking] = useState(false);
-  const [assessmentError, setAssessmentError] = useState("");
   const controller = useRef(null);
   const pending = useRef(false);
   const { capture } = useScreenScope(
     () => {
       setBusy(false);
-      setChecking(false);
-      setAssessmentError("");
       load();
     },
     () => {
@@ -76,27 +72,6 @@ export default function useFeedbackDetail(id, manager) {
     [capture, id, item, manager],
   );
 
-  async function assess() {
-    if (!manager || !item || item._id !== id || pending.current || item.ai_assessment) return;
-    const current = capture();
-    pending.current = true;
-    setChecking(true);
-    setAssessmentError("");
-    try {
-      const assessment = await feedbackService.assess(id);
-      if (current())
-        setItem((previous) => previous?._id === id
-          ? { ...previous, ai_assessment: assessment }
-          : previous);
-    } catch (failure) {
-      if (current())
-        setAssessmentError(getErrorMessage(failure, "Không thể kiểm tra đóng góp bằng AI."));
-    } finally {
-      pending.current = false;
-      if (current()) setChecking(false);
-    }
-  }
-
   return {
     item,
     loading,
@@ -104,9 +79,6 @@ export default function useFeedbackDetail(id, manager) {
     error,
     load,
     review,
-    assess,
-    checking,
-    assessmentError,
     message,
     clearMessage: () => setMessage(""),
   };

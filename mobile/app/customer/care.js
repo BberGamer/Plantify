@@ -55,6 +55,7 @@ const FILTERS = [
   { id: "watering", label: "Tưới nước", icon: "water-outline" },
   { id: "fertilizing", label: "Bón phân", icon: "leaf-outline" },
   { id: "sunlight", label: "Ánh sáng", icon: "sunny-outline" },
+  { id: "inspection", label: "Theo dõi", icon: "eye-outline" },
 ];
 
 function IconControl({ icon, label, onPress, disabled, style }) {

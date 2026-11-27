@@ -1,85 +1,111 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import useAuthStore from "../../store/authStore";
 import careService from "../services/careService";
 import getErrorMessage from "../utils/getErrorMessage";
 import useCarePlants from "./useCarePlants";
 import useScreenScope from "./useScreenScope";
 
-export default function useCareGeneration(plantId, preferredId, generateOnOpen, {
-  diagnosisId, candidateRank,
-} = {}) {
-  const garden = useCarePlants();
-  const plants = garden.plants.filter((plant) => plant.plant_id === plantId);
-  const [chosenId, setChosenId] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [result, setResult] = useState(null);
-  const pending = useRef(false);
-  const autoAttempt = useRef("");
-  const { capture, isActive } = useScreenScope(
-    () => setBusy(pending.current),
-    undefined,
-    `${plantId}:${preferredId}:${diagnosisId}:${candidateRank}`,
-  );
-  const eligible = plants.filter((plant) => !plant.active_treatment);
-  const selectedId = [chosenId, preferredId].find((id) =>
-    eligible.some((plant) => plant._id === id),
-  ) || (eligible.length === 1 ? eligible[0]._id : "");
+const isPreview = (data) => Boolean(
+  typeof data?.preview_token === "string" && data.preview_token && typeof data.plant_name === "string" &&
+  Array.isArray(data.tasks) && data.tasks.length > 0 && data.tasks.every((task) =>
+    typeof task?.action_type === "string" && typeof task.title === "string" &&
+    /^\d{2}:\d{2}$/.test(task.time) && Number.isInteger(task.repeat_every_days) &&
+    Array.isArray(task.steps) && task.steps.length >= 2) &&
+  Array.isArray(data.sources) && data.sources.every((source) =>
+    typeof source?.title === "string" && /^https:\/\/[^\s]+$/.test(source.url)),
+);
 
-  function select(id) {
-    if (pending.current) return;
-    setChosenId(id);
-    setError("");
-    setResult(null);
+export default function useCareGeneration({ plantId, preferredId, diagnosisId, candidateRank }) {
+  const garden = useCarePlants();
+  const session = useAuthStore((store) => store.sessionVersion);
+  const key = JSON.stringify([session, plantId, diagnosisId, candidateRank]);
+  const latestKey = useRef(key);
+  latestKey.current = key;
+  const [state, setState] = useState({});
+  const view = state.key === key ? state : {};
+  const previewRequest = useRef(0);
+  const pendingApply = useRef(null);
+  const scope = useScreenScope(() => {
+    if (!plantId) return;
+    update({ applying: pendingApply.current === key });
+    if (!view.preview) void loadPreview();
+  }, undefined, key);
+
+  const plants = garden.plants.filter((plant) => plant.plant_id === plantId);
+  const eligible = plants.filter((plant) => !plant.active_treatment);
+  const selected = eligible.find((plant) => plant._id === view.chosenId) ||
+    eligible.find((plant) => plant._id === preferredId) ||
+    (eligible.length === 1 ? eligible[0] : undefined);
+  const canApply = Boolean(view.preview && selected && !garden.plantLoading && !garden.plantError &&
+    !view.loading && !view.applying);
+
+  function update(patch) {
+    setState((previous) => ({ ...(previous.key === key ? previous : {}), key, ...patch }));
   }
 
-  const generate = useCallback(async () => {
-    if (!selectedId || pending.current || !isActive()) return;
-    const current = capture();
-    pending.current = true;
-    setBusy(true);
-    setError("");
-    try {
-      const response = await careService.generate(selectedId, { diagnosisId, candidateRank });
-      const { date, created_count: count, schedules = [], sources = [], reference_kind, timing_source } =
-        response?.data || {};
-      if (!response?.success || !/^\d{4}-\d{2}-\d{2}$/.test(date || "") ||
-          !Number.isInteger(count) || count < 0 || !Array.isArray(schedules) ||
-          schedules.some((item) => !item?._id || typeof item.title !== "string" ||
-            !/^\d{2}:\d{2}$/.test(item.time) || !Number.isInteger(item.repeat_every_days)) ||
-          !Array.isArray(sources) || sources.some((source) =>
-            typeof source?.title !== "string" || typeof source.url !== "string" ||
-            !/^https:\/\/[^\s]+$/.test(source.url)))
-        throw new Error("Dữ liệu lịch chăm sóc không hợp lệ.");
-      if (current()) setResult({
-        date, count, schedules, sources, referenceKind: reference_kind,
-        timingSource: timing_source, plantId: selectedId,
-      });
-    } catch (failure) {
-      if (current())
-        setError(getErrorMessage(failure, "Không thể tạo lịch chăm sóc."));
-    } finally {
-      pending.current = false;
-      if (isActive()) setBusy(false);
-    }
-  }, [candidateRank, capture, diagnosisId, isActive, selectedId]);
+  function capture() {
+    const active = scope.capture();
+    return () => latestKey.current === key && active();
+  }
 
-  useEffect(() => {
-    if (!generateOnOpen || garden.plantLoading || garden.plantError || !selectedId ||
-        (eligible.length !== 1 && selectedId !== preferredId) ||
-        autoAttempt.current === selectedId || !isActive() || pending.current) return;
-    autoAttempt.current = selectedId;
-    void generate();
-  }, [generateOnOpen, garden.plantLoading, garden.plantError, selectedId, eligible.length,
-    preferredId, isActive, generate]);
+  async function loadPreview() {
+    if (!plantId || !scope.isActive()) return;
+    const request = ++previewRequest.current;
+    const active = capture();
+    const current = () => request === previewRequest.current && active();
+    update({ loading: true, previewError: "", applyError: "" });
+    try {
+      const response = await careService.preview({ plantId, diagnosisId, candidateRank });
+      if (!current()) return;
+      if (!response?.success || !isPreview(response.data))
+        throw new Error("Dữ liệu bản xem trước không hợp lệ.");
+      update({ preview: response.data });
+    } catch (failure) {
+      if (current()) update({ previewError: getErrorMessage(failure, "Không thể chuẩn bị lịch chăm sóc.") });
+    } finally {
+      if (current()) update({ loading: false });
+    }
+  }
+
+  async function apply() {
+    if (!canApply || pendingApply.current === key || !scope.isActive()) return;
+    const current = capture();
+    pendingApply.current = key;
+    update({ applying: true, applyError: "" });
+    try {
+      const response = await careService.apply(selected._id, view.preview.preview_token);
+      if (!current()) return;
+      if (!response?.success || !/^\d{4}-\d{2}-\d{2}$/.test(response.data?.date))
+        throw new Error("Dữ liệu lịch chăm sóc không hợp lệ.");
+      return { plantId: selected._id, date: response.data.date };
+    } catch (failure) {
+      if (!current()) return;
+      const message = getErrorMessage(failure, "Không thể áp dụng lịch chăm sóc.");
+      const code = failure?.response?.data?.code;
+      if (code === "CARE_PREVIEW_EXPIRED" || code === "CARE_PREVIEW_INVALID")
+        update({ preview: null, previewError: message });
+      else update({ applyError: message });
+    } finally {
+      if (pendingApply.current === key) pendingApply.current = null;
+      if (latestKey.current === key && scope.isActive()) update({ applying: false });
+    }
+  }
 
   return {
     ...garden,
     plants,
-    selectedId,
-    select,
-    generate,
-    busy,
-    error,
-    result: result?.plantId === selectedId ? result : null,
+    eligibleCount: eligible.length,
+    selected,
+    select: (id) => {
+      if (pendingApply.current !== key) update({ chosenId: id, applyError: "" });
+    },
+    preview: view.preview,
+    loading: view.loading ?? Boolean(plantId),
+    previewError: view.previewError || "",
+    loadPreview,
+    canApply,
+    applying: Boolean(view.applying),
+    applyError: view.applyError || "",
+    apply,
   };
 }
